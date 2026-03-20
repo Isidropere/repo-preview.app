@@ -32,9 +32,14 @@ class RegisterController extends Controller
             'profile_photo'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $nombre_usuario_generado = strtolower(
+        $nombre_usuario_base = strtolower(
             preg_replace('/\s+/', '', $validado['nombres'] . $validado['apellidos'])
         );
+        // Asegurar unicidad del nombre de usuario
+        $nombre_usuario_generado = $nombre_usuario_base;
+        if (User::where('nombre_usuario', $nombre_usuario_generado)->exists()) {
+            $nombre_usuario_generado = $nombre_usuario_base . rand(100, 9999);
+        }
 
         try {
             $usuario = User::create([
@@ -98,7 +103,12 @@ class RegisterController extends Controller
             }
         }
 
-        $usuario->sendEmailVerificationNotification();
+        // Intentar enviar verificación de email (no bloquea el registro si falla)
+        try {
+            $usuario->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo enviar email de verificación', ['error' => $e->getMessage()]);
+        }
 
         // Auto-login después del registro
         Auth::login($usuario);

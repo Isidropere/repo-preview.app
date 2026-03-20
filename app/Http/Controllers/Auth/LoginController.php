@@ -32,12 +32,12 @@ class LoginController extends Controller
             ])->withInput();
         }
 
-        //// Verifica verificación de email
-        if (!$user->hasVerifiedEmail()) {
-            return back()->withErrors([
-                'credentials' => 'Verifica tu correo electrónico primero. Revisa tu bandeja de entrada.',
-            ])->withInput();
-        }
+        // Verificación de email desactivada en local — activar en producción
+        // if (!$user->hasVerifiedEmail()) {
+        //     return back()->withErrors([
+        //         'credentials' => 'Verifica tu correo electrónico primero. Revisa tu bandeja de entrada.',
+        //     ])->withInput();
+        // }
 
         // Intento de autenticación
         if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {

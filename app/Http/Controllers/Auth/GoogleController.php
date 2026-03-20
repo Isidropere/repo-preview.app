@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Controller;
 
@@ -22,14 +23,21 @@ class GoogleController extends Controller
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if (!$user) {
+            // Separar nombre y apellido del nombre completo de Google
+            $nameParts = explode(' ', $googleUser->getName(), 2);
+            $nombres   = $nameParts[0] ?? $googleUser->getName();
+            $apellidos = $nameParts[1] ?? '';
+
             $user = User::create([
-                'nombres' => $googleUser->getName(),
-                'apellidos' => '', // You may want to extract this from the Google user data if available
-                'email' => $googleUser->getEmail(),
-                'google_id' => $googleUser->getId(),
-                'password' => bcrypt(str_random(16)), // Generate a random password
-                'status' => 'active',
-                'id_tipo_usuario' => 'default', // Set a default user type
+                'nombres'         => $nombres,
+                'apellidos'       => $apellidos,
+                'email'           => $googleUser->getEmail(),
+                'google_id'       => $googleUser->getId(),
+                'nombre_usuario'  => strtolower(preg_replace('/\s+/', '', $googleUser->getName())) . '_' . Str::random(4),
+                'password'        => bcrypt(Str::random(16)),
+                'estatus'         => 1,
+                'id_tipo_usuario' => 1,
+                'email_verified_at' => now(),
             ]);
         }
 
