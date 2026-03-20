@@ -130,7 +130,7 @@
                     </div>
                 @endif
                
-                <form action="{{ route('items.update', $item->id_item) }}" method="POST" enctype="multipart/form-data" id="productForm">
+                <form action="{{ route('items.update', $item->slug) }}" method="POST" enctype="multipart/form-data" id="productForm">
                     @csrf
                     @method('PUT')
                     

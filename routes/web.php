@@ -301,8 +301,8 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de items protegidas
     Route::prefix('items')->group(function () {
         Route::get('/{slug}/detalle', [ItemController::class, 'VerDetalle'])->name('items.VerDetalle');
-        Route::get('/{id}/Talentoeditar', [ItemController::class, 'talentoedit'])->name('items.talentoedit');
-        Route::put('/{id}/talentoupdate', [ItemController::class, 'talentoupdate'])->name('items.talentoupdate');
+        Route::get('/{slug}/Talentoeditar', [ItemController::class, 'talentoedit'])->name('items.talentoedit');
+        Route::put('/{slug}/talentoupdate', [ItemController::class, 'talentoupdate'])->name('items.talentoupdate');
         Route::get('/', [ItemController::class, 'itemsCategoria29'])->name('items.categoria29');
     });
 
@@ -396,9 +396,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('gestiona-item', [ItemController::class, 'gestion'])->name('items.gestion');
-    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
-    Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
-    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+    Route::get('/items/{slug}/edit', [ItemController::class, 'edit'])->name('items.edit');
+    Route::put('/items/{slug}', [ItemController::class, 'update'])->name('items.update');
+    Route::delete('/items/{slug}', [ItemController::class, 'destroy'])->name('items.destroy');
 });
 
 

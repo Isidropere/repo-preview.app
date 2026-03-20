@@ -168,7 +168,7 @@
                         </div>
 
                         <div class="mt-6 flex space-x-2">
-                            <a href="{{ $item->id_categoria_item == 29 ? route('items.talentoedit', $item->id_item) : route('items.edit', $item->id_item) }}" class="bg-blue-600 hover:bg-gray-400 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center">
+                            <a href="{{ $item->id_categoria_item == 29 ? route('items.talentoedit', $item->slug) : route('items.edit', $item->slug) }}" class="bg-blue-600 hover:bg-gray-400 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center">
                                 Editar
                             </a>
                             <button type="button" onclick="openContactModal()" class="bg-gray-600 hover:bg-gray-400 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-center">

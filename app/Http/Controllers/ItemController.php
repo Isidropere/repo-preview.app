@@ -747,8 +747,9 @@ class ItemController extends Controller
         }
     }
    
-    public function destroy($id)
+    public function destroy($slug)
     {
+        $id = \App\Helpers\HashIdHelper::decode($slug);
         try {
             $item = Item::findOrFail($id);
 
@@ -1305,8 +1306,9 @@ class ItemController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit($slug)
     {
+        $id = \App\Helpers\HashIdHelper::decode($slug);
         $item = Item::with('imagenes')->findOrFail($id);
         $categorias = CategoriaItem::all();
 
@@ -1339,8 +1341,9 @@ class ItemController extends Controller
         ));
     }
 
-    public function talentoedit($id)
+    public function talentoedit($slug)
     {
+        $id = \App\Helpers\HashIdHelper::decode($slug);
         $item = Item::with('imagenes')->findOrFail($id);
         $categorias = CategoriaItem::all();
         try {
@@ -1365,8 +1368,9 @@ class ItemController extends Controller
     }
 
   
-    public function update(Request $request, $id)
+    public function update(Request $request, $slug)
     {
+        $id = \App\Helpers\HashIdHelper::decode($slug);
         Log::info('Inicio de update()', [
             'user_id' => auth()->id(),
             'item_id' => $id,
@@ -1521,8 +1525,9 @@ class ItemController extends Controller
         }
     }
 
-    public function talentoupdate(Request $request, $id)
+    public function talentoupdate(Request $request, $slug)
     {
+        $id = \App\Helpers\HashIdHelper::decode($slug);
         Log::info('Inicio de update()', [
             'user_id' => auth()->id(),
             'item_id' => $id,
