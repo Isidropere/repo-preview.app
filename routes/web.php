@@ -207,9 +207,15 @@ Route::prefix('items')->group(function () {
     Route::get('/search', [ItemController::class, 'search'])->middleware('throttle:30,1')->name('items.search');
     Route::get('/info/{id}', [ItemController::class, 'info'])->name('items.info');
     Route::get('/categoria/{id}', [ItemController::class, 'porCategoria'])->name('categorias.show');
-    Route::get('/{id}', [ItemController::class, 'show'])->name('items.show');
-    Route::get('/producto/{slug}', [ItemController::class, 'showDetail'])
-        ->name('producto.detalle');
+    Route::get('/producto/{slug}', [ItemController::class, 'showDetail'])->name('producto.detalle');
+
+    // Rutas protegidas con segmentos específicos — deben ir ANTES del wildcard /{id}
+    Route::get('/{slug}/edit', [ItemController::class, 'edit'])->middleware(['auth', 'verified'])->name('items.edit');
+    Route::get('/{slug}/Talentoeditar', [ItemController::class, 'talentoedit'])->middleware(['auth'])->name('items.talentoedit');
+    Route::get('/{slug}/detalle', [ItemController::class, 'VerDetalle'])->middleware(['auth'])->name('items.VerDetalle');
+
+    // Wildcard al final — solo captura slugs sin segmentos adicionales
+    Route::get('/{id}', [ItemController::class, 'show'])->name('items.show')->where('id', '[^/]+');
 });
 
 
@@ -299,12 +305,8 @@ Route::middleware(['auth'])->group(function () {
     ]);
 
     // Rutas de items protegidas
-    Route::prefix('items')->group(function () {
-        Route::get('/{slug}/detalle', [ItemController::class, 'VerDetalle'])->name('items.VerDetalle');
-        Route::get('/{slug}/Talentoeditar', [ItemController::class, 'talentoedit'])->name('items.talentoedit');
-        Route::put('/{slug}/talentoupdate', [ItemController::class, 'talentoupdate'])->name('items.talentoupdate');
-        Route::get('/', [ItemController::class, 'itemsCategoria29'])->name('items.categoria29');
-    });
+    Route::put('/items/{slug}/talentoupdate', [ItemController::class, 'talentoupdate'])->name('items.talentoupdate');
+    Route::get('/items', [ItemController::class, 'itemsCategoria29'])->name('items.categoria29');
 
     // Talentos
     Route::get('/talentos/crear', function () {
@@ -374,8 +376,7 @@ Route::controller(RegisterController::class)->group(function () {
 
 });
 
-// Allow viewing items without verification
-Route::get('/items/{item}', [ItemController::class, 'show']);
+// Allow viewing items without verification (handled in prefix group above)
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Mi cuenta
@@ -396,7 +397,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('gestiona-item', [ItemController::class, 'gestion'])->name('items.gestion');
-    Route::get('/items/{slug}/edit', [ItemController::class, 'edit'])->name('items.edit');
     Route::put('/items/{slug}', [ItemController::class, 'update'])->name('items.update');
     Route::delete('/items/{slug}', [ItemController::class, 'destroy'])->name('items.destroy');
 });

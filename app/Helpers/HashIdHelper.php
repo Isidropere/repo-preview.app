@@ -18,7 +18,10 @@ class HashIdHelper
 
     public static function decode(string $hash): ?int
     {
-        $decoded = self::hashids()->decode($hash);
+        // El slug puede ser "nombre-del-item-HASH" — extraemos solo la última parte
+        $parts = explode('-', $hash);
+        $hashPart = end($parts);
+        $decoded = self::hashids()->decode($hashPart);
         return $decoded[0] ?? null;
     }
 }
