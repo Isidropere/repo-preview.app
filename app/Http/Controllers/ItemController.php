@@ -692,9 +692,18 @@ class ItemController extends Controller
         Log::error('Error en ItemController', $errorData);
     }
 
-    public function showDetail($id)
+    public function showDetail($slug)
     {
         try {
+            // Extraer el hash (última parte después del último guión)
+            $parts = explode('-', $slug);
+            $hash  = array_pop($parts);
+            $id    = \App\Helpers\HashIdHelper::decode($hash);
+
+            if (!$id) {
+                abort(404, 'Producto no encontrado');
+            }
+
             $item = Item::with([
                     'categoria',
                     'imagenes',
@@ -730,7 +739,7 @@ class ItemController extends Controller
         } catch (Throwable $e) {
             $this->logError($e, [
                 'method' => 'showDetail',
-                'id_item' => $id,
+                'slug'   => $slug,
                 'request_params' => request()->all()
             ]);
 

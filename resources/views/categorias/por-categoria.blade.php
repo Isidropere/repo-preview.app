@@ -61,7 +61,7 @@
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
                     
                     {{-- Imagen del producto --}}
-                    <a href="{{ route('producto.detalle', $item->id_item) }}" class="relative block h-64 w-full overflow-hidden">
+                    <a href="{{ route('producto.detalle', $item->slug) }}" class="relative block h-64 w-full overflow-hidden">
                         <div class="skeleton-loader absolute inset-0"></div>
                         @php
                             $imagen = $item->imagenes->first();
@@ -92,7 +92,7 @@
 
                         {{-- Botones --}}
                         <div class="mt-3 flex justify-between items-center">
-                            <a href="{{ route('producto.detalle', $item->id_item) }}" 
+                            <a href="{{ route('producto.detalle', $item->slug) }}" 
                                class="text-blue-500 hover:text-blue-700 text-sm font-medium">
                                 Ver detalles
                             </a>

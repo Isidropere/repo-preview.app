@@ -185,7 +185,7 @@ function btnCopiar(string $id, string $label = ''): string {
                                     @endif
                                 </p>
                                 @if($pi->id_item)
-                                <a href="{{ route('producto.detalle', $pi->id_item) }}" target="_blank"
+                                <a href="{{ route('producto.detalle', $pi->item->slug) }}" target="_blank"
                                    class="text-xs text-primary hover:underline mt-0.5 inline-block">Ver artículo →</a>
                                 @endif
                             </div>

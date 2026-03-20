@@ -99,7 +99,7 @@
                             @forelse($productosIntercambio as $prod)
                             <div class="keen-slider__slide">
                                 <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
-                                    <a href="{{ route('producto.detalle', $prod->id_item) }}">
+                                    <a href="{{ route('producto.detalle', $prod->slug) }}">
                                         @php $imgProd = $prod->imagenes->first(); $imgValida = $imgProd && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd->nombre); @endphp
                                         @if($imgValida)
                                             <img alt="{{ $prod->item }}" src="{{ asset('storage/imgs/articulos/items/'.$imgProd->nombre) }}" class="h-56 w-full object-cover" loading="lazy">
@@ -108,7 +108,7 @@
                                         @endif
                                     </a>
                                     <div class="bg-white p-4 sm:p-6">
-                                        <a href="{{ route('producto.detalle', $prod->id_item) }}">
+                                        <a href="{{ route('producto.detalle', $prod->slug) }}">
                                             <h3 class="mt-0.5 text-lg text-gray-900">{{ $prod->item }}</h3>
                                         </a>
                                         <div class="flex justify-between">
@@ -219,7 +219,7 @@
                             @forelse($productosVenta as $prod)
                             <div class="keen-slider__slide">
                                 <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
-                                    <a href="{{ route('producto.detalle', $prod->id_item) }}">
+                                    <a href="{{ route('producto.detalle', $prod->slug) }}">
                                         @php $imgProd2 = $prod->imagenes->first(); $imgValida2 = $imgProd2 && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd2->nombre); @endphp
                                         @if($imgValida2)
                                             <img alt="{{ $prod->item }}" src="{{ asset('storage/imgs/articulos/items/'.$imgProd2->nombre) }}" class="h-56 w-full object-cover" loading="lazy">
@@ -228,14 +228,14 @@
                                         @endif
                                     </a>
                                     <div class="bg-white p-4 sm:p-6">
-                                        <a href="{{ route('producto.detalle', $prod->id_item) }}">
+                                        <a href="{{ route('producto.detalle', $prod->slug) }}">
                                             <h3 class="mt-0.5 text-lg text-gray-900">{{ $prod->item }}</h3>
                                         </a>
                                         <div class="flex justify-between">
                                             <h3 class="mt-2 line-clamp-3 text-md text-gray-500">
                                                 RD$ {{ number_format($prod->valor, 2) }}
                                             </h3>
-                                            <a href="{{ route('producto.detalle', $prod->id_item) }}">
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}">
                                                 <svg class="h-8 w-8 fill-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="10.5" cy="19.5" r="1.5"></circle><circle cx="17.5" cy="19.5" r="1.5"></circle><path d="M13 13h2v-2.99h2.99v-2H15V5.03h-2v2.98h-2.99v2H13V13z"></path><path d="M10 17h8a1 1 0 0 0 .93-.64L21.76 9h-2.14l-2.31 6h-6.64L6.18 4.23A2 2 0 0 0 4.33 3H2v2h2.33l4.75 11.38A1 1 0 0 0 10 17z"></path></svg>
                                             </a>
                                         </div>

@@ -208,9 +208,8 @@ Route::prefix('items')->group(function () {
     Route::get('/info/{id}', [ItemController::class, 'info'])->name('items.info');
     Route::get('/categoria/{id}', [ItemController::class, 'porCategoria'])->name('categorias.show');
     Route::get('/{id}', [ItemController::class, 'show'])->name('items.show');
-    Route::get('/producto/{id}', [ItemController::class, 'showDetail'])
-        ->name('producto.detalle')
-        ->where('id', '[0-9]+');
+    Route::get('/producto/{slug}', [ItemController::class, 'showDetail'])
+        ->name('producto.detalle');
 });
 
 

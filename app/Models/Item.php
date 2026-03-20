@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Helpers\HashIdHelper;
+use Illuminate\Support\Str;
 
 /**
  * ============================================================
@@ -141,4 +143,14 @@ class Item extends Model
     const CREATED_AT = 'fecha';
     const UPDATED_AT = null;
 
+    /**
+     * URL slug: nombre-del-item-HASH
+     * Ej: iphone-14-pro-max-xK9mP
+     */
+    public function getSlugAttribute(): string
+    {
+        $nombre = Str::slug($this->item);
+        $hash   = HashIdHelper::encode($this->id_item);
+        return "{$nombre}-{$hash}";
+    }
 }

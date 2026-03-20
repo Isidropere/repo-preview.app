@@ -54,7 +54,7 @@
             <div class="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col">
 
                 <!-- Imagen clicable -->
-                <a href="{{ route('producto.detalle', $item->id_item) }}" class="block overflow-hidden">
+                <a href="{{ route('producto.detalle', $item->slug) }}" class="block overflow-hidden">
                     <img src="{{ $imgSrc }}"
                          class="w-full h-48 object-cover hover:scale-105 transition-transform duration-200"
                          alt="{{ $item->item }}" loading="lazy"
@@ -63,7 +63,7 @@
 
                 <!-- Info -->
                 <div class="p-4 flex flex-col flex-1">
-                    <a href="{{ route('producto.detalle', $item->id_item) }}" class="hover:text-blue-600 transition-colors">
+                    <a href="{{ route('producto.detalle', $item->slug) }}" class="hover:text-blue-600 transition-colors">
                         <h2 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1 leading-snug">
                             {{ $item->item }}
                         </h2>
@@ -97,7 +97,7 @@
                         @endif
 
                         {{-- Botón intercambio --}}
-                        <a href="{{ route('producto.detalle', $item->id_item) }}#intercambio"
+                        <a href="{{ route('producto.detalle', $item->slug) }}#intercambio"
                            style="flex:1;display:flex;align-items:center;justify-content:center;gap:0.3rem;background:#fff;color:#059669;border:1.5px solid #10b981;border-radius:0.5rem;padding:0.45rem 0.5rem;font-size:0.72rem;font-weight:700;text-decoration:none;transition:background .15s;"
                            onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#fff'">
                             <svg style="width:0.8rem;height:0.8rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@
                         </a>
 
                         {{-- Ícono ver detalle --}}
-                        <a href="{{ route('producto.detalle', $item->id_item) }}"
+                        <a href="{{ route('producto.detalle', $item->slug) }}"
                            style="display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem 0.55rem;transition:background .15s;"
                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'"
                            title="Ver detalle">
