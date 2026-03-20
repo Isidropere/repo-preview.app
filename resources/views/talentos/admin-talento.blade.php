@@ -177,7 +177,7 @@
                                             <!-- Acciones - Siempre visibles -->
                                             <div class="flex-shrink-0">
                                                 <div class="flex flex-row flex-wrap gap-2">
-                                                    <a href="{{ route('items.VerDetalle', $item->id_item) }}" 
+                                                    <a href="{{ route('items.VerDetalle', $item->slug) }}" 
                                                        class="px-3 py-1.5 bg-blue-100 hover:text-primary rounded-md hover:bg-blue-200 flex items-center justify-center">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>

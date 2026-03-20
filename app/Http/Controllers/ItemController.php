@@ -787,10 +787,18 @@ class ItemController extends Controller
     }
 
   
-    public function VerDetalle($id)
+    public function VerDetalle($slug)
     {
         try {
-            Log::debug('Iniciando mÃ©todo VerDetalle', ['id' => $id]);
+            $parts = explode('-', $slug);
+            $hash  = array_pop($parts);
+            $id    = \App\Helpers\HashIdHelper::decode($hash);
+
+            if (!$id) {
+                abort(404, 'Producto no encontrado');
+            }
+
+            Log::debug('Iniciando método VerDetalle', ['id' => $id]);
 
             $item = Item::with(['usuario', 'categoria', 'imagenes', 'direcciones'])
                 ->findOrFail($id);
@@ -849,7 +857,7 @@ class ItemController extends Controller
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString(),
-                'id_item' => $id,
+                'slug' => $slug,
                 'request_params' => request()->all()
             ]);
 

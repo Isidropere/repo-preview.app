@@ -300,7 +300,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Rutas de items protegidas
     Route::prefix('items')->group(function () {
-        Route::get('/{id}/detalle', [ItemController::class, 'VerDetalle'])->name('items.VerDetalle');
+        Route::get('/{slug}/detalle', [ItemController::class, 'VerDetalle'])->name('items.VerDetalle');
         Route::get('/{id}/Talentoeditar', [ItemController::class, 'talentoedit'])->name('items.talentoedit');
         Route::put('/{id}/talentoupdate', [ItemController::class, 'talentoupdate'])->name('items.talentoupdate');
         Route::get('/', [ItemController::class, 'itemsCategoria29'])->name('items.categoria29');

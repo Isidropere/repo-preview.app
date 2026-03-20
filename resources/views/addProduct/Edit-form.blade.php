@@ -90,7 +90,7 @@
                                 </svg>
 
                                 <!-- Enlace con ícono de ojo y texto -->
-                                <a href="{{ route('items.VerDetalle', $item->id_item) }}"
+                                <a href="{{ route('items.VerDetalle', $item->slug) }}"
                                    class="ml-2 flex items-center text-sm font-medium text-gray-700 hover:text-primary">
 
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"

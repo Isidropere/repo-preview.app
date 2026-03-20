@@ -216,7 +216,7 @@
                                 <div class="flex justify-between">
                                     <div>
                                         <h3 class="text-sm text-gray-700">
-                                            <a href="{{ route('items.VerDetalle', $relatedItem->id_item) }}">
+                                            <a href="{{ route('items.VerDetalle', $relatedItem->slug) }}">
                                                 <span aria-hidden="true" class="absolute inset-0"></span>
                                                 {{ Str::limit($relatedItem->item, 30) }}
                                             </a>
@@ -233,7 +233,7 @@
                                         @else bg-red-100 text-red-800 @endif">
                                         {{ $relatedItem->condicion_text }}
                                     </span>
-                                    <a href="{{ route('items.VerDetalle', $relatedItem->id_item) }}" class="text-xs text-primary hover:text-hoverPrimary">Ver detalles</a>
+                                    <a href="{{ route('items.VerDetalle', $relatedItem->slug) }}" class="text-xs text-primary hover:text-hoverPrimary">Ver detalles</a>
                                 </div>
                             </div>
                         </div>
