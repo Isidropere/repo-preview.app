@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" style="fill: #F9852B;">
+  <!-- Silueta humana (talento) -->
+  <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm0 3.5c-3.5 0-6 1.5-6 2.5v2h12v-2c0-1-2.5-2.5-6-2.5z"></path>
+  
+  <!-- Engranaje (organización/trabajo en equipo) -->
+  <path d="M19 11h2v2h-2zm-4.5-6.3l1.4-1.4 1.4 1.4-1.4 1.4zM11 5h2V3h-2zM5.3 6.5L3.9 5.1 5.1 3.9l1.4 1.4zM5 11H3V9h2zm1.5 4.5L5.1 19l1.4 1.4 1.4-1.4zM11 19h2v-2h-2zm4.5 1.7l-1.4 1.4-1.4-1.4 1.4-1.4zM19 13h2v-2h-2z" opacity="0.7"></path>
+  
+  <!-- Corazón (pasión/dedicación) -->
+  <path d="M12 21.4l-1.6-1.4C6.5 16.2 4 13.4 4 10c0-3 2-5 5-5 1.8 0 3.5 1 4.5 2.5C14.5 6 16.2 5 18 5c3 0 5 2 5 5 0 3.4-2.5 6.2-6.4 10z" fill="#F9852B" opacity="0.9"></path>
+</svg>

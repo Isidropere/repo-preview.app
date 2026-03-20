@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\CompraTrazabilidad;
+use App\Models\ItemIntencionCompra;
+use App\Models\Negociacion;
+use App\Models\PagoCompra;
+
+/**
+ * ============================================================
+ * AdminComprasService — Lógica de negocio del panel admin
+ * ============================================================
+ *
+ * Gestiona las operaciones administrativas:
+ * - Obtener datos del panel principal con tabs
+ * - Actualizar estado de compras (con trazabilidad)
+ * - Actualizar estado de intercambios
+ *
+ * Estados de compra: pendiente → aprobado → enviado → entregado
+ *                              → rechazado / cancelado
+ *
+ * Estados de intercambio: Inicial → pendiente → contraoferta
+ *                                 → aceptado → completado
+ *                                 → rechazado / cancelado
+ * ============================================================
+ */
+class AdminComprasService
+{
+    public const ESTADOS_COMPRA = ['pendiente', 'aprobado', 'rechazado', 'enviado', 'entregado', 'cancelado'];
+    public const ESTADOS_INTERCAMBIO = ['Inicial', 'pendiente', 'aceptado', 'rechazado', 'contraoferta', 'completado', 'cancelado'];
+
+    /**
+     * Datos del panel principal con todas las pestañas.
+     */
+    public function obtenerDatosPanelPrincipal(string $tab, ?string $estatus, ?string $buscar): array
+    {
+        return [
+            'compras'                    => $this->queryCompras($tab, $estatus, $buscar)->paginate(20, ['*'], 'page_compras')->withQueryString(),
+            'ventas'                     => $this->queryVentas($tab, $buscar)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
+            'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
+            'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
+            'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar)->paginate(20, ['*'], 'page_ii')->withQueryString(),
+            'totalCompras'               => PagoCompra::count(),
+            'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
+            'totalIntercambios'          => Negociacion::count(),
+            'totalIntencionCompra'       => ItemIntencionCompra::whereHas('item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
+            'totalIntencionIntercambio'  => Negociacion::whereIn('estado', ['Inicial', 'pendiente', 'contraoferta'])->count(),
+            'estadosCompra'              => self::ESTADOS_COMPRA,
+            'estadosIntercambio'         => self::ESTADOS_INTERCAMBIO,
+            'tab'                        => $tab,
+        ];
+    }
+
+    /**
+     * Actualiza el estado de una compra y registra trazabilidad.
+     */
+    public function actualizarEstadoCompra(int $compraId, string $nuevoEstado, ?string $nota, int $adminId): array
+    {
+        $compra = PagoCompra::findOrFail($compraId);
+        $estadoAnterior = $compra->estatus;
+        $compra->update(['estatus' => $nuevoEstado]);
+
+        CompraTrazabilidad::create([
+            'id_pago_compra'  => $compra->id_pago_compra,
+            'estado_anterior' => $estadoAnterior,
+            'estado_nuevo'    => $nuevoEstado,
+            'nota'            => $nota,
+            'id_admin'        => $adminId,
+        ]);
+
+        return ['success' => true, 'message' => 'Estado actualizado correctamente.'];
+    }
+
+    /**
+     * Actualiza el estado de un intercambio.
+     */
+    public function actualizarEstadoIntercambio(int $intercambioId, string $nuevoEstado): array
+    {
+        $intercambio = Negociacion::findOrFail($intercambioId);
+        $intercambio->update(['estado' => $nuevoEstado]);
+
+        return ['success' => true, 'message' => 'Estado del intercambio actualizado.'];
+    }
+
+    // ───────────────────────────────────────────────────────
+    // Queries privadas
+    // ───────────────────────────────────────────────────────
+
+    private function queryCompras(string $tab, ?string $estatus, ?string $buscar)
+    {
+        $query = PagoCompra::with(['pagoItems.item.imagenes', 'carrito.usuario'])
+            ->orderByDesc('id_pago_compra');
+
+        if ($tab === 'compras') {
+            if ($estatus) $query->where('estatus', $estatus);
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->where('id_pago_compra', 'like', "%$buscar%")
+                    ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%")));
+            }
+        }
+
+        return $query;
+    }
+
+    private function queryVentas(string $tab, ?string $buscar)
+    {
+        $query = PagoCompra::with(['pagoItems.item.imagenes', 'pagoItems.item.usuario', 'carrito.usuario'])
+            ->whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
+            ->orderByDesc('id_pago_compra');
+
+        if ($tab === 'ventas' && $buscar) {
+            $query->where(fn($q) => $q
+                ->where('id_pago_compra', 'like', "%$buscar%")
+                ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('pagoItems.item.usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%")));
+        }
+
+        return $query;
+    }
+
+    private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar)
+    {
+        $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
+            ->orderByDesc('id_negociacion');
+
+        if ($tab === 'intercambios') {
+            if ($estatus) $query->where('estado', $estatus);
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
+            }
+        }
+
+        return $query;
+    }
+
+    private function queryIntencionCompra(string $tab, ?string $buscar)
+    {
+        $query = ItemIntencionCompra::with(['item.imagenes', 'item.usuario', 'carrito.usuario'])
+            ->whereHas('item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
+            ->orderByDesc('id_item_intencion_compra');
+
+        if ($tab === 'intencion_compra' && $buscar) {
+            $query->where(fn($q) => $q
+                ->whereHas('item', fn($q2) => $q2->where('item', 'like', "%$buscar%"))
+                ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%")));
+        }
+
+        return $query;
+    }
+
+    private function queryIntencionIntercambio(string $tab, ?string $buscar)
+    {
+        $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
+            ->whereIn('estado', ['Inicial', 'pendiente', 'contraoferta'])
+            ->orderByDesc('id_negociacion');
+
+        if ($tab === 'intencion_intercambio' && $buscar) {
+            $query->where(fn($q) => $q
+                ->whereHas('usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('item', fn($q2) => $q2
+                    ->where('item', 'like', "%$buscar%")));
+        }
+
+        return $query;
+    }
+}
