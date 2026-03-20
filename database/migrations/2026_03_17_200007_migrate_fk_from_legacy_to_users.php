@@ -25,6 +25,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         // ── carritos: drop FK vieja, crear nueva a users ──
         $this->dropFkSafe('carritos', 'carritos_ibfk_1');
         DB::statement('ALTER TABLE `carritos` MODIFY `id_user` BIGINT(20) UNSIGNED NOT NULL');

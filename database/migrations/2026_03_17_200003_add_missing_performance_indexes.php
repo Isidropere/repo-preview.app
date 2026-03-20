@@ -12,23 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         // items: query del home (estatus + tipo_trans + fecha)
-        Schema::table('items', function (Blueprint $table) {
-            $table->index(['estatus', 'tipo_trans', 'fecha'], 'idx_items_estatus_tipo_fecha');
-            $table->index(['id_user', 'estatus'], 'idx_items_user_estatus');
-        });
+        if (Schema::hasTable('items')) {
+            Schema::table('items', function (Blueprint $table) {
+                $table->index(['estatus', 'tipo_trans', 'fecha'], 'idx_items_estatus_tipo_fecha');
+                $table->index(['id_user', 'estatus'], 'idx_items_user_estatus');
+            });
+        }
 
         // items_intencion_compra: checkout filtra seleccionados por carrito
-        if (Schema::hasColumn('items_intencion_compra', 'es_seleccionado')) {
+        if (Schema::hasTable('items_intencion_compra') && Schema::hasColumn('items_intencion_compra', 'es_seleccionado')) {
             Schema::table('items_intencion_compra', function (Blueprint $table) {
                 $table->index(['id_carrito', 'es_seleccionado'], 'idx_iic_carrito_seleccionado');
             });
         }
 
         // pagos_compra: historial ordena por fecha, admin filtra por estatus
-        Schema::table('pagos_compra', function (Blueprint $table) {
-            $table->index('fecha', 'idx_pagos_compra_fecha');
-            $table->index('estatus', 'idx_pagos_compra_estatus');
-        });
+        if (Schema::hasTable('pagos_compra')) {
+            Schema::table('pagos_compra', function (Blueprint $table) {
+                $table->index('fecha', 'idx_pagos_compra_fecha');
+                $table->index('estatus', 'idx_pagos_compra_estatus');
+            });
+        }
 
         // negociaciones: historial de negociaciones por usuario
         if (Schema::hasTable('negociaciones')) {
@@ -40,19 +44,25 @@ return new class extends Migration
         }
 
         // imagenes_item: siempre se cargan ordenadas por item
-        Schema::table('imagenes_item', function (Blueprint $table) {
-            $table->index(['id_item', 'orden_visualizacion'], 'idx_imagenes_item_orden');
-        });
+        if (Schema::hasTable('imagenes_item')) {
+            Schema::table('imagenes_item', function (Blueprint $table) {
+                $table->index(['id_item', 'orden_visualizacion'], 'idx_imagenes_item_orden');
+            });
+        }
 
         // item_views: estadísticas de vistas por item
-        Schema::table('item_views', function (Blueprint $table) {
-            $table->index(['id_item', 'created_at'], 'idx_item_views_item_fecha');
-        });
+        if (Schema::hasTable('item_views')) {
+            Schema::table('item_views', function (Blueprint $table) {
+                $table->index(['id_item', 'created_at'], 'idx_item_views_item_fecha');
+            });
+        }
 
         // direcciones: buscar predeterminada del usuario
-        Schema::table('direcciones', function (Blueprint $table) {
-            $table->index(['id_user', 'es_predeterminada'], 'idx_direcciones_user_predet');
-        });
+        if (Schema::hasTable('direcciones')) {
+            Schema::table('direcciones', function (Blueprint $table) {
+                $table->index(['id_user', 'es_predeterminada'], 'idx_direcciones_user_predet');
+            });
+        }
     }
 
     public function down(): void

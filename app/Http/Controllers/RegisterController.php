@@ -16,39 +16,43 @@ class RegisterController extends Controller
 {
     public function showRegistroForm()
     {
-        $tipos_usuarios = Tipos_usuario::where('id_tipo_usuario', '!=', 3)->get();
+        $tipos_usuarios = Tipos_usuario::whereNotIn('id_tipo_usuario', [3, 4])->get();
         return view('registro', compact('tipos_usuarios'));
     }
 
     public function registrarUsuario(Request $request)
     {
         $validado = $request->validate([
-            'nombres' => 'required|string|max:255',
-            'apellidos' => 'required|string|max:255',
-            'telefono' => 'required|string|max:10',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'tipos_usuario_id' => 'required|integer|exists:tipos_usuarios,id_tipo_usuario|not_in:3,4',
-            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'nombres'          => 'required|string|max:255',
+            'apellidos'        => 'required|string|max:255',
+            'telefono'         => 'required|string|max:14',
+            'email'            => 'required|email|unique:users',
+            'password'         => 'required|string|min:8|confirmed',
+            'tipos_usuario_id' => 'required|integer|exists:tipos_usuarios,id_tipo_usuario|not_in:3',
+            'profile_photo'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
+
         $nombre_usuario_generado = strtolower(
             preg_replace('/\s+/', '', $validado['nombres'] . $validado['apellidos'])
         );
 
-
-        $usuario = User::create([
-            'nombres' => $validado['nombres'],
-            'apellidos' => $validado['apellidos'],
-            'telefono' => $validado['telefono'],
-            'email' => $validado['email'],
-            'nombre_usuario' => $validado['email'],  
-            'isAdmin' => false,
-            'password' => Hash::make($validado['password']),
-            'estatus' => true,
-            'tipos_usuario_id' => $validado['tipos_usuario_id'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        try {
+            $usuario = User::create([
+                'nombres'         => $validado['nombres'],
+                'apellidos'       => $validado['apellidos'],
+                'telefono'        => $validado['telefono'],
+                'email'           => $validado['email'],
+                'nombre_usuario'  => $nombre_usuario_generado,
+                'password'        => Hash::make($validado['password']),
+                'estatus'         => true,
+                'id_tipo_usuario' => $validado['tipos_usuario_id'],
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error al crear usuario', ['error' => $e->getMessage()]);
+            return back()->withInput()->withErrors(['email' => 'Error al crear la cuenta: ' . $e->getMessage()]);
+        }
 
         // Guardar imagen localmente
         if ($request->hasFile('profile_photo')) {
@@ -75,38 +79,14 @@ class RegisterController extends Controller
                 }
 
                 // Configurar ruta de almacenamiento
-                $directory = 'userImg/img';
-                $prefix = 'userImg';
-                $fileName = $prefix . '_' . $usuario->id . '_' . now()->format('YmdHis') . '.' . $file->extension();
-                Log::debug('Nombre de archivo generado', ['file_name' => $fileName]);
-
-                // Crear directorio si no existe
-                if (!Storage::disk('public')->exists($directory)) {
-                    Storage::disk('public')->makeDirectory($directory, 0755, true);
-                    Log::info('Directorio creado', ['path' => $directory]);
+                $directory = public_path('imgs/profiles');
+                if (!file_exists($directory)) {
+                    mkdir($directory, 0755, true);
                 }
-
-                // Guardar archivo
-                $path = Storage::disk('public')->putFileAs(
-                    $directory,
-                    $file,
-                    $fileName
-                );
-
-                if (!$path) {
-                    Log::error('Error al guardar archivo en almacenamiento local');
-                    throw new \Exception('No se pudo guardar el archivo');
-                }
-
-                // Guardar ruta en base de datos
-                $relativePath = $directory . '/' . $fileName;
-                $usuario->profile_photo_path = $relativePath;
+                $fileName = 'profile_' . $usuario->id . '_' . time() . '.' . $file->extension();
+                $file->move($directory, $fileName);
+                $usuario->profile_photo_path = 'imgs/profiles/' . $fileName;
                 $usuario->save();
-
-                Log::info('Imagen guardada localmente con éxito', [
-                    'user_id' => $usuario->id,
-                    'path' => $relativePath
-                ]);
 
             } catch (\Throwable $e) {
                 Log::error('Error al guardar imagen localmente', [
@@ -119,6 +99,10 @@ class RegisterController extends Controller
         }
 
         $usuario->sendEmailVerificationNotification();
-        return redirect()->route('login')->with('success', 'Debes verificar tu correo electrónico antes de iniciar sesión.');
+
+        // Auto-login después del registro
+        Auth::login($usuario);
+
+        return redirect()->route('home')->with('success', '¡Bienvenido! Tu cuenta ha sido creada exitosamente.');
     }
 }

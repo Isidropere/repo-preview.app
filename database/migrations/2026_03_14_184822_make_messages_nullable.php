@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('messages')) {
+            return;
+        }
         Schema::table('messages', function (Blueprint $table) {
             $table->integer('id_oferta')->nullable()->change();
             $table->integer('id_paquete')->nullable()->change();

@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('items')) {
+            return;
+        }
         Schema::table('items', function (Blueprint $table) {
             $table->boolean('tiene_video')->default(false)->after('presentacion');
         });

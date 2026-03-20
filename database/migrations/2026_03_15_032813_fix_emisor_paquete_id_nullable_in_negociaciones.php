@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('negociaciones')) {
+            return;
+        }
         Schema::table('negociaciones', function (Blueprint $table) {
             // Hacer nullable para permitir negociaciones sin paquete (solo oferta monetaria)
             $table->unsignedInteger('emisor_paquete_id')->nullable()->change();

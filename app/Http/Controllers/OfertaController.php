@@ -9,9 +9,12 @@ class OfertaController extends Controller
 {
     public function index()
     {
+        $userId = auth()->id();
         return response()->json([
             'success' => true,
-            'data' => Oferta::with(['oferente', 'beneficiario', 'paquete.itemsOferta.item'])->get(),
+            'data' => Oferta::with(['oferente', 'beneficiario', 'paquete.itemsOferta.item'])
+                ->where(fn($q) => $q->where('id_oferente', $userId)->orWhere('id_beneficiario', $userId))
+                ->get(),
             'message' => '',
         ]);
     }
@@ -38,9 +41,14 @@ class OfertaController extends Controller
 
     public function show($id)
     {
+        $userId = auth()->id();
+        $oferta = Oferta::with(['oferente', 'beneficiario', 'paquete.itemsOferta.item'])
+            ->where(fn($q) => $q->where('id_oferente', $userId)->orWhere('id_beneficiario', $userId))
+            ->findOrFail($id);
+
         return response()->json([
             'success' => true,
-            'data' => Oferta::with(['oferente', 'beneficiario', 'paquete.itemsOferta.item'])->findOrFail($id),
+            'data' => $oferta,
             'message' => '',
         ]);
     }
@@ -51,7 +59,9 @@ class OfertaController extends Controller
             'estatus' => 'sometimes|integer|in:0,1,2',
         ]);
 
-        $oferta = Oferta::findOrFail($id);
+        $userId = auth()->id();
+        $oferta = Oferta::where(fn($q) => $q->where('id_oferente', $userId)->orWhere('id_beneficiario', $userId))
+            ->findOrFail($id);
         $oferta->update($validated);
 
         return response()->json([
@@ -63,7 +73,8 @@ class OfertaController extends Controller
 
     public function destroy($id)
     {
-        Oferta::findOrFail($id)->delete();
+        $userId = auth()->id();
+        Oferta::where('id_oferente', $userId)->findOrFail($id)->delete();
 
         return response()->json([
             'success' => true,

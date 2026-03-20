@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('items')) {
+            return;
+        }
         \DB::table('items')->update([
             'created_at' => now(),
             'updated_at' => now()

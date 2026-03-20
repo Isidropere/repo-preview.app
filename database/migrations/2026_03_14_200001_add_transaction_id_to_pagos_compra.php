@@ -12,8 +12,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('pagos_compra')) {
+            return;
+        }
         Schema::table('pagos_compra', function (Blueprint $table) {
-            // ID de transacción del proveedor (pnRef en CardNet, pi_xxx en Stripe)
             $table->string('transaction_id')->nullable()->after('autorizacion_pago');
         });
     }

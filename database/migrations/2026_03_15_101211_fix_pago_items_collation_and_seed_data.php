@@ -9,6 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         // ─────────────────────────────────────────────────────────────
         // 1. ARREGLAR COLLATION
         //    pagos_compra.id_pago_compra  → utf8mb4_general_ci

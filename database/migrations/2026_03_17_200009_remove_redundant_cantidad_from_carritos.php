@@ -12,8 +12,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('carritos')) {
+            return;
+        }
         Schema::table('carritos', function (Blueprint $table) {
-            $table->dropColumn('cantidad');
         });
     }
 

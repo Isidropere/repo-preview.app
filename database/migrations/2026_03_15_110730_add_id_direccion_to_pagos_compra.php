@@ -8,8 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('pagos_compra')) {
+            return;
+        }
         Schema::table('pagos_compra', function (Blueprint $table) {
-            $table->integer('id_direccion')->nullable()->after('cantidad_items');
             $table->foreign('id_direccion')
                   ->references('id_direccion')
                   ->on('direcciones')

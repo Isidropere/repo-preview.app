@@ -8,8 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('tarjetas_pagos')) {
+            return;
+        }
         Schema::table('tarjetas_pagos', function (Blueprint $table) {
-            // Agregar no_tarjeta para CardNet (número completo, solo en cobro)
             if (!Schema::hasColumn('tarjetas_pagos', 'no_tarjeta')) {
                 $table->string('no_tarjeta', 19)->nullable()->after('id_tarjeta');
             }

@@ -9,6 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         // 1. Cambiar estatus de tinyint a varchar con valor por defecto 'pendiente'
         DB::statement("ALTER TABLE pagos_compra MODIFY COLUMN estatus VARCHAR(30) NOT NULL DEFAULT 'pendiente'");
 

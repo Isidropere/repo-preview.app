@@ -7,6 +7,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         // Unificar collation de la FK id_pago_compra en ambas tablas
         // a utf8mb4_unicode_ci (estándar de Laravel)
         DB::statement("ALTER TABLE `pagos_compra`

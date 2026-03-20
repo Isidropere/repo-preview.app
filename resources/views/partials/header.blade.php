@@ -144,11 +144,15 @@
                                         class="hs-dropdown-toggle flex items-center gap-2 text-sm text-primary hover:text-hoverPrimary p-2" 
                                         aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
 
-                                    <img src="{{ Auth::user()->profile_photo_path && file_exists(public_path(Auth::user()->profile_photo_path)) 
-                                                 ? asset(Auth::user()->profile_photo_path) 
-                                                 : asset('storage/imgs/default-profile.png') }}"
-                                         alt="Foto de perfil" 
-                                         class="h-8 w-8 rounded-full flex-shrink-0">
+                                    @php
+                                        $photoPath = Auth::user()->profile_photo_path;
+                                        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->nombres . ' ' . Auth::user()->apellidos) . '&background=f58634&color=fff&size=64&rounded=true';
+                                        $photoUrl = $photoPath ? asset($photoPath) : $avatarUrl;
+                                    @endphp
+                                    <img src="{{ $photoUrl }}"
+                                         alt="Foto de perfil"
+                                         onerror="this.onerror=null;this.src='{{ $avatarUrl }}'"
+                                         style="width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%;object-fit:cover;border:2px solid #f58634;flex-shrink:0;display:inline-block;">
 
                                     <span class="whitespace-nowrap hidden sm:inline">Hola, {{ Auth::user()->nombres }}</span>
                                 </button>
@@ -157,9 +161,15 @@
                                         role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-floating-dark" data-astro-cid-pwmmw5ba>
 
                                     <div class="my-4 md:px-1 space-y-1 text-sm text-center text-primary flex flex-col gap-y-2 items-center" data-astro-cid-pwmmw5ba>
-    
-                                        <div class="flex gap-4 items-center" data-astro-cid-pwmmw5ba>
-                                            <p>Gestiona tu cuenta</p>
+
+                                        {{-- Foto + nombre en el dropdown --}}
+                                        <div class="flex flex-col items-center gap-2 pb-1">
+                                            <img src="{{ $photoUrl }}"
+                                                 alt="Foto de perfil"
+                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nombres . "+" . Auth::user()->apellidos) }}&background=f58634&color=fff&size=64'"
+                                                 style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #f58634;">
+                                            <p class="font-medium text-gray-700 text-sm">{{ Auth::user()->nombres }} {{ Auth::user()->apellidos }}</p>
+                                            <p class="text-xs text-gray-400">Gestiona tu cuenta</p>
                                         </div>
                                         <hr class="border border-gray-200 w-full" data-astro-cid-pwmmw5ba>
                                             <a class="flex gap-x-3.5 py-2 md:px-3 w-full items-center justify-left rounded-lg hover:bg-gray-100 focus:outline-none hover:underline transition-all" href="{{ route('tu_cuenta') }}" data-astro-cid-pwmmw5ba>
@@ -175,17 +185,15 @@
                                                 Panel Admin
                                             </a>
                                             @endif
-                    
+
                                         <form method="POST" action="{{ route('logout') }}" class="hs-dropdown-toggle flex items-center w-full text-sm text-primary hover:text-hoverPrimary relative" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown"
                                                 data-astro-cid-pwmmw5ba>
                                         @csrf
                                         <button type="submit" class="flex items-center gap-x-3.5 py-2 md:px-3 w-full justify-left rounded-lg text-red-600 hover:text-red-700 focus:outline-none hover:bg-gray-100 hover:underline transition-all">
-                        
-                                            <img src="/imgs/dropdown_icons/logout1.png" class="h-8 w-8 rounded-full mr-4" alt="Imagen de Notificación 2" data-astro-cid-pwmmw5ba>
-                                            Cerrar Sesión
-              
+                                            <img src="/imgs/dropdown_icons/logout1.png" class="h-8 w-8 rounded-full mr-4" alt="Cerrar sesion" data-astro-cid-pwmmw5ba>
+                                            Cerrar Sesion
                                         </button>
-                                        </form>       
+                                        </form>
                                     </div>
                              </div>
                          @else

@@ -26,6 +26,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('predefined_messages')) {
+            return;
+        }
         // 1. Ampliar el ENUM de 'tipo' para incluir los nuevos valores
         DB::statement("ALTER TABLE `predefined_messages`
             MODIFY `tipo` VARCHAR(50) NULL DEFAULT 'general'");

@@ -64,16 +64,32 @@ class UserController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'nombres'        => 'required|string|max:100',
-            'apellidos'      => 'required|string|max:100',
+            'nombres'        => 'sometimes|string|max:100',
+            'apellidos'      => 'sometimes|string|max:100',
             'telefono'       => 'nullable|string|max:20',
             'nombre_usuario' => 'nullable|string|max:50|unique:users,nombre_usuario,' . auth()->id(),
+            'profile_photo'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $user = auth()->user();
-        $user->update($request->only('nombres', 'apellidos', 'telefono', 'nombre_usuario'));
 
-        return redirect()->route('profile')->with('success', 'Perfil actualizado correctamente.');
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $fileName = 'profile_' . $user->id . '_' . time() . '.' . $file->extension();
+            // Guardar en public/ de Laravel Y en htdocs de Apache
+            $file->move(public_path('imgs/profiles'), $fileName);
+            @copy(public_path('imgs/profiles/' . $fileName), 'C:/xampp/htdocs/imgs/profiles/' . $fileName);
+            $user->profile_photo_path = 'imgs/profiles/' . $fileName;
+        }
+
+        $fields = array_filter($request->only('nombres', 'apellidos', 'telefono', 'nombre_usuario'));
+        if (!empty($fields)) {
+            $user->update($fields);
+        } else {
+            $user->save();
+        }
+
+        return redirect()->route('tu_cuenta')->with('success', 'Perfil actualizado correctamente.');
     }
 
     /* ── Resource methods (admin) ── */

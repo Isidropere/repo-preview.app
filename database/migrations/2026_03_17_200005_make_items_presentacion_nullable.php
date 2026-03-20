@@ -12,8 +12,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('items')) {
+            return;
+        }
         Schema::table('items', function (Blueprint $table) {
-            $table->string('presentacion', 250)->nullable()->change();
         });
     }
 

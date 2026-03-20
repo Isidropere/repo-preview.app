@@ -44,8 +44,23 @@
                             data-astro-cid-phpud7wc>O</div>
                             <!-- Form --> 
                             <!-- Formulario de registro -->
-                        <form id="registroForm" action="{{ route('registro.usuario') }}" method="POST" data-astro-cid-phpud7wc>
-                        @csrf <!-- Token de seguridad para Laravel -->
+                        <form id="registroForm" action="{{ route('registro.usuario') }}" method="POST" enctype="multipart/form-data" data-astro-cid-phpud7wc>
+                        @csrf
+                        {{-- Errores de validación --}}
+                        @if ($errors->any())
+                            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <ul class="text-sm text-red-600 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        @if (session('success'))
+                            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-600">
+                                {{ session('success') }}
+                            </div>
+                        @endif
                         <div class="alert alert-danger">
                         </div>
                         <div class="grid gap-y-4" data-astro-cid-phpud7wc>

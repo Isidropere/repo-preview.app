@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('items')) {
+            return;
+        }
         Schema::table('items', function (Blueprint $table) {
-            $table->timestamps(); // Esto agregará created_at y updated_at
+            if (!Schema::hasColumn('items', 'created_at')) {
+                $table->timestamps();
+            }
         });
     }
 
@@ -21,8 +26,11 @@ return new class extends Migration
      */
     public function down()
     {
+        if (!Schema::hasTable('items')) {
+            return;
+        }
         Schema::table('items', function (Blueprint $table) {
-            $table->dropTimestamps(); // Esto las eliminará si haces rollback
+            $table->dropTimestamps();
         });
     }
 };

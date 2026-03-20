@@ -12,6 +12,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('direcciones')) {
+            return;
+        }
         Schema::table('direcciones', function (Blueprint $table) {
             $table->string('id_provincia', 5)->change();   // era varchar(100), real: '01'-'32'
             $table->string('id_municipio', 10)->nullable()->change(); // era varchar(100), real: '01-01'

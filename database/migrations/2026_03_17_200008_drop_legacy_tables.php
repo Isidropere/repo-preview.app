@@ -17,6 +17,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         // Primero eliminar FK que apuntan a estas tablas (si quedó alguna)
         $this->dropRemainingFks();
 
