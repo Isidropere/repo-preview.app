@@ -9,58 +9,89 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
+    private function indexExists(string $table, string $indexName): bool
+    {
+        $indexes = \Illuminate\Support\Facades\DB::select(
+            "SHOW INDEX FROM `{$table}` WHERE Key_name = ?",
+            [$indexName]
+        );
+        return count($indexes) > 0;
+    }
+
     public function up(): void
     {
         // items: query del home (estatus + tipo_trans + fecha)
         if (Schema::hasTable('items')) {
             Schema::table('items', function (Blueprint $table) {
-                $table->index(['estatus', 'tipo_trans', 'fecha'], 'idx_items_estatus_tipo_fecha');
-                $table->index(['id_user', 'estatus'], 'idx_items_user_estatus');
+                if (!$this->indexExists('items', 'idx_items_estatus_tipo_fecha')) {
+                    $table->index(['estatus', 'tipo_trans', 'fecha'], 'idx_items_estatus_tipo_fecha');
+                }
+                if (!$this->indexExists('items', 'idx_items_user_estatus')) {
+                    $table->index(['id_user', 'estatus'], 'idx_items_user_estatus');
+                }
             });
         }
 
         // items_intencion_compra: checkout filtra seleccionados por carrito
         if (Schema::hasTable('items_intencion_compra') && Schema::hasColumn('items_intencion_compra', 'es_seleccionado')) {
             Schema::table('items_intencion_compra', function (Blueprint $table) {
-                $table->index(['id_carrito', 'es_seleccionado'], 'idx_iic_carrito_seleccionado');
+                if (!$this->indexExists('items_intencion_compra', 'idx_iic_carrito_seleccionado')) {
+                    $table->index(['id_carrito', 'es_seleccionado'], 'idx_iic_carrito_seleccionado');
+                }
             });
         }
 
         // pagos_compra: historial ordena por fecha, admin filtra por estatus
         if (Schema::hasTable('pagos_compra')) {
             Schema::table('pagos_compra', function (Blueprint $table) {
-                $table->index('fecha', 'idx_pagos_compra_fecha');
-                $table->index('estatus', 'idx_pagos_compra_estatus');
+                if (!$this->indexExists('pagos_compra', 'idx_pagos_compra_fecha')) {
+                    $table->index('fecha', 'idx_pagos_compra_fecha');
+                }
+                if (!$this->indexExists('pagos_compra', 'idx_pagos_compra_estatus')) {
+                    $table->index('estatus', 'idx_pagos_compra_estatus');
+                }
             });
         }
 
         // negociaciones: historial de negociaciones por usuario
         if (Schema::hasTable('negociaciones')) {
             Schema::table('negociaciones', function (Blueprint $table) {
-                $table->index('usuario_emisor_id', 'idx_negociaciones_emisor');
-                $table->index('usuario_receptor_id', 'idx_negociaciones_receptor');
-                $table->index('receptor_item_id', 'idx_negociaciones_item');
+                if (!$this->indexExists('negociaciones', 'idx_negociaciones_emisor')) {
+                    $table->index('usuario_emisor_id', 'idx_negociaciones_emisor');
+                }
+                if (!$this->indexExists('negociaciones', 'idx_negociaciones_receptor')) {
+                    $table->index('usuario_receptor_id', 'idx_negociaciones_receptor');
+                }
+                if (!$this->indexExists('negociaciones', 'idx_negociaciones_item')) {
+                    $table->index('receptor_item_id', 'idx_negociaciones_item');
+                }
             });
         }
 
         // imagenes_item: siempre se cargan ordenadas por item
         if (Schema::hasTable('imagenes_item')) {
             Schema::table('imagenes_item', function (Blueprint $table) {
-                $table->index(['id_item', 'orden_visualizacion'], 'idx_imagenes_item_orden');
+                if (!$this->indexExists('imagenes_item', 'idx_imagenes_item_orden')) {
+                    $table->index(['id_item', 'orden_visualizacion'], 'idx_imagenes_item_orden');
+                }
             });
         }
 
         // item_views: estadísticas de vistas por item
         if (Schema::hasTable('item_views')) {
             Schema::table('item_views', function (Blueprint $table) {
-                $table->index(['id_item', 'created_at'], 'idx_item_views_item_fecha');
+                if (!$this->indexExists('item_views', 'idx_item_views_item_fecha')) {
+                    $table->index(['id_item', 'created_at'], 'idx_item_views_item_fecha');
+                }
             });
         }
 
         // direcciones: buscar predeterminada del usuario
         if (Schema::hasTable('direcciones')) {
             Schema::table('direcciones', function (Blueprint $table) {
-                $table->index(['id_user', 'es_predeterminada'], 'idx_direcciones_user_predet');
+                if (!$this->indexExists('direcciones', 'idx_direcciones_user_predet')) {
+                    $table->index(['id_user', 'es_predeterminada'], 'idx_direcciones_user_predet');
+                }
             });
         }
     }

@@ -31,23 +31,29 @@ return new class extends Migration
         // ── carritos: drop FK vieja, crear nueva a users ──
         $this->dropFkSafe('carritos', 'carritos_ibfk_1');
         DB::statement('ALTER TABLE `carritos` MODIFY `id_user` BIGINT(20) UNSIGNED NOT NULL');
-        Schema::table('carritos', function ($table) {
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('carritos', 'carritos_id_user_foreign')) {
+            Schema::table('carritos', function ($table) {
+                $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
 
         // ── items: drop FK vieja, crear nueva a users ──
         $this->dropFkSafe('items', 'items_ibfk_1');
         DB::statement('ALTER TABLE `items` MODIFY `id_user` BIGINT(20) UNSIGNED NOT NULL');
-        Schema::table('items', function ($table) {
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('items', 'items_id_user_foreign')) {
+            Schema::table('items', function ($table) {
+                $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
 
         // ── direcciones: drop FK vieja, crear nueva a users ──
         $this->dropFkSafe('direcciones', 'direcciones_ibfk_3');
         DB::statement('ALTER TABLE `direcciones` MODIFY `id_user` BIGINT(20) UNSIGNED NULL');
-        Schema::table('direcciones', function ($table) {
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('direcciones', 'direcciones_id_user_foreign')) {
+            Schema::table('direcciones', function ($table) {
+                $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
 
         // ── tarjetas_pagos: renombrar id_miembro → id_user, nueva FK ──
         $this->dropFkSafe('tarjetas_pagos', 'tarjetas_pagos_ibfk_1');
@@ -56,40 +62,63 @@ return new class extends Migration
         } elseif (Schema::hasColumn('tarjetas_pagos', 'id_user')) {
             DB::statement('ALTER TABLE `tarjetas_pagos` MODIFY `id_user` BIGINT(20) UNSIGNED NOT NULL');
         }
-        Schema::table('tarjetas_pagos', function ($table) {
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('tarjetas_pagos', 'tarjetas_pagos_id_user_foreign')) {
+            Schema::table('tarjetas_pagos', function ($table) {
+                $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
 
-        // ── paquetes: beneficiario → users.id ──
+        // ── paquetes: id_user → users.id (columna ya se llama id_user, no beneficiario) ──
         $this->dropFkSafe('paquetes', 'paquetes_ibfk_1');
-        DB::statement('ALTER TABLE `paquetes` MODIFY `beneficiario` BIGINT(20) UNSIGNED NOT NULL');
-        Schema::table('paquetes', function ($table) {
-            $table->foreign('beneficiario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (Schema::hasColumn('paquetes', 'beneficiario')) {
+            DB::statement('ALTER TABLE `paquetes` MODIFY `beneficiario` BIGINT(20) UNSIGNED NOT NULL');
+            if (!$this->fkExists('paquetes', 'paquetes_beneficiario_foreign')) {
+                Schema::table('paquetes', function ($table) {
+                    $table->foreign('beneficiario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+                });
+            }
+        } elseif (Schema::hasColumn('paquetes', 'id_user')) {
+            DB::statement('ALTER TABLE `paquetes` MODIFY `id_user` BIGINT(20) UNSIGNED NOT NULL');
+            if (!$this->fkExists('paquetes', 'paquetes_id_user_foreign')) {
+                Schema::table('paquetes', function ($table) {
+                    $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+                });
+            }
+        }
 
         // ── ofertas: oferente y beneficiario → users.id ──
         $this->dropFkSafe('ofertas', 'ofertas_ibfk_1');
         $this->dropFkSafe('ofertas', 'ofertas_ibfk_2');
         DB::statement('ALTER TABLE `ofertas` MODIFY `oferente` BIGINT(20) UNSIGNED NOT NULL');
         DB::statement('ALTER TABLE `ofertas` MODIFY `beneficiario` BIGINT(20) UNSIGNED NOT NULL');
-        Schema::table('ofertas', function ($table) {
-            $table->foreign('oferente')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('beneficiario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('ofertas', 'ofertas_oferente_foreign')) {
+            Schema::table('ofertas', function ($table) {
+                $table->foreign('oferente')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
+        if (!$this->fkExists('ofertas', 'ofertas_beneficiario_foreign')) {
+            Schema::table('ofertas', function ($table) {
+                $table->foreign('beneficiario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
 
         // ── ratings: id_usuario → users.id, id_miembro → id_user_rated ──
         $this->dropFkSafe('ratings', 'ratings_ibfk_1');
         $this->dropFkSafe('ratings', 'ratings_ibfk_2');
         DB::statement('ALTER TABLE `ratings` MODIFY `id_usuario` BIGINT(20) UNSIGNED NOT NULL');
-        Schema::table('ratings', function ($table) {
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-        });
+        if (!$this->fkExists('ratings', 'ratings_id_usuario_foreign')) {
+            Schema::table('ratings', function ($table) {
+                $table->foreign('id_usuario')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            });
+        }
         // id_miembro en ratings es nullable, lo renombramos a id_user_rated
         if (Schema::hasColumn('ratings', 'id_miembro')) {
             DB::statement('ALTER TABLE `ratings` CHANGE `id_miembro` `id_user_rated` BIGINT(20) UNSIGNED NULL');
-            Schema::table('ratings', function ($table) {
-                $table->foreign('id_user_rated')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
-            });
+            if (!$this->fkExists('ratings', 'ratings_id_user_rated_foreign')) {
+                Schema::table('ratings', function ($table) {
+                    $table->foreign('id_user_rated')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
+                });
+            }
         }
     }
 
@@ -143,5 +172,18 @@ return new class extends Migration
         } catch (\Throwable $e) {
             // FK no existe, continuar
         }
+    }
+
+    /**
+     * Verifica si un FK constraint ya existe.
+     */
+    private function fkExists(string $tabla, string $constraint): bool
+    {
+        $result = DB::select(
+            "SELECT COUNT(*) as cnt FROM information_schema.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = 'FOREIGN KEY'",
+            [$tabla, $constraint]
+        );
+        return ($result[0]->cnt ?? 0) > 0;
     }
 };

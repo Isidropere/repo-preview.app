@@ -46,9 +46,15 @@ return new class extends Migration
         if (DB::getDriverName() !== 'mysql') {
             return;
         }
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         foreach ($this->tablas as $tabla) {
-            DB::statement("ALTER TABLE `{$tabla}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            try {
+                DB::statement("ALTER TABLE `{$tabla}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            } catch (\Exception $e) {
+                // Tabla no existe o ya tiene el collation correcto — continuar
+            }
         }
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 
     public function down(): void
@@ -56,8 +62,14 @@ return new class extends Migration
         if (DB::getDriverName() !== 'mysql') {
             return;
         }
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         foreach ($this->tablas as $tabla) {
-            DB::statement("ALTER TABLE `{$tabla}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+            try {
+                DB::statement("ALTER TABLE `{$tabla}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+            } catch (\Exception $e) {
+                // Tabla no existe — continuar
+            }
         }
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 };

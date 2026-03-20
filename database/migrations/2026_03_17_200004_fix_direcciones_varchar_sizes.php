@@ -15,17 +15,17 @@ return new class extends Migration
         if (!Schema::hasTable('direcciones')) {
             return;
         }
-        Schema::table('direcciones', function (Blueprint $table) {
-            $table->string('id_provincia', 5)->change();   // era varchar(100), real: '01'-'32'
-            $table->string('id_municipio', 10)->nullable()->change(); // era varchar(100), real: '01-01'
-        });
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `direcciones` MODIFY `id_provincia` varchar(5) NOT NULL");
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `direcciones` MODIFY `id_municipio` varchar(10) NULL");
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 
     public function down(): void
     {
-        Schema::table('direcciones', function (Blueprint $table) {
-            $table->string('id_provincia', 100)->change();
-            $table->string('id_municipio', 100)->nullable()->change();
-        });
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `direcciones` MODIFY `id_provincia` varchar(100) NOT NULL");
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `direcciones` MODIFY `id_municipio` varchar(100) NULL");
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 };
