@@ -1,9 +1,9 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Cambialord - Agregar talento')
 
 @section('content')
-<main class="min-h-screen bg-gray-50 py-5">
+<div class="min-h-screen bg-gray-50 py-5">
     <div class="max-w-xl mx-auto px-4">
         @include('components.btn-volver', ['backUrl' => route('items.admintalento')])
 
@@ -69,13 +69,13 @@
                     </div>
 
                     {{-- Precio y Modalidad --}}
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3" style="align-items:end">
                         <div>
                             <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
                                 <input type="text" id="valor" name="valor" required value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
-                                       class="w-full pl-10 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                                       class="w-full pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" style="padding-left:3rem">
                             </div>
                             @error('valor')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                         </div>
@@ -96,7 +96,7 @@
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">%</span>
                             <input type="number" id="descuento" name="descuento" value="{{ old('descuento', 0) }}" min="0" max="100" placeholder="0"
-                                   class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                                   class="w-full pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" style="padding-left:1.75rem">
                         </div>
                     </div>
 
@@ -184,7 +184,7 @@
             </div>
         </form>
     </div>
-</main>
+</div>
 @endsection
 
 @push('scripts')
