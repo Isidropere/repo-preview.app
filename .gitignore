@@ -21,14 +21,21 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.kiro
 *.phpproj
 *.phpproj.user
 *.sln
 *.lnk
 *.sql
 /Utilitarios
+/tests
+/database/dumps
 
 *.rar
 *.zip
-mobil/api/vendor/
-mobil/api/node_modules/
+
+# Carpeta móvil — excluida del deploy web
+/mobil
+
+# Archivos de desarrollo local
+/agents
