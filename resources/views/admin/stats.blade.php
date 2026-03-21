@@ -1,4 +1,4 @@
-﻿?@extends('layouts.app')
+?@extends('layouts.app')
 @section('title', 'Estadisticas - Admin')
 @section('content')
 <div style="padding:24px;max-width:1400px;margin:0 auto;font-family:sans-serif;">
@@ -674,4 +674,117 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarDatos();
 });
 </script>
+
+  {{-- 
+       Cuentas Bancarias (informativas)
+        --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0;">Cuentas Bancarias de la Empresa</h2>
+      <button onclick="abrirModalCuenta(null)" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:.85rem;cursor:pointer;font-weight:600;">+ Nueva cuenta</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Banco</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Número</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Tipo</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Titular</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Estado</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyCuentas">
+          @forelse($cuentasBanco as $cuenta)
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 12px;">{{ $cuenta->banco }}</td>
+            <td style="padding:10px 12px;">{{ $cuenta->numero_cuenta }}</td>
+            <td style="padding:10px 12px;">{{ $cuenta->tipo_cuenta }}</td>
+            <td style="padding:10px 12px;">{{ $cuenta->titular }}</td>
+            <td style="padding:10px 12px;">
+              <span style="padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600;background:{{ $cuenta->activo ? '#d1fae5' : '#fee2e2' }};color:{{ $cuenta->activo ? '#065f46' : '#991b1b' }};">
+                {{ $cuenta->activo ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td style="padding:10px 12px;">
+              <div style="display:flex;gap:6px;">
+                <button onclick="editarCuenta({{ json_encode($cuenta) }})" style="font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;">Editar</button>
+                <button onclick="toggleCuenta({{ $cuenta->id }})" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">{{ $cuenta->activo ? 'Desactivar' : 'Activar' }}</button>
+                <button onclick="eliminarCuenta({{ $cuenta->id }})" style="font-size:.75rem;padding:4px 10px;border:1px solid #ef4444;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer;">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+          @empty
+          <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px;">Sin cuentas registradas</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {{-- Modal Cuenta Bancaria --}}
+  <div id="modalCuenta" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:480px;margin:16px;">
+      <h3 id="modalCuentaTitulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0 0 20px;">Nueva cuenta</h3>
+      <input type="hidden" id="cuentaId">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Banco *</label>
+        <input id="cuentaBanco" type="text" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Número de cuenta *</label>
+        <input id="cuentaNumero" type="text" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Tipo de cuenta *</label>
+        <select id="cuentaTipo" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+          <option value="ahorro">Ahorro</option>
+          <option value="corriente">Corriente</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Titular *</label>
+        <input id="cuentaTitular" type="text" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Descripción</label>
+        <textarea id="cuentaDescripcion" rows="2" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="cerrarModalCuenta()" style="padding:8px 18px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;font-size:.9rem;">Cancelar</button>
+        <button onclick="guardarCuenta()" style="padding:8px 18px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-size:.9rem;font-weight:600;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  {{-- 
+       Config Tarifa Categoría 29
+        --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
+    <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0 0 16px;">Configuración de Tarifas  Categoría 29</h2>
+    <div id="cfgMsgOk" style="display:none;background:#d1fae5;border:1px solid #a7f3d0;border-radius:6px;padding:10px 14px;color:#065f46;font-size:.875rem;margin-bottom:14px;">Configuración guardada correctamente.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+      <div>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Monto de registro (RD$)</label>
+        <input id="cfgMonto" type="number" min="0" step="0.01" value="{{ $configTarifa->monto_registro ?? 0 }}"
+               style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Descuento venta masiva (%)</label>
+        <input id="cfgDescuento" type="number" min="0" max="100" step="0.01" value="{{ $configTarifa->descuento_venta_masiva ?? 0 }}"
+               style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Cantidad mínima para descuento</label>
+        <input id="cfgCantidad" type="number" min="1" step="1" value="{{ $configTarifa->cantidad_minima_descuento ?? 1 }}"
+               style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+    </div>
+    <p style="font-size:.8rem;color:#64748b;margin:0 0 14px;">
+      Ejemplo: si el monto es RD$ 500 y el descuento es 10% con mínimo 3 unidades, al comprar 3 o más servicios de categoría 29 se aplica un descuento de RD$ 50 por unidad.
+    </p>
+    <button onclick="guardarConfigTarifa()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar configuración</button>
+  </div>
 @endsection

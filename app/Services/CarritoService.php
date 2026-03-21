@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Carrito;
+use App\Models\ConfigTarifaCategoria29;
 use App\Models\Item;
 use App\Models\ItemIntencionCompra;
 use App\Models\PredefinedMessage;
@@ -65,12 +66,23 @@ class CarritoService
         $carrito = Carrito::firstOrCreate(['id_user' => $userId]);
         $itemBase = Item::findOrFail($idItem);
 
+        // Calcular descuento por volumen para categoría 29 tipo venta
+        $descuento = $itemBase->descuento ?? 0;
+        if ((int) $itemBase->id_categoria_item === 29 && (int) $itemBase->tipo_trans === 1) {
+            $config = ConfigTarifaCategoria29::vigente();
+            if ($config->descuento_venta_masiva > 0 && $cantidad >= $config->cantidad_minima_descuento) {
+                $descuento = round($itemBase->valor * ($config->descuento_venta_masiva / 100), 2);
+            } else {
+                $descuento = 0;
+            }
+        }
+
         $carrito->itemsIntencionCompra()->updateOrCreate(
             ['id_item' => $idItem],
             [
                 'cantidad'         => $cantidad,
                 'es_seleccionado'  => 1,
-                'descuento'        => $itemBase->descuento ?? 0,
+                'descuento'        => $descuento,
             ]
         );
 

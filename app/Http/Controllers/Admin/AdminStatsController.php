@@ -38,7 +38,10 @@ class AdminStatsController extends Controller
 {
     public function index()
     {
-        return view('admin.stats');
+        $cuentasBanco = \App\Models\CuentaBancoEmpresa::orderBy('id', 'desc')->get();
+        $configTarifa = \App\Models\ConfigTarifaCategoria29::vigente();
+
+        return view('admin.stats', compact('cuentasBanco', 'configTarifa'));
     }
 
     public function data(Request $request)

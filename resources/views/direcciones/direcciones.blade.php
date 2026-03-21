@@ -218,9 +218,10 @@
 
   // ── Provincias / Municipios ───────────────────────────────
   function cargarProvincias() {
-    fetch('/provincias').then(r=>r.json()).then(data=>{
+    fetch('/provincias').then(r=>r.json()).then(res=>{
+      var lista = res.data || res;
       fProv.innerHTML = '<option value="">Selecciona provincia</option>';
-      data.forEach(p => fProv.innerHTML += '<option value="'+p.id+'">'+p.nombre+'</option>');
+      lista.forEach(p => fProv.innerHTML += '<option value="'+p.id+'">'+p.nombre+'</option>');
     });
   }
   fProv.addEventListener('change', function() {
@@ -228,8 +229,9 @@
     fMun.disabled = !id;
     fMun.innerHTML = '<option value="">Selecciona municipio</option>';
     if (!id) return;
-    fetch('/municipios?id_provincia='+id).then(r=>r.json()).then(data=>{
-      data.forEach(m => fMun.innerHTML += '<option value="'+m.id+'">'+m.nombre+'</option>');
+    fetch('/municipios?id_provincia='+id).then(r=>r.json()).then(res=>{
+      var lista = res.data || res;
+      lista.forEach(m => fMun.innerHTML += '<option value="'+m.id+'">'+m.nombre+'</option>');
       fMun.disabled = false;
     });
   });
@@ -328,11 +330,17 @@
   document.querySelectorAll('.btn-set-default').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = this.dataset.id;
+      var textoOriginal = this.textContent;
+      this.disabled = true;
+      this.textContent = 'Procesando...';
+      var self = this;
       fetch('/direccion/predeterminada/'+id, {
         method: 'POST',
         headers: {'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,'Content-Type':'application/json'}
-      }).then(r=>r.json()).then(function(d){ if(d.success) window.location.reload(); })
-       .catch(function(){ alert('Error al actualizar'); });
+      }).then(r=>r.json()).then(function(d){
+        if(d.success) { window.location.reload(); }
+        else { self.disabled = false; self.textContent = textoOriginal; }
+      }).catch(function(){ self.disabled = false; self.textContent = textoOriginal; alert('Error al actualizar'); });
     });
   });
 

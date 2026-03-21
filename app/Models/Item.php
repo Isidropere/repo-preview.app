@@ -153,4 +153,9 @@ class Item extends Model
         $hash   = HashIdHelper::encode($this->id_item);
         return "{$nombre}-{$hash}";
     }
+
+    public function pagoRegistro()
+    {
+        return $this->hasOne(PagoRegistroTalento::class, 'id_item', 'id_item');
+    }
 }

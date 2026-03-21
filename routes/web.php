@@ -318,6 +318,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/talentos', [ItemController::class, 'userItemstalento'])->name('items.admintalento');
     Route::get('/items/categoria-29', [ItemController::class, 'itemsCategoria29']);
 
+    // Flujo de pago para registro de talento (categoría 29)
+    Route::get('/talento/pago', [\App\Http\Controllers\TalentoRegistroPagoController::class, 'mostrarPago'])->name('talento.pago.show');
+    Route::post('/talento/pago', [\App\Http\Controllers\TalentoRegistroPagoController::class, 'procesarPago'])
+        ->middleware('throttle.sensitive:5,1')
+        ->name('talento.pago.procesar');
+
     // Mensajes
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/create/{item?}', [MessageController::class, 'create'])->name('messages.create');
@@ -473,4 +479,15 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::put('/mensajes-predefinidos/{id}', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'update'])->name('mensajes.update');
     Route::delete('/mensajes-predefinidos/{id}', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'destroy'])->name('mensajes.destroy');
     Route::patch('/mensajes-predefinidos/{id}/toggle', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'toggleActivo'])->name('mensajes.toggle');
+
+    // Cuentas bancarias (informativas)
+    Route::get('/cuentas-banco',               [\App\Http\Controllers\Admin\AdminCuentaBancoController::class, 'index'])->name('cuentas.index');
+    Route::post('/cuentas-banco',              [\App\Http\Controllers\Admin\AdminCuentaBancoController::class, 'store'])->name('cuentas.store');
+    Route::put('/cuentas-banco/{id}',          [\App\Http\Controllers\Admin\AdminCuentaBancoController::class, 'update'])->name('cuentas.update');
+    Route::delete('/cuentas-banco/{id}',       [\App\Http\Controllers\Admin\AdminCuentaBancoController::class, 'destroy'])->name('cuentas.destroy');
+    Route::patch('/cuentas-banco/{id}/toggle', [\App\Http\Controllers\Admin\AdminCuentaBancoController::class, 'toggleActivo'])->name('cuentas.toggle');
+
+    // Config tarifa categoría 29
+    Route::get('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'show'])->name('config_tarifa.show');
+    Route::put('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'update'])->name('config_tarifa.update');
 });

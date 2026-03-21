@@ -14,6 +14,7 @@
     $imagenes     = $item->imagenes->sortBy('orden_visualizacion');
     $imgPrincipal = $imagenes->first();
     $colores      = $item->colors ?? collect();
+    $configTarifa29 = $configTarifa29 ?? null;
 @endphp
 
 @section('content')
@@ -148,6 +149,16 @@
                             </span>
                         </div>
                     </div>
+
+                    {{-- Mensaje de descuento por volumen (categoría 29) --}}
+                    @if(!empty($configTarifa29))
+                    <div style="margin-top:10px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:1.1rem;">🏷️</span>
+                        <span style="font-size:.85rem;color:#92400e;font-weight:500;">
+                            Compra {{ $configTarifa29->cantidad_minima_descuento }} o más y obtén <strong>{{ number_format($configTarifa29->descuento_venta_masiva, 0) }}% de descuento</strong>
+                        </span>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Sección 3: Colores --}}

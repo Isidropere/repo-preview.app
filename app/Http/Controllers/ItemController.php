@@ -78,6 +78,37 @@ class ItemController extends Controller
 
             // MANTENIENDO TU LOG DE VALIDACIÃ“N
             Log::debug('Datos validados correctamente', $validatedData);
+            // Interceptar categoría 29: redirigir a flujo de pago
+            if ((int) $validatedData['id_categoria_item'] === 29) {
+                $uuid = Str::uuid()->toString();
+                $tempDir = 'temp/' . $uuid;
+
+                // Guardar datos del formulario (sin archivos) en sesión
+                $datosSinArchivos = collect($validatedData)->except(['imagen_principal', 'imagenes'])->toArray();
+                session(['talento_pendiente_data' => $datosSinArchivos, 'talento_pendiente_uuid' => $uuid]);
+
+                // Guardar archivos temporalmente
+                $archivosTemp = [];
+                if ($request->hasFile('imagen_principal')) {
+                    $file = $request->file('imagen_principal');
+                    $nombre = 'principal_' . Str::random(10) . '.' . $file->extension();
+                    Storage::disk('local')->putFileAs($tempDir, $file, $nombre);
+                    $archivosTemp['imagen_principal'] = $tempDir . '/' . $nombre;
+                }
+                if ($request->hasFile('imagenes')) {
+                    foreach ($request->file('imagenes') as $i => $file) {
+                        if ($file->isValid()) {
+                            $nombre = 'adicional_' . $i . '_' . Str::random(8) . '.' . $file->extension();
+                            Storage::disk('local')->putFileAs($tempDir, $file, $nombre);
+                            $archivosTemp['imagenes'][] = $tempDir . '/' . $nombre;
+                        }
+                    }
+                }
+                session(['talento_pendiente_files' => $archivosTemp]);
+
+                return redirect()->route('talento.pago.show');
+            }
+
 
             // Punto 4: CreaciÃ³n del Ã­tem (MANTENIENDO TU ESTRUCTURA ORIGINAL)  descuento
             $itemData = [
@@ -731,9 +762,19 @@ class ItemController extends Controller
                 ->limit(6)
                 ->get();
 
+            // Pasar config de descuento para categoría 29
+            $configTarifa29 = null;
+            if ((int) $item->id_categoria_item === 29 && (int) $item->tipo_trans === 1) {
+                $configTarifa29 = \App\Models\ConfigTarifaCategoria29::vigente();
+                if ((float) $configTarifa29->descuento_venta_masiva <= 0) {
+                    $configTarifa29 = null;
+                }
+            }
+
             return view('productos.producto-detalle', [
-                'item'         => $item,
-                'relatedItems' => $relatedItems,
+                'item'           => $item,
+                'relatedItems'   => $relatedItems,
+                'configTarifa29' => $configTarifa29,
             ]);
 
         } catch (Throwable $e) {
