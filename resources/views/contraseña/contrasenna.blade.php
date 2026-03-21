@@ -131,8 +131,7 @@
                         </form> <!-- End Form -->
                     </div>
                 </div>
-            </div> <a onclick="window.
-            history.back(); return false;" class="flex items-center my-4 gap-x-2 cursor-pointer"
+            </div> <a href="{{ route('login') }}" class="flex items-center my-4 gap-x-2 cursor-pointer"
                 data-astro-cid-i5vqdef3> <svg class="h-4 w-4 fill-primary" data-astro-cid-i5vqdef3
                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>

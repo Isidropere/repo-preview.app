@@ -167,12 +167,12 @@
                         </button>
 
                         <!-- Botón Volver -->
-                        <button type="button" onclick="window.history.back();" class="flex items-center justify-center gap-2 text-primary mt-4 w-full">
+                        <a href="{{ route('home') }}" class="flex items-center justify-center gap-2 text-primary mt-4 w-full">
                             <svg class="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                             </svg>
                             <span>Volver</span>
-                        </button>
+                        </a>
                     </form>
 
                     <!-- Mensajes de error generales -->

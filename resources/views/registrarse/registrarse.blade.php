@@ -278,12 +278,12 @@
                                         class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary disabled:opacity-50 disabled:pointer-events-none"
                                         data-astro-cid-phpud7wc>Registrarse</button>
 
-                                              <button onclick="window.history.back();" class="flex items-center my-4 gap-x-2 cursor-pointer text-blue-500">
+                                              <a href="{{ route('home') }}" class="flex items-center my-4 gap-x-2 cursor-pointer text-blue-500">
                                             <svg class="h-4 w-4 fill-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                 <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                                             </svg>
                                             <span>Volver al inicio</span>
-                                        </button>
+                                        </a>
                             
                                 </div>
                                 @if($errors->any())
