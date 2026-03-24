@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'core/auth_service.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   runApp(const CambialoApp());
@@ -41,7 +41,7 @@ class _SplashRouterState extends State<_SplashRouter> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => loggedIn ? const HomeScreen() : const LoginScreen()),
+      MaterialPageRoute(builder: (_) => loggedIn ? const MainScreen() : const LoginScreen()),
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 
 /// Pantalla de registro — fiel al diseño web de Cambialord
 class RegisterScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
     } else {
       setState(() => _error = result['message']);
     }

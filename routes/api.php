@@ -58,7 +58,31 @@ Route::middleware('auth:sanctum')->prefix('carrito')->group(function () {
     Route::delete('/{id_item}', [CarritoApiController::class, 'eliminar']);
 });
 
-// ── Delivery ──────────────────────────────────────────────────────────
+// ── Historial (protegido) ──────────────────────────────────────────────
+Route::middleware('auth:sanctum')->get('/historial', function () {
+    $userId = auth()->id();
+
+    $compras = \App\Models\PagoCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
+        ->with(['pagoItems', 'trazabilidad'])
+        ->orderByDesc('fecha')
+        ->get();
+
+    $ventas = \App\Models\ItemIntencionCompra::whereHas('item', fn($q) => $q->where('id_user', $userId))
+        ->with(['item'])
+        ->orderByDesc('id_item_intencion_compra')
+        ->get();
+
+    $intercambios = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
+        ->orWhere('usuario_receptor_id', $userId)
+        ->orderByDesc('id_negociacion')
+        ->get();
+
+    return response()->json([
+        'compras'      => $compras,
+        'ventas'       => $ventas,
+        'intercambios' => $intercambios,
+    ]);
+});
 Route::prefix('delivery')->group(function () {
     Route::get('/zonas',    [DeliveryZonaController::class, 'index']);
     Route::get('/calcular', [DeliveryZonaController::class, 'calcular']);
