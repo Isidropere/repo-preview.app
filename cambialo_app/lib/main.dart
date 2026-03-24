@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/theme.dart';
 import 'core/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -15,17 +16,12 @@ class CambialoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cambialord',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF58634)),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+      theme: appTheme(),
       home: const _SplashRouter(),
     );
   }
 }
 
-/// Decide si ir al login o al home según si hay token guardado
 class _SplashRouter extends StatefulWidget {
   const _SplashRouter();
   @override
@@ -40,6 +36,7 @@ class _SplashRouterState extends State<_SplashRouter> {
   }
 
   Future<void> _check() async {
+    await Future.delayed(const Duration(milliseconds: 800));
     final loggedIn = await AuthService.isLoggedIn();
     if (!mounted) return;
     Navigator.pushReplacement(
@@ -50,15 +47,29 @@ class _SplashRouterState extends State<_SplashRouter> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF58634),
+    return Scaffold(
+      backgroundColor: kPrimary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Cambialord', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-            SizedBox(height: 24),
-            CircularProgressIndicator(color: Colors.white),
+            // Logo igual que la web
+            const Text(
+              'Cambialord',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 38,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Encuentra lo que deseas cambiar',
+              style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14),
+            ),
+            const SizedBox(height: 40),
+            const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
           ],
         ),
       ),
