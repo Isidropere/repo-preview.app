@@ -21,7 +21,6 @@ use App\Http\Controllers\MessageController;
 use App\Models\CategoriaItem;
 use App\Http\Controllers\NegociacionController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\RegisterController;
@@ -363,10 +362,6 @@ Route::middleware(['auth'])->group(function () {
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
-
-// Google OAuth (legacy — mantenido por compatibilidad)
-Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
-Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 // Social OAuth unificado: Google, Facebook, Instagram
 // Rutas: /auth/{provider}  y  /auth/{provider}/callback

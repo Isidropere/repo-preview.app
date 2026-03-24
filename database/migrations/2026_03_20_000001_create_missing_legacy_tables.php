@@ -16,8 +16,10 @@ return new class extends Migration
                 $table->timestamps();
             });
             \DB::table('tipos_usuarios')->insert([
-                ['tipo' => 'Persona', 'created_at' => now(), 'updated_at' => now()],
-                ['tipo' => 'Empresa', 'created_at' => now(), 'updated_at' => now()],
+                ['tipo' => 'Persona'],
+                ['tipo' => 'Empresa'],
+                ['tipo' => 'Admin'],
+                ['tipo' => 'SuperAdmin'],
             ]);
         }
 

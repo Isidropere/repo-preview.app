@@ -28,7 +28,9 @@ class Carrito extends Model
 
     public function direcciones()
     {
-        return $this->belongsTo(Direcciones::class, 'id_user');
+        // Un carrito pertenece a un usuario que tiene muchas direcciones
+        // La relación correcta es a través del id_user del carrito
+        return $this->hasMany(Direcciones::class, 'id_user', 'id_user');
     }
 
     public function usuario()

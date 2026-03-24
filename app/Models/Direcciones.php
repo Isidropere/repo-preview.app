@@ -39,7 +39,9 @@ class Direcciones extends Model
 
     public function plan()
     {
-        return $this->belongsTo(Plan::class, 'id_plan');
+        // Direcciones no tiene id_plan — relación eliminada para evitar errores
+        // Si se necesita plan, acceder via $direccion->usuario->tiposUsuario
+        return null;
     }
 
     public function provincia()
