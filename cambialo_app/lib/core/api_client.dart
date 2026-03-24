@@ -6,8 +6,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// En emulador Android: 10.0.2.2 apunta al localhost de tu PC.
 const String kBaseUrl = 'http://10.0.2.2:8000/api';
 
+// Cache en memoria para respuestas GET — evita llamadas repetidas
+final Map<String, String> _cache = {};
+
 class ApiClient {
   static final _storage = FlutterSecureStorage();
+  static final _client  = http.Client();
 
   static Future<String?> getToken() => _storage.read(key: 'auth_token');
   static Future<void> saveToken(String t) => _storage.write(key: 'auth_token', value: t);
@@ -22,18 +26,38 @@ class ApiClient {
     return h;
   }
 
-  static Future<http.Response> get(String path, {bool auth = false}) async {
+  static Future<http.Response> get(String path, {bool auth = false, bool useCache = true}) async {
+    final cacheKey = path;
+    // Devolver cache si existe y no requiere auth
+    if (useCache && !auth && _cache.containsKey(cacheKey)) {
+      return http.Response(_cache[cacheKey]!, 200);
+    }
     final headers = await _headers(auth: auth);
-    return http.get(Uri.parse('$kBaseUrl$path'), headers: headers);
+    final res = await _client
+        .get(Uri.parse('$kBaseUrl$path'), headers: headers)
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200 && useCache && !auth) {
+      _cache[cacheKey] = res.body;
+    }
+    return res;
+  }
+
+  static void clearCache([String? path]) {
+    if (path != null) _cache.remove(path);
+    else _cache.clear();
   }
 
   static Future<http.Response> post(String path, Map<String, dynamic> body, {bool auth = false}) async {
     final headers = await _headers(auth: auth);
-    return http.post(Uri.parse('$kBaseUrl$path'), headers: headers, body: jsonEncode(body));
+    return _client
+        .post(Uri.parse('$kBaseUrl$path'), headers: headers, body: jsonEncode(body))
+        .timeout(const Duration(seconds: 10));
   }
 
   static Future<http.Response> delete(String path, {bool auth = false}) async {
     final headers = await _headers(auth: auth);
-    return http.delete(Uri.parse('$kBaseUrl$path'), headers: headers);
+    return _client
+        .delete(Uri.parse('$kBaseUrl$path'), headers: headers)
+        .timeout(const Duration(seconds: 10));
   }
 }

@@ -9,37 +9,44 @@ use Illuminate\Http\Request;
 
 /**
  * ItemApiController — Productos para la app móvil
+ *
+ * Las imágenes se sirven desde storage/public (symlink).
+ * La API devuelve image_url lista para usar en Flutter.
  */
 class ItemApiController extends Controller
 {
     /** GET /api/items — listado paginado */
     public function index(Request $request)
     {
-        $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
-            ->where('estatus', 1)
-            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
+        $cacheKey = 'api_items_' . md5(json_encode($request->only('tipo', 'categoria', 'q', 'page')));
 
-        if ($request->filled('tipo')) {
-            // tipo=1 venta | tipo=2,3 intercambio
-            $query->where('tipo_trans', $request->tipo);
-        }
+        $result = \Cache::remember($cacheKey, 120, function () use ($request) {
+            $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                ->where('estatus', 1)
+                ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
 
-        if ($request->filled('categoria')) {
-            $query->where('id_categoria_item', $request->categoria);
-        }
+            if ($request->filled('tipo')) {
+                $query->where('tipo_trans', $request->tipo);
+            }
+            if ($request->filled('categoria')) {
+                $query->where('id_categoria_item', $request->categoria);
+            }
+            if ($request->filled('q')) {
+                $query->where('item', 'like', '%' . $request->q . '%');
+            }
 
-        if ($request->filled('q')) {
-            $query->where('item', 'like', '%' . $request->q . '%');
-        }
+            $items = $query->latest('fecha')->paginate(12);
+            $data  = collect($items->items())->map(fn($item) => $this->appendImageUrl($item));
 
-        $items = $query->latest('fecha')->paginate(12);
+            return [
+                'data'         => $data,
+                'current_page' => $items->currentPage(),
+                'last_page'    => $items->lastPage(),
+                'total'        => $items->total(),
+            ];
+        });
 
-        return response()->json([
-            'data'         => $items->items(),
-            'current_page' => $items->currentPage(),
-            'last_page'    => $items->lastPage(),
-            'total'        => $items->total(),
-        ]);
+        return response()->json($result);
     }
 
     /** GET /api/items/{id} — detalle */
@@ -52,13 +59,15 @@ class ItemApiController extends Controller
             'inventarios',
         ])->where('estatus', 1)->findOrFail($id);
 
-        return response()->json($item);
+        return response()->json($this->appendImageUrl($item));
     }
 
     /** GET /api/categorias */
     public function categorias()
     {
-        return response()->json(CategoriaItem::select('id_categoria_item', 'categoria')->get());
+        return response()->json(
+            CategoriaItem::select('id_categoria_item', 'categoria')->get()
+        );
     }
 
     /** GET /api/items/buscar?q=... */
@@ -72,8 +81,49 @@ class ItemApiController extends Controller
             ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha')
             ->latest('fecha')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map(fn($item) => $this->appendImageUrl($item));
 
         return response()->json($items);
+    }
+
+    /**
+     * Agrega image_url resuelta al item.
+     * Intenta storage/public primero, luego htdocs de Apache.
+     */
+    private function appendImageUrl($item): array
+    {
+        $arr = is_array($item) ? $item : $item->toArray();
+
+        $imagenes = $arr['imagenes'] ?? [];
+        if (!empty($imagenes)) {
+            $primera = $imagenes[0];
+            $nombre  = $primera['nombre'] ?? '';
+            $ruta    = trim($primera['ruta'] ?? 'imgs/articulos/items', '/');
+
+            // Intentar storage symlink primero
+            $storagePath = public_path("storage/{$ruta}/{$nombre}");
+            if (file_exists($storagePath)) {
+                $arr['image_url'] = url("storage/{$ruta}/{$nombre}");
+            } else {
+                // Fallback: Apache htdocs
+                $arr['image_url'] = url("{$ruta}/{$nombre}");
+            }
+
+            // Agregar image_url a cada imagen
+            $arr['imagenes'] = array_map(function ($img) use ($ruta) {
+                $n = $img['nombre'] ?? '';
+                $r = trim($img['ruta'] ?? $ruta, '/');
+                $storagePath = public_path("storage/{$r}/{$n}");
+                $img['image_url'] = file_exists($storagePath)
+                    ? url("storage/{$r}/{$n}")
+                    : url("{$r}/{$n}");
+                return $img;
+            }, $imagenes);
+        } else {
+            $arr['image_url'] = null;
+        }
+
+        return $arr;
     }
 }

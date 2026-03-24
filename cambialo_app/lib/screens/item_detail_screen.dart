@@ -93,7 +93,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       itemCount: imagenes.length,
                       onPageChanged: (i) => setState(() => _imgIndex = i),
                       itemBuilder: (_, i) => CachedNetworkImage(
-                        imageUrl: 'http://10.0.2.2:8000/storage/imgs/articulos/items/${imagenes[i]['nombre']}',
+                        imageUrl: imagenes[i]['image_url'] ?? '',
                         fit: BoxFit.cover,
                         placeholder: (_, __) => Container(color: Colors.grey.shade100),
                         errorWidget: (_, __, ___) => Container(color: Colors.grey.shade100,

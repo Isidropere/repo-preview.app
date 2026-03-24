@@ -145,10 +145,7 @@ class _CarritoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itemData = item['item'] as Map? ?? {};
-    final imagenes = (itemData['imagenes'] as List?) ?? [];
-    final imgUrl = imagenes.isNotEmpty
-        ? 'http://10.0.2.2:8000/storage/imgs/articulos/items/${imagenes[0]['nombre']}'
-        : null;
+    final imgUrl = itemData['image_url'] as String?;
     final subtotal = ((itemData['valor'] ?? 0) * (item['cantidad'] ?? 1)) - (item['descuento'] ?? 0);
 
     return Container(

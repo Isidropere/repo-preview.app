@@ -107,10 +107,8 @@ class _ItemGridCard extends StatelessWidget {
   const _ItemGridCard({required this.item});
   @override
   Widget build(BuildContext context) {
-    final imagenes = item['imagenes'] as List? ?? [];
-    final imgUrl = imagenes.isNotEmpty
-        ? 'http://10.0.2.2:8000/storage/imgs/articulos/items/${imagenes[0]['nombre']}'
-        : null;
+    // La API ya devuelve image_url resuelta
+    final imgUrl = item['image_url'] as String?;
 
     return GestureDetector(
       onTap: () => Navigator.push(context,
