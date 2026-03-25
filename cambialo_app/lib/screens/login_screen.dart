@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               // Logo
               Image.network(
-                'http://10.0.2.2:8000/imgs/logoTypes/logoFooter.png',
+                'http://192.168.0.105:8000/imgs/logoTypes/logoFooter.png',
                 height: 80,
                 errorBuilder: (_, __, ___) => const Text(
                   'Cambialord',

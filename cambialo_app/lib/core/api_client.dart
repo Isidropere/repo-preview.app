@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// URL base de la API.
-/// En emulador Android: 10.0.2.2 apunta al localhost de tu PC.
-const String kBaseUrl = 'http://10.0.2.2:8000/api';
+/// 10.0.2.2     → emulador Android Studio (apunta al localhost de la PC)
+/// 192.168.0.105 → teléfono real en la misma red WiFi
+const String kBaseUrl = 'http://192.168.0.105:8000/api';
 
 // Cache en memoria para respuestas GET — evita llamadas repetidas
 final Map<String, String> _cache = {};

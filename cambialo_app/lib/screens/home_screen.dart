@@ -229,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       elevation: 2,
       title: Image.network(
-        'http://10.0.2.2:8000/imgs/logoTypes/header-logo.png',
+        'http://192.168.0.105:8000/imgs/logoTypes/header-logo.png',
         height: 36,
         errorBuilder: (_, __, ___) => const Text('Cambialord',
             style: TextStyle(color: kPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
