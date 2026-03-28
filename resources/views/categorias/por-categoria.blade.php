@@ -64,7 +64,7 @@
                     <a href="{{ route('producto.detalle', $item->slug) }}" class="relative block h-64 w-full overflow-hidden">
                         <div class="skeleton-loader absolute inset-0"></div>
                         @php
-                            $imagen = $item->imagenes->first();
+                            $imagen = $item->imagenes->where('estado', 'aprobado')->first();
                             $rutaImagen = $imagen && file_exists(public_path('storage/imgs/articulos/items/'.$imagen->nombre))
                                            ? asset('storage/imgs/articulos/items/'.$imagen->nombre)
                                            : asset('storage/imgs/producto_default.png');

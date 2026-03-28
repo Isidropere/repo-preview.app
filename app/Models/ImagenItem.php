@@ -16,6 +16,13 @@ class ImagenItem extends Model
         'id_item',
         'orden_visualizacion',
         'ruta',
+        'tipo',
+        'estado',
+        'motivo_rechazo',
+    ];
+
+    protected $attributes = [
+        'estado' => 'pendiente',
     ];
 
     public function item()

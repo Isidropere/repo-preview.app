@@ -79,7 +79,10 @@ class ItemController extends Controller
             // MANTENIENDO TU LOG DE VALIDACIÃ“N
             Log::debug('Datos validados correctamente', $validatedData);
             // Interceptar categoría 29: redirigir a flujo de pago
-            if ((int) $validatedData['id_categoria_item'] === 29) {
+            // Aplica cuando la categoría es 29 y la transacción es venta (1), intercambio (2) o ambas (3)
+            $esCategoria29 = (int) $validatedData['id_categoria_item'] === 29;
+            $tipoTransConPago = in_array((int) $validatedData['tipo_trans'], [1, 2, 3]);
+            if ($esCategoria29 && $tipoTransConPago) {
                 $uuid = Str::uuid()->toString();
                 $tempDir = 'temp/' . $uuid;
 

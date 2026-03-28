@@ -41,23 +41,18 @@ class RegisterController extends Controller
             $nombre_usuario_generado = $nombre_usuario_base . rand(100, 9999);
         }
 
-        try {
-            $usuario = User::create([
-                'nombres'         => $validado['nombres'],
-                'apellidos'       => $validado['apellidos'],
-                'telefono'        => $validado['telefono'],
-                'email'           => $validado['email'],
-                'nombre_usuario'  => $nombre_usuario_generado,
-                'password'        => Hash::make($validado['password']),
-                'estatus'         => true,
-                'id_tipo_usuario' => $validado['tipos_usuario_id'],
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('Error al crear usuario', ['error' => $e->getMessage()]);
-            return back()->withInput()->withErrors(['email' => 'Error al crear la cuenta: ' . $e->getMessage()]);
-        }
+        $usuario = User::create([
+            'nombres'         => $validado['nombres'],
+            'apellidos'       => $validado['apellidos'],
+            'telefono'        => $validado['telefono'],
+            'email'           => $validado['email'],
+            'nombre_usuario'  => $nombre_usuario_generado,
+            'password'        => Hash::make($validado['password']),
+            'estatus'         => true,
+            'id_tipo_usuario' => $validado['tipos_usuario_id'],
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
 
         // Guardar imagen localmente
         if ($request->hasFile('profile_photo')) {

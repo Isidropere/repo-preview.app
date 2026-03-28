@@ -11,7 +11,7 @@
         3 => 'Usado — Buen estado', 4 => 'Usado — Aceptable',
         default => 'No especificado'
     };
-    $imagenes     = $item->imagenes->sortBy('orden_visualizacion');
+    $imagenes     = $item->imagenes->where('estado', 'aprobado')->sortBy('orden_visualizacion');
     $imgPrincipal = $imagenes->first();
     $colores      = $item->colors ?? collect();
     $configTarifa29 = $configTarifa29 ?? null;
@@ -290,7 +290,7 @@
         <div style="padding:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.75rem;" class="sm:grid-cols-related-products">
             @foreach($relatedItems as $rel)
             @php
-                $ri  = $rel->imagenes->first();
+                $ri  = $rel->imagenes->where('estado', 'aprobado')->first();
                 $riu = $ri ? asset('storage/'.$ri->ruta.'/'.$ri->nombre) : null;
             @endphp
             <a href="{{ route('items.show', $rel->id_item) }}"

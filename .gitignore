@@ -1,6 +1,6 @@
 /.phpunit.cache
 /node_modules
-/public/build
+# /public/build  # Allow build for shared hosting
 /public/hot
 /public/storage
 /storage/*.key
@@ -39,3 +39,10 @@ yarn-error.log
 
 # Archivos de desarrollo local
 /agents
+.vs/
+*.slnx
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

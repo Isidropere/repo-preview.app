@@ -49,6 +49,8 @@ class PagoCompra extends Model
         'total',             // Monto total al momento del pago
         'cantidad_items',    // Cantidad de artículos al momento del pago
         'id_direccion',      // Dirección de envío capturada al momento del pago
+        'tracking_code',     // Código/sufijo de rastreo del envío
+        'tracking_url',      // URL completa de rastreo construida por el admin
     ];
 
     public $timestamps = false;

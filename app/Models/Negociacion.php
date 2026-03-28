@@ -119,4 +119,12 @@ class Negociacion extends Model
             ->withPivot('cantidad')
             ->withTimestamps();
     }
+
+    /**
+     * Registros de pago de envío de ambos participantes.
+     */
+    public function pagoEnvios()
+    {
+        return $this->hasMany(PagoEnvioIntercambio::class, 'id_negociacion', 'id_negociacion');
+    }
 }

@@ -49,10 +49,10 @@
               <input type="radio" name="id_tarjeta_select" value="{{ $tarjeta->id_tarjeta }}" style="width:16px;height:16px;">
               <div>
                 <div style="font-weight:600;color:#1e293b;">
-                  **** **** **** {{ substr($tarjeta->numero_tarjeta ?? '????', -4) }}
+                  **** **** **** {{ $tarjeta->last4 ?? '????' }}
                 </div>
                 <div style="font-size:.8rem;color:#64748b;">
-                  {{ $tarjeta->nombre_titular ?? '' }} &bull; Vence {{ $tarjeta->mes_expiracion ?? '??' }}/{{ $tarjeta->anio_expiracion ?? '??' }}
+                  {{ $tarjeta->nombre_titular ?? '' }} &bull; Vence {{ $tarjeta->mes_expiracion ?? '??' }}/{{ $tarjeta->getAttribute(\App\Models\TarjetaPago::COL_ANIO) ?? '??' }}
                 </div>
               </div>
             </div>

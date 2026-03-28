@@ -459,6 +459,40 @@ function btnCopiar(string $id, string $label = ''): string {
                     </form>
                 </div>
 
+                {{-- Enviar tracking --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-semibold text-gray-800">Envío y rastreo</h2>
+                        @if($compra->tracking_url)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Enviado
+                        </span>
+                        @endif
+                    </div>
+
+                    @if($compra->tracking_url)
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-sm">
+                        <p class="text-xs text-blue-500 mb-1">Código de rastreo</p>
+                        <p class="font-mono font-semibold text-blue-800">{{ $compra->tracking_code }}</p>
+                        <a href="{{ $compra->tracking_url }}" target="_blank"
+                           class="text-xs text-blue-600 hover:underline mt-1 inline-block break-all">
+                            {{ $compra->tracking_url }}
+                        </a>
+                    </div>
+                    @endif
+
+                    <button type="button" onclick="document.getElementById('modalTracking').classList.remove('hidden')"
+                        class="w-full border border-primary text-primary hover:bg-primary hover:text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        {{ $compra->tracking_url ? 'Actualizar tracking' : 'Enviar tracking' }}
+                    </button>
+                </div>
+
                 {{-- Timeline de trazabilidad --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                     <h2 class="font-semibold text-gray-800 mb-4">Historial de cambios</h2>
@@ -513,6 +547,67 @@ function btnCopiar(string $id, string $label = ''): string {
 <div id="copyToast" style="display:none;position:fixed;bottom:24px;right:24px;background:#1f2937;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)">
     ✓ Copiado al portapapeles
 </div>
+
+{{-- Modal de tracking --}}
+<div id="modalTracking" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(0,0,0,.45)">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-800">Enviar información de rastreo</h3>
+            <button type="button" onclick="document.getElementById('modalTracking').classList.add('hidden')"
+                class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('admin.compras.tracking', $compra->id_pago_compra) }}"
+              id="formTracking">
+            @csrf
+            <div class="px-6 py-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Estado de la orden</label>
+                    <select name="estatus" required
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        @foreach($estados as $estado)
+                        <option value="{{ $estado }}" {{ $estado === 'enviado' && !$compra->tracking_url ? 'selected' : ($compra->estatus === $estado && $compra->tracking_url ? 'selected' : '') }}>
+                            {{ ucfirst($estado) }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Código de rastreo</label>
+                    <input type="text" name="tracking_code" required maxlength="100"
+                           value="{{ $compra->tracking_code }}"
+                           placeholder="Ej: 1Z999AA10123456784"
+                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary">
+                    <p class="text-xs text-gray-400 mt-1">Este código se añadirá a la URL base de rastreo.</p>
+                </div>
+                @if($compra->comprador)
+                <p class="text-xs text-gray-400">
+                    Se enviará una notificación a
+                    <span class="font-medium text-gray-600">{{ $compra->comprador->nombres }} ({{ $compra->comprador->email }})</span>.
+                </p>
+                @endif
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
+                <button type="button" onclick="document.getElementById('modalTracking').classList.add('hidden')"
+                    class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" id="btnTracking"
+                    class="px-5 py-2 text-sm font-medium bg-primary hover:bg-hoverPrimary text-white rounded-lg transition-colors flex items-center gap-2">
+                    <span id="btnTrackingTexto">Enviar tracking</span>
+                    <svg id="btnTrackingSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"></path>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -531,6 +626,21 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('btnGuardar').disabled = true;
         });
     }
+
+    // Spinner tracking form
+    const formTracking = document.getElementById('formTracking');
+    if (formTracking) {
+        formTracking.addEventListener('submit', function () {
+            document.getElementById('btnTrackingTexto').textContent = 'Enviando...';
+            document.getElementById('btnTrackingSpinner').classList.remove('hidden');
+            document.getElementById('btnTracking').disabled = true;
+        });
+    }
+
+    // Cerrar modal al hacer click fuera
+    document.getElementById('modalTracking').addEventListener('click', function (e) {
+        if (e.target === this) this.classList.add('hidden');
+    });
 });
 
 function copiarSeccion(id) {

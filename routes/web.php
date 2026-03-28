@@ -455,6 +455,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/compras', [AdminComprasController::class, 'indexCompras'])->name('compras.index');
     Route::get('/compras/{id}', [AdminComprasController::class, 'showCompra'])->name('compras.show');
     Route::post('/compras/{id}/estado', [AdminComprasController::class, 'actualizarEstado'])->name('compras.estado');
+    Route::post('/compras/{id}/tracking', [AdminComprasController::class, 'enviarTracking'])->name('compras.tracking');
 
     // Ventas
     Route::get('/ventas/{id}', [AdminComprasController::class, 'showVenta'])->name('ventas.show');
@@ -490,4 +491,15 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     // Config tarifa categoría 29
     Route::get('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'show'])->name('config_tarifa.show');
     Route::put('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'update'])->name('config_tarifa.update');
+
+    // Panel de aprobación de imágenes
+    Route::prefix('imagenes')->name('imagenes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'index'])->name('index');
+        Route::post('/items/aprobar-todas',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosItems'])->name('items.aprobarTodas');
+        Route::post('/items/{id}/aprobar',     [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarItem'])->name('items.aprobar');
+        Route::post('/items/{id}/rechazar',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarItem'])->name('items.rechazar');
+        Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
+        Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
+        Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+    });
 });

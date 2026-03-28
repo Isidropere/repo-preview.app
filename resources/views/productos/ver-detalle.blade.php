@@ -5,7 +5,7 @@
 @section('content')
 <main class="min-h-screen py-8 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        @include('components.btn-volver', ['backUrl' => route('home')])
+        <!--  @include('components.btn-volver', ['backUrl' => route('home')])-->
         <!-- Breadcrumbs -->
         <div class="mb-6">
             <nav class="flex" aria-label="Breadcrumb">
@@ -13,7 +13,7 @@
                     <li class="inline-flex items-center">
                         <a href="{{ route('home') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-                            Inicio
+                            Inicio 
                         </a>
                     </li>
                     <li>
@@ -24,10 +24,10 @@
                     </li>
                    
                       <li class="inline-flex items-center">
-                            <button onclick="window.history.back()" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary focus:outline-none">
+                            <a href="{{ route('items.admintalento') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary focus:outline-none">
                                  <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                                Volver
-                            </button>
+                                Volver talentos administrador
+                            </a>
                             </li>
                 </ol>
             </nav>
@@ -40,22 +40,22 @@
                 <div class="md:w-1/2 p-4">
                     <!-- Main Image -->
                     <div class="mb-4 rounded-lg overflow-hidden bg-gray-100" style="height: 400px;">
-                        @if($item && $item->imagenes && $item->imagenes->isNotEmpty())
+                        @if($item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty())
                             <img id="mainImage"  
-                                 src="{{ asset('storage/imgs/articulos/items/' . $item->imagenes->first()->nombre) }}" 
+                                 src="{{ asset('storage/imgs/articulos/items/' . $item->imagenes->where('estado', 'aprobado')->first()->nombre) }}" 
                                  class="w-full h-full object-contain"
                                  alt="Imagen del artículo">
                         @else
                             <div class="w-full h-full flex items-center justify-center bg-gray-300">
-                                <span class="text-gray-500">Sin imagen</span>
+                                <span class="text-gray-500">Imagen en espera de aprobación</span>
                             </div>
                         @endif
                     </div>
               
              <!-- Thumbnails compactos -->
-@if($item->imagenes->count() > 0)
+@if($item->imagenes->where('estado', 'aprobado')->count() > 0)
     <div class="grid grid-cols-2 gap-1">
-        @foreach($item->imagenes as $index => $imagen)
+        @foreach($item->imagenes->where('estado', 'aprobado') as $index => $imagen)
             @if($index === 0 || $index === 1 )
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
@@ -159,7 +159,7 @@
                         <h2 class="text-lg font-medium text-gray-900">Información del vendedor</h2>
                         <div class="mt-4 flex items-center">
                             <div class="flex-shrink-0">
-                                <img class="h-10 w-10 rounded-full" src="{{ $item->usuario && $item->usuario->foto_perfil ? asset('storage/' . $item->usuario->foto_perfil) : asset('storage/imgs/default-profile.png') }}" alt="Foto del vendedor" onerror="this.src='{{ asset('storage/imgs/default-profile.png') }}'">
+                                <img class="h-10 w-10 rounded-full" src="{{ $item->usuario && $item->usuario->foto_perfil && ($item->usuario->foto_perfil_estado ?? 'pendiente') === 'aprobado' ? asset('storage/' . $item->usuario->foto_perfil) : asset('storage/imgs/default-profile.png') }}" alt="Foto del vendedor" onerror="this.src='{{ asset('storage/imgs/default-profile.png') }}'">
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-gray-900">{{ $item->usuario->nombres ?? 'N/A' }} {{ $item->usuario->apellidos ?? '' }}</p>
@@ -191,10 +191,10 @@
                             @php
                                 // Obtener la imagen principal con orden_visualizacion = 1
                             // $image = $item->imagenes->firstWhere('orden_visualizacion', 1);
-                                $mainImage = $relatedItem->imagenes->firstWhere('orden_visualizacion', 1);
+                                $mainImage = $relatedItem->imagenes->where('estado', 'aprobado')->firstWhere('orden_visualizacion', 1);
              
                                 // Si no existe imagen con orden 1, usar la primera disponible
-                                $displayImage = $mainImage ?? $relatedItem->imagenes->first();
+                                $displayImage = $mainImage ?? $relatedItem->imagenes->where('estado', 'aprobado')->first();
                             @endphp
 
                             @if($displayImage && $displayImage->nombre != null)

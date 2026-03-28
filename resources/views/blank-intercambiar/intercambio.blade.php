@@ -43,7 +43,7 @@
              class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             @foreach($items as $item)
             @php
-                $imgNombre = $item->imagenes->first()?->nombre;
+                $imgNombre = $item->imagenes->where('estado', 'aprobado')->first()?->nombre;
                 $imgSrc    = $imgNombre
                     ? asset('storage/imgs/articulos/items/'.$imgNombre)
                     : asset('storage/imgs/producto_defaul.png');

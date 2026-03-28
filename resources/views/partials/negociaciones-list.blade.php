@@ -1,9 +1,3 @@
-
-
-
-@section('title', 'Carrito de Compras - Cambialord')
-
-@section('content')
 @if($negociaciones->isEmpty())
     <p class="text-center text-gray-400">No hay negociaciones activas para este producto.</p>
 @else
@@ -89,4 +83,3 @@
         @endforeach
     </ul>
 @endif
-@endforeach

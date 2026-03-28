@@ -22,7 +22,10 @@ class AdminConfigTarifaController extends Controller
             'cantidad_minima_descuento' => 'required|integer|min:1',
         ]);
 
-        $config = ConfigTarifaCategoria29::updateOrCreate(['id' => 1], $data);
+        // Singleton: siempre actualizar la primera fila, o crearla si no existe
+        $config = ConfigTarifaCategoria29::first() ?? new ConfigTarifaCategoria29();
+        $config->fill($data);
+        $config->save();
 
         return response()->json(['success' => true, 'data' => $config]);
     }

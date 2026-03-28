@@ -55,7 +55,7 @@ class AdminComprasService
     /**
      * Actualiza el estado de una compra y registra trazabilidad.
      */
-    public function actualizarEstadoCompra(int $compraId, string $nuevoEstado, ?string $nota, int $adminId): array
+    public function actualizarEstadoCompra(string $compraId, string $nuevoEstado, ?string $nota, int $adminId): array
     {
         $compra = PagoCompra::findOrFail($compraId);
         $estadoAnterior = $compra->estatus;

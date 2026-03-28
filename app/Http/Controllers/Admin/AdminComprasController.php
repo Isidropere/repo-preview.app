@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Negociacion;
 use App\Models\PagoCompra;
+use App\Events\NuevaNotificacion;
 use App\Services\AdminComprasService;
 use Illuminate\Http\Request;
 
@@ -106,6 +107,44 @@ class AdminComprasController extends Controller
 
         return redirect()->route('admin.compras.show', $id)
             ->with('success', 'Estado actualizado correctamente.');
+    }
+
+    public function enviarTracking(Request $request, $id)
+    {
+        $request->validate([
+            'estatus'       => 'required|in:' . implode(',', AdminComprasService::ESTADOS_COMPRA),
+            'tracking_code' => 'required|string|max:100',
+        ]);
+
+        $compra = PagoCompra::with(['carrito.usuario'])->findOrFail($id);
+
+        // Construir URL de rastreo
+        $baseUrl = rtrim(env('TRACKING_BASE_URL', 'https://tracking.transporteblanco.do/rastreo'), '/');
+        $trackingUrl = $baseUrl . '/' . $request->tracking_code;
+
+        // Actualizar estado + trazabilidad
+        $this->adminComprasService->actualizarEstadoCompra(
+            $compra->id_pago_compra,
+            $request->estatus,
+            'Tracking enviado: ' . $request->tracking_code,
+            auth()->id()
+        );
+
+        // Guardar tracking en la orden
+        $compra->update([
+            'tracking_code' => $request->tracking_code,
+            'tracking_url'  => $trackingUrl,
+        ]);
+
+        // Notificar al comprador vía evento (sin email, sin mensaje)
+        $comprador = $compra->comprador;
+        if ($comprador) {
+            $texto = "Tu orden #{$compra->id_pago_compra} fue actualizada a \"" . ucfirst($request->estatus) . "\". Rastreo: {$trackingUrl}";
+            event(new NuevaNotificacion($texto, $comprador->id));
+        }
+
+        return redirect()->route('admin.compras.show', $id)
+            ->with('success', 'Tracking enviado correctamente.');
     }
 
     public function showVenta($id)

@@ -785,6 +785,133 @@ document.addEventListener('DOMContentLoaded', () => {
     <p style="font-size:.8rem;color:#64748b;margin:0 0 14px;">
       Ejemplo: si el monto es RD$ 500 y el descuento es 10% con mínimo 3 unidades, al comprar 3 o más servicios de categoría 29 se aplica un descuento de RD$ 50 por unidad.
     </p>
-    <button onclick="guardarConfigTarifa()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar configuración</button>
+    <button id="btnGuardarTarifa" onclick="guardarConfigTarifa()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar configuración</button>
   </div>
 @endsection
+
+@push('scripts')
+<script>
+(function() {
+  var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+  // Cuentas Bancarias
+  function renderCuentas(cuentas) {
+    var tbody = document.getElementById('tbodyCuentas');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!cuentas.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px;">Sin cuentas registradas</td></tr>';
+      return;
+    }
+    cuentas.forEach(function(c) {
+      tbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9;">' +
+        '<td style="padding:10px 12px;">' + c.banco + '</td>' +
+        '<td style="padding:10px 12px;">' + c.numero_cuenta + '</td>' +
+        '<td style="padding:10px 12px;">' + c.tipo_cuenta + '</td>' +
+        '<td style="padding:10px 12px;">' + c.titular + '</td>' +
+        '<td style="padding:10px 12px;"><span style="padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600;background:' + (c.activo ? '#d1fae5' : '#fee2e2') + ';color:' + (c.activo ? '#065f46' : '#991b1b') + ';">' + (c.activo ? 'Activa' : 'Inactiva') + '</span></td>' +
+        '<td style="padding:10px 12px;display:flex;gap:6px;">' +
+          '<button onclick="editarCuenta(' + JSON.stringify(c).replace(/"/g, '&quot;') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;">Editar</button>' +
+          '<button onclick="toggleCuenta(' + c.id + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">' + (c.activo ? 'Desactivar' : 'Activar') + '</button>' +
+          '<button onclick="eliminarCuenta(' + c.id + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #ef4444;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer;">Eliminar</button>' +
+        '</td></tr>';
+    });
+  }
+
+  function cargarCuentas() {
+    fetch('/admin/cuentas-banco', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { renderCuentas(data); })
+      .catch(function(e) { console.error('Error cargando cuentas', e); });
+  }
+
+  window.abrirModalCuenta = function(cuenta) {
+    var modal = document.getElementById('modalCuenta');
+    document.getElementById('cuentaId').value = cuenta ? cuenta.id : '';
+    document.getElementById('cuentaBanco').value = cuenta ? cuenta.banco : '';
+    document.getElementById('cuentaNumero').value = cuenta ? cuenta.numero_cuenta : '';
+    document.getElementById('cuentaTipo').value = cuenta ? cuenta.tipo_cuenta : 'ahorro';
+    document.getElementById('cuentaTitular').value = cuenta ? cuenta.titular : '';
+    document.getElementById('cuentaDescripcion').value = cuenta ? (cuenta.descripcion || '') : '';
+    document.getElementById('modalCuentaTitulo').textContent = cuenta ? 'Editar cuenta' : 'Nueva cuenta';
+    modal.style.display = 'flex';
+  };
+
+  window.editarCuenta = function(c) { abrirModalCuenta(c); };
+
+  window.cerrarModalCuenta = function() {
+    document.getElementById('modalCuenta').style.display = 'none';
+  };
+
+  window.guardarCuenta = function() {
+    var id = document.getElementById('cuentaId').value;
+    var url = id ? '/admin/cuentas-banco/' + id : '/admin/cuentas-banco';
+    var method = id ? 'PUT' : 'POST';
+    var body = {
+      banco: document.getElementById('cuentaBanco').value,
+      numero_cuenta: document.getElementById('cuentaNumero').value,
+      tipo_cuenta: document.getElementById('cuentaTipo').value,
+      titular: document.getElementById('cuentaTitular').value,
+      descripcion: document.getElementById('cuentaDescripcion').value
+    };
+    fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) { cerrarModalCuenta(); cargarCuentas(); }
+      else { alert('Error al guardar'); }
+    });
+  };
+
+  window.eliminarCuenta = function(id) {
+    if (!confirm('Eliminar esta cuenta?')) return;
+    fetch('/admin/cuentas-banco/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.success) cargarCuentas(); });
+  };
+
+  window.toggleCuenta = function(id) {
+    fetch('/admin/cuentas-banco/' + id + '/toggle', { method: 'PATCH', headers: { 'X-CSRF-TOKEN': csrfToken } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.success) cargarCuentas(); });
+  };
+
+  // Config Tarifa
+  window.guardarConfigTarifa = function() {
+    var btn = document.getElementById('btnGuardarTarifa');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    var body = {
+      monto_registro: document.getElementById('cfgMonto').value,
+      descuento_venta_masiva: document.getElementById('cfgDescuento').value,
+      cantidad_minima_descuento: document.getElementById('cfgCantidad').value
+    };
+    fetch('/admin/config-tarifa', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.disabled = false;
+      btn.textContent = 'Guardar configuracion';
+      if (d.success) {
+        var msg = document.getElementById('cfgMsgOk');
+        msg.style.display = '';
+        setTimeout(function() { msg.style.display = 'none'; }, 3000);
+      } else { alert('Error al guardar configuracion'); }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = 'Guardar configuracion';
+      alert('Error de conexion');
+    });
+  };
+
+  cargarCuentas();
+})();
+</script>
+@endpush

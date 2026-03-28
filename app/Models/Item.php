@@ -149,8 +149,11 @@ class Item extends Model
      */
     public function getSlugAttribute(): string
     {
-        $nombre = Str::slug($this->item);
-        $hash   = HashIdHelper::encode($this->id_item);
+        if (!$this->id_item) {
+            return '';
+        }
+        $nombre = Str::slug($this->item ?? '');
+        $hash   = HashIdHelper::encode((int) $this->id_item);
         return "{$nombre}-{$hash}";
     }
 

@@ -100,7 +100,7 @@
                             <div class="keen-slider__slide">
                                 <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
                                     <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                        @php $imgProd = $prod->imagenes->first(); $imgValida = $imgProd && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd->nombre); @endphp
+                                        @php $imgProd = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida = $imgProd && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd->nombre); @endphp
                                         @if($imgValida)
                                             <img alt="{{ $prod->item }}" src="{{ asset('storage/imgs/articulos/items/'.$imgProd->nombre) }}" class="h-56 w-full object-cover" loading="lazy">
                                         @else
@@ -220,7 +220,7 @@
                             <div class="keen-slider__slide">
                                 <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
                                     <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                        @php $imgProd2 = $prod->imagenes->first(); $imgValida2 = $imgProd2 && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd2->nombre); @endphp
+                                        @php $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida2 = $imgProd2 && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd2->nombre); @endphp
                                         @if($imgValida2)
                                             <img alt="{{ $prod->item }}" src="{{ asset('storage/imgs/articulos/items/'.$imgProd2->nombre) }}" class="h-56 w-full object-cover" loading="lazy">
                                         @else
