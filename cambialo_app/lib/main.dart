@@ -36,7 +36,7 @@ class _SplashRouterState extends State<_SplashRouter> {
   }
 
   Future<void> _check() async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Sin delay — ir directo
     final loggedIn = await AuthService.isLoggedIn();
     if (!mounted) return;
     Navigator.pushReplacement(

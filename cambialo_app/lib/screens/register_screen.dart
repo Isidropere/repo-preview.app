@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               // Logo
               Image.network(
-                'http://192.168.0.105:8000/imgs/logoTypes/logoFooter.png',
+                'http://10.0.2.2:8000/imgs/logoTypes/logoFooter.png',
                 height: 80,
                 errorBuilder: (_, __, ___) => const Text(
                   'Cambialord',

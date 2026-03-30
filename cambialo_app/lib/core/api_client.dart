@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// URL base de la API.
-/// 10.0.2.2     → emulador Android Studio (apunta al localhost de la PC)
-/// 192.168.0.105 → teléfono real en la misma red WiFi
-const String kBaseUrl = 'http://192.168.0.105:8000/api';
+/// 10.0.2.2      → emulador Android Studio (apunta al localhost de la PC)
+/// 192.168.0.105 → teléfono real o BlueStacks en la misma red WiFi
+const String kBaseUrl = 'http://10.0.2.2:8000/api';
 
 // Cache en memoria para respuestas GET — evita llamadas repetidas
 final Map<String, String> _cache = {};
@@ -36,7 +36,7 @@ class ApiClient {
     final headers = await _headers(auth: auth);
     final res = await _client
         .get(Uri.parse('$kBaseUrl$path'), headers: headers)
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 6));
     if (res.statusCode == 200 && useCache && !auth) {
       _cache[cacheKey] = res.body;
     }
@@ -52,7 +52,7 @@ class ApiClient {
     final headers = await _headers(auth: auth);
     return _client
         .post(Uri.parse('$kBaseUrl$path'), headers: headers, body: jsonEncode(body))
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 6));
   }
 
   static Future<http.Response> delete(String path, {bool auth = false}) async {

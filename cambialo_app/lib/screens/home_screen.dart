@@ -48,12 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadHome() async {
     setState(() => _loading = true);
-    final r1 = await ApiClient.get('/items?tipo=2&page=1');
-    final r2 = await ApiClient.get('/items?tipo=1&page=1');
+    // Cargar en paralelo — no esperar una para empezar la otra
+    final results = await Future.wait([
+      ApiClient.get('/items?tipo=2&page=1'),
+      ApiClient.get('/items?tipo=1&page=1'),
+    ]);
     if (mounted) {
       setState(() {
-        if (r1.statusCode == 200) _intercambio = jsonDecode(r1.body)['data'] ?? [];
-        if (r2.statusCode == 200) _venta       = jsonDecode(r2.body)['data'] ?? [];
+        if (results[0].statusCode == 200) _intercambio = jsonDecode(results[0].body)['data'] ?? [];
+        if (results[1].statusCode == 200) _venta       = jsonDecode(results[1].body)['data'] ?? [];
         _loading = false;
       });
     }
@@ -81,9 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         color: kPrimary,
         onRefresh: _loadHome,
-        child: _loading
-            ? const Center(child: CircularProgressIndicator(color: kPrimary))
-            : SingleChildScrollView(
+        child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,11 +185,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Sección intercambio
                     _sectionHeader('Productos de intercambio', 'Intercambia lo que tienes por algo que quieres', tipo: 2),
-                    _ProductosSlider(items: _intercambio),
+                    _ProductosSlider(items: _intercambio, loading: _loading),
 
                     // Sección venta
                     _sectionHeader('Productos de venta', 'Aquí puedes vender lo que quieras', tipo: 1),
-                    _ProductosSlider(items: _venta),
+                    _ProductosSlider(items: _venta, loading: _loading),
 
                     // CTA final — igual que la web (fondo naranja)
                     Container(
@@ -229,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       elevation: 2,
       title: Image.network(
-        'http://192.168.0.105:8000/imgs/logoTypes/header-logo.png',
+        'http://10.0.2.2:8000/imgs/logoTypes/header-logo.png',
         height: 36,
         errorBuilder: (_, __, ___) => const Text('Cambialord',
             style: TextStyle(color: kPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
@@ -343,9 +344,30 @@ class _CategoriaChip extends StatelessWidget {
 
 class _ProductosSlider extends StatelessWidget {
   final List items;
-  const _ProductosSlider({required this.items});
+  final bool loading;
+  const _ProductosSlider({required this.items, this.loading = false});
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      // Skeleton placeholder mientras carga
+      return Container(
+        color: kBgGray,
+        height: 240,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          itemCount: 4,
+          itemBuilder: (_, __) => Container(
+            width: 160,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      );
+    }
     if (items.isEmpty) {
       return Container(
         color: kBgGray,
