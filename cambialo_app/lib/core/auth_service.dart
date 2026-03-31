@@ -3,15 +3,19 @@ import 'api_client.dart';
 
 class AuthService {
   static Future<Map<String, dynamic>> login(String email, String password) async {
-    final res = await ApiClient.post('/auth/login', {'email': email, 'password': password});
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      await ApiClient.saveToken(body['token']);
-      return {'success': true, 'user': body['user']};
+    try {
+      final res = await ApiClient.post('/auth/login', {'email': email, 'password': password});
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        await ApiClient.saveToken(body['token']);
+        return {'success': true, 'user': body['user']};
+      }
+      final errors = body['errors'] ?? {};
+      final msg = errors.isNotEmpty ? errors.values.first[0] : (body['message'] ?? 'Error al iniciar sesión');
+      return {'success': false, 'message': msg};
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor.'};
     }
-    final errors = body['errors'] ?? {};
-    final msg = errors.isNotEmpty ? errors.values.first[0] : (body['message'] ?? 'Error al iniciar sesión');
-    return {'success': false, 'message': msg};
   }
 
   static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {

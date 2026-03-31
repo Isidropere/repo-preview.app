@@ -19,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List _intercambio = [];
   List _venta       = [];
   bool _loading     = true;
+  bool _error       = false;
   Map<String, dynamic>? _user;
   final _searchCtrl = TextEditingController();
 
@@ -47,18 +48,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadHome() async {
-    setState(() => _loading = true);
-    // Cargar en paralelo — no esperar una para empezar la otra
-    final results = await Future.wait([
-      ApiClient.get('/items?tipo=2&page=1'),
-      ApiClient.get('/items?tipo=1&page=1'),
-    ]);
-    if (mounted) {
-      setState(() {
-        if (results[0].statusCode == 200) _intercambio = jsonDecode(results[0].body)['data'] ?? [];
-        if (results[1].statusCode == 200) _venta       = jsonDecode(results[1].body)['data'] ?? [];
-        _loading = false;
-      });
+    setState(() { _loading = true; _error = false; });
+    try {
+      final results = await Future.wait([
+        ApiClient.get('/items?tipo=2&page=1'),
+        ApiClient.get('/items?tipo=1&page=1'),
+      ]);
+      if (mounted) {
+        setState(() {
+          if (results[0].statusCode == 200) _intercambio = jsonDecode(results[0].body)['data'] ?? [];
+          if (results[1].statusCode == 200) _venta       = jsonDecode(results[1].body)['data'] ?? [];
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _error = true; });
     }
   }
 
@@ -84,7 +88,26 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         color: kPrimary,
         onRefresh: _loadHome,
-        child: SingleChildScrollView(
+        child: _error
+            ? Center(
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.wifi_off, size: 56, color: Colors.grey),
+                  const SizedBox(height: 12),
+                  const Text('No se pudo conectar al servidor',
+                      style: TextStyle(color: kTextGray, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text('Verifica que el servidor esté corriendo',
+                      style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: _loadHome,
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    label: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                  ),
+                ]),
+              )
+            : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

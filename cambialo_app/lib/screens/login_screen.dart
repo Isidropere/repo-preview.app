@@ -23,14 +23,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
 
-    final result = await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
-    setState(() => _loading = false);
-
-    if (result['success']) {
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
-    } else {
-      setState(() => _error = result['message']);
+    try {
+      final result = await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
+      setState(() => _loading = false);
+      if (result['success']) {
+        if (!mounted) return;
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+      } else {
+        setState(() => _error = result['message']);
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'No se pudo conectar al servidor. Verifica que esté corriendo.';
+      });
     }
   }
 
