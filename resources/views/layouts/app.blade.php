@@ -394,6 +394,13 @@
             max-height: calc(100vh - 80px);
         }
     }
+    
+    /* Indicador de producto en carrito */
+    .in-cart {
+        background-color: #10b981 !important; /* emerald-500 */
+        border-color: #059669 !important; /* emerald-600 */
+        color: white !important;
+    }
     </style>
     <script type="module" src="/js/hoisted.D4SCdckR.js"></script>
 </head>
@@ -474,6 +481,41 @@
     @if(session('alerta'))
         alert("{{ session('alerta') }}");
     @endif
+
+    // Función global para sincronizar indicadores de carrito
+    window.syncCartIndicators = async function() {
+        @guest return; @endguest
+        try {
+            const res = await fetch('{{ route("carrito.item_ids") }}');
+            const itemIds = await res.json();
+            
+            // Buscar todos los botones de "Agregar al carrito"
+            document.querySelectorAll('[id^="add-to-cart-"]').forEach(btn => {
+                const itemId = parseInt(btn.id.replace('add-to-cart-', ''));
+                const btnText = btn.querySelector('.button-text');
+                const originalText = btn.dataset.originalText || (btnText ? btnText.textContent : 'Agregar');
+                
+                // Guardar texto original si no existe
+                if (!btn.dataset.originalText) btn.dataset.originalText = originalText;
+                
+                if (itemIds.includes(itemId)) {
+                    btn.classList.add('in-cart');
+                    if (btnText) {
+                        btnText.innerHTML = '<i class="fas fa-check mr-1"></i> En el carrito';
+                    }
+                } else {
+                    btn.classList.remove('in-cart');
+                    if (btnText) btnText.textContent = originalText;
+                }
+            });
+        } catch (e) {
+            console.error('Error sincronizando carrito:', e);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.syncCartIndicators();
+    });
 
 </script>
 

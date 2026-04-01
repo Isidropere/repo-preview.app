@@ -220,6 +220,7 @@ Route::prefix('items')->group(function () {
 
 
 Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function () {
+    Route::get('/item-ids', [CarritoController::class, 'getItemIds'])->name('item_ids');
     Route::get('/carrito', [CarritoController::class, 'show'])->name('show');
     Route::post('/agregar', [CarritoController::class, 'agregarItem'])->name('agregar');
     Route::delete('/item/{id_item}', [CarritoController::class, 'eliminarItem'])->name('eliminarItem');

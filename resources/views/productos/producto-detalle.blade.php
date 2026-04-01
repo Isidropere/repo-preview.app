@@ -812,6 +812,7 @@ window.agregarAlCarrito = async function(id_item) {
         if (!res.ok) throw new Error(data.message||'Error');
         showNotification('Producto agregado al carrito','success');
         if (data.cart_count) updateCartCounter(data.cart_count);
+        if (window.syncCartIndicators) window.syncCartIndicators();
     } catch(e) { showNotification(e.message,'error'); }
     finally {
         if (btn) btn.disabled=false;

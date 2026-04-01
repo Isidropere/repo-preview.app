@@ -120,4 +120,16 @@ class CarritoController extends Controller
             'totales' => $resultado['data']['totales'],
         ]);
     }
+
+    public function getItemIds()
+    {
+        $userId = auth()->id();
+        if (!$userId) return response()->json([]);
+
+        $ids = \App\Models\ItemIntencionCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
+            ->pluck('id_item')
+            ->toArray();
+
+        return response()->json($ids);
+    }
 }

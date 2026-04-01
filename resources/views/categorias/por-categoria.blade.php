@@ -191,6 +191,9 @@
             if (!response.ok) throw new Error(data.message || "Error al agregar al carrito");
             showNotification("Producto agregado al carrito", "success");
             if (data.cart_count) updateCartCounter(data.cart_count);
+            
+            // Sincronizar indicadores visuales
+            if (window.syncCartIndicators) window.syncCartIndicators();
         } catch (e) { showNotification(e.message, "error"); }
         finally { 
             button.disabled = false; 
