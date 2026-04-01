@@ -29,7 +29,8 @@ class ItemIntencionCompra extends Model
 
     public function categoria()
     {
-        return $this->belongsTo(CategoriaItem::class, 'id_categoria_item', 'id_categoria_item');
+        // ItemIntencionCompra no tiene id_categoria_item — acceder via item()
+        return $this->item()->with('categoria');
     }
 
     public function item()
@@ -41,14 +42,17 @@ class ItemIntencionCompra extends Model
     {
         return $this->hasMany(ImagenItem::class, 'id_item', 'id_item');
     }
-    public function Usuarios()
+
+    // Usuario dueño del item (a través del item)
+    public function usuario()
     {
-        return $this->hasMany(user::class, 'id', 'id_user');
+        return $this->hasOneThrough(User::class, Item::class, 'id_item', 'id', 'id_item', 'id_user');
     }
 
-    public function Inventarios()
+    public function inventario()
     {
-        return $this->hasMany(Inventario::class, 'id_item', 'id_item');
+        // Acceder al inventario a través del item relacionado
+        return $this->hasOneThrough(Inventario::class, Item::class, 'id_item', 'id_item', 'id_item', 'id_item');
     }
 
 }

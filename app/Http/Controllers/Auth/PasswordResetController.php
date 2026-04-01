@@ -98,8 +98,7 @@ class PasswordResetController extends Controller
         return view('password_reset', [
             'token' => $token,
             'email' => $request->email,
-        ])->withErrors(['email' => 'The email address is required.']);
-
+        ]);
     }
 
     // Handle the password reset

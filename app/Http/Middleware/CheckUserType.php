@@ -11,7 +11,8 @@ class CheckUserType
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->tipo, $types)) {
+        // Usar id_tipo_usuario (columna real en BD), no $user->tipo que no existe
+        if (!$user || !in_array($user->id_tipo_usuario, $types)) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
