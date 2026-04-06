@@ -45,7 +45,7 @@
             @php
                 $imgNombre = $item->imagenes->where('estado', 'aprobado')->first()?->nombre;
                 $imgSrc    = $imgNombre
-                    ? asset('storage/imgs/articulos/items/'.$imgNombre)
+                    ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items',$imgNombre)
                     : asset('storage/imgs/producto_defaul.png');
                 $esVenta   = in_array($item->tipo_trans, [1, 3]);
                 $stock     = $item->inventarios?->cantidad ?? 1;

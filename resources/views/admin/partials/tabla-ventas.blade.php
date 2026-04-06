@@ -58,7 +58,7 @@
                                      class="w-full h-full object-cover"
                                      onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">
                             @elseif($primerImagen)
-                                <img src="{{ asset('storage/' . trim($primerImagen->ruta, '/') . '/' . $primerImagen->nombre) }}"
+                                <img src="{{ \App\Helpers\ImageHelper::urlMedia($primerImagen->ruta, $primerImagen->nombre) }}"
                                      alt="{{ $primerItem?->nombre_item }}"
                                      class="w-full h-full object-cover"
                                      onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">

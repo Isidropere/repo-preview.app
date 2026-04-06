@@ -67,7 +67,7 @@
         <!-- Imagen -->
         <div class="w-28 h-28 sm:w-32 sm:h-32 flex-shrink-0 mx-auto sm:mx-0">
             @if($item->imagenes->first())
-                <img src="{{ asset('storage/imgs/articulos/items/' . $item->imagenes->first()->nombre) }}" 
+                <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}" 
                      alt="{{ $item->item->item }}" 
                      class="w-full h-full object-cover rounded-xl border">
             @else

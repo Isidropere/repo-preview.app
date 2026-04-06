@@ -154,12 +154,12 @@ class TalentoRegistroPagoService
             if (Storage::disk('local')->exists($tempPath)) {
                 $ext      = pathinfo($tempPath, PATHINFO_EXTENSION);
                 $isVideo  = in_array(strtolower($ext), ['mp4', 'mov', 'm4v']);
-                $dir      = $isVideo ? 'videos/articulos/items' : $destDir;
+                $dir      = $isVideo ? 'imgs/videos/items' : $destDir;
                 $prefix   = $isVideo ? 'video_' : 'item_';
                 $fileName = $prefix . $itemId . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $ext;
 
                 $contenido = Storage::disk('local')->get($tempPath);
-                Storage::disk('public')->put($dir . '/' . $fileName, $contenido);
+                \App\Helpers\ImageHelper::guardarContenido($contenido, $dir, $fileName);
                 Storage::disk('local')->delete($tempPath);
 
                 DB::table('imagenes_item')->insert([
@@ -180,7 +180,7 @@ class TalentoRegistroPagoService
                 $fileName = 'item_' . $itemId . '_' . now()->format('YmdHis') . '_' . Str::random(8) . '.' . $ext;
 
                 $contenido = Storage::disk('local')->get($tempPath);
-                Storage::disk('public')->put($destDir . '/' . $fileName, $contenido);
+                \App\Helpers\ImageHelper::guardarContenido($contenido, $destDir, $fileName);
                 Storage::disk('local')->delete($tempPath);
 
                 DB::table('imagenes_item')->insert([

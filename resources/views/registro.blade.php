@@ -21,7 +21,7 @@
                             </a>
                         </p>
                     </div>
-                    <div class="mt-5" data-astro-cid-phpud7wc> <a href="{{ route('google.login') }}"
+                    <div class="mt-5" data-astro-cid-phpud7wc> <a href="{{ route('social.login', 'google') }}"
                             class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
                             data-astro-cid-phpud7wc> <svg class="w-4 h-auto" width="46" height="47" viewBox="0 0 46 47"
                                 fill="none" data-astro-cid-phpud7wc>

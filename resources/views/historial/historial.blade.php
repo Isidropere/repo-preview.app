@@ -112,10 +112,10 @@
                                     if ($pi->imagen_url) {
                                         $imgSrc = str_starts_with($pi->imagen_url, 'http')
                                             ? $pi->imagen_url
-                                            : asset('storage/' . $pi->imagen_url);
+                                            : asset($pi->imagen_url);
                                     } elseif ($pi->item?->imagenes?->first()) {
                                         $img = $pi->item->imagenes->first();
-                                        $imgSrc = asset('storage/' . trim($img->ruta ?? '', '/') . '/' . $img->nombre);
+                                        $imgSrc = \App\Helpers\ImageHelper::urlMedia($img->ruta ?? '', $img->nombre);
                                     }
                                 @endphp
                                 <img src="{{ $imgSrc }}"
@@ -193,7 +193,7 @@
                             @php
                                 $imagen = $intencion->item?->imagenes?->first();
                                 $src = $imagen
-                                    ? asset('storage/' . trim($imagen->ruta ?? '', '/') . '/' . $imagen->nombre)
+                                    ? \App\Helpers\ImageHelper::urlMedia($imagen->ruta ?? '', $imagen->nombre)
                                     : asset('imgs/producto_defaul.png');
                             @endphp
                             <img src="{{ $src }}" alt="{{ $intencion->item?->item }}"

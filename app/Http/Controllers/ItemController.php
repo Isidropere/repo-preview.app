@@ -209,93 +209,44 @@ class ItemController extends Controller
 
     protected function guardarImagenTalento($file, $itemId, $orden)
     {
-        // VerificaciÃ³n del archivo
         if (!$file || !$file->isValid()) {
-            \Log::error('Archivo invÃ¡lido', ['error' => $file->getErrorMessage()]);
-            throw new \Exception('El archivo no es vÃ¡lido: ' . $file->getErrorMessage());
+            \Log::error('Archivo inválido', ['error' => $file->getErrorMessage()]);
+            throw new \Exception('El archivo no es válido: ' . $file->getErrorMessage());
         }
 
-        // ValidaciÃ³n del path fÃ­sico
-        $pathname = $file->getPathname();
-        if (empty($pathname) || !file_exists($pathname)) {
-            \Log::error('Path fÃ­sico invÃ¡lido', ['path' => $pathname]);
-            throw new \Exception('El archivo no tiene un path fÃ­sico vÃ¡lido');
-        }
-
-        // ValidaciÃ³n del tipo de archivo
-        $allowedMimeTypes = [
-            'image/jpeg',
-            'image/png',
-            'image/jpg',
-            'image/webp',
-            'video/mp4',
-            'video/quicktime',
-            'video/x-m4v'
-        ];
-
+        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
         $mime = $file->getMimeType();
         $isVideo = str_starts_with($mime, 'video/');
 
         if (!in_array($mime, $allowedMimeTypes)) {
-            \Log::error('Tipo de archivo no permitido', ['mime' => $mime]);
             throw new \Exception('Tipo de archivo no permitido: ' . $mime);
         }
 
-        // ConfiguraciÃ³n de rutas segÃºn tipo
-        $directory = $isVideo ? 'videos/articulos/items' : 'imgs/articulos/items';
+        $directory = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
         $prefix = $isVideo ? 'video_' : 'item_';
 
-        // GeneraciÃ³n mejorada del nombre de archivo
-        $fileName = $prefix . $itemId . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $file->extension();
-
         try {
-            // Guardar el archivo en el disco 'public'
-            $path = Storage::disk('public')->putFileAs(
-                rtrim($directory, '/'), // Aseguramos que no termine con /
-                $file,
-                $fileName
-            );
+            $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, $prefix, $itemId);
 
-            if (empty($path)) {
-                throw new \Exception('No se pudo guardar el archivo en el almacenamiento');
-            }
-
-            // ValidaciÃ³n adicional del nombre del archivo
-            if (empty($fileName) || strpos($fileName, '/') !== false) {
-                \Log::error('Nombre de archivo invÃ¡lido', ['fileName' => $fileName]);
-                throw new \Exception('Nombre de archivo invÃ¡lido generado');
-            }
-
-            // Guardar metadatos en la base de datos
-            $dataToInsert = [
-                'nombre' => $fileName,
-                'extension' => $file->extension(),
-                'id_item' => $itemId,
+            DB::table('imagenes_item')->insert([
+                'nombre'              => $resultado['fileName'],
+                'extension'           => $file->extension(),
+                'id_item'             => $itemId,
                 'orden_visualizacion' => $orden,
-                'ruta' => $directory,
-                'tipo' => $isVideo ? 'video' : 'imagen'
-            ];
-
-            DB::table('imagenes_item')->insert($dataToInsert);
-
-            return [
-                'path' => $path,
-                'url' => asset('storage/' . $directory . $fileName),
-                'is_video' => $isVideo
-            ];
-
-        } catch (\Exception $e) {
-            \Log::error('Error al guardar archivo', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file_type' => $isVideo ? 'video' : 'imagen'
+                'ruta'                => $directory,
+                'tipo'                => $isVideo ? 'video' : 'imagen',
             ]);
 
-            // Eliminar archivo si se creÃ³ pero fallÃ³ la BD
-            if (!empty($path)) {
-                Storage::disk('public')->delete($path);
+            return [
+                'path'     => $resultado['path'],
+                'url'      => asset($resultado['path']),
+                'is_video' => $isVideo,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error al guardar archivo', ['error' => $e->getMessage(), 'file_type' => $isVideo ? 'video' : 'imagen']);
+            if (!empty($resultado['path'])) {
+                \App\Helpers\ImageHelper::eliminar($resultado['path']);
             }
-
             throw new \Exception('Error al guardar archivo: ' . $e->getMessage());
         }
     }
@@ -482,96 +433,46 @@ class ItemController extends Controller
 
     protected function guardarImagen($file, $itemId, $orden)
     {
-        // VerificaciÃ³n del archivo
         if (!$file || !$file->isValid()) {
-            \Log::error('Archivo invÃ¡lido', ['error' => $file->getErrorMessage()]);
-            throw new \Exception('El archivo no es vÃ¡lido: ' . $file->getErrorMessage());
+            \Log::error('Archivo inválido', ['error' => $file->getErrorMessage()]);
+            throw new \Exception('El archivo no es válido: ' . $file->getErrorMessage());
         }
 
-        // ValidaciÃ³n del path fÃ­sico
-        $pathname = $file->getPathname();
-        if (empty($pathname) || !file_exists($pathname)) {
-            \Log::error('Path fÃ­sico invÃ¡lido', ['path' => $pathname]);
-            throw new \Exception('El archivo no tiene un path fÃ­sico vÃ¡lido');
-        }
-
-        // ValidaciÃ³n del tipo de archivo
-        $allowedMimeTypes = [
-            'image/jpeg',
-            'image/png',
-            'image/jpg',
-            'image/webp',
-            'video/mp4',
-            'video/quicktime',
-            'video/x-m4v'
-        ];
-
+        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
         $mime = $file->getMimeType();
         $isVideo = str_starts_with($mime, 'video/');
 
         if (!in_array($mime, $allowedMimeTypes)) {
-            \Log::error('Tipo de archivo no permitido', ['mime' => $mime]);
             throw new \Exception('Tipo de archivo no permitido: ' . $mime);
         }
 
-        // ConfiguraciÃ³n de rutas segÃºn tipo
-        $directory = $isVideo ? 'videos/articulos/items' : 'imgs/articulos/items';
+        $directory = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
         $prefix = $isVideo ? 'video_' : 'item_';
 
-        // GeneraciÃ³n mejorada del nombre de archivo
-        $fileName = $prefix . $itemId . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $file->extension();
-
         try {
-            // Guardar el archivo en el disco 'public'
-            $path = Storage::disk('public')->putFileAs(
-                rtrim($directory, '/'), // Aseguramos que no termine con /
-                $file,
-                $fileName
-            );
+            $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, $prefix, $itemId);
 
-            if (empty($path)) {
-                throw new \Exception('No se pudo guardar el archivo en el almacenamiento');
-            }
-
-            // ValidaciÃ³n adicional del nombre del archivo
-            if (empty($fileName) || strpos($fileName, '/') !== false) {
-                \Log::error('Nombre de archivo invÃ¡lido', ['fileName' => $fileName]);
-                throw new \Exception('Nombre de archivo invÃ¡lido generado');
-            }
-
-            // Guardar metadatos en la base de datos
-            $dataToInsert = [
-                'nombre' => $fileName,
-                'extension' => $file->extension(),
-                'id_item' => $itemId,
+            DB::table('imagenes_item')->insert([
+                'nombre'              => $resultado['fileName'],
+                'extension'           => $file->extension(),
+                'id_item'             => $itemId,
                 'orden_visualizacion' => $orden,
-                'ruta' => $directory,
-                'tipo' => $isVideo ? 'video' : 'imagen'
-            ];
-
-            DB::table('imagenes_item')->insert($dataToInsert);
-
-            return [
-                'path' => $path,
-                'url' => asset('storage/' . $directory . $fileName),
-                'is_video' => $isVideo
-            ];
-
-        } catch (\Exception $e) {
-            \Log::error('Error al guardar archivo', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file_type' => $isVideo ? 'video' : 'imagen'
+                'ruta'                => $directory,
+                'tipo'                => $isVideo ? 'video' : 'imagen',
             ]);
 
-            // Eliminar archivo si se creÃ³ pero fallÃ³ la BD
-            if (!empty($path)) {
-                Storage::disk('public')->delete($path);
+            return [
+                'path'     => $resultado['path'],
+                'url'      => asset($resultado['path']),
+                'is_video' => $isVideo,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error al guardar archivo', ['error' => $e->getMessage()]);
+            if (!empty($resultado['path'])) {
+                \App\Helpers\ImageHelper::eliminar($resultado['path']);
             }
-
             throw new \Exception('Error al guardar archivo: ' . $e->getMessage());
         }
-
     }
 
 
@@ -1520,7 +1421,7 @@ class ItemController extends Controller
                 try {
                     $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
                     if ($imagenAnterior) {
-                        Storage::disk('public')->delete($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
+                        \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
                         $imagenAnterior->delete();
                     }
 
@@ -1538,7 +1439,7 @@ class ItemController extends Controller
 
             foreach ($imagenesActuales as $imagen) {
                 if (!in_array($imagen->id_imagen, $idsConservar)) {
-                    Storage::disk('public')->delete($imagen->ruta . '/' . $imagen->nombre);
+                    \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
                     $imagen->delete();
                 }
             }
@@ -1647,7 +1548,7 @@ class ItemController extends Controller
                 try {
                     $imagenPrincipalAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
                     if ($imagenPrincipalAnterior) {
-                        Storage::disk('public')->delete($imagenPrincipalAnterior->ruta . '/' . $imagenPrincipalAnterior->nombre);
+                        \App\Helpers\ImageHelper::eliminar($imagenPrincipalAnterior->ruta . '/' . $imagenPrincipalAnterior->nombre);
                         $imagenPrincipalAnterior->delete();
                     }
 
@@ -1673,7 +1574,7 @@ class ItemController extends Controller
 
             foreach ($imagenesActuales as $imagen) {
                 if (!in_array($imagen->id_imagen, $idsConservar)) {
-                    Storage::disk('public')->delete($imagen->ruta . '/' . $imagen->nombre);
+                    \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
                     Log::info('Imagen secundaria eliminada', [
                         'id_imagen' => $imagen->id_imagen,
                         'path' => $imagen->ruta . '/' . $imagen->nombre

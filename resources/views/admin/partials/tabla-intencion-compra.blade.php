@@ -29,7 +29,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                             @if($imagen)
-                                <img src="{{ asset('storage/' . trim($imagen->ruta, '/') . '/' . $imagen->nombre) }}"
+                                <img src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}"
                                      alt="{{ $ic->item?->item }}"
                                      class="w-full h-full object-cover"
                                      onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">

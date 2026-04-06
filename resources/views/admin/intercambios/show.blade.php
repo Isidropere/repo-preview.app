@@ -77,7 +77,7 @@
                         <div class="flex gap-4">
                             <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                                 @if($imgSol)
-                                    <img src="{{ asset('storage/' . trim($imgSol->ruta, '/') . '/' . $imgSol->nombre) }}"
+                                    <img src="{{ \App\Helpers\ImageHelper::urlMedia($imgSol->ruta, $imgSol->nombre) }}"
                                          alt="{{ $itemSolicitado->item }}"
                                          class="w-full h-full object-cover"
                                          onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">

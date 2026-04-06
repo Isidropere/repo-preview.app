@@ -108,7 +108,7 @@
                                     @if($item->imagenes->isNotEmpty())
                                         @php
                                             $image = $item->imagenes->first();
-                                            $imageUrl = asset('storage/' . trim(str_replace('\\', '/', $image->ruta), '/') . '/' . $image->nombre);
+                                            $imageUrl = \App\Helpers\ImageHelper::urlMedia(trim(str_replace('\\', '/', $image->ruta), '/'), $image->nombre);
                                         @endphp
 
                                         <img src="{{ $imageUrl }}"

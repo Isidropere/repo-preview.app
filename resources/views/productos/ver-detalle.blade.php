@@ -42,7 +42,7 @@
                     <div class="mb-4 rounded-lg overflow-hidden bg-gray-100" style="height: 400px;">
                         @if($item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty())
                             <img id="mainImage"  
-                                 src="{{ asset('storage/imgs/articulos/items/' . $item->imagenes->where('estado', 'aprobado')->first()->nombre) }}" 
+                                 src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->where('estado', 'aprobado')->first()->nombre) }}" 
                                  class="w-full h-full object-contain"
                                  alt="Imagen del artículo">
                         @else
@@ -59,21 +59,21 @@
             @if($index === 0 || $index === 1 )
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ asset('storage/imgs/articulos/items/' . $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16 object-contain w-1/2 h-16 object-cover">
                 </div>
                @elseif($index === 2|| $index === 3)
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ asset('storage/imgs/articulos/items/' . $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16 object-contain w-1/2 h-16 object-cover">
                 </div>
             @elseif($index === 4)
                 <!-- Imagen más grande que abarca dos columnas -->
                 <div class="col-span-2 cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ asset('storage/imgs/articulos/items/' . $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16  object-contain  w-1/2 h-16 object-cover">
                 </div>
@@ -159,7 +159,7 @@
                         <h2 class="text-lg font-medium text-gray-900">Información del vendedor</h2>
                         <div class="mt-4 flex items-center">
                             <div class="flex-shrink-0">
-                                <img class="h-10 w-10 rounded-full" src="{{ $item->usuario && $item->usuario->foto_perfil && ($item->usuario->foto_perfil_estado ?? 'pendiente') === 'aprobado' ? asset('storage/' . $item->usuario->foto_perfil) : asset('storage/imgs/default-profile.png') }}" alt="Foto del vendedor" onerror="this.src='{{ asset('storage/imgs/default-profile.png') }}'">
+                                <img class="h-10 w-10 rounded-full" src="{{ $item->usuario && $item->usuario->foto_perfil && ($item->usuario->foto_perfil_estado ?? 'pendiente') === 'aprobado' ? \App\Helpers\ImageHelper::urlPerfil($item->usuario->foto_perfil ?? null) : asset(\App\Helpers\ImageHelper::DEFAULT_PROFILE) }}" alt="Foto del vendedor" onerror="this.src='{{ asset(\App\Helpers\ImageHelper::DEFAULT_PROFILE) }}'">
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-gray-900">{{ $item->usuario->nombres ?? 'N/A' }} {{ $item->usuario->apellidos ?? '' }}</p>
@@ -199,7 +199,7 @@
 
                             @if($displayImage && $displayImage->nombre != null)
                                 <div class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
-                                    <img src="{{ asset('storage/imgs/articulos/items/' . $displayImage->nombre) }}" 
+                                    <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $displayImage->nombre) }}" 
                                          alt="{{ $relatedItem->item }}" 
                                          class="h-full w-full object-cover object-center lg:h-full lg:w-full"
                                          onerror="this.onerror=null;this.src='{{ asset('storage/images/default-image.jpg') }}'">

@@ -66,7 +66,7 @@
             @foreach($imagenesItems as $img)
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:10px 16px;">
-                    <img src="{{ asset('storage/' . $img->ruta) }}"
+                    <img src="{{ asset($img->ruta . '/' . ($img->nombre ?? '')) }}"
                          alt="Imagen artículo"
                          style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"
                          onerror="this.src='{{ asset('images/placeholder.png') }}'">
@@ -155,7 +155,7 @@
             @foreach($fotosUsuarios as $user)
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:10px 16px;">
-                    <img src="{{ asset('storage/' . $user->foto_perfil) }}"
+                    <img src="{{ \App\Helpers\ImageHelper::urlPerfil($user->foto_perfil) }}"
                          alt="Foto de perfil"
                          style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid #e2e8f0;"
                          onerror="this.src='{{ asset('images/default-avatar.png') }}'">

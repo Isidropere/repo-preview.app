@@ -69,6 +69,32 @@ use App\Http\Controllers\Auth\VerificationController;
 
 // Ruta principal
 Route::get('/', fn() => redirect()->route('home'));
+
+// Crear symlink storage en hosting compartido (MochaHost)
+// Visitar /storage-link una sola vez después de deploy
+Route::get('/storage-link', function () {
+    $target = storage_path('app/public');
+    $link   = public_path('storage');
+
+    if (file_exists($link)) {
+        return 'El enlace /public/storage ya existe.';
+    }
+
+    // Intentar symlink nativo
+    if (function_exists('symlink')) {
+        try {
+            symlink($target, $link);
+            return 'Symlink creado correctamente: public/storage → storage/app/public';
+        } catch (\Throwable $e) {
+            // Si symlink falla, intentar con Artisan
+        }
+    }
+
+    // Fallback: copiar contenido
+    \Illuminate\Support\Facades\File::copyDirectory($target, $link);
+    return 'Directorio copiado (symlink no disponible). Nota: deberás ejecutar esto después de cada upload.';
+});
+
 Route::get('/home', function () {
     $productosIntercambio = \Illuminate\Support\Facades\Cache::remember('home_intercambio', 600, function () {
         return \App\Models\Item::with([

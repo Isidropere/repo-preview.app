@@ -120,7 +120,7 @@
                                                 // Check that both ruta and nombre are not empty
                                                 if (!empty($image->ruta) && !empty($image->nombre)) {
                                                     $directory = trim(str_replace('\\', '/', $image->ruta), '/');
-                                                    $imageUrl = asset('storage/' . $directory . '/' . $image->nombre);
+                                                    $imageUrl = \App\Helpers\ImageHelper::urlMedia($directory, $image->nombre);
                                                 }
                                             }
                                         @endphp

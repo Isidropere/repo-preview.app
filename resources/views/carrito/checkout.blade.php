@@ -255,7 +255,7 @@
                         <div class="flex gap-3">
                             <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
                                 @if($item->imagenes->first())
-                                    <img src="{{ asset('storage/imgs/articulos/items/' . $item->imagenes->first()->nombre) }}"
+                                    <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}"
                                          alt="{{ $item->item->item }}" class="w-full h-full object-cover">
                                 @else
                                     <img src="{{ asset('storage/imgs/producto_defaul.png') }}"

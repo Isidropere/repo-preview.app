@@ -47,11 +47,11 @@
                 <div style="position:relative;background:#f8fafc;border-radius:0.875rem;overflow:hidden;height:290px;display:flex;align-items:center;justify-content:center;border:1px solid #f1f5f9;">
                     @if($imgPrincipal)
                         @if(($imgPrincipal->tipo ?? 'imagen') === 'video')
-                        <video id="mainMedia" src="{{ asset('storage/'.$imgPrincipal->ruta.'/'.$imgPrincipal->nombre) }}"
+                        <video id="mainMedia" src="{{ \App\Helpers\ImageHelper::urlMedia($imgPrincipal->ruta, $imgPrincipal->nombre) }}"
                                style="width:100%;height:100%;object-fit:contain;" controls></video>
                         @else
                         <img id="mainMedia"
-                             src="{{ asset('storage/'.$imgPrincipal->ruta.'/'.$imgPrincipal->nombre) }}"
+                             src="{{ \App\Helpers\ImageHelper::urlMedia($imgPrincipal->ruta, $imgPrincipal->nombre) }}"
                              alt="{{ $item->item }}"
                              style="width:100%;height:100%;object-fit:contain;cursor:zoom-in;"
                              onclick="openZoom(this.src)">
@@ -80,16 +80,16 @@
                 <div style="display:flex;gap:0.4rem;overflow-x:auto;padding-bottom:2px;">
                     @foreach($imagenes as $img)
                     @php $isVid = ($img->tipo ?? 'imagen') === 'video'; @endphp
-                    <button onclick="switchMedia('{{ asset('storage/'.$img->ruta.'/'.$img->nombre) }}', {{ $isVid ? 'true':'false' }})"
+                    <button onclick="switchMedia('{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}', {{ $isVid ? 'true':'false' }})"
                             style="flex-shrink:0;width:52px;height:52px;border-radius:0.5rem;border:2px solid #e2e8f0;overflow:hidden;cursor:pointer;padding:0;background:none;transition:border-color .15s;"
-                            data-src="{{ asset('storage/'.$img->ruta.'/'.$img->nombre) }}" class="thumb-btn"
+                            data-src="{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}" class="thumb-btn"
                             onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor=this.dataset.active?'#3b82f6':'#e2e8f0'">
                         @if($isVid)
                         <div style="width:100%;height:100%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">
                             <svg style="width:1rem;height:1rem;color:#94a3b8;" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
                         </div>
                         @else
-                        <img src="{{ asset('storage/'.$img->ruta.'/'.$img->nombre) }}" alt="min" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}" alt="min" style="width:100%;height:100%;object-fit:cover;">
                         @endif
                     </button>
                     @endforeach
@@ -291,7 +291,7 @@
             @foreach($relatedItems as $rel)
             @php
                 $ri  = $rel->imagenes->where('estado', 'aprobado')->first();
-                $riu = $ri ? asset('storage/'.$ri->ruta.'/'.$ri->nombre) : null;
+                $riu = $ri ? \App\Helpers\ImageHelper::urlMedia($ri->ruta, $ri->nombre) : null;
             @endphp
             <a href="{{ route('items.show', $rel->id_item) }}"
                style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:0.6rem;overflow:hidden;text-decoration:none;display:block;transition:box-shadow .2s,transform .2s;"
@@ -358,7 +358,7 @@
             <div style="display:flex;align-items:center;gap:0.75rem;background:#fff;border:1px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.75rem;">
                 @php $imgNeg = $imagenes->first(); @endphp
                 @if($imgNeg)
-                <img src="{{ asset('storage/'.$imgNeg->ruta.'/'.$imgNeg->nombre) }}"
+                <img src="{{ \App\Helpers\ImageHelper::urlMedia($imgNeg->ruta, $imgNeg->nombre) }}"
                      alt="{{ $item->item }}"
                      style="width:52px;height:52px;object-fit:cover;border-radius:0.5rem;flex-shrink:0;border:1px solid #f1f5f9;">
                 @else

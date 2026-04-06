@@ -152,7 +152,7 @@
                             <p class="text-xs text-gray-400 mt-1">JPEG, PNG, WebP o MP4 (Máx. 10MB)</p>
                         </div>
                         @if($imagenPrincipal)
-                            <img id="imagen_principal_preview" src="{{ asset('storage/' . $imagenPrincipal->ruta . '/' . $imagenPrincipal->nombre) }}" class="absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
+                            <img id="imagen_principal_preview" src="{{ \App\Helpers\ImageHelper::urlMedia($imagenPrincipal->ruta, $imagenPrincipal->nombre) }}" class="absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
                         @else
                             <img id="imagen_principal_preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
                         @endif
@@ -182,7 +182,7 @@
                                 <p class="text-xs text-gray-400">Imagen {{ $i + 1 }}</p>
                             </div>
                             <img class="preview-image {{ $imagen ? '' : 'hidden' }} absolute inset-0 w-full h-full object-cover rounded-xl"
-                                 src="{{ $imagen ? asset('storage/' . $imagen->ruta . '/' . $imagen->nombre) : '' }}" alt="Vista previa"/>
+                                 src="{{ $imagen ? \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) : '' }}" alt="Vista previa"/>
                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center preview-actions {{ $imagen ? '' : 'hidden' }}">
                                 <button type="button" class="text-white bg-red-500 rounded-full p-1.5 hover:bg-red-600 transition-colors" data-action="remove">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
