@@ -293,7 +293,7 @@
                 $ri  = $rel->imagenes->where('estado', 'aprobado')->first();
                 $riu = $ri ? \App\Helpers\ImageHelper::urlMedia($ri->ruta, $ri->nombre) : null;
             @endphp
-            <a href="{{ route('items.show', $rel->id_item) }}"
+            <a href="{{ route('producto.detalle', $rel->slug) }}"
                style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:0.6rem;overflow:hidden;text-decoration:none;display:block;transition:box-shadow .2s,transform .2s;"
                onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)';this.style.transform='translateY(-2px)'"
                onmouseout="this.style.boxShadow='none';this.style.transform='none'">

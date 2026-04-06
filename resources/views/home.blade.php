@@ -34,28 +34,28 @@
                             Categorías Populares
                                                 </h1>
                         <div class="p-0 lg:p-6 rounded-2xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-x-2 lg:gap-x-8 gap-y-1 md:gap-y-4 lg:max-w-[900px] mt-0 lg:mt-4 justify-items-center mx-auto">
-                            <a href="{{ route('categorias.show', 26) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Damas</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 27) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Caballeros</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 20) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Niños</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 19) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Teléfonos</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 16) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Hogar</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 4) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Gamer</h2>
                             </a>
-                            <a href="{{ route('categorias.show', 29) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Talentos</h2>
                             </a>
-                                 <a href="{{ route('categorias.show', 10) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
+                                 <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(10)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
                                 <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Otras categorías</h2>
                             </a>

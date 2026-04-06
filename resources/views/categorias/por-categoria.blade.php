@@ -22,7 +22,7 @@
     {{-- Barra de búsqueda y filtros --}}
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.05);">
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:stretch;">
-            <form action="{{ route('categorias.show', $categoria->id_categoria_item) }}" method="GET" style="flex:1;min-width:200px;display:flex;">
+            <form action="{{ route('categorias.show', $categoria->slug) }}" method="GET" style="flex:1;min-width:200px;display:flex;">
                 <input type="text" name="search" placeholder="Buscar en {{ $categoria->categoria }}..."
                        value="{{ request('search') }}"
                        style="flex:1;padding:0.6rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem 0 0 0.5rem;font-size:0.875rem;outline:none;">
@@ -137,7 +137,7 @@
             <p style="color:#6b7280;font-size:0.9rem;max-width:400px;margin:0 auto 1.5rem;">
                 @if(request()->has('search'))
                     No hay resultados para "{{ request('search') }}".
-                    <a href="{{ route('categorias.show', $categoria->id_categoria_item) }}" style="color:#479bd5;">Ver todos</a>
+                    <a href="{{ route('categorias.show', $categoria->slug) }}" style="color:#479bd5;">Ver todos</a>
                 @else
                     Esta categoría aún no tiene productos.
                 @endif

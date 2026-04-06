@@ -16,7 +16,7 @@
 
         @if($message->item)
             <div class="bg-gray-50 rounded p-3 mb-4">
-                <p class="text-sm text-gray-600">Artículo: <a href="{{ route('items.show', $message->item->id_item) }}" class="text-blue-600 hover:underline">{{ $message->item->item }}</a></p>
+                <p class="text-sm text-gray-600">Artículo: <a href="{{ route('producto.detalle', $message->item->slug) }}" class="text-blue-600 hover:underline">{{ $message->item->item }}</a></p>
             </div>
         @endif
 

@@ -19,14 +19,7 @@
     @stack('head_styles')
  
 
-           <?php
-           //$allowedReferer = 'http://localhost:40364'; // O usa 127.0.0.1 si aplica
-           
-           //if (!isset($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], $allowedReferer) !== 0) {
-           //    http_response_code(403); // Prohibido
-           //    exit('Acceso no autorizado - Solo desde localhost');
-           //}
-           ?>
+         
 
 
 

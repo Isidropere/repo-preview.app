@@ -1,9 +1,7 @@
-<!-- Banner superior -->
+
 <section class="flex justify-center items-center w-full bg-primary font-medium text-center py-1">
     Encuentra lo que deseas cambiar
 </section>
-
-
 
 <!-- Header principal -->
 <header class="w-full bg-[#FAFAFA] text-xl py-3 md:py-4 shadow-lg sticky top-0 z-50">
@@ -13,45 +11,30 @@
         <nav class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4" aria-label="Global">
           
             <!-- Primera fila (logo, buscador móvil y menú hamburguesa) -->
-            <div class="flex items-center justify-between w-full lg:w-auto gap-4">
+            <div class="flex items-center justify-between w-full lg:w-auto gap-2">
                  <!-- Logo -->
-                <a class="h-auto min-w-[160px]" href="/" aria-label="Brand">
+                <a class="h-auto flex-shrink-0" href="/" aria-label="Brand">
                     <img src="/imgs/logoTypes/header-logo.png" id="logoHeader" class="object-cover w-[160px] md:w-[210px] h-auto" alt="Brand Logo">
                 </a>
                 <!-- Buscador móvil con input + botón pegado -->
-                <div class="block lg:hidden w-full">
+                <div class="block lg:hidden flex-1 min-w-0">
                     <form method="GET" action="{{ route('items.search_header') }}" class="w-full flex">
                         <label for="mobile-search" class="sr-only">Buscar</label>
-
-                        <!-- Contenedor relativo para el input + icono -->
-                        <div class="relative flex-grow min-w-0">
-                            <!-- Icono de lupa dentro del input -->
-                            <div class="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                <svg class="w-4 h-4 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                                </svg>
-                            </div>
-
-                            <!-- Input de búsqueda -->
-                            <input type="search" id="mobile-search"
-                                   name="q"
-                                   class="w-full py-1 pl-7 pr-2 text-xs text-gray-900 border border-gray-300 rounded-l-md bg-gray-50 focus:ring-1 focus:ring-secondary focus:border-secondary"
-                                   placeholder="Buscar..."
-                                   value="{{ request('q') }}"
-                                   required>
-                        </div>
-
-                        <!-- Botón Buscar (fuera del div relativo, pegado al input) -->
+                        <input type="search" id="mobile-search"
+                               name="q"
+                               class="flex-1 min-w-0 py-1.5 px-3 text-xs text-gray-900 border border-gray-300 rounded-l-md bg-gray-50 focus:ring-1 focus:ring-secondary focus:border-secondary"
+                               placeholder="Buscar..."
+                               value="{{ request('q') }}"
+                               required>
                         <button type="submit"
-                                class="flex-shrink-0 bg-primary text-white rounded-r-md text-xs px-3 py-1 hover:bg-hoverPrimary whitespace-nowrap">
+                                class="flex-shrink-0 bg-primary text-white rounded-r-md text-xs px-3 py-1.5 hover:bg-hoverPrimary whitespace-nowrap">
                             Buscar
                         </button>
-
                     </form>
                 </div>
 
                 <!-- Botón menú hamburguesa (solo móvil) -->
-                <div class="lg:hidden">
+                <div class="lg:hidden flex-shrink-0">
                     <button type="button" class="flex justify-center items-center p-1.5 text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
                         <svg class="hs-collapse-open:hidden flex-shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" x2="21" y1="6" y2="6"></line>

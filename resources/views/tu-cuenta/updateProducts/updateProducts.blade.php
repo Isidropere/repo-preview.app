@@ -416,7 +416,7 @@
         </div>
         <div class="p-4" data-astro-cid-pwmmw5ba> <a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/13" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(13)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/cuidadoPersonal.svg" alt="Cuidado personal icon"
                         data-astro-cid-pwmmw5ba>
@@ -425,7 +425,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/14" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(14)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/decoraciones.svg" alt="Decoraciones icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -433,7 +433,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/15" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(15)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/deportes.svg" alt="Deportes icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -441,7 +441,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/7" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(7)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/herramientas.svg" alt="Herramientas icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -449,7 +449,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/16" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/hogar.svg" alt="Hogar icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -457,7 +457,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/1" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(1)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/instrumentos.svg" alt="Instrumentos musicales icon"
                         data-astro-cid-pwmmw5ba>
@@ -466,7 +466,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/17" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(17)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/jardin.svg" alt="Jardín icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -474,7 +474,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/4" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/juegos.svg" alt="Juegos icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -482,7 +482,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/19" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/telefono.svg" alt="Teléfonos icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -490,7 +490,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/20" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/niños.svg" alt="Niños icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -498,7 +498,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/21" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(21)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/Antiguedades.svg" alt="Antigüedades icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -506,7 +506,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/22" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(22)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/vehiculos.svg" alt="Vehículos icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -514,7 +514,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/23" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(23)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/mascotas.svg" alt="Mascotas icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -522,7 +522,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/24" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/tecnología.svg" alt="Tecnología icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -530,7 +530,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/25" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(25)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/librería.svg" alt="Librería y Papelería icon"
                         data-astro-cid-pwmmw5ba>
@@ -539,7 +539,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/26" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/damas.svg" alt="Damas icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -547,7 +547,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/27" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/caballeros.svg" alt="Caballeros icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -555,7 +555,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/28" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(28)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/oficina.svg" alt="Oficina icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
@@ -571,7 +571,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="/items/categoria/11" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/age-limit.svg" alt="Adultos icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"

@@ -80,19 +80,44 @@ Route::get('/storage-link', function () {
         return 'El enlace /public/storage ya existe.';
     }
 
-    // Intentar symlink nativo
     if (function_exists('symlink')) {
         try {
             symlink($target, $link);
             return 'Symlink creado correctamente: public/storage → storage/app/public';
         } catch (\Throwable $e) {
-            // Si symlink falla, intentar con Artisan
+            // Si symlink falla, copiar
         }
     }
 
-    // Fallback: copiar contenido
     \Illuminate\Support\Facades\File::copyDirectory($target, $link);
-    return 'Directorio copiado (symlink no disponible). Nota: deberás ejecutar esto después de cada upload.';
+    return 'Directorio copiado (symlink no disponible).';
+});
+
+// Migrar imágenes de storage/app/public/ a public/ (ejecutar una vez en MochaHost)
+Route::get('/migrate-images', function () {
+    $source = storage_path('app/public');
+    $dest   = public_path();
+    $count  = 0;
+
+    $dirs = ['imgs/articulos/items', 'imgs/videos/items', 'videos/articulos/items'];
+    foreach ($dirs as $dir) {
+        $src = $source . '/' . $dir;
+        $dst = $dest . '/' . $dir;
+        if (is_dir($src)) {
+            if (!is_dir($dst)) {
+                mkdir($dst, 0755, true);
+            }
+            foreach (scandir($src) as $file) {
+                if ($file === '.' || $file === '..') continue;
+                if (!file_exists($dst . '/' . $file)) {
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                    $count++;
+                }
+            }
+        }
+    }
+
+    return "Migración completada: {$count} archivos copiados a public/.";
 });
 
 Route::get('/home', function () {
@@ -232,7 +257,7 @@ Route::prefix('items')->group(function () {
     Route::get('/categoria29', [ItemController::class, 'soloCategoria29'])->name('items.soloCategoria29');
     Route::get('/search', [ItemController::class, 'search'])->middleware('throttle:30,1')->name('items.search');
     Route::get('/info/{id}', [ItemController::class, 'info'])->name('items.info');
-    Route::get('/categoria/{id}', [ItemController::class, 'porCategoria'])->name('categorias.show');
+    Route::get('/categoria/{slug}', [ItemController::class, 'porCategoria'])->name('categorias.show');
     Route::get('/producto/{slug}', [ItemController::class, 'showDetail'])->name('producto.detalle');
 
     // Rutas protegidas con segmentos específicos — deben ir ANTES del wildcard /{id}

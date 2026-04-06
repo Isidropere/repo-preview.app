@@ -814,8 +814,25 @@ class ItemController extends Controller
     public function show($id)
     {
         try {
-            $categoria = CategoriaItem::findOrFail($id);
-            $items = Item::where('id_categoria_item', $id);
+            // Soportar ambos: ID numérico (legacy) y slug con hash
+            if (ctype_digit((string) $id)) {
+                $catId = (int) $id;
+            } else {
+                $catId = \App\Helpers\HashIdHelper::decode($id);
+            }
+
+            if (!$catId) {
+                abort(404, 'Categoría no encontrada');
+            }
+
+            $categoria = CategoriaItem::findOrFail($catId);
+
+            // Redirigir ID numérico al slug
+            if (ctype_digit((string) $id)) {
+                return redirect()->route('categorias.show', $categoria->slug, 301);
+            }
+
+            $items = Item::where('id_categoria_item', $catId);
 
             if (request()->has('sort')) {
                 $sort = request('sort');
@@ -922,10 +939,27 @@ class ItemController extends Controller
     }
 
 
-    public function porCategoria($id)
+    public function porCategoria($slug)
     {
         try {
+            // Soportar ambos formatos: ID numérico (legacy) y slug con hash
+            if (ctype_digit($slug)) {
+                $id = (int) $slug;
+            } else {
+                $id = \App\Helpers\HashIdHelper::decode($slug);
+            }
+
+            if (!$id) {
+                abort(404, 'Categoría no encontrada');
+            }
+
             $categoria = CategoriaItem::findOrFail($id);
+
+            // Si llegó con ID numérico, redirigir al slug correcto (SEO)
+            if (ctype_digit($slug)) {
+                return redirect()->route('categorias.show', $categoria->slug, 301);
+            }
+
             $query = Item::where('id_categoria_item', $id);
 
             switch (request('sort')) {
