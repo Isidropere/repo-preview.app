@@ -55,7 +55,7 @@
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Talentos</h2>
                             </a>
-                                 <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(10)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
+                                 <a href="{{ route('categorias.otras') }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
                                 <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2">
                                 <h2 class="font-medium text-center">Otras categorías</h2>
                             </a>

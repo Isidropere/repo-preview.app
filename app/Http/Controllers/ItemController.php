@@ -938,6 +938,21 @@ class ItemController extends Controller
         }
     }
 
+    /**
+     * Muestra todas las categorías excepto las destacadas del home.
+     */
+    public function otrasCategorias()
+    {
+        // IDs de categorías que ya aparecen en el home
+        $idsHome = [26, 27, 20, 19, 16, 4, 29];
+
+        $categorias = CategoriaItem::whereNotIn('id_categoria_item', $idsHome)
+            ->orderBy('categoria', 'asc')
+            ->get();
+
+        return view('categorias.otras-categorias', compact('categorias'));
+    }
+
 
     public function porCategoria($slug)
     {

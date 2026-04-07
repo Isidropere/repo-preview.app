@@ -257,6 +257,7 @@ Route::prefix('items')->group(function () {
     Route::get('/categoria29', [ItemController::class, 'soloCategoria29'])->name('items.soloCategoria29');
     Route::get('/search', [ItemController::class, 'search'])->middleware('throttle:30,1')->name('items.search');
     Route::get('/info/{id}', [ItemController::class, 'info'])->name('items.info');
+    Route::get('/otras-categorias', [ItemController::class, 'otrasCategorias'])->name('categorias.otras');
     Route::get('/categoria/{slug}', [ItemController::class, 'porCategoria'])->name('categorias.show');
     Route::get('/producto/{slug}', [ItemController::class, 'showDetail'])->name('producto.detalle');
 

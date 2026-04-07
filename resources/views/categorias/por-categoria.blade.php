@@ -15,7 +15,7 @@
             <span>/</span>
             <span style="color:#111827;font-weight:500;">{{ $categoria->categoria }}</span>
         </nav>
-        <h1 style="font-size:1.75rem;font-weight:700;color:#111827;margin:0;">{{ $categoria->categoria }}</h1>
+        <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold my-2">{{ $categoria->categoria }}</h1>
         <p style="color:#6b7280;margin-top:0.25rem;font-size:0.9rem;">{{ $items->total() }} producto{{ $items->total() != 1 ? 's' : '' }}</p>
     </div>
 
