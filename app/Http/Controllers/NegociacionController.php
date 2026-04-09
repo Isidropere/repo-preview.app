@@ -16,8 +16,10 @@ use Illuminate\Http\Request;
  *   Receptor → usuario DUEÑO del artículo solicitado
  *
  * ESTADOS:
- *   Inicial → pendiente → contraoferta → aceptado → completado
- *                       → rechazado / cancelado
+ *   Inicial → aceptado → completado
+ *           → contraoferta → aceptado / rechazado
+ *           → rechazado
+ *           → cancelado (por el emisor)
  * ============================================================
  */
 class NegociacionController extends Controller
@@ -63,12 +65,36 @@ class NegociacionController extends Controller
     public function aceptar($id)
     {
         $resultado = $this->negociacionService->aceptar(auth()->id(), $id);
+        if (request()->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
     public function rechazar(Request $request, $id)
     {
         $resultado = $this->negociacionService->rechazar(auth()->id(), $id);
+        if ($request->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
+        return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
+    }
+
+    public function cancelar($id)
+    {
+        $resultado = $this->negociacionService->cancelar(auth()->id(), $id);
+        if (request()->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
+        return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
+    }
+
+    public function completar($id)
+    {
+        $resultado = $this->negociacionService->completar(auth()->id(), $id);
+        if (request()->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
@@ -80,6 +106,9 @@ class NegociacionController extends Controller
         ]);
 
         $resultado = $this->negociacionService->contraoferta(auth()->id(), $id, $validated);
+        if ($request->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 

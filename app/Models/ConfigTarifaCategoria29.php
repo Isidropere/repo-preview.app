@@ -25,10 +25,12 @@ class ConfigTarifaCategoria29 extends Model
      */
     public static function vigente(): self
     {
-        return static::first() ?? new static([
-            'monto_registro'            => 0,
-            'descuento_venta_masiva'    => 0,
-            'cantidad_minima_descuento' => 1,
-        ]);
+        return cache()->remember('config_tarifa_cat29', 3600, function () {
+            return static::first() ?? new static([
+                'monto_registro'            => 0,
+                'descuento_venta_masiva'    => 0,
+                'cantidad_minima_descuento' => 1,
+            ]);
+        });
     }
 }

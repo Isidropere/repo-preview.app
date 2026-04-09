@@ -97,6 +97,7 @@
                         @endif
 
                         {{-- Botón intercambio --}}
+                        @if($stock > 0)
                         <a href="{{ route('producto.detalle', $item->slug) }}#intercambio"
                            style="flex:1;display:flex;align-items:center;justify-content:center;gap:0.3rem;background:#fff;color:#059669;border:1.5px solid #10b981;border-radius:0.5rem;padding:0.45rem 0.5rem;font-size:0.72rem;font-weight:700;text-decoration:none;transition:background .15s;"
                            onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#fff'">
@@ -105,6 +106,9 @@
                             </svg>
                             <span>Intercambiar</span>
                         </a>
+                        @else
+                        <span style="flex:1;text-align:center;background:#f1f5f9;color:#94a3b8;border-radius:0.5rem;padding:0.5rem;font-size:0.72rem;font-weight:600;">Agotado</span>
+                        @endif
 
                         {{-- Ícono ver detalle --}}
                         <a href="{{ route('producto.detalle', $item->slug) }}"

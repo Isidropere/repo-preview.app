@@ -96,7 +96,7 @@
                                 Ver detalles
                                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
-                            @if($item->estatus == 1)
+                            @if($item->estatus == 1 && ($item->inventarios?->cantidad ?? 0) > 0)
                                 @auth
                                     <button onclick="agregarAlCarrito({{ $item->id_item }})"
                                         id="add-to-cart-{{ $item->id_item }}"
@@ -111,6 +111,8 @@
                                 @guest
                                     <a href="{{ route('login') }}" style="font-size:0.8rem;font-weight:500;color:#479bd5;text-decoration:none;">Iniciar sesión</a>
                                 @endguest
+                            @elseif($item->estatus == 1 && ($item->inventarios?->cantidad ?? 0) <= 0)
+                                <span style="font-size:0.8rem;font-weight:600;color:#94a3b8;">Agotado</span>
                             @endif
                         </div>
                     </div>

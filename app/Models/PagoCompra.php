@@ -53,7 +53,7 @@ class PagoCompra extends Model
         'tracking_url',      // URL completa de rastreo construida por el admin
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Mapear la columna 'fecha' de la BD como fecha de creación
     const CREATED_AT = 'fecha';

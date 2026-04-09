@@ -53,25 +53,31 @@ class CheckoutService
             return $this->error('No hay ítems seleccionados para pagar.');
         }
 
-        // 2. Validar dirección predeterminada
+        // 2. Validar que no se compre a sí mismo
+        $itemsPropios = $itemsSeleccionados->filter(fn($i) => $i->item->id_user === $userId);
+        if ($itemsPropios->isNotEmpty()) {
+            return $this->error('No puedes comprar tus propios artículos.');
+        }
+
+        // 3. Validar dirección predeterminada
         $direccion = $this->obtenerDireccionPredeterminada($userId);
         if (!$direccion) {
             return $this->error('Debes registrar una dirección de envío antes de realizar un pago. Ve a tu perfil → Direcciones.');
         }
 
-        // 3. Verificar stock
+        // 4. Verificar stock (con precios actualizados)
         $errorStock = $this->verificarStock($itemsSeleccionados);
         if ($errorStock) {
             return $this->error($errorStock);
         }
 
-        // 4. Calcular monto total
+        // 5. Calcular monto total (usa precios actuales del item, no del carrito)
         $montoTotal = $this->calcularTotal($itemsSeleccionados);
         if ($montoTotal <= 0) {
             return $this->error('El monto total no puede ser cero o negativo.');
         }
 
-        // 5. Validar tarjeta del usuario
+        // 6. Validar tarjeta del usuario
         $tarjeta = $this->obtenerTarjetaUsuario($idTarjeta, $userId);
         if (!$tarjeta) {
             return $this->error('Tarjeta no válida o no pertenece a tu cuenta.');
@@ -122,6 +128,11 @@ class CheckoutService
     private function verificarStock(Collection $items): ?string
     {
         foreach ($items as $item) {
+            // Verificar que el item siga activo
+            if ($item->item->estatus != 1) {
+                return "El artículo \"{$item->item->item}\" ya no está disponible.";
+            }
+
             $inventario = $item->item->inventarios;
             if (!$inventario || $inventario->cantidad < $item->cantidad) {
                 $disponible = $inventario->cantidad ?? 0;
@@ -249,9 +260,19 @@ class CheckoutService
         $inventario = $itemModel->inventarios;
 
         $imagen    = $itemModel->imagenes()->first();
-        $imagenUrl = $imagen
-            ? trim($imagen->ruta ?? '', '/') . '/' . $imagen->nombre
-            : null;
+        $imagenUrl = null;
+        if ($imagen) {
+            $ruta = trim($imagen->ruta ?? '', '/');
+            $directPath = $ruta . '/' . $imagen->nombre;
+            // Guardar la ruta que realmente existe en el servidor
+            if (file_exists(public_path($directPath))) {
+                $imagenUrl = $directPath;
+            } elseif (file_exists(public_path('storage/' . $directPath))) {
+                $imagenUrl = 'storage/' . $directPath;
+            } else {
+                $imagenUrl = $directPath;
+            }
+        }
 
         PagoItem::create([
             'id_pago_compra'  => $pagoCompra->id_pago_compra,

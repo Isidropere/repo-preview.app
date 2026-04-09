@@ -13,12 +13,11 @@
  *
  * Estados posibles del campo `estado`:
  *   - 'Inicial'      → Negociación recién creada
- *   - 'pendiente'    → Esperando respuesta del receptor
  *   - 'contraoferta' → El receptor hizo una contraoferta
  *   - 'aceptado'     → Ambas partes acordaron
  *   - 'completado'   → Intercambio finalizado
- *   - 'rechazado'    → Fue rechazado por alguna parte
- *   - 'cancelado'    → Cancelado por admin u otra razón
+ *   - 'rechazado'    → Fue rechazado por el receptor
+ *   - 'cancelado'    → Cancelado por el emisor o por falta de stock
  * ============================================================
  */
 
@@ -59,6 +58,12 @@ class Negociacion extends Model
      */
     public $timestamps = false;
 
+    protected $casts = [
+        'monto_oferta'        => 'decimal:2',
+        'monto_contra_oferta' => 'decimal:2',
+        'fecha_creacion'      => 'datetime',
+    ];
+
     // ============================================================
     // RELACIONES ELOQUENT
     // ============================================================
@@ -88,36 +93,6 @@ class Negociacion extends Model
     public function item()
     {
         return $this->belongsTo(Item::class, 'receptor_item_id');
-    }
-
-    /**
-     * Artículos que el emisor ofrece a cambio (tabla pivot).
-     *
-     * NOTA: Esta tabla pivot (negociacion_items_oferta) aún no existe
-     * en la base de datos. La relación está definida pero no debe
-     * usarse hasta que se cree la migración correspondiente.
-     */
-    public function itemsOferta()
-    {
-        // Tabla pivot no existe en BD — relación deshabilitada
-        return $this->belongsToMany(Item::class, 'negociacion_items_oferta', 'negociacion_id_negociacion', 'item_id_item')
-            ->withPivot('cantidad')
-            ->withTimestamps();
-    }
-
-    /**
-     * Artículos que el receptor propone como contraoferta (tabla pivot).
-     *
-     * NOTA: Esta tabla pivot (negociacion_items_contraoferta) aún no existe
-     * en la base de datos. La relación está definida pero no debe
-     * usarse hasta que se cree la migración correspondiente.
-     */
-    public function itemsContraOferta()
-    {
-        // Tabla pivot no existe en BD — relación deshabilitada
-        return $this->belongsToMany(Item::class, 'negociacion_items_contraoferta', 'negociacion_id_negociacion', 'item_id_item')
-            ->withPivot('cantidad')
-            ->withTimestamps();
     }
 
     /**

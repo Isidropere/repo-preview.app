@@ -38,6 +38,21 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4 mb-6 shadow-sm">
+        <svg class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1">
+            <p class="font-semibold text-sm">Datos inválidos</p>
+            @foreach($errors->all() as $err)
+                <p class="text-sm mt-0.5">{{ $err }}</p>
+            @endforeach
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xl leading-none ml-2">&#x2715;</button>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <div class="lg:col-span-2 space-y-6">
@@ -452,8 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (r) r.checked = true;
     }
 
-    // Re-habilitar botón si la página recargó con error
-    @if(session('error'))
+    // Re-habilitar botón si la página recargó con error o errores de validación
+    @if(session('error') || $errors->any())
     const btnPagarInit = document.getElementById('btnPagar');
     if (btnPagarInit) {
         btnPagarInit.disabled = false;

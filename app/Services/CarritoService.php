@@ -36,7 +36,7 @@ class CarritoService
             ->with([
                 'itemsIntencionCompra.item.categoria',
                 'itemsIntencionCompra.imagenes',
-                'itemsIntencionCompra.Inventarios',
+                'itemsIntencionCompra.inventario',
             ])->first();
 
         if (!$carrito) {
@@ -65,6 +65,35 @@ class CarritoService
     {
         $carrito = Carrito::firstOrCreate(['id_user' => $userId]);
         $itemBase = Item::findOrFail($idItem);
+
+        // No permitir auto-compra
+        if ($itemBase->id_user === $userId) {
+            return ['success' => false, 'message' => 'No puedes comprar tu propio artículo.'];
+        }
+
+        // No permitir mezclar talentos (cat 29) con productos físicos en el mismo carrito
+        $itemsExistentes = $carrito->itemsIntencionCompra()->with('item')->get();
+        if ($itemsExistentes->isNotEmpty()) {
+            $esNuevoTalento = (int) $itemBase->id_categoria_item === 29;
+            $tieneProductos = $itemsExistentes->contains(fn($i) => (int) $i->item?->id_categoria_item !== 29);
+            $tieneTalentos = $itemsExistentes->contains(fn($i) => (int) $i->item?->id_categoria_item === 29);
+
+            if ($esNuevoTalento && $tieneProductos) {
+                return ['success' => false, 'message' => 'No puedes mezclar servicios y productos físicos en el mismo carrito.'];
+            }
+            if (!$esNuevoTalento && $tieneTalentos) {
+                return ['success' => false, 'message' => 'No puedes mezclar productos físicos y servicios en el mismo carrito.'];
+            }
+        }
+
+        // Validar stock disponible
+        $stockDisponible = $itemBase->inventarios?->cantidad ?? 0;
+        if ($stockDisponible <= 0) {
+            return ['success' => false, 'message' => 'Este artículo está agotado.'];
+        }
+        if ($cantidad > $stockDisponible) {
+            return ['success' => false, 'message' => "Stock insuficiente. Disponible: {$stockDisponible}"];
+        }
 
         // Calcular descuento por volumen para categoría 29 tipo venta
         $descuento = $itemBase->descuento ?? 0;

@@ -128,6 +128,30 @@ class Item extends Model
         return $this->hasOne(Inventario::class, 'id_item', 'id_item');
     }
 
+    /**
+     * Verifica si hay stock disponible para la cantidad solicitada.
+     */
+    public function tieneStock(int $cantidad = 1): bool
+    {
+        return ($this->inventarios?->cantidad ?? 0) >= $cantidad;
+    }
+
+    /**
+     * Retorna el stock disponible.
+     */
+    public function getStockAttribute(): int
+    {
+        return $this->inventarios?->cantidad ?? 0;
+    }
+
+    /**
+     * Verifica si el item está activo y con stock.
+     */
+    public function estaDisponible(int $cantidad = 1): bool
+    {
+        return $this->estatus == 1 && $this->tieneStock($cantidad);
+    }
+
 
     /**
      * Obtiene los colores asociados con este item.
@@ -142,6 +166,15 @@ class Item extends Model
     public $timestamps = true;
     const CREATED_AT = 'fecha';
     const UPDATED_AT = null;
+
+    protected $casts = [
+        'valor'     => 'decimal:2',
+        'descuento' => 'decimal:2',
+        'peso_lbs'  => 'decimal:2',
+        'alto_cm'   => 'decimal:2',
+        'ancho_cm'  => 'decimal:2',
+        'profundo_cm' => 'decimal:2',
+    ];
 
     /**
      * URL slug: nombre-del-item-HASH
