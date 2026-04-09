@@ -26,12 +26,14 @@
                 <p class="font-normal group-hover:font-bold group-hover:underline-animation">Vehículos</p>
             </div>
         </a>
+        @auth
         <a class="group flex gap-x-5 text-gray-800 transition-all duration-300 hover:bg-gray-200 rounded-lg p-4" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}">
             <div class="grow flex gap-x-2 fill-secondary"> 
                 <img src="/imgs/icons/side-bar-icons/age-limit.svg" alt="Adultos icon">
                 <p class="font-normal group-hover:font-bold group-hover:underline-animation">Adultos</p>
             </div>
         </a>
+        @endauth
         <a class="group flex gap-x-5 text-gray-800 transition-all duration-300 hover:bg-gray-200 rounded-lg p-4" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(21)) }}">
             <div class="grow flex gap-x-2 fill-secondary"> 
                 <img src="/imgs/icons/side-bar-icons/Antiguedades.svg" alt="Antigüedades icon">
@@ -96,6 +98,12 @@
             <div class="grow flex gap-x-2 fill-secondary"> 
                 <img src="/imgs/icons/side-bar-icons/hogar.svg" alt="Hogar icon">
                 <p class="font-normal group-hover:font-bold group-hover:underline-animation">Hogar</p>
+            </div>
+        </a>
+        <a class="group flex gap-x-5 text-gray-800 transition-all duration-300 hover:bg-gray-200 rounded-lg p-4" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(5)) }}">
+            <div class="grow flex gap-x-2 fill-secondary"> 
+                <img src="/imgs/icons/side-bar-icons/muebles.svg" alt="Mueble (hogar) icon">
+                <p class="font-normal group-hover:font-bold group-hover:underline-animation">Mueble (hogar)</p>
             </div>
         </a>
         <a class="group flex gap-x-5 text-gray-800 transition-all duration-300 hover:bg-gray-200 rounded-lg p-4" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(1)) }}">

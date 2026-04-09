@@ -1,244 +1,181 @@
 @extends('layouts.app')
 
-@section('title', 'Envio-password - Cambialord')
+@section('title', 'Registrarse - Cambialord')
 
 @section('content')
-    <main>
-        <div class="flex flex-col items-center justify-center " data-astro-cid-phpud7wc>
-            <div class="my-8" data-astro-cid-phpud7wc> <img src="{{ asset('imgs/logoTypes/logoFooter.png') }}" class="object-cover h-28"
-                    alt="" data-astro-cid-phpud7wc> </div>
-            <div class="mt-0 bg-white border border-gray-200 rounded-xl shadow-sm max-w-md w-full mx-4"
-                data-astro-cid-phpud7wc>
-          
-                <div class="p-4 sm:p-7" data-astro-cid-phpud7wc>
-                    <div class="text-center" data-astro-cid-phpud7wc>
-                        <h1 class="block text-2xl font-bold text-gray-800" data-astro-cid-phpud7wc>Registrarse</h1>
-                        <p class="mt-2 text-sm text-gray-600" data-astro-cid-phpud7wc>
-                            ¿Ya tienes una cuenta?
-                            <a class="text-primary decoration-2 hover:underline font-medium" href="{{ route('login') }}"
-                                data-astro-cid-phpud7wc>
-                                Iniciar Sesión
-                            </a>
-                        </p>
-                    </div>
-                    <div class="mt-5" data-astro-cid-phpud7wc> <a href="{{ route('social.login', 'google') }}"
-                            class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-                            data-astro-cid-phpud7wc> <svg class="w-4 h-auto" width="46" height="47" viewBox="0 0 46 47"
-                                fill="none" data-astro-cid-phpud7wc>
-                                <path
-                                    d="M46 24.0287C46 22.09 45.8533 20.68 45.5013 19.2112H23.4694V27.9356H36.4069C36.1429 30.1094 34.7347 33.37 31.5957 35.5731L31.5663 35.8669L38.5191 41.2719L38.9885 41.3306C43.4477 37.2181 46 31.1669 46 24.0287Z"
-                                    fill="#4285F4" data-astro-cid-phpud7wc></path>
-                                <path
-                                    d="M23.4694 47C29.8061 47 35.1161 44.9144 39.0179 41.3012L31.625 35.5437C29.6301 36.9244 26.9898 37.8937 23.4987 37.8937C17.2793 37.8937 12.0281 33.7812 10.1505 28.1412L9.88649 28.1706L2.61097 33.7812L2.52296 34.0456C6.36608 41.7125 14.287 47 23.4694 47Z"
-                                    fill="#34A853" data-astro-cid-phpud7wc></path>
-                                <path
-                                    d="M10.1212 28.1413C9.62245 26.6725 9.32908 25.1156 9.32908 23.5C9.32908 21.8844 9.62245 20.3275 10.0918 18.8588V18.5356L2.75765 12.8369L2.52296 12.9544C0.909439 16.1269 0 19.7106 0 23.5C0 27.2894 0.909439 30.8731 2.49362 34.0456L10.1212 28.1413Z"
-                                    fill="#FBBC05" data-astro-cid-phpud7wc></path>
-                                <path
-                                    d="M23.4694 9.07688C27.8699 9.07688 30.8622 10.9863 32.5344 12.5725L39.1645 6.11C35.0867 2.32063 29.8061 0 23.4694 0C14.287 0 6.36607 5.2875 2.49362 12.9544L10.0918 18.8588C11.9987 13.1894 17.25 9.07688 23.4694 9.07688Z"
-                                    fill="#EB4335" data-astro-cid-phpud7wc></path>
-                            </svg>
-                            Regístrate con Google
-                        </a>
-                        <div class="py-3 flex items-center text-xs text-gray-400 uppercase before:flex-1 before:border-t before:border-gray-200 before:me-6 after:flex-1 after:border-t after:border-gray-200 after:ms-6"
-                            data-astro-cid-phpud7wc>O</div>
-                            <!-- Form --> 
-                            <!-- Formulario de registro -->
-                        <form id="registroForm" action="{{ route('registro.usuario') }}" method="POST" enctype="multipart/form-data" data-astro-cid-phpud7wc>
-                        @csrf
-                        {{-- Errores de validación --}}
-                        @if ($errors->any())
-                            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <ul class="text-sm text-red-600 list-disc list-inside">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        @if (session('success'))
-                            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-600">
-                                {{ session('success') }}
-                            </div>
-                        @endif
-                        <div class="alert alert-danger">
-                        </div>
-                        <div class="grid gap-y-4" data-astro-cid-phpud7wc>
-                            <!-- Campo Nombres -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="text" placeholder="Nombres" required name="nombres" value="{{ old('nombres') }}"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                    data-astro-cid-phpud7wc>
-                                    </div>
-                                </div>
-                            </div>
+<div class="min-h-screen bg-gray-50 py-5">
+    <div class="max-w-xl mx-auto px-4">
 
-                            <!-- Campo Apellido Paterno -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="text" placeholder="Apellidos" required name="apellidos" value="{{ old('apellidos') }}"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                   
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <input type="text" id="nombre_usuario" name="nombre_usuario" placeholder="Nombre de usuario"
-                                       readonly class="relative pt-3 pb-2 block w-full border-b-2 border-gray-300">
-                            </div>
-                            <!-- Campo Correo Electrónico -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="email" placeholder="Correo Electrónico" required name="email" value="{{ old('email') }}"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                      
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Telefono -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="tel" placeholder="Telefono" required name="telefono"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                     
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tipo de usuario -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <label for="tipo_usuario"
-                                                class="block text-sm font-medium text-gray-500 mb-1"
-                                                data-astro-cid-phpud7wc>Opcion de transaccion</label>
-                                        <select name="tipos_usuario_id" id="tipo_usuario" required
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                        <option value="" disabled selected>-- Selecciona una opción --</option>
-                                            @foreach ($tipos_usuarios as $tipoUsuario)
-                                                <option value="{{ $tipoUsuario->id_tipo_usuario }}">{{ $tipoUsuario->tipo }}</option>
-                                            @endforeach
-                                        </select>
-                    
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Foto del usuario -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <label for="foto_usuario" class="block text-sm font-medium text-gray-500 mb-1"
-                                                data-astro-cid-phpud7wc>Foto de perfil</label>
-                                        <input type="file" name="profile_photo" id="profile_photo" accept="image/*"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                        <p class="mt-1 text-sm text-gray-500" data-astro-cid-phpud7wc>Sube una imagen de perfil (opcional)</p>
-                                    </div>    
-                                </div>
-                            </div>
-
-                            <!-- Campo Contraseña -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="password" placeholder="Contraseña" required name="password"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                      
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Campo Confirmar Contraseña -->
-                            <div data-astro-cid-phpud7wc>
-                                <div class="relative" data-astro-cid-phpud7wc>
-                                    <div class="relative z-0 w-full mb-4">
-                                        <input type="password" placeholder="Confirmar Contraseña" required name="password_confirmation"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                                data-astro-cid-phpud7wc>
-                                       
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Checkbox para Términos y Condiciones -->
-                            <div class="flex items-center" data-astro-cid-phpud7wc>
-                                <div class="flex" data-astro-cid-phpud7wc>
-                                    <input id="terms" name="terms" type="checkbox" required
-                                            class="shrink-0 mt-0.5 border-gray-200 rounded text-primary focus:ring-primary"
-                                            data-astro-cid-phpud7wc>
-                                </div>
-                                <div class="ms-3" data-astro-cid-phpud7wc>
-                                    <label for="terms" class="text-sm" data-astro-cid-phpud7wc>
-                                        Acepto los <a href="#" class="text-primary decoration-2 hover:underline font-medium" data-astro-cid-phpud7wc>Términos y Condiciones</a>
-                                    </label>
-                                </div>
-                            </div>
-
-        <!-- Botón de Registro -->
-        <button  id="submitButton"  type="submit"
-            class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary disabled:opacity-50 disabled:pointer-events-none"
-            data-astro-cid-phpud7wc>Registrarse</button>
-
-                 {{--  <button onclick="window.history.back();" class="flex items-center my-4 gap-x-2 cursor-pointer text-blue-500">
-                <svg class="h-4 w-4 fill-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
-                </svg>
-                <span>Volver atras</span>
-            </button> --}}
-            
-            
-            <a class="flex items-center my-4 gap-x-2 cursor-pointer text-blue-500" href="{{ route('home') }}" data-astro-cid-phpud7wc>
-                <svg class="h-4 w-4 fill-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
-                </svg>
-                Volver a pagina de inicio
-            </a>
-            
-                            
-                            
-    </div>
-        @if($errors->any())
-            <div class="alert alert-danger mt-4">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        {{-- Header --}}
+        <div class="text-center mb-5">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
             </div>
-        @endif
-</form>
+            <h1 class="text-2xl font-bold text-gray-800">Crear cuenta</h1>
+            <p class="text-gray-500 mt-1">
+                ¿Ya tienes una cuenta?
+                <a href="{{ route('login') }}" class="text-primary hover:underline font-medium">Iniciar Sesión</a>
+            </p>
+        </div>
 
+        {{-- Google --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 text-center">
+            <a href="{{ route('social.login', 'google') }}"
+               class="w-full py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50">
+                <svg class="w-4 h-4" viewBox="0 0 46 47" fill="none">
+                    <path d="M46 24.0287C46 22.09 45.8533 20.68 45.5013 19.2112H23.4694V27.9356H36.4069C36.1429 30.1094 34.7347 33.37 31.5957 35.5731L31.5663 35.8669L38.5191 41.2719L38.9885 41.3306C43.4477 37.2181 46 31.1669 46 24.0287Z" fill="#4285F4"/>
+                    <path d="M23.4694 47C29.8061 47 35.1161 44.9144 39.0179 41.3012L31.625 35.5437C29.6301 36.9244 26.9898 37.8937 23.4987 37.8937C17.2793 37.8937 12.0281 33.7812 10.1505 28.1412L9.88649 28.1706L2.61097 33.7812L2.52296 34.0456C6.36608 41.7125 14.287 47 23.4694 47Z" fill="#34A853"/>
+                    <path d="M10.1212 28.1413C9.62245 26.6725 9.32908 25.1156 9.32908 23.5C9.32908 21.8844 9.62245 20.3275 10.0918 18.8588V18.5356L2.75765 12.8369L2.52296 12.9544C0.909439 16.1269 0 19.7106 0 23.5C0 27.2894 0.909439 30.8731 2.49362 34.0456L10.1212 28.1413Z" fill="#FBBC05"/>
+                    <path d="M23.4694 9.07688C27.8699 9.07688 30.8622 10.9863 32.5344 12.5725L39.1645 6.11C35.0867 2.32063 29.8061 0 23.4694 0C14.287 0 6.36607 5.2875 2.49362 12.9544L10.0918 18.8588C11.9987 13.1894 17.25 9.07688 23.4694 9.07688Z" fill="#EB4335"/>
+                </svg>
+                Regístrate con Google
+            </a>
+            <div class="flex items-center my-3">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="mx-3 text-xs text-gray-400">O completa el formulario</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+        </div>
+
+        @if($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+            <div class="flex items-center mb-1">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                <span class="font-semibold">Corrige los siguientes errores:</span>
+            </div>
+            <ul class="list-disc list-inside text-sm">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </div>
+        @endif
+
+        <form id="registroForm" action="{{ route('registro.usuario') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+
+            {{-- Datos personales --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                    <span class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">1</span>
+                    Datos personales
+                </h2>
+                <div class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="nombres" class="block text-xs font-medium text-gray-700 mb-0.5">Nombres <span class="text-red-500">*</span></label>
+                            <input type="text" id="nombres" name="nombres" required value="{{ old('nombres') }}" placeholder="Ej: Juan Carlos"
+                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                            @error('nombres')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                        </div>
+                        <div>
+                            <label for="apellidos" class="block text-xs font-medium text-gray-700 mb-0.5">Apellidos <span class="text-red-500">*</span></label>
+                            <input type="text" id="apellidos" name="apellidos" required value="{{ old('apellidos') }}" placeholder="Ej: Pérez García"
+                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                            @error('apellidos')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div>
+                        <label for="nombre_usuario" class="block text-xs font-medium text-gray-700 mb-0.5">Nombre de usuario</label>
+                        <input type="text" id="nombre_usuario" name="nombre_usuario" readonly
+                               class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-xs font-medium text-gray-700 mb-0.5">Correo electrónico <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" required value="{{ old('email') }}" placeholder="correo@ejemplo.com"
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                        @error('email')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                    </div>
+                    <div>
+                        <label for="telefono" class="block text-xs font-medium text-gray-700 mb-0.5">Teléfono <span class="text-red-500">*</span></label>
+                        <input type="tel" id="telefono" name="telefono" required value="{{ old('telefono') }}" placeholder="809-000-0000"
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                        @error('telefono')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
                     </div>
                 </div>
             </div>
+
+            {{-- Cuenta y seguridad --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                    <span class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">2</span>
+                    Cuenta y seguridad
+                </h2>
+                <div class="space-y-2.5">
+                    <div>
+                        <label for="tipos_usuario_id" class="block text-xs font-medium text-gray-700 mb-0.5">Tipo de transacción <span class="text-red-500">*</span></label>
+                        <select name="tipos_usuario_id" id="tipos_usuario_id" required
+                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
+                            <option value="" disabled selected>-- Selecciona --</option>
+                            @foreach ($tipos_usuarios as $tipo)
+                                <option value="{{ $tipo->id_tipo_usuario }}" {{ old('tipos_usuario_id') == $tipo->id_tipo_usuario ? 'selected' : '' }}>{{ $tipo->tipo }}</option>
+                            @endforeach
+                        </select>
+                        @error('tipos_usuario_id')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="password" class="block text-xs font-medium text-gray-700 mb-0.5">Contraseña <span class="text-red-500">*</span></label>
+                            <input type="password" id="password" name="password" required placeholder="Mínimo 8 caracteres"
+                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                            @error('password')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                        </div>
+                        <div>
+                            <label for="password_confirmation" class="block text-xs font-medium text-gray-700 mb-0.5">Confirmar <span class="text-red-500">*</span></label>
+                            <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Repetir contraseña"
+                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Foto de perfil --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                    <span class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">3</span>
+                    Foto de perfil <span class="text-xs text-gray-400 font-normal">(opcional)</span>
+                </h2>
+                <div>
+                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-2 pb-2">
+                            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <p class="text-xs text-gray-500">Haz clic para subir tu foto</p>
+                            <p class="text-xs text-gray-400">JPG, PNG o WEBP (máx. 2MB)</p>
+                        </div>
+                        <input type="file" name="profile_photo" accept="image/*" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            {{-- Términos y botón --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+                <div class="flex items-start mb-4">
+                    <input id="terms" name="terms" type="checkbox" required
+                           class="shrink-0 mt-0.5 border-gray-200 rounded text-primary focus:ring-primary">
+                    <label for="terms" class="ms-3 text-sm text-gray-600">
+                        Acepto los <a href="#" class="text-primary hover:underline font-medium">Términos y Condiciones</a>
+                    </label>
+                </div>
+                <button type="submit" id="submitButton"
+                        class="w-full py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary transition-colors">
+                    Crear mi cuenta
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-4 mb-8">
+            <a href="{{ route('home') }}" class="text-sm text-gray-500 hover:text-primary inline-flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Volver al inicio
+            </a>
         </div>
-        </main>
-
+    </div>
+</div>
 @endsection
-
 
 @push('scripts')
 <script>
 document.addEventListener("input", function () {
-    let nombre   = document.querySelector('input[name="nombres"]').value;
-    let apellido = document.querySelector('input[name="apellidos"]').value;
-
-    document.getElementById("nombre_usuario").value =
-        (nombre + apellido).replace(/\s+/g, '').toLowerCase();
+    let nombre   = document.querySelector('input[name="nombres"]')?.value || '';
+    let apellido = document.querySelector('input[name="apellidos"]')?.value || '';
+    let campo = document.getElementById("nombre_usuario");
+    if (campo) campo.value = (nombre + apellido).replace(/\s+/g, '').toLowerCase();
 });
 </script>
 @endpush
-

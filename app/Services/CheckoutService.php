@@ -197,11 +197,11 @@ class CheckoutService
     ): array {
         try {
             DB::transaction(function () use ($itemsSeleccionados, $carrito, $tarjeta, $resultadoPago, $montoTotal, $direccion) {
-                // Bloqueo pesimista: evita pedidos duplicados por doble submit
+                // Bloqueo pesimista: evita pedidos duplicados por doble submit (ventana de 2 minutos)
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
                     ->where('estatus', 'aprobado')
-                    ->whereDate('fecha', today())
+                    ->where('fecha', '>=', now()->subMinutes(2))
                     ->exists();
                 if ($yaExiste) {
                     throw new \RuntimeException('duplicate_order');

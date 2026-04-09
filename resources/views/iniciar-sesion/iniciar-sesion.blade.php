@@ -93,7 +93,8 @@
                         <h1 class="text-3xl font-bold text-gray-800">Iniciar Sesión</h1>
                         <p class="mt-2 text-gray-600">
                             ¿Aún no tienes una cuenta?
-                            <a href="{{ route('registro') }}" class="text-primary hover:underline font-medium">
+                            <a href="{{ route('registro') }}" class="text-primary hover:underline font-medium"
+                                onclick="event.preventDefault(); if(confirm('¿Confirmas que eres mayor de 18 años?')) window.location.href='{{ route('registro') }}';">
                                 Regístrate aquí
                             </a>
                         </p>

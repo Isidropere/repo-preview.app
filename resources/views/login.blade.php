@@ -29,7 +29,8 @@
                         <p class="mt-2 text-sm text-gray-600" data-astro-cid-zp6vblvr>
                             ¿Aún no tienes una cuenta?
                             <a class="text-primary decoration-2 hover:underline font-medium" href="/registro"
-                                data-astro-cid-zp6vblvr>
+                                data-astro-cid-zp6vblvr
+                                onclick="event.preventDefault(); if(confirm('¿Confirmas que eres mayor de 18 años?')) window.location.href='/registro';">
                                 Registrate aquí
                             </a>
                         </p>
