@@ -75,12 +75,17 @@
                             </div> <!-- End Form Group --> <!-- Form Group -->
                             <div data-astro-cid-zp6vblvr>
                                 <div class="relative" data-astro-cid-zp6vblvr>
-                                    <div class="relative z-0 w-full mb-4"> <input type="password" placeholder="Contraseña" required
-                                            name="password"
-                                            class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
-                                            data-astro-cid-zp6vblvr> <span
-                                            class="text-sm text-red-600 hidden" id="error"
-                                            data-astro-cid-zp6vblvr>Contraseña es requerida</span> </div>
+                                    <div class="relative z-0 w-full mb-4">
+                                        <input type="password" placeholder="Contraseña" required
+                                            name="password" id="passwordInput"
+                                            class="relative pt-3 pb-2 block w-full px-0 pr-10 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
+                                            data-astro-cid-zp6vblvr>
+                                        <button type="button" onclick="togglePassword()" class="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600" tabindex="-1">
+                                            <svg id="eyeOpen" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <svg id="eyeClosed" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                                        </button>
+                                        <span class="text-sm text-red-600 hidden" id="error" data-astro-cid-zp6vblvr>Contraseña es requerida</span>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end items-center" data-astro-cid-zp6vblvr> <a
                                         class="text-sm text-primary decoration-2 hover:underline font-medium"
@@ -111,5 +116,21 @@
     </div>
      </div>
 </main>
+<script>
+function togglePassword() {
+    const input = document.getElementById('passwordInput');
+    const eyeOpen = document.getElementById('eyeOpen');
+    const eyeClosed = document.getElementById('eyeClosed');
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeOpen.classList.remove('hidden');
+        eyeClosed.classList.add('hidden');
+    } else {
+        input.type = 'password';
+        eyeOpen.classList.add('hidden');
+        eyeClosed.classList.remove('hidden');
+    }
+}
+</script>
 @endsection
 

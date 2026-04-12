@@ -377,12 +377,33 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
-        // Punto 1: Verificar recepciÃ³n de datos (MANTENIENDO TUS LOGS)
         Log::info('Inicio de store() - Datos recibidos:', [
             'form_data' => $request->except(['imagen_principal', 'imagenes']),
             'has_imagen_principal' => $request->hasFile('imagen_principal'),
             'num_imagenes' => $request->hasFile('imagenes') ? count($request->file('imagenes')) : 0
         ]);
+
+        // Preservar archivos antes de la transaccion (PHP puede limpiar tmp durante operaciones largas)
+        $savedFiles = [];
+        if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+            $f = $request->file('imagen_principal');
+            $savedFiles['principal'] = [
+                'content'   => file_get_contents($f->getRealPath()),
+                'extension' => $f->extension(),
+                'mime'      => $f->getMimeType(),
+            ];
+        }
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $i => $f) {
+                if ($f && $f->isValid()) {
+                    $savedFiles['extra_' . $i] = [
+                        'content'   => file_get_contents($f->getRealPath()),
+                        'extension' => $f->extension(),
+                        'mime'      => $f->getMimeType(),
+                    ];
+                }
+            }
+        }
 
         DB::beginTransaction();
 
@@ -488,44 +509,36 @@ class ItemController extends Controller
             //$item = Item::create($itemData);
             //Log::info('Item creado exitosamente', ['id_item' => $item->id_item]);
 
-            // Punto 5: Procesar imagen/video principal
-            if ($request->hasFile('imagen_principal')) {
-                Log::debug('Procesando imagen/video principal...');
-                try {
-                    $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
+            // Guardar archivos desde memoria (preservados antes de la transaccion)
+            if (!empty($savedFiles['principal'])) {
+                $sf = $savedFiles['principal'];
+                $isVideo = str_starts_with($sf['mime'], 'video/');
+                $dir = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
+                $prefix = $isVideo ? 'video_' : 'item_';
+                $fileName = $prefix . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $sf['extension'];
 
-                    // Actualizar el item si es un video
-                    if ($resultado['is_video']) {
-                        $item->tiene_video = true;
-                        $item->save();
-                        Log::info('Video principal guardado', ['path' => $resultado['path']]);
-                    } else {
-                        Log::info('Imagen principal guardada', ['path' => $resultado['path']]);
-                    }
+                \App\Helpers\ImageHelper::guardarContenido($sf['content'], $dir, $fileName);
 
-                } catch (\Exception $e) {
-                    Log::error('Error al guardar imagen/video principal', ['error' => $e->getMessage()]);
-                    throw $e; // Relanzamos la excepciÃ³n para que caiga en el catch general
-                }
+                DB::table('imagenes_item')->insert([
+                    'nombre' => $fileName, 'extension' => $sf['extension'],
+                    'id_item' => $item->id_item, 'orden_visualizacion' => 1,
+                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen',
+                ]);
+
+                if ($isVideo) { $item->update(['tiene_video' => true]); }
+                Log::info('Imagen/video principal guardado', ['file' => $fileName]);
             }
 
-            // Punto 6: Procesar imÃ¡genes adicionales (MANTENIENDO TUS LOGS)
-            if ($request->hasFile('imagenes')) {
-                Log::debug('Procesando imÃ¡genes adicionales...');
-                $orden = 2;
-
-                foreach ($request->file('imagenes') as $index => $file) {
-                    if ($file->isValid()) {
-                        try {
-                            $this->guardarImagen($file, $item->id_item, $orden);
-                            Log::info("Imagen adicional {$index} guardada", ['orden' => $orden]);
-                            $orden++;
-                        } catch (\Exception $e) {
-                            Log::error("Error al guardar imagen adicional {$index}", ['error' => $e->getMessage()]);
-                            // Continuamos con las siguientes imÃ¡genes aunque falle una
-                        }
-                    }
-                }
+            $orden = 2;
+            foreach ($savedFiles as $key => $sf) {
+                if ($key === 'principal') continue;
+                $fileName = 'item_' . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(8) . '.' . $sf['extension'];
+                \App\Helpers\ImageHelper::guardarContenido($sf['content'], 'imgs/articulos/items', $fileName);
+                DB::table('imagenes_item')->insert([
+                    'nombre' => $fileName, 'extension' => $sf['extension'],
+                    'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
+                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen',
+                ]);
             }
 
             DB::commit();

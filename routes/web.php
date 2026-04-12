@@ -353,6 +353,7 @@ Route::middleware(['auth'])->group(function () {
     // Perfil propio (cualquier usuario autenticado)
     Route::get('/mi-perfil', [UserController::class, 'profile'])->name('profile');
     Route::put('/actualizar-perfil', [UserController::class, 'updateProfile'])->name('update-profile');
+    Route::post('/cambiar-contrasena', [UserController::class, 'updatePassword'])->name('password.update.profile');
 
     // Direcciones
     Route::post('/direccion/predeterminada/{id}', [DireccionesController::class, 'marcarComoPredeterminada']);

@@ -12,6 +12,21 @@ class StoreTarjetaRequest extends FormRequest
         return auth()->check();
     }
 
+    /**
+     * Forzar respuesta JSON cuando la validación falla.
+     * Esto evita redirects cuando se llama desde AJAX/fetch.
+     */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw new \Illuminate\Validation\ValidationException($validator,
+            response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422)
+        );
+    }
+
     public function rules(): array
     {
         $driver = config('services.payment.driver', 'cardnet');

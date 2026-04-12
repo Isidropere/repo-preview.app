@@ -540,12 +540,26 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Guardando...';
 
             try {
-                const resp   = await fetch(@json(route('carrito.tarjetas_store')), { method: 'POST', body: new FormData(formAgregar) });
+                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
+                    method: 'POST',
+                    body: new FormData(formAgregar),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const ct = resp.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    console.error('Respuesta no-JSON:', resp.status, await resp.text().then(t => t.substring(0, 300)));
+                    alert('Error del servidor. Intenta de nuevo.');
+                    btn.disabled = false;
+                    btn.textContent = 'Guardar tarjeta';
+                    return;
+                }
+
                 const result = await resp.json();
                 if (result.success) {
                     location.reload();
                 } else {
-                    alert(result.message || result.error || 'Error al guardar la tarjeta.');
+                    alert(result.message || 'Error al guardar la tarjeta.');
                     btn.disabled = false;
                     btn.textContent = 'Guardar tarjeta';
                 }
@@ -591,10 +605,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('last4').value = paymentMethod.card.last4 ?? '';
                 document.getElementById('tipo_tarjeta').value = paymentMethod.card.brand ?? '';
 
-                const resp   = await fetch(@json(route('carrito.tarjetas_store')), { method: 'POST', body: new FormData(formAgregar) });
+                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
+                    method: 'POST',
+                    body: new FormData(formAgregar),
+                    headers: { 'Accept': 'application/json' }
+                });
                 const result = await resp.json();
                 if (result.success) { location.reload(); }
-                else { alert(result.error ?? 'Error'); btn.disabled = false; }
+                else { alert(result.message || 'Error al guardar.'); btn.disabled = false; }
             });
         }
     }

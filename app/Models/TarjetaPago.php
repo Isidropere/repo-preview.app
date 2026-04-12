@@ -94,7 +94,7 @@ class TarjetaPago extends Model
     // Helpers para proveedores
     // ---------------------------------------------------------------
 
-    public function datosCardnet(string $cvv = null): array
+    public function datosCardnet(?string $cvv = null): array
     {
         $anio = $this->getAttribute(self::COL_ANIO);
         $mes = (int) $this->mes_expiracion;

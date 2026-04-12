@@ -51,7 +51,7 @@ class TarjetaPagoController extends Controller
             Log::error('Error store() tarjeta: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al registrar la tarjeta',
+                'message' => 'Error al registrar la tarjeta: ' . $e->getMessage(),
             ], 500);
         }
     }

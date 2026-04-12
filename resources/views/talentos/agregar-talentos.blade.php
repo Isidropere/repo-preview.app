@@ -196,13 +196,18 @@
                 <p class="text-sm font-semibold text-gray-700 mb-2">Selecciona una tarjeta</p>
                 <div id="listaTarjetasPago" class="space-y-2 max-h-48 overflow-y-auto">
                     @forelse($tarjetas as $tarjeta)
-                    <label class="tarjeta-pago flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all" data-id="{{ $tarjeta->id_tarjeta }}">
-                        <input type="radio" name="tarjeta_pago_select" value="{{ $tarjeta->id_tarjeta }}" class="h-4 w-4 text-blue-600">
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-800">**** **** **** {{ $tarjeta->last4 ?? substr($tarjeta->no_tarjeta ?? '', -4) }}</p>
-                            <p class="text-xs text-gray-400">{{ $tarjeta->nombre_titular ?? 'Titular' }}</p>
-                        </div>
-                    </label>
+                    <div class="tarjeta-pago-wrapper flex items-center gap-1" data-id="{{ $tarjeta->id_tarjeta }}">
+                        <label class="tarjeta-pago flex-1 flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all" data-id="{{ $tarjeta->id_tarjeta }}">
+                            <input type="radio" name="tarjeta_pago_select" value="{{ $tarjeta->id_tarjeta }}" class="h-4 w-4 text-blue-600">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800">**** **** **** {{ $tarjeta->last4 ?? substr($tarjeta->no_tarjeta ?? '', -4) }}</p>
+                                <p class="text-xs text-gray-400">{{ $tarjeta->nombre_titular ?? 'Titular' }}</p>
+                            </div>
+                        </label>
+                        <button type="button" class="btn-borrar-tarjeta p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0" data-id="{{ $tarjeta->id_tarjeta }}" title="Eliminar tarjeta">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
                     @empty
                     <p id="sinTarjetasMsg" class="text-sm text-gray-400 text-center py-3">No tienes tarjetas guardadas</p>
                     @endforelse
@@ -402,6 +407,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const primera = document.querySelector('.tarjeta-pago');
     if (primera) primera.click();
 
+    // Eliminar tarjeta
+    function bindBorrarTarjeta(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const id = this.dataset.id;
+            const wrapper = this.closest('.tarjeta-pago-wrapper');
+            
+            if (!confirm('¿Estás seguro de que deseas eliminar esta tarjeta?')) return;
+            
+            fetch('/carrito/tarjetas/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            }).then(function(resp) {
+                if (resp.ok) {
+                    wrapper.remove();
+                    if (!document.querySelector('.tarjeta-pago')) {
+                        document.getElementById('listaTarjetasPago').innerHTML = '<p id="sinTarjetasMsg" class="text-sm text-gray-400 text-center py-3">No tienes tarjetas guardadas</p>';
+                        document.getElementById('seccionCvvPago').classList.add('hidden');
+                    }
+                } else {
+                    alert('No se pudo eliminar la tarjeta.');
+                }
+            }).catch(function() {
+                alert('Error de red al eliminar.');
+            });
+        });
+    }
+    document.querySelectorAll('.btn-borrar-tarjeta').forEach(bindBorrarTarjeta);
+
     // Confirmar pago
     confirmar.addEventListener('click', async function() {
         const selected = document.querySelector('input[name="tarjeta_pago_select"]:checked');
@@ -503,8 +542,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (anio) fd.append('anio_expiracion', anio);
             if (banco) fd.append('banco_tarjeta', banco);
 
-            const resp = await fetch('{{ route("carrito.tarjetas_store") }}', { method: 'POST', body: fd });
-            const data = await resp.json();
+            const resp = await fetch('{{ route("carrito.tarjetas_store") }}', {
+                method: 'POST',
+                body: fd,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            const ct = resp.headers.get('content-type') || '';
+            let data;
+            if (ct.includes('application/json')) {
+                data = await resp.json();
+            } else {
+                const html = await resp.text();
+                console.error('Respuesta no-JSON al guardar tarjeta:', resp.status, html.substring(0, 300));
+                tarjetaError.textContent = 'Error del servidor (código ' + resp.status + '). Revisa la consola.';
+                tarjetaError.classList.remove('hidden');
+                this.disabled = false;
+                this.textContent = 'Guardar tarjeta';
+                return;
+            }
+
+            // Si es error de validación (422), mostrar el primer error
+            if (!resp.ok && data.errors) {
+                const firstError = Object.values(data.errors).flat()[0];
+                tarjetaError.textContent = firstError || data.message || 'Datos inválidos.';
+                tarjetaError.classList.remove('hidden');
+                this.disabled = false;
+                this.textContent = 'Guardar tarjeta';
+                return;
+            }
 
             if (data.success) {
                 const t = data.data;
@@ -513,19 +579,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Quitar mensaje "no tienes tarjetas"
                 document.getElementById('sinTarjetasMsg')?.remove();
 
-                // Agregar tarjeta a la lista
-                const html = `<label class="tarjeta-pago flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all" data-id="${t.id_tarjeta}">
-                    <input type="radio" name="tarjeta_pago_select" value="${t.id_tarjeta}" class="h-4 w-4 text-blue-600">
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-800">**** **** **** ${last4}</p>
-                        <p class="text-xs text-gray-400">${nombre}</p>
-                    </div>
-                </label>`;
+                // Agregar tarjeta a la lista con botón de eliminar
+                const html = `<div class="tarjeta-pago-wrapper flex items-center gap-1" data-id="${t.id_tarjeta}">
+                    <label class="tarjeta-pago flex-1 flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all" data-id="${t.id_tarjeta}">
+                        <input type="radio" name="tarjeta_pago_select" value="${t.id_tarjeta}" class="h-4 w-4 text-blue-600">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-800">**** **** **** ${last4}</p>
+                            <p class="text-xs text-gray-400">${nombre}</p>
+                        </div>
+                    </label>
+                    <button type="button" class="btn-borrar-tarjeta p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0" data-id="${t.id_tarjeta}" title="Eliminar tarjeta">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>`;
                 document.getElementById('listaTarjetasPago').insertAdjacentHTML('beforeend', html);
 
-                const nuevo = document.getElementById('listaTarjetasPago').lastElementChild;
-                bindTarjetaClick(nuevo);
-                nuevo.click();
+                const nuevoWrapper = document.getElementById('listaTarjetasPago').lastElementChild;
+                const nuevoLabel = nuevoWrapper.querySelector('.tarjeta-pago');
+                bindTarjetaClick(nuevoLabel);
+                bindBorrarTarjeta(nuevoWrapper.querySelector('.btn-borrar-tarjeta'));
+                nuevoLabel.click();
 
                 // Limpiar y cerrar
                 ['nt_nombre','nt_numero','nt_mes','nt_anio','nt_banco'].forEach(id => document.getElementById(id).value = '');

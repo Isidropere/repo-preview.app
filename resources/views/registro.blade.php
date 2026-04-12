@@ -112,14 +112,26 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label for="password" class="block text-xs font-medium text-gray-700 mb-0.5">Contraseña <span class="text-red-500">*</span></label>
-                            <input type="password" id="password" name="password" required placeholder="Mínimo 8 caracteres"
-                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required placeholder="Mínimo 8 caracteres"
+                                       class="w-full px-3 py-1.5 pr-9 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                                <button type="button" onclick="togglePwd('password')" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabindex="-1">
+                                    <svg class="w-4 h-4 eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"/></svg>
+                                    <svg class="w-4 h-4 eye-open hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
                             @error('password')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
                         </div>
                         <div>
                             <label for="password_confirmation" class="block text-xs font-medium text-gray-700 mb-0.5">Confirmar <span class="text-red-500">*</span></label>
-                            <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Repetir contraseña"
-                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                            <div class="relative">
+                                <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Repetir contraseña"
+                                       class="w-full px-3 py-1.5 pr-9 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                                <button type="button" onclick="togglePwd('password_confirmation')" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabindex="-1">
+                                    <svg class="w-4 h-4 eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"/></svg>
+                                    <svg class="w-4 h-4 eye-open hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -177,5 +189,21 @@ document.addEventListener("input", function () {
     let campo = document.getElementById("nombre_usuario");
     if (campo) campo.value = (nombre + apellido).replace(/\s+/g, '').toLowerCase();
 });
+
+function togglePwd(id) {
+    const input = document.getElementById(id);
+    const btn = input.parentElement.querySelector('button');
+    const closed = btn.querySelector('.eye-closed');
+    const open = btn.querySelector('.eye-open');
+    if (input.type === 'password') {
+        input.type = 'text';
+        closed.classList.add('hidden');
+        open.classList.remove('hidden');
+    } else {
+        input.type = 'password';
+        closed.classList.remove('hidden');
+        open.classList.add('hidden');
+    }
+}
 </script>
 @endpush
