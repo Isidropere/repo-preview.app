@@ -92,6 +92,30 @@ class UserController extends Controller
         return redirect()->route('tu_cuenta')->with('success', 'Perfil actualizado correctamente.');
     }
 
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:8|confirmed',
+        ], [
+            'current_password.required' => 'La contraseña actual es obligatoria.',
+            'password.required'         => 'La nueva contraseña es obligatoria.',
+            'password.min'              => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed'        => 'Las contraseñas no coinciden.',
+        ]);
+
+        $user = auth()->user();
+
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'La contraseña actual es incorrecta.']);
+        }
+
+        $user->password = \Hash::make($request->password);
+        $user->save();
+
+        return redirect()->route('contraseña')->with('success', 'Contraseña actualizada correctamente.');
+    }
+
     /* ── Resource methods (admin) ── */
 
     public function index()

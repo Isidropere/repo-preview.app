@@ -107,12 +107,18 @@
                         {{-- Lista de articulos (pagoItems) --}}
                         <div class="divide-y divide-gray-50">
                             @forelse($pago->pagoItems as $pi)
-                            <div class="px-5 py-3 flex items-center gap-4">                                @php
+                            <div class="px-5 py-3 flex items-center gap-4">                            @php
                                     $imgSrc = asset('imgs/producto_defaul.png');
                                     if ($pi->imagen_url) {
-                                        $imgSrc = str_starts_with($pi->imagen_url, 'http')
-                                            ? $pi->imagen_url
-                                            : asset($pi->imagen_url);
+                                        if (str_starts_with($pi->imagen_url, 'http')) {
+                                            $imgSrc = $pi->imagen_url;
+                                        } else {
+                                            // Buscar en public/ directo y luego en public/storage/
+                                            $parts = pathinfo($pi->imagen_url);
+                                            $dir = $parts['dirname'] ?? '';
+                                            $file = $parts['basename'] ?? '';
+                                            $imgSrc = \App\Helpers\ImageHelper::urlMedia($dir, $file);
+                                        }
                                     } elseif ($pi->item?->imagenes?->first()) {
                                         $img = $pi->item->imagenes->first();
                                         $imgSrc = \App\Helpers\ImageHelper::urlMedia($img->ruta ?? '', $img->nombre);

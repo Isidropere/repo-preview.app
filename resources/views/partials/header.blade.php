@@ -14,7 +14,7 @@
             <div class="flex items-center justify-between w-full lg:w-auto gap-2">
                  <!-- Logo -->
                 <a class="h-auto flex-shrink-0" href="/" aria-label="Brand">
-                    <img src="/imgs/logoTypes/header-logo.png" id="logoHeader" class="object-cover w-[160px] md:w-[210px] h-auto" alt="Brand Logo">
+                    <img src="/imgs/logoTypes/header-logo.png" id="logoHeader" class="object-cover w-[160px] md:w-[100px] h-auto" alt="Brand Logo">
                 </a>
                 <!-- Buscador móvil con input + botón pegado -->
                 <div class="block lg:hidden flex-1 min-w-0">
@@ -116,8 +116,10 @@
                                 </svg>
                             </a>
         
+                            @auth
                             <x-negociaciones-modal/>
                             <x-notificaciones />
+                            @endauth
 
                             <div class="hs-dropdown [--strategy:static] md:[--strategy:fixed] [--adaptive:none] [--is-collapse:true] md:[--is-collapse:false]"
                                 data-astro-cid-pwmmw5ba>

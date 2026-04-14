@@ -99,6 +99,42 @@ class Handler extends ExceptionHandler
             return response()->json($response, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        // 🔵 Para peticiones web: guardar error y mostrar vista personalizada
+        if (!$request->wantsJson() && !config('app.debug')) {
+            try {
+                $errorRef = \Illuminate\Support\Str::uuid()->toString();
+                \DB::table('application_errors')->insert([
+                    'error_reference' => $errorRef,
+                    'message'         => $exception->getMessage(),
+                    'stack_trace'     => $exception->getTraceAsString(),
+                    'url'             => $request->fullUrl(),
+                    'method'          => $request->method(),
+                    'user_id'         => auth()->id(),
+                    'ip_address'      => $request->ip(),
+                    'user_agent'      => $request->userAgent(),
+                    'input_data'      => json_encode($request->except(['password', 'password_confirmation'])),
+                    'created_at'      => now(),
+                ]);
+
+                $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
+
+                return response()->view('errors.custom', [
+                    'error_reference' => $errorRef,
+                    'status_code'     => $statusCode,
+                    'message'         => $statusCode === 404 ? 'Página no encontrada' : 'Algo salió mal',
+                ], $statusCode);
+            } catch (\Throwable $e) {
+                // Si falla guardar el error, mostrar vista con referencia N/A
+                \Illuminate\Support\Facades\Log::error('Error handler failed: ' . $e->getMessage());
+                $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
+                return response()->view('errors.custom', [
+                    'error_reference' => null,
+                    'status_code'     => $statusCode,
+                    'message'         => 'Algo salió mal',
+                ], $statusCode);
+            }
+        }
+
         return parent::render($request, $exception);
     }
 

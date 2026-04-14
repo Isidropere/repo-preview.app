@@ -38,6 +38,21 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4 mb-6 shadow-sm">
+        <svg class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1">
+            <p class="font-semibold text-sm">Datos inválidos</p>
+            @foreach($errors->all() as $err)
+                <p class="text-sm mt-0.5">{{ $err }}</p>
+            @endforeach
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xl leading-none ml-2">&#x2715;</button>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <div class="lg:col-span-2 space-y-6">
@@ -452,8 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (r) r.checked = true;
     }
 
-    // Re-habilitar botón si la página recargó con error
-    @if(session('error'))
+    // Re-habilitar botón si la página recargó con error o errores de validación
+    @if(session('error') || $errors->any())
     const btnPagarInit = document.getElementById('btnPagar');
     if (btnPagarInit) {
         btnPagarInit.disabled = false;
@@ -525,12 +540,26 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Guardando...';
 
             try {
-                const resp   = await fetch(@json(route('carrito.tarjetas_store')), { method: 'POST', body: new FormData(formAgregar) });
+                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
+                    method: 'POST',
+                    body: new FormData(formAgregar),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const ct = resp.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    console.error('Respuesta no-JSON:', resp.status, await resp.text().then(t => t.substring(0, 300)));
+                    alert('Error del servidor. Intenta de nuevo.');
+                    btn.disabled = false;
+                    btn.textContent = 'Guardar tarjeta';
+                    return;
+                }
+
                 const result = await resp.json();
                 if (result.success) {
                     location.reload();
                 } else {
-                    alert(result.message || result.error || 'Error al guardar la tarjeta.');
+                    alert(result.message || 'Error al guardar la tarjeta.');
                     btn.disabled = false;
                     btn.textContent = 'Guardar tarjeta';
                 }
@@ -576,10 +605,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('last4').value = paymentMethod.card.last4 ?? '';
                 document.getElementById('tipo_tarjeta').value = paymentMethod.card.brand ?? '';
 
-                const resp   = await fetch(@json(route('carrito.tarjetas_store')), { method: 'POST', body: new FormData(formAgregar) });
+                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
+                    method: 'POST',
+                    body: new FormData(formAgregar),
+                    headers: { 'Accept': 'application/json' }
+                });
                 const result = await resp.json();
                 if (result.success) { location.reload(); }
-                else { alert(result.error ?? 'Error'); btn.disabled = false; }
+                else { alert(result.message || 'Error al guardar.'); btn.disabled = false; }
             });
         }
     }

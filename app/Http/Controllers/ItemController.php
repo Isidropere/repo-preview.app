@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Item;
@@ -7,6 +6,9 @@ use App\Models\ImagenItem;
 use App\Models\Color;
 use App\Models\ItemColor;
 use App\Models\CategoriaItem;
+use App\Models\ConfigTarifaCategoria29;
+use App\Models\TarjetaPago;
+use App\Services\PagoService;
 use Illuminate\Http\Request;
 use App\Logging\ErrorLoggerTrait;
 use Throwable;
@@ -22,6 +24,11 @@ class ItemController extends Controller
 {
     public function AddTalento(Request $request)
     {
+        Log::info('AddTalento: request recibido', [
+            'ajax' => $request->ajax(),
+            'wantsJson' => $request->wantsJson(),
+            'has_id_tarjeta' => $request->has('id_tarjeta'),
+        ]);
         // Punto 1: Verificar recepciÃ³n de datos (MANTENIENDO TUS LOGS)
         Log::info('Inicio de store() - Datos recibidos:', [
             'form_data' => $request->except(['imagen_principal', 'imagenes']),
@@ -39,6 +46,7 @@ class ItemController extends Controller
                 'valor' => 'required|numeric|min:0',
                 'descuento' => 'nullable|numeric|min:0',
                 'presentacion' => 'required|string',
+                'cantidad' => 'nullable|integer|min:1|max:999',
                 'condicion' => 'required|integer|in:1,2,3,4',
                 'tipo_trans' => 'required|integer|in:1,2,3',
                 'imagen_principal' => 'required|file|mimes:mp4,mov,jpeg,png,jpg,gif,webp|max:20480', // 10MB para videos
@@ -78,42 +86,8 @@ class ItemController extends Controller
 
             // MANTENIENDO TU LOG DE VALIDACIÃ“N
             Log::debug('Datos validados correctamente', $validatedData);
-            // Interceptar categoría 29: redirigir a flujo de pago
-            // Aplica cuando la categoría es 29 y la transacción es venta (1), intercambio (2) o ambas (3)
-            $esCategoria29 = (int) $validatedData['id_categoria_item'] === 29;
-            $tipoTransConPago = in_array((int) $validatedData['tipo_trans'], [1, 2, 3]);
-            if ($esCategoria29 && $tipoTransConPago) {
-                $uuid = Str::uuid()->toString();
-                $tempDir = 'temp/' . $uuid;
 
-                // Guardar datos del formulario (sin archivos) en sesión
-                $datosSinArchivos = collect($validatedData)->except(['imagen_principal', 'imagenes'])->toArray();
-                session(['talento_pendiente_data' => $datosSinArchivos, 'talento_pendiente_uuid' => $uuid]);
-
-                // Guardar archivos temporalmente
-                $archivosTemp = [];
-                if ($request->hasFile('imagen_principal')) {
-                    $file = $request->file('imagen_principal');
-                    $nombre = 'principal_' . Str::random(10) . '.' . $file->extension();
-                    Storage::disk('local')->putFileAs($tempDir, $file, $nombre);
-                    $archivosTemp['imagen_principal'] = $tempDir . '/' . $nombre;
-                }
-                if ($request->hasFile('imagenes')) {
-                    foreach ($request->file('imagenes') as $i => $file) {
-                        if ($file->isValid()) {
-                            $nombre = 'adicional_' . $i . '_' . Str::random(8) . '.' . $file->extension();
-                            Storage::disk('local')->putFileAs($tempDir, $file, $nombre);
-                            $archivosTemp['imagenes'][] = $tempDir . '/' . $nombre;
-                        }
-                    }
-                }
-                session(['talento_pendiente_files' => $archivosTemp]);
-
-                return redirect()->route('talento.pago.show');
-            }
-
-
-            // Punto 4: CreaciÃ³n del Ã­tem (MANTENIENDO TU ESTRUCTURA ORIGINAL)  descuento
+            // Preparar datos del item (necesario antes del bloque de pago)
             $itemData = [
                 'item' => $validatedData['item'],
                 'id_categoria_item' => $validatedData['id_categoria_item'],
@@ -130,16 +104,149 @@ class ItemController extends Controller
                 'ancho_cm' => $validatedData['ancho_cm'] ?? 0,
                 'profundo_cm' => $validatedData['profundo_cm'] ?? 0,
                 'id_tipo_item' => $validatedData['id_tipo_item'] ?? 1,
-                'tiene_video' => false // Inicializamos como falso
+                'tiene_video' => false,
             ];
 
-            // MANTENIENDO TU LOG DE CREACIÃ“N
+            // Interceptar categoría 29: procesar pago inline via modal
+            $esCategoria29 = (int) $validatedData['id_categoria_item'] === 29;
+            $tipoTransConPago = in_array((int) $validatedData['tipo_trans'], [1, 2, 3]);
+            if ($esCategoria29 && $tipoTransConPago) {
+                // Validar datos de pago del modal
+                $request->validate([
+                    'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
+                    'cvv'        => 'nullable|string|max:4',
+                ]);
+
+                // Preservar archivos ANTES del cobro (PHP limpia los tmp durante requests largos)
+                $savedFiles = [];
+                if ($request->hasFile('imagen_principal')) {
+                    $f = $request->file('imagen_principal');
+                    $savedFiles['principal'] = [
+                        'content'   => file_get_contents($f->getRealPath()),
+                        'extension' => $f->extension(),
+                        'mime'      => $f->getMimeType(),
+                        'original'  => $f->getClientOriginalName(),
+                    ];
+                }
+                if ($request->hasFile('imagenes')) {
+                    foreach ($request->file('imagenes') as $i => $f) {
+                        if ($f->isValid()) {
+                            $savedFiles['extra_' . $i] = [
+                                'content'   => file_get_contents($f->getRealPath()),
+                                'extension' => $f->extension(),
+                                'mime'      => $f->getMimeType(),
+                                'original'  => $f->getClientOriginalName(),
+                            ];
+                        }
+                    }
+                }
+
+                $config = ConfigTarifaCategoria29::vigente();
+                $cantidadServicios = (int) ($validatedData['cantidad'] ?? 1);
+                $monto = (float) $config->monto_registro * $cantidadServicios;
+
+                $tarjeta = TarjetaPago::where('id_tarjeta', $request->input('id_tarjeta'))
+                    ->where('id_user', auth()->id())
+                    ->where('estatus', 1)
+                    ->first();
+
+                if (!$tarjeta) {
+                    return response()->json(['success' => false, 'message' => 'Tarjeta no válida.'], 422);
+                }
+
+                // Cobrar (los archivos ya están en memoria)
+                $pagoService = app(PagoService::class);
+                $datosTarjeta = $tarjeta->datosCardnet($request->input('cvv'));
+                $opciones = [
+                    'client_ip'        => $request->ip(),
+                    'invoice_number'   => 'TAL' . Str::random(10),
+                    'reference_number' => 'talento_' . auth()->id() . '_' . time(),
+                ];
+
+                $resultadoPago = $pagoService->cobrarTarjeta($monto, '214', $datosTarjeta, $opciones);
+
+                if (!$resultadoPago['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $resultadoPago['error'] ?? 'Pago rechazado. Intenta con otra tarjeta.',
+                    ], 422);
+                }
+
+                // Pago aprobado — crear item y guardar archivos desde memoria
+                $item = Item::create($itemData);
+
+                Inventario::create([
+                    'id_item' => $item->id_item,
+                    'cantidad' => $cantidadServicios,
+                    'fecha' => now(),
+                ]);
+
+                // Guardar archivos preservados
+                if (!empty($savedFiles['principal'])) {
+                    $sf = $savedFiles['principal'];
+                    $isVideo = str_starts_with($sf['mime'], 'video/');
+                    $dir = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
+                    $prefix = $isVideo ? 'video_' : 'item_';
+                    $fileName = $prefix . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $sf['extension'];
+
+                    \App\Helpers\ImageHelper::guardarContenido($sf['content'], $dir, $fileName);
+
+                    DB::table('imagenes_item')->insert([
+                        'nombre' => $fileName, 'extension' => $sf['extension'],
+                        'id_item' => $item->id_item, 'orden_visualizacion' => 1,
+                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen',
+                    ]);
+
+                    if ($isVideo) { $item->update(['tiene_video' => true]); }
+                }
+
+                $orden = 2;
+                foreach ($savedFiles as $key => $sf) {
+                    if ($key === 'principal') continue;
+                    $fileName = 'item_' . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(8) . '.' . $sf['extension'];
+                    \App\Helpers\ImageHelper::guardarContenido($sf['content'], 'imgs/articulos/items', $fileName);
+                    DB::table('imagenes_item')->insert([
+                        'nombre' => $fileName, 'extension' => $sf['extension'],
+                        'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
+                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen',
+                    ]);
+                }
+
+                // Registrar pago
+                \App\Models\PagoRegistroTalento::create([
+                    'id_item'        => $item->id_item,
+                    'id_user'        => auth()->id(),
+                    'transaction_id' => $resultadoPago['transaction_id'],
+                    'monto_pagado'   => $monto,
+                    'estatus'        => 'aprobado',
+                ]);
+
+                DB::commit();
+
+                \Illuminate\Support\Facades\Cache::forget('home_intercambio');
+                \Illuminate\Support\Facades\Cache::forget('home_venta');
+
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => 'Talento publicado exitosamente!', 'redirect' => route('items.admintalento')]);
+                }
+                return redirect()->route('items.admintalento')->with('success', 'Talento publicado exitosamente!');
+            }
+
+
+
+            // Crear item (flujo normal, no categoria 29 con pago)
             Log::debug('Intentando crear item con datos:', $itemData);
 
             $item = Item::create($itemData);
             Log::info('Item creado exitosamente', ['id_item' => $item->id_item]);
 
-            // Punto 5: Procesar imagen/video principal
+            // Crear registro en el inventario
+            Inventario::create([
+                'id_item' => $item->id_item,
+                'cantidad' => $validatedData['cantidad'] ?? 1,
+                'fecha' => now(),
+            ]);
+
             if ($request->hasFile('imagen_principal')) {
                 Log::debug('Procesando imagen/video principal...');
                 try {
@@ -182,26 +289,43 @@ class ItemController extends Controller
             DB::commit();
             Log::info('TransacciÃ³n completada exitosamente');
 
+            // Registrar pago de talento si aplica (categoría 29)
+            $pagoResultado = session('_talento_pago_resultado');
+            if ($pagoResultado) {
+                \App\Models\PagoRegistroTalento::create([
+                    'id_item'        => $item->id_item,
+                    'id_user'        => auth()->id(),
+                    'transaction_id' => $pagoResultado['transaction_id'],
+                    'monto_pagado'   => session('_talento_pago_monto'),
+                    'estatus'        => 'aprobado',
+                ]);
+                session()->forget(['_talento_pago_resultado', '_talento_pago_monto']);
+            }
+
             // Invalidar cache del home para reflejar el nuevo item
             \Illuminate\Support\Facades\Cache::forget('home_intercambio');
             \Illuminate\Support\Facades\Cache::forget('home_venta');
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Talento creado exitosamente!', 'redirect' => route('items.admintalento')]);
+            }
 
             return redirect()->route('items.admintalento')->with('success', 'Talento creado exitosamente!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
-            // MANTENIENDO TU LOG DE ERROR DE VALIDACIÃ“N
-            Log::error('Error de validaciÃ³n', ['errors' => $e->errors()]);
+            Log::error('Error de validacion', ['errors' => $e->errors()]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
+            }
             return back()->withErrors($e->validator)->withInput();
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // MANTENIENDO TUS LOGS DE ERROR GENERAL
-            Log::error('Error en store()', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
+            Log::error('Error en store()', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Error al crear el talento: ' . $e->getMessage()], 500);
+            }
             return back()->with('error', 'Error al crear el talento: ' . $e->getMessage());
         }
     }
@@ -253,12 +377,33 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
-        // Punto 1: Verificar recepciÃ³n de datos (MANTENIENDO TUS LOGS)
         Log::info('Inicio de store() - Datos recibidos:', [
             'form_data' => $request->except(['imagen_principal', 'imagenes']),
             'has_imagen_principal' => $request->hasFile('imagen_principal'),
             'num_imagenes' => $request->hasFile('imagenes') ? count($request->file('imagenes')) : 0
         ]);
+
+        // Preservar archivos antes de la transaccion (PHP puede limpiar tmp durante operaciones largas)
+        $savedFiles = [];
+        if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+            $f = $request->file('imagen_principal');
+            $savedFiles['principal'] = [
+                'content'   => file_get_contents($f->getRealPath()),
+                'extension' => $f->extension(),
+                'mime'      => $f->getMimeType(),
+            ];
+        }
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $i => $f) {
+                if ($f && $f->isValid()) {
+                    $savedFiles['extra_' . $i] = [
+                        'content'   => file_get_contents($f->getRealPath()),
+                        'extension' => $f->extension(),
+                        'mime'      => $f->getMimeType(),
+                    ];
+                }
+            }
+        }
 
         DB::beginTransaction();
 
@@ -346,8 +491,8 @@ class ItemController extends Controller
             // Crear registro en el inventario
             Inventario::create([
                 'id_item' => $item->id_item,
-                'cantidad' => $validatedData['cantidad'],
-                'fecha' => now() // Usa la misma fecha que el Ã­tem
+                'cantidad' => $validatedData['cantidad'] ?? 1,
+                'fecha' => now()
             ]);
 
 
@@ -364,44 +509,36 @@ class ItemController extends Controller
             //$item = Item::create($itemData);
             //Log::info('Item creado exitosamente', ['id_item' => $item->id_item]);
 
-            // Punto 5: Procesar imagen/video principal
-            if ($request->hasFile('imagen_principal')) {
-                Log::debug('Procesando imagen/video principal...');
-                try {
-                    $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
+            // Guardar archivos desde memoria (preservados antes de la transaccion)
+            if (!empty($savedFiles['principal'])) {
+                $sf = $savedFiles['principal'];
+                $isVideo = str_starts_with($sf['mime'], 'video/');
+                $dir = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
+                $prefix = $isVideo ? 'video_' : 'item_';
+                $fileName = $prefix . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $sf['extension'];
 
-                    // Actualizar el item si es un video
-                    if ($resultado['is_video']) {
-                        $item->tiene_video = true;
-                        $item->save();
-                        Log::info('Video principal guardado', ['path' => $resultado['path']]);
-                    } else {
-                        Log::info('Imagen principal guardada', ['path' => $resultado['path']]);
-                    }
+                \App\Helpers\ImageHelper::guardarContenido($sf['content'], $dir, $fileName);
 
-                } catch (\Exception $e) {
-                    Log::error('Error al guardar imagen/video principal', ['error' => $e->getMessage()]);
-                    throw $e; // Relanzamos la excepciÃ³n para que caiga en el catch general
-                }
+                DB::table('imagenes_item')->insert([
+                    'nombre' => $fileName, 'extension' => $sf['extension'],
+                    'id_item' => $item->id_item, 'orden_visualizacion' => 1,
+                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen',
+                ]);
+
+                if ($isVideo) { $item->update(['tiene_video' => true]); }
+                Log::info('Imagen/video principal guardado', ['file' => $fileName]);
             }
 
-            // Punto 6: Procesar imÃ¡genes adicionales (MANTENIENDO TUS LOGS)
-            if ($request->hasFile('imagenes')) {
-                Log::debug('Procesando imÃ¡genes adicionales...');
-                $orden = 2;
-
-                foreach ($request->file('imagenes') as $index => $file) {
-                    if ($file->isValid()) {
-                        try {
-                            $this->guardarImagen($file, $item->id_item, $orden);
-                            Log::info("Imagen adicional {$index} guardada", ['orden' => $orden]);
-                            $orden++;
-                        } catch (\Exception $e) {
-                            Log::error("Error al guardar imagen adicional {$index}", ['error' => $e->getMessage()]);
-                            // Continuamos con las siguientes imÃ¡genes aunque falle una
-                        }
-                    }
-                }
+            $orden = 2;
+            foreach ($savedFiles as $key => $sf) {
+                if ($key === 'principal') continue;
+                $fileName = 'item_' . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(8) . '.' . $sf['extension'];
+                \App\Helpers\ImageHelper::guardarContenido($sf['content'], 'imgs/articulos/items', $fileName);
+                DB::table('imagenes_item')->insert([
+                    'nombre' => $fileName, 'extension' => $sf['extension'],
+                    'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
+                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen',
+                ]);
             }
 
             DB::commit();
@@ -858,7 +995,7 @@ class ItemController extends Controller
                         break;
                 }
             }
-            $items = $items->with(['categoria', 'direcciones', 'imagenes'])->paginate(15);
+            $items = $items->with(['categoria', 'direcciones', 'imagenes', 'inventarios'])->paginate(15);
 
             return view('categorias.por-categoria', compact('categoria', 'items'));
         } catch (Throwable $e) {
@@ -868,7 +1005,7 @@ class ItemController extends Controller
                 'request_params' => request()->all()
             ]);
 
-            abort(404, 'CategorÃ­a no encontrada');
+            abort(404, 'Categori­a no encontrada');
         }
     }
 
@@ -1186,7 +1323,7 @@ class ItemController extends Controller
         try {
             $items = Item::whereIn('tipo_trans', [2, 3])
                 ->where('estatus', 1)
-                ->with(['categoria', 'direccionPredeterminada.provincia', 'imagenes'])
+                ->with(['categoria', 'direccionPredeterminada.provincia', 'imagenes', 'inventarios'])
                 ->orderBy('fecha', 'desc')
                 ->paginate(12);
 
@@ -1206,7 +1343,7 @@ class ItemController extends Controller
         try {
             $items = Item::where('tipo_trans', 1)
                 ->where('estatus', 1)
-                ->with(['categoria', 'direccionPredeterminada.provincia', 'imagenes'])
+                ->with(['categoria', 'direccionPredeterminada.provincia', 'imagenes', 'inventarios'])
                 ->orderBy('fecha', 'desc')
                 ->paginate(12);
 
@@ -1264,9 +1401,10 @@ class ItemController extends Controller
     {
         try {
             $items = Item::where('id_user', auth()->id())
+                ->where('id_categoria_item', '!=', 29)
                 ->with(['categoria', 'imagenes'])
                 ->withCount('views')
-                ->orderBy('created_at', 'desc')
+                ->orderByDesc('fecha')
                 ->paginate(10);
 
             return view('productos.mis-productos', compact('items'));
@@ -1286,7 +1424,7 @@ class ItemController extends Controller
                 ->where('id_categoria_item', 29) // â† Filtrar por categorÃ­a 29
                 ->with(['categoria', 'imagenes'])
                 ->withCount('views')
-                ->orderBy('created_at', 'desc')
+                ->orderByDesc('fecha')
                 ->paginate(10);
 
             return view('talentos.admin-talento', compact('items'));

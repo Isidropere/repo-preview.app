@@ -4,13 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 
 /**
  * Modelo de tarjeta de pago guardada.
  *
- * Soporta multiples proveedores:
- *   - CardNet: usa no_tarjeta, mes_expiracion, anio_expiracion (columna: a\u{00F1}o_expiracion)
- *   - Stripe:  usa payment_method_id (pm_xxx)
+ * El número de tarjeta se almacena encriptado (AES-256-CBC via APP_KEY).
+ * Solo se expone last4 en las vistas.
+ *
+ * Soporta:
+ *   - CardNet: no_tarjeta (encriptado), mes_expiracion, año_expiracion
+ *   - Stripe:  payment_method_id (pm_xxx)
  */
 class TarjetaPago extends Model
 {
@@ -22,7 +26,6 @@ class TarjetaPago extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    // Nombre de la columna con ñ (UTF-8 \u00F1)
     const COL_ANIO = "a\u{00F1}o_expiracion";
 
     protected $fillable = [
@@ -39,8 +42,44 @@ class TarjetaPago extends Model
         'id_user',
     ];
 
-    // Nunca exponer el numero completo de tarjeta en JSON/API
     protected $hidden = ['no_tarjeta'];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id_tarjeta)) {
+                $model->id_tarjeta = (string) \Illuminate\Support\Str::uuid();
+            }
+            // Encriptar número de tarjeta al crear
+            if (!empty($model->no_tarjeta) && !str_starts_with($model->no_tarjeta, 'eyJ')) {
+                $model->no_tarjeta = Crypt::encryptString($model->no_tarjeta);
+            }
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('no_tarjeta') && !empty($model->no_tarjeta) && !str_starts_with($model->no_tarjeta, 'eyJ')) {
+                $model->no_tarjeta = Crypt::encryptString($model->no_tarjeta);
+            }
+        });
+    }
+
+    /**
+     * Desencripta el número de tarjeta para uso interno (cobros).
+     */
+    public function getNumeroDesencriptado(): ?string
+    {
+        if (empty($this->no_tarjeta)) {
+            return null;
+        }
+        try {
+            return Crypt::decryptString($this->no_tarjeta);
+        } catch (\Throwable $e) {
+            // Si no está encriptado (datos legacy), retornar tal cual
+            return $this->no_tarjeta;
+        }
+    }
 
     // ---------------------------------------------------------------
     // Relaciones
@@ -55,23 +94,27 @@ class TarjetaPago extends Model
     // Helpers para proveedores
     // ---------------------------------------------------------------
 
-    /**
-     * Retorna los datos de tarjeta en el formato que espera CardNet.
-     * La fecha de expiracion se formatea como MM/YY.
-     */
-    public function datosCardnet(string $cvv = null): array
+    public function datosCardnet(?string $cvv = null): array
     {
         $anio = $this->getAttribute(self::COL_ANIO);
+        $mes = (int) $this->mes_expiracion;
+        $anioNum = (int) $anio;
+
+        // Validar que la tarjeta no esté expirada
+        if ($anioNum > 0 && $mes > 0) {
+            $expTimestamp = mktime(0, 0, 0, $mes + 1, 1, $anioNum);
+            if ($expTimestamp < time()) {
+                throw new \RuntimeException('La tarjeta está expirada. Actualiza o usa otra tarjeta.');
+            }
+        }
+
         return [
-            'card_number'     => $this->no_tarjeta,
-            'expiration_date' => sprintf('%02d/%s', $this->mes_expiracion, substr((string) $anio, -2)),
+            'card_number'     => $this->getNumeroDesencriptado(),
+            'expiration_date' => sprintf('%02d/%s', $mes, substr((string) $anio, -2)),
             'cvv'             => $cvv,
         ];
     }
 
-    /**
-     * Retorna los datos de tarjeta en el formato que espera Stripe.
-     */
     public function datosStripe(): array
     {
         return [

@@ -123,10 +123,10 @@ Route::get('/migrate-images', function () {
 Route::get('/home', function () {
     $productosIntercambio = \Illuminate\Support\Facades\Cache::remember('home_intercambio', 600, function () {
         return \App\Models\Item::with([
-                'imagenes:id_imagen,id_item,nombre,ruta',
+                'imagenes:id_imagen,id_item,nombre,ruta,estado',
                 'direccionPredeterminada.municipio:id_municipio,municipio',
             ])
-            ->select('id_item', 'item', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha')
+            ->select('id_item', 'item', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha', 'id_categoria_item')
             ->whereIn('tipo_trans', [2, 3])
             ->where('estatus', 1)
             ->latest('fecha')
@@ -136,10 +136,10 @@ Route::get('/home', function () {
 
     $productosVenta = \Illuminate\Support\Facades\Cache::remember('home_venta', 600, function () {
         return \App\Models\Item::with([
-                'imagenes:id_imagen,id_item,nombre,ruta',
+                'imagenes:id_imagen,id_item,nombre,ruta,estado',
                 'direccionPredeterminada.municipio:id_municipio,municipio',
             ])
-            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha')
+            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha', 'id_categoria_item')
             ->where('tipo_trans', 1)
             ->where('estatus', 1)
             ->latest('fecha')
@@ -231,7 +231,8 @@ Route::get('/historial', function () {
 })->middleware('auth')->name('historial');
 
 Route::get('/items/search_header', [ItemController::class, 'search_header'])->middleware('throttle:30,1')->name('items.search_header');
-Route::get('/buscar', [ItemController::class, 'search_header'])->middleware('throttle:30,1');
+// /buscar redirige a search_header (consolidado)
+Route::get('/buscar', fn() => redirect()->route('items.search_header', request()->query()))->middleware('throttle:30,1');
 
 // Rutas de categorías
 Route::get('categorias-item', [CategoriaItemController::class, 'index']);
@@ -243,8 +244,8 @@ Route::get('/municipios', [MunicipioController::class, 'getMunicipio']);
 Route::get('distritos-municipales', [DistritoMunicipalController::class, 'index']);
 
 // Rutas de tipos de productos
-Route::get('/intercambio', [ItemController::class, 'showItemsTipo2y3'])->name('intercambio');
-Route::get('/compras', [ItemController::class, 'showItemsTipo1'])->name('compra');
+Route::get('/intercambio', [ItemController::class, 'showItemsTipo2y3'])->middleware('throttle:60,1')->name('intercambio');
+Route::get('/compras', [ItemController::class, 'showItemsTipo1'])->middleware('throttle:60,1')->name('compra');
 
 
 
@@ -325,6 +326,8 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/rechazar', [NegociacionController::class, 'rechazar'])->name('negociaciones.rechazar');
     Route::get('/{id}/contraoferta', [NegociacionController::class, 'contraoferta'])->name('negociaciones.contraoferta');
     Route::post('/{id}/contraoferta', [NegociacionController::class, 'storeContraoferta'])->name('negociaciones.store_contraoferta');
+    Route::post('/{id}/cancelar', [NegociacionController::class, 'cancelar'])->name('negociaciones.cancelar');
+    Route::post('/{id}/completar', [NegociacionController::class, 'completar'])->name('negociaciones.completar');
 
     Route::post('/enviar', [App\Http\Controllers\NegociacionController::class, 'store'])
         ->middleware('throttle.sensitive:10,1')
@@ -350,6 +353,7 @@ Route::middleware(['auth'])->group(function () {
     // Perfil propio (cualquier usuario autenticado)
     Route::get('/mi-perfil', [UserController::class, 'profile'])->name('profile');
     Route::put('/actualizar-perfil', [UserController::class, 'updateProfile'])->name('update-profile');
+    Route::post('/cambiar-contrasena', [UserController::class, 'updatePassword'])->name('password.update.profile');
 
     // Direcciones
     Route::post('/direccion/predeterminada/{id}', [DireccionesController::class, 'marcarComoPredeterminada']);
@@ -364,7 +368,9 @@ Route::middleware(['auth'])->group(function () {
     // Talentos
     Route::get('/talentos/crear', function () {
         $categorias = CategoriaItem::all();
-        return view('talentos.agregar-talentos', compact('categorias'));
+        $tarjetas = \App\Models\TarjetaPago::where('id_user', auth()->id())->where('estatus', 1)->get();
+        $montoRegistro = \App\Models\ConfigTarifaCategoria29::vigente()->monto_registro;
+        return view('talentos.agregar-talentos', compact('categorias', 'tarjetas', 'montoRegistro'));
     })->name('items.talento_create');
     Route::post('/talento/agregar', [ItemController::class, 'AddTalento'])->name('items.AddTalento');
     Route::get('/talentos', [ItemController::class, 'userItemstalento'])->name('items.admintalento');
@@ -514,6 +520,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Mensajes predefinidos — solo lectura para admin normal
     Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');
+
+    // Panel de aprobación de imágenes (accesible por admin y superadmin)
+    Route::prefix('imagenes')->name('imagenes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'index'])->name('index');
+        Route::post('/items/aprobar-todas',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosItems'])->name('items.aprobarTodas');
+        Route::post('/items/{id}/aprobar',     [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarItem'])->name('items.aprobar');
+        Route::post('/items/{id}/rechazar',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarItem'])->name('items.rechazar');
+        Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
+        Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
+        Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+    });
 });
 
 // Rutas exclusivas de superadmin
@@ -539,15 +556,4 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     // Config tarifa categoría 29
     Route::get('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'show'])->name('config_tarifa.show');
     Route::put('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'update'])->name('config_tarifa.update');
-
-    // Panel de aprobación de imágenes
-    Route::prefix('imagenes')->name('imagenes.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'index'])->name('index');
-        Route::post('/items/aprobar-todas',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosItems'])->name('items.aprobarTodas');
-        Route::post('/items/{id}/aprobar',     [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarItem'])->name('items.aprobar');
-        Route::post('/items/{id}/rechazar',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarItem'])->name('items.rechazar');
-        Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
-        Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
-        Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
-    });
 });

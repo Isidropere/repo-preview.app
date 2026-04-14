@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Cambialord - Agregar Producto')
 
@@ -55,7 +55,7 @@
                     {{-- Nombre --}}
                     <div>
                         <label for="item" class="block text-xs font-medium text-gray-700 mb-0.5">Nombre del producto <span class="text-red-500">*</span></label>
-                        <input type="text" id="item" name="item" required value="{{ old('item') }}" placeholder="Ej: iPhone 14 Pro Max"
+                        <input type="text" id="item" name="item"  value="{{ old('item') }}" placeholder="Ej: iPhone 14 Pro Max"
                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                         @error('item')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                     </div>
@@ -66,7 +66,7 @@
                             <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
-                                <input type="text" id="valor" name="valor" required value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
+                                <input type="text" id="valor" name="valor"  value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
                                        class="w-full pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" style="padding-left:3rem">
                             </div>
                             @error('valor')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
@@ -86,13 +86,13 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label for="cantidad" class="block text-xs font-medium text-gray-700 mb-0.5">Cantidad <span class="text-red-500">*</span></label>
-                            <input type="number" id="cantidad" name="cantidad" required min="1" value="{{ old('cantidad', 1) }}" placeholder="1"
+                            <input type="number" id="cantidad" name="cantidad"  min="1" value="{{ old('cantidad', 1) }}" placeholder="1"
                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                             @error('cantidad')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                         </div>
                         <div>
                             <label for="id_categoria_item" class="block text-xs font-medium text-gray-700 mb-0.5">Categoría <span class="text-red-500">*</span></label>
-                            <select id="id_categoria_item" name="id_categoria_item" required
+                            <select id="id_categoria_item" name="id_categoria_item" 
                                     class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
                                 @foreach($categorias as $categoria)
                                     <option value="{{ $categoria->id_categoria_item }}" {{ old('id_categoria_item') == $categoria->id_categoria_item ? 'selected' : '' }}>{{ $categoria->categoria }}</option>
@@ -138,7 +138,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </div>
-                        <input id="imagen_principal" hidden name="imagen_principal" type="file" class="imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4" required>
+                        <input id="imagen_principal" hidden name="imagen_principal" type="file" class="imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4">
                     </label>
                 </div>
 
@@ -332,9 +332,14 @@ function goToStep(step) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Si hay errores, mostrar todos los pasos
+// Si hay errores, mostrar todos los pasos y re-habilitar botón
 @if($errors->any())
 document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('hidden'));
+const submitBtn = document.getElementById('submitBtn');
+if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Publicar producto';
+}
 @endif
 
 // ═══ Precio ═══

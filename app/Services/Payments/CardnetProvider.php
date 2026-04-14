@@ -98,7 +98,7 @@ class CardnetProvider implements PaymentProviderInterface
                 'tip'              => $opciones['tip'] ?? 0,
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
             ])->post("{$this->baseUrl}/transactions/sales", $payload);
@@ -154,7 +154,7 @@ class CardnetProvider implements PaymentProviderInterface
                 'client-ip'        => $opciones['client_ip'] ?? request()->ip(),
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
             ])->post("{$this->baseUrl}/transactions/voids", $payload);
@@ -202,7 +202,7 @@ class CardnetProvider implements PaymentProviderInterface
                 'txToken'          => $opciones['tx_token'] ?? $transactionId,
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
             ])->post("{$this->baseUrl}/transactions/refund", $payload);
@@ -239,7 +239,7 @@ class CardnetProvider implements PaymentProviderInterface
      */
     private function obtenerIdempotencyKey(): string
     {
-        $response = Http::withHeaders([
+        $response = Http::timeout(30)->withHeaders([
             'Accept' => 'text/plain',
         ])->post("{$this->baseUrl}/idenpotency-keys");
 

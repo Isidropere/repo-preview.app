@@ -53,9 +53,9 @@ return [
     */
     'cardnet' => [
         'env'         => env('CARDNET_ENV', 'QA'),
-        'merchant_id' => env('CARDNET_MERCHANT_ID', '349041263'),
-        'terminal_id' => env('CARDNET_TERMINAL_ID', '77777777'),
-        'token'       => env('CARDNET_TOKEN', '454500350001'),
+        'merchant_id' => env('CARDNET_MERCHANT_ID', ''),
+        'terminal_id' => env('CARDNET_TERMINAL_ID', ''),
+        'token'       => env('CARDNET_TOKEN', ''),
         'environment' => env('CARDNET_ENVIRONMENT', 'ECommerce'),
     ],
 
@@ -78,19 +78,19 @@ return [
     'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect'      => env('GOOGLE_REDIRECT_URI', 'http://localhost:8080/auth/google/callback'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', ''),
     ],
 
     'facebook' => [
         'client_id'     => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect'      => env('FACEBOOK_REDIRECT_URI', 'http://localhost:8080/auth/facebook/callback'),
+        'redirect'      => env('FACEBOOK_REDIRECT_URI', ''),
     ],
 
     'instagram' => [
         'client_id'     => env('INSTAGRAM_CLIENT_ID'),
         'client_secret' => env('INSTAGRAM_CLIENT_SECRET'),
-        'redirect'      => env('INSTAGRAM_REDIRECT_URI', 'http://localhost:8080/auth/instagram/callback'),
+        'redirect'      => env('INSTAGRAM_REDIRECT_URI', ''),
     ],
 
 ];
