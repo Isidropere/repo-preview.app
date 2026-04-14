@@ -116,8 +116,10 @@
                                 </svg>
                             </a>
         
+                            @auth
                             <x-negociaciones-modal/>
                             <x-notificaciones />
+                            @endauth
 
                             <div class="hs-dropdown [--strategy:static] md:[--strategy:fixed] [--adaptive:none] [--is-collapse:true] md:[--is-collapse:false]"
                                 data-astro-cid-pwmmw5ba>

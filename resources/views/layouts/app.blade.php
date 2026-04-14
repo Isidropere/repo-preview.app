@@ -412,7 +412,9 @@
         @include('partials.header')
         @include('partials.menu')
     </header>
+    @auth
     <x-negociaciones-modal />
+    @endauth
     <!-- Contenido dinámico -->
    <main class="py-0">
         @yield('content')
