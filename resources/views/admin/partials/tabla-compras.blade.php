@@ -55,12 +55,12 @@
                                 <img src="{{ $imagenUrl }}"
                                      alt="{{ $primerItem?->nombre_item }}"
                                      class="w-full h-full object-cover"
-                                     onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">
+                                     onerror="this.onerror=null;this.src='/imgs/defaults/producto_default.svg'">
                             @elseif($primerImagen)
                                 <img src="{{ \App\Helpers\ImageHelper::urlMedia($primerImagen->ruta, $primerImagen->nombre) }}"
                                      alt="{{ $primerItem?->nombre_item }}"
                                      class="w-full h-full object-cover"
-                                     onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">
+                                     onerror="this.onerror=null;this.src='/imgs/defaults/producto_default.svg'">
                             @else
                                 <div class="w-full h-full flex items-center justify-center text-gray-300">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

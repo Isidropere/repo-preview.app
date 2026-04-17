@@ -291,7 +291,7 @@
                                                         Mochila
                                                     </h3>
                                                     <p class="text-xs text-gray-500" data-astro-cid-pwmmw5ba>Un usuario
-                                                        está interesado en intercambiar tu artículo el 10 de Agosto de
+                                                        est? interesado en intercambiar tu artículo el 10 de Agosto de
                                                         2024</p>
                                                     <p class="text-xs text-secondary font-medium mt-1"
                                                         data-astro-cid-pwmmw5ba>Hace 1 día</p>
@@ -300,7 +300,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- La configuración de cuenta no debe aparecer hasta que el usuario inicie o se registre en la página -->
+                                <!-- La configuración de cuenta no debe aparecer hasta que el usuario inicie o se registre en la p?gina -->
                                 <div class="hs-dropdown [--strategy:static] md:[--strategy:fixed] [--adaptive:none] [--is-collapse:true] md:[--is-collapse:false] p-3 ps-px sm:px-3"
                                     data-astro-cid-pwmmw5ba> <button id="hs-dropdown-floating-dark" type="button"
                                         class="hs-dropdown-toggle flex items-center w-full text-sm text-primary hover:text-hoverPrimary"
@@ -316,7 +316,7 @@
                                         role="menu" aria-orientation="vertical"
                                         aria-labelledby="hs-dropdown-floating-dark" data-astro-cid-pwmmw5ba>
                                         <div class="my-4 md:px-1 space-y-1 text-sm text-center text-primary flex flex-col gap-y-2 items-center"
-                                            data-astro-cid-pwmmw5ba> <!-- --- Aquí debe cargarse su foto de perfil
+                                            data-astro-cid-pwmmw5ba> <!-- --- Aqu? debe cargarse su foto de perfil
                                         y su nombre -- -->
                                             <div class="flex gap-4 items-center" data-astro-cid-pwmmw5ba> <img
                                                     src="/profilePlaceholder.jpg" alt="" class="h-12 w-12 rounded-full"
@@ -492,7 +492,7 @@
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
                 href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
-                        src="/icons/side-bar-icons/niños.svg" alt="Niños icon" data-astro-cid-pwmmw5ba>
+                        src="/icons/side-bar-icons/Niños.svg" alt="Niños icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
                         data-astro-cid-pwmmw5ba> Niños </p>
                 </div>
@@ -508,9 +508,9 @@
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
                 href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(22)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
-                        src="/icons/side-bar-icons/vehiculos.svg" alt="Vehículos icon" data-astro-cid-pwmmw5ba>
+                        src="/icons/side-bar-icons/niños.svg" alt="Niñas icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
-                        data-astro-cid-pwmmw5ba> Vehículos </p>
+                        data-astro-cid-pwmmw5ba> Niñas </p>
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
@@ -524,7 +524,7 @@
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
                 href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
-                        src="/icons/side-bar-icons/tecnología.svg" alt="Tecnología icon" data-astro-cid-pwmmw5ba>
+                        src="/icons/side-bar-icons/Tecnología.svg" alt="Tecnología icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
                         data-astro-cid-pwmmw5ba> Tecnología </p>
                 </div>
@@ -532,7 +532,7 @@
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
                 href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(25)) }}" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
-                        src="/icons/side-bar-icons/librería.svg" alt="Librería y Papelería icon"
+                        src="/icons/side-bar-icons/Librería.svg" alt="Librería y Papelería icon"
                         data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"
                         data-astro-cid-pwmmw5ba> Librería y Papelería </p>
@@ -600,7 +600,7 @@
                 dropdownMenu.classList.remove("scale-100");
                 setTimeout(() => {
                     dropdownMenu.classList.add("hidden");
-                }, 300); // La duración debe coincidir con la duración de la transición
+                }, 300); // La duración debe coincidir con la duración de la transici?n
                 iconMenu.classList.remove("hidden");
                 iconClose.classList.add("hidden");
             }
@@ -622,7 +622,7 @@
                 dropdownMenu.classList.remove("scale-100");
                 setTimeout(() => {
                     dropdownMenu.classList.add("hidden");
-                }, 300); // La duración debe coincidir con la duración de la transición
+                }, 300); // La duración debe coincidir con la duración de la transici?n
                 iconMenu.classList.remove("hidden");
                 iconClose.classList.add("hidden");
             }
@@ -820,7 +820,7 @@
                         <div class="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:gap-3 bg-white rounded-lg p-2">
                             <div class="w-full"> <input type="text" id="hero-input" name="hero-input"
                                     class="py-3 px-4 block w-full border-primary border-2 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
-                                    placeholder="Buscar productos, marcas y más"> </div> <a
+                                    placeholder="Buscar productos, Marcas y más"> </div> <a
                                 class="w-full sm:w-auto whitespace-nowrap p-3 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary disabled:opacity-50 disabled:pointer-events-none"
                                 href="#">
                                 Buscar

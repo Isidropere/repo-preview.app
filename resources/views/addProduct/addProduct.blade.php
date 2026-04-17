@@ -187,8 +187,13 @@
                     {{-- Descripción --}}
                     <div>
                         <label for="presentacion" class="block text-xs font-medium text-gray-700 mb-0.5">Descripción <span class="text-red-500">*</span></label>
-                        <textarea id="presentacion" name="presentacion" rows="2" placeholder="Describe tu producto: estado, características, incluye accesorios, etc."
+                        <textarea id="presentacion" name="presentacion" rows="2" maxlength="250" placeholder="Describe tu producto: estado, características, incluye accesorios, etc."
+                                  oninput="contarCaracteres(this,'contadorProducto')"
                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none">{{ old('presentacion') }}</textarea>
+                        <div class="flex justify-between items-center mt-0.5">
+                            <span id="msgProducto" class="text-xs text-red-500 hidden">Máximo 250 caracteres</span>
+                            <span id="contadorProducto" class="text-xs text-gray-400 ml-auto">0/250</span>
+                        </div>
                         @error('presentacion')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                     </div>
 
@@ -346,6 +351,21 @@ if (submitBtn) {
 function formatPrice(input) {
     let v = input.value.replace(/[^0-9.]/g, '');
     input.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function contarCaracteres(textarea, contadorId) {
+    const max = 250;
+    const len = textarea.value.length;
+    const contador = document.getElementById(contadorId);
+    const msg = document.getElementById(contadorId.replace('contador', 'msg'));
+    if (contador) contador.textContent = len + '/' + max;
+    if (len >= max) {
+        if (contador) contador.classList.replace('text-gray-400', 'text-red-500');
+        if (msg) msg.classList.remove('hidden');
+    } else {
+        if (contador) contador.classList.replace('text-red-500', 'text-gray-400');
+        if (msg) msg.classList.add('hidden');
+    }
 }
 
 // ═══ Dimensiones toggle ═══

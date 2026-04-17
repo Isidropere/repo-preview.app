@@ -166,7 +166,7 @@ function btnCopiar(string $id, string $label = ''): string {
                                 @if($pi->imagen_url)
                                     <img src="{{ $pi->imagen_url }}" alt="{{ $pi->nombre_item }}"
                                          class="w-full h-full object-cover"
-                                         onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">
+                                         onerror="this.onerror=null;this.src='/imgs/defaults/producto_default.svg'">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-gray-300">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

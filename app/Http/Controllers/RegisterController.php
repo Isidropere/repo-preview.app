@@ -3,14 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Tipos_usuario;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
@@ -22,6 +19,11 @@ class RegisterController extends Controller
 
     public function registrarUsuario(Request $request)
     {
+        Log::info('registrarUsuario: inicio', [
+            'ip' => $request->ip(),
+            'data' => $request->except(['password', 'password_confirmation', 'profile_photo']),
+        ]);
+
         $validado = $request->validate([
             'nombres'          => 'required|string|max:255',
             'apellidos'        => 'required|string|max:255',
@@ -32,82 +34,64 @@ class RegisterController extends Controller
             'profile_photo'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $nombre_usuario_base = strtolower(
-            preg_replace('/\s+/', '', $validado['nombres'] . $validado['apellidos'])
-        );
-        // Asegurar unicidad del nombre de usuario
-        $nombre_usuario_generado = $nombre_usuario_base;
-        if (User::where('nombre_usuario', $nombre_usuario_generado)->exists()) {
-            $nombre_usuario_generado = $nombre_usuario_base . rand(100, 9999);
-        }
-
-        $usuario = User::create([
-            'nombres'         => $validado['nombres'],
-            'apellidos'       => $validado['apellidos'],
-            'telefono'        => $validado['telefono'],
-            'email'           => $validado['email'],
-            'nombre_usuario'  => $nombre_usuario_generado,
-            'password'        => Hash::make($validado['password']),
-            'estatus'         => true,
-            'id_tipo_usuario' => $validado['tipos_usuario_id'],
-            'created_at'      => now(),
-            'updated_at'      => now(),
-        ]);
-
-        // Guardar imagen localmente
-        if ($request->hasFile('profile_photo')) {
-            try {
-                Log::info('Inicio de guardado local de imagen', ['user_id' => $usuario->id]);
-
-                $file = $request->file('profile_photo');
-                Log::debug('Archivo obtenido', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType()
-                ]);
-
-                // Validar tipo de archivo
-                $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-                $mime = $file->getMimeType();
-
-                if (!in_array($mime, $allowedMimeTypes)) {
-                    Log::error('Tipo de archivo no permitido', [
-                        'mime' => $mime,
-                        'permitidos' => $allowedMimeTypes
-                    ]);
-                    throw new \Exception('Tipo de archivo no permitido: ' . $mime);
-                }
-
-                // Configurar ruta de almacenamiento
-                $directory = public_path('imgs/profiles');
-                if (!file_exists($directory)) {
-                    mkdir($directory, 0755, true);
-                }
-                $fileName = 'profile_' . $usuario->id . '_' . time() . '.' . $file->extension();
-                $file->move($directory, $fileName);
-                $usuario->profile_photo_path = 'imgs/profiles/' . $fileName;
-                $usuario->save();
-
-            } catch (\Throwable $e) {
-                Log::error('Error al guardar imagen localmente', [
-                    'user_id' => $usuario->id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                // Continuar sin imagen
-            }
-        }
-
-        // Intentar enviar verificación de email (no bloquea el registro si falla)
         try {
-            $usuario->sendEmailVerificationNotification();
+            $nombre_usuario_base = strtolower(
+                preg_replace('/\s+/', '', $validado['nombres'] . $validado['apellidos'])
+            );
+            $nombre_usuario_generado = $nombre_usuario_base;
+            if (User::where('nombre_usuario', $nombre_usuario_generado)->exists()) {
+                $nombre_usuario_generado = $nombre_usuario_base . rand(100, 9999);
+            }
+
+            $usuario = User::create([
+                'nombres'         => $validado['nombres'],
+                'apellidos'       => $validado['apellidos'],
+                'telefono'        => $validado['telefono'],
+                'email'           => $validado['email'],
+                'nombre_usuario'  => $nombre_usuario_generado,
+                'password'        => Hash::make($validado['password']),
+                'estatus'         => true,
+                'id_tipo_usuario' => $validado['tipos_usuario_id'],
+            ]);
+
+            Log::info('Usuario registrado', ['id' => $usuario->id, 'email' => $usuario->email]);
+
+            // Guardar foto de perfil (no bloquea el registro si falla)
+            if ($request->hasFile('profile_photo')) {
+                try {
+                    $file = $request->file('profile_photo');
+                    $directory = public_path('imgs/profiles');
+                    if (!file_exists($directory)) {
+                        mkdir($directory, 0755, true);
+                    }
+                    $fileName = 'profile_' . $usuario->id . '_' . time() . '.' . $file->extension();
+                    $file->move($directory, $fileName);
+                    $usuario->profile_photo_path = 'imgs/profiles/' . $fileName;
+                    $usuario->save();
+                } catch (\Throwable $e) {
+                    Log::error('Error al guardar foto de perfil', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // Email de verificacion (no bloquea el registro si falla)
+            try {
+                $usuario->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo enviar email de verificacion', ['error' => $e->getMessage()]);
+            }
+
+            // Auto-login
+            Auth::login($usuario);
+
+            return redirect()->route('home')->with('success', '¡Bienvenido! Tu cuenta ha sido creada exitosamente.');
+
         } catch (\Throwable $e) {
-            Log::warning('No se pudo enviar email de verificación', ['error' => $e->getMessage()]);
+            Log::error('Error al registrar usuario', [
+                'error' => $e->getMessage(),
+                'email' => $validado['email'] ?? 'N/A',
+            ]);
+
+            return back()->withInput()->with('error', 'Error al crear la cuenta: ' . $e->getMessage());
         }
-
-        // Auto-login después del registro
-        Auth::login($usuario);
-
-        return redirect()->route('home')->with('success', '¡Bienvenido! Tu cuenta ha sido creada exitosamente.');
     }
 }
