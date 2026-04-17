@@ -94,8 +94,13 @@
                     </div>
                     <div>
                         <label for="presentacion" class="block text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
-                        <textarea id="presentacion" name="presentacion" rows="2" required placeholder="Describe tu talento o servicio..."
+                        <textarea id="presentacion" name="presentacion" rows="2" maxlength="250" placeholder="Describe tu talento o servicio..."
+                                  oninput="contarCaracteres(this,'contadorTalento')"
                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm resize-none">{{ old('presentacion') }}</textarea>
+                        <div class="flex justify-between items-center mt-0.5">
+                            <span id="msgTalento" class="text-xs text-red-500 hidden">Máximo 250 caracteres</span>
+                            <span id="contadorTalento" class="text-xs text-gray-400 ml-auto">0/250</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end mt-4">
@@ -220,7 +225,7 @@
             <div id="seccionCvvPago" class="mb-2 {{ $tarjetas->isEmpty() ? 'hidden' : '' }}">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">CVV</label>
                 <div class="flex items-center gap-3">
-                    <input type="password" id="cvvPagoTalento" maxlength="4" placeholder="•••" class="w-28 border-2 border-gray-200 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:border-blue-500">
+                    <input type="password" id="cvvPagoTalento" maxlength="4" placeholder="" class="w-28 border-2 border-gray-200 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:border-blue-500">
                     <span class="text-xs text-gray-400">3-4 dígitos al dorso</span>
                 </div>
             </div>
@@ -310,8 +315,23 @@ function formatPrice(input) {
     input.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+function contarCaracteres(textarea, contadorId) {
+    const max = 250;
+    const len = textarea.value.length;
+    const contador = document.getElementById(contadorId);
+    const msg = document.getElementById(contadorId.replace('contador', 'msg'));
+    if (contador) contador.textContent = len + '/' + max;
+    if (len >= max) {
+        if (contador) contador.classList.replace('text-gray-400', 'text-red-500');
+        if (msg) msg.classList.remove('hidden');
+    } else {
+        if (contador) contador.classList.replace('text-red-500', 'text-gray-400');
+        if (msg) msg.classList.add('hidden');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // ── Imagen principal ──
+    // -- Imagen principal --
     const inp = document.getElementById('imagen_principal');
     const prevDef = document.querySelector('#step-2 .preview-default');
     const prevImg = document.getElementById('imagen_principal_preview');
@@ -338,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
         prevDef.classList.remove('hidden'); fname.classList.add('hidden'); prevAct.classList.add('hidden');
     });
 
-    // ── Imágenes adicionales ──
+    // -- Imágenes adicionales --
     document.querySelectorAll('.imagen-input').forEach(input => {
         input.addEventListener('change', function(e) {
             const file = e.target.files[0]; const label = input.closest('label'); if (!label || !file) return;
@@ -359,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ── Submit: abrir modal de pago ──
+    // -- Submit: abrir modal de pago --
     document.getElementById('productForm').addEventListener('submit', function(e) {
         e.preventDefault();
         document.getElementById('valor').value = document.getElementById('valor').value.replace(/,/g, '');
@@ -374,9 +394,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('modalPagoTalento').classList.remove('hidden');
     });
 
-    // ══════════════════════════════════════
+    // --------------------------------------
     // MODAL DE PAGO
-    // ══════════════════════════════════════
+    // --------------------------------------
     const modalPago = document.getElementById('modalPagoTalento');
     const errorDiv = document.getElementById('pagoError');
     const confirmar = document.getElementById('confirmarPagoTalento');
@@ -479,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (data.success) {
-                confirmar.innerHTML = '✓ Publicado';
+                confirmar.innerHTML = '? Publicado';
                 confirmar.classList.remove('bg-blue-600');
                 confirmar.classList.add('bg-green-600');
                 setTimeout(() => { window.location.href = data.redirect || '{{ route("items.admintalento") }}'; }, 500);
@@ -496,9 +516,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ══════════════════════════════════════
+    // --------------------------------------
     // MODAL DE NUEVA TARJETA
-    // ══════════════════════════════════════
+    // --------------------------------------
     const modalTarjeta = document.getElementById('modalNuevaTarjeta');
     const tarjetaError = document.getElementById('tarjetaError');
 
@@ -510,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('cancelarNuevaTarjeta').addEventListener('click', cerrarModalTarjeta);
     modalTarjeta.addEventListener('click', e => { if (e.target === modalTarjeta) cerrarModalTarjeta(); });
 
-    // Formato número tarjeta
+    // Formato Número tarjeta
     document.getElementById('nt_numero').addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '').substring(0, 16);
         this.value = v.replace(/(.{4})/g, '$1 ').trim();
@@ -525,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const banco = document.getElementById('nt_banco').value.trim();
 
         if (!nombre || !numero || numero.length < 13 || !mes) {
-            tarjetaError.textContent = 'Completa nombre, número de tarjeta y mes.';
+            tarjetaError.textContent = 'Completa nombre, Número de tarjeta y mes.';
             tarjetaError.classList.remove('hidden');
             return;
         }

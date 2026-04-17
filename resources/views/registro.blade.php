@@ -32,10 +32,16 @@
             </a>
             <div class="flex items-center my-3">
                 <div class="flex-grow border-t border-gray-200"></div>
-                <span class="mx-3 text-xs text-gray-400">O completa el formulario</span>
+                <span class="mx-3 text-xs text-gray-400">completa el formulario</span>
                 <div class="flex-grow border-t border-gray-200"></div>
             </div>
         </div>
+
+        @if(session('error'))
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+            <p class="font-semibold">{{ session('error') }}</p>
+        </div>
+        @endif
 
         @if($errors->any())
         <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">

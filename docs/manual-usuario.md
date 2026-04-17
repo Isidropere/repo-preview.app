@@ -1,241 +1,153 @@
 # Manual de Usuario — CambialóRD
 
-## 1. ¿Qué es CambialóRD?
-
-CambialóRD es una plataforma dominicana donde puedes comprar, vender e intercambiar artículos y servicios (talentos) con otros usuarios de forma segura. Funciona con moneda local (RD$) y cubre envíos a todo el territorio nacional.
+> Guía básica para usuarios registrados de la plataforma
 
 ---
 
-## 2. Registro y Verificación
+## 1. Registro e Inicio de Sesión
 
-### 2.1 Crear una cuenta
-1. Ve a la página principal y haz clic en "Registrarse".
-2. Completa el formulario con tus datos: nombres, apellidos, email, teléfono y contraseña.
-3. Haz clic en "Registrar".
+### Crear una cuenta
+1. Ve a `/registro`
+2. Completa: nombres, apellidos, teléfono, correo, contraseña (mínimo 8 caracteres)
+3. Selecciona tu tipo de usuario (Persona o Empresa)
+4. Acepta los términos y condiciones
+5. Opcionalmente sube una foto de perfil
+6. Haz click en **Crear mi cuenta**
 
-### 2.2 Verificar tu email
-- Después de registrarte recibirás un correo de verificación.
-- Haz clic en el enlace del correo para activar tu cuenta.
-- Sin verificación no podrás publicar artículos ni realizar compras.
+También puedes registrarte con **Google** usando el botón correspondiente.
 
-### 2.3 Iniciar sesión con Google
-- En la pantalla de login, haz clic en "Iniciar sesión con Google".
-- Autoriza el acceso y serás redirigido automáticamente.
+### Iniciar sesión
+1. Ve a `/login`
+2. Ingresa tu correo y contraseña
+3. Usa el icono de ojo para mostrar/ocultar la contraseña
+4. Marca "Recordarme" si quieres mantener la sesión activa
 
-### 2.4 Recuperar contraseña
-1. En la pantalla de login, haz clic en "¿Olvidaste tu contraseña?".
-2. Ingresa tu email registrado.
-3. Recibirás un enlace para crear una nueva contraseña.
-
----
-
-## 3. Tu Cuenta
-
-### 3.1 Panel principal
-- Accede desde el menú "Tu Cuenta".
-- Desde aquí puedes gestionar tu perfil, direcciones, productos y talentos.
-
-### 3.2 Editar perfil
-1. Ve a "Mi Perfil" desde el menú.
-2. Puedes modificar: nombres, apellidos, teléfono y nombre de usuario.
-3. Haz clic en "Guardar cambios".
-
-### 3.3 Cambiar tipo de usuario
-- CambialóRD tiene diferentes tipos de usuario (comprador, vendedor, etc.).
-- Ve a "Cambiar tipo de usuario" para seleccionar el que mejor se adapte a ti.
-- Los tipos de administrador (3 y 4) no están disponibles para selección.
+### Cambiar contraseña
+1. Ve a `/contraseña`
+2. Ingresa tu contraseña actual
+3. Ingresa y confirma la nueva contraseña
+4. Haz click en **Cambiar contraseña**
 
 ---
 
-## 4. Direcciones
+## 2. Explorar el Catálogo
 
-### 4.1 Agregar una dirección
-1. Ve a "Direcciones" desde tu cuenta.
-2. Haz clic en "Agregar dirección".
-3. Completa: calle, número, apartamento (opcional), provincia, municipio, sector y teléfono de contacto.
-4. Guarda la dirección.
+### Página de inicio
+- Muestra categorías populares, productos de intercambio y productos en venta
+- Usa el buscador del header para encontrar artículos específicos
 
-### 4.2 Dirección predeterminada
-- Marca una dirección como predeterminada haciendo clic en el botón correspondiente.
-- Esta dirección se usará automáticamente para envíos y cálculos de delivery.
-- Debes tener al menos una dirección predeterminada para poder realizar compras.
+### Categorías
+- Navega por categorías desde el menú o la página de inicio
+- Filtra por precio, nombre o fecha
+- Busca dentro de una categoría específica
 
-### 4.3 Editar o eliminar
-- Puedes editar cualquier campo de tus direcciones existentes.
-- También puedes eliminar direcciones que ya no necesites.
-
----
-
-## 5. Publicar Artículos
-
-### 5.1 Crear un producto
-1. Ve a "Mis Productos" y haz clic en "Crear producto".
-2. Completa la información:
-   - Nombre del producto
-   - Categoría
-   - Precio (RD$)
-   - Descuento (opcional)
-   - Condición: Nuevo, Usado, Reacondicionado o Como nuevo
-   - Tipo de transacción: Venta, Intercambio o Ambos
-   - Descripción detallada
-   - Dimensiones y peso (para cálculo de envío)
-   - Cantidad disponible (inventario)
-3. Sube una imagen o video principal (obligatorio) y hasta 4 imágenes adicionales.
-4. Selecciona los colores disponibles y el stock por color (si aplica).
-5. Haz clic en "Publicar".
-
-### 5.2 Editar un producto
-- Desde "Mis Productos", haz clic en "Editar" en el producto que desees modificar.
-- Puedes cambiar precio, descripción, imágenes, inventario, etc.
-
-### 5.3 Eliminar un producto
-- Desde "Mis Productos", haz clic en "Eliminar".
-- El producto será removido de la plataforma.
-
-### 5.4 Gestionar productos
-- En "Gestionar Items" puedes ver todos tus productos activos con estadísticas de vistas.
+### Ver detalle de un producto
+- Haz click en cualquier artículo para ver su detalle completo
+- Verás: imágenes, precio, stock disponible, descripción, condición
+- Si el artículo está **Agotado**, no podrás comprarlo ni intercambiarlo
 
 ---
 
-## 6. Publicar Talentos (Servicios)
+## 3. Comprar un Producto
 
-### 6.1 ¿Qué es un talento?
-- Los talentos son servicios que ofreces (diseño, reparaciones, clases, etc.).
-- Se publican en la categoría especial 29.
+### Agregar al carrito
+1. En el detalle del producto, selecciona la cantidad
+2. Haz click en **Agregar al carrito**
+3. No puedes agregar tus propios artículos
+4. No puedes mezclar productos físicos y servicios (talentos) en el mismo carrito
 
-### 6.2 Crear un talento
-1. Ve a "Talentos" y haz clic en "Agregar talento".
-2. Completa la información similar a un producto.
-3. Publica tu servicio.
+### Revisar el carrito
+- Ve a `/carrito/carrito`
+- Selecciona/deselecciona los artículos que quieres pagar
+- El total se calcula automáticamente sobre los artículos seleccionados
 
-### 6.3 Administrar talentos
-- Desde "Mis Talentos" puedes ver, editar y gestionar tus servicios publicados.
+### Checkout y pago
+1. Ve a `/carrito/checkout`
+2. Selecciona una tarjeta guardada o agrega una nueva
+3. Ingresa el CVV de tu tarjeta
+4. Verifica el resumen del pedido y el costo de envío
+5. Haz click en **Confirmar y Pagar**
+6. Si el pago es exitoso, recibirás confirmación y podrás ver tu orden en el historial
 
----
-
-## 7. Comprar
-
-### 7.1 Buscar productos
-- Usa la barra de búsqueda en el header para encontrar artículos.
-- Navega por categorías desde el menú.
-- Filtra entre productos de venta o intercambio.
-
-### 7.2 Ver detalle de producto
-- Haz clic en cualquier producto para ver su información completa.
-- Verás: imágenes, precio, descripción, condición, ubicación del vendedor y opciones de contacto.
-
-### 7.3 Agregar al carrito
-1. En la página del producto, selecciona la cantidad.
-2. Haz clic en "Agregar al carrito".
-3. El contador del carrito se actualizará en el header.
-
-### 7.4 Gestionar el carrito
-- Ve a "Carrito" desde el menú.
-- Puedes:
-  - Aumentar o disminuir cantidades (respetando el stock disponible).
-  - Seleccionar/deseleccionar items para el pago.
-  - Eliminar items individuales.
-  - Vaciar todo el carrito.
-- Los totales se recalculan automáticamente al seleccionar/deseleccionar items.
-
-### 7.5 Checkout y pago
-1. Desde el carrito, haz clic en "Proceder al pago".
-2. Verifica los items seleccionados y el total.
-3. Asegúrate de tener una dirección predeterminada configurada.
-4. Selecciona o agrega una tarjeta de pago.
-5. Ingresa el CVV de tu tarjeta.
-6. Haz clic en "Pagar".
-7. Si el pago es exitoso, serás redirigido al historial con la confirmación.
+### Gestionar tarjetas
+- En el checkout puedes agregar nuevas tarjetas
+- Haz click en el icono de basura para eliminar una tarjeta (te pedirá confirmación)
 
 ---
 
-## 8. Tarjetas de Pago
+## 4. Intercambiar un Artículo
 
-### 8.1 Agregar una tarjeta
-1. Durante el checkout, haz clic en "Agregar tarjeta".
-2. Ingresa: número de tarjeta, nombre del titular, fecha de expiración, banco y tipo.
-3. La tarjeta se guardará para futuros pagos.
+### Proponer un intercambio
+1. Ve al detalle de un artículo con modalidad "Intercambio"
+2. Haz click en **Intercambio**
+3. Selecciona un paquete de tus artículos para ofrecer
+4. Escribe un mensaje inicial
+5. Opcionalmente indica un monto de oferta en dinero
+6. Haz click en **Enviar propuesta**
 
-### 8.2 Seleccionar tarjeta activa
-- Si tienes varias tarjetas, selecciona cuál usar haciendo clic en "Usar esta tarjeta".
+### Seguimiento de negociaciones
+- Ve a `/historial` → pestaña **Intercambios**
+- Verás todas tus negociaciones activas e históricas
+- Estados posibles: Inicial, Contraoferta, Aceptado, Rechazado, Cancelado, Completado
 
-### 8.3 Eliminar tarjeta
-- Puedes eliminar tarjetas que ya no uses.
-- Si la tarjeta tiene pagos asociados, se desactivará en lugar de eliminarse.
-
----
-
-## 9. Intercambios (Negociaciones)
-
-### 9.1 Proponer un intercambio
-1. En la página de un producto marcado para intercambio, haz clic en "Negociar".
-2. Escribe un mensaje al dueño del artículo.
-3. Opcionalmente, selecciona un paquete de tus artículos para ofrecer.
-4. Puedes incluir un monto de oferta adicional.
-5. Envía la propuesta.
-
-### 9.2 Gestionar negociaciones
-- Como receptor (dueño del artículo), puedes:
-  - Aceptar la propuesta.
-  - Rechazarla.
-  - Enviar una contraoferta con un monto diferente y un mensaje.
-
-### 9.3 Paquetes
-- Los paquetes son agrupaciones de tus artículos que puedes ofrecer en intercambios.
-- Crea paquetes desde el carrito para facilitar las negociaciones.
-
-### 9.4 Chat de negociación
-- Cada negociación tiene un historial de mensajes entre ambas partes.
-- Puedes usar mensajes predefinidos para agilizar la comunicación.
+### Cancelar una negociación
+- Solo el emisor puede cancelar en estados Inicial o Contraoferta
+- Una vez aceptada, no se puede cancelar
 
 ---
 
-## 10. Mensajes
+## 5. Publicar un Producto
 
-- Puedes enviar mensajes directos a otros usuarios sobre artículos específicos.
-- Accede a "Mensajes" desde el menú para ver tus mensajes recibidos y enviados.
-- Los mensajes no leídos se marcan automáticamente como leídos al abrirlos.
+1. Ve a **Mis Productos** → **Nuevo Producto**
+2. Paso 1 — Información: nombre, precio, cantidad, categoría
+3. Paso 2 — Imágenes: sube imagen/video principal y hasta 4 adicionales
+4. Paso 3 — Detalles: descripción (máx. 250 caracteres), condición, modalidad, dimensiones
+5. Haz click en **Publicar producto**
 
----
-
-## 11. Notificaciones
-
-- Recibirás notificaciones sobre actividad relevante (negociaciones, mensajes, etc.).
-- El contador de notificaciones aparece en el header.
-- Haz clic en una notificación para marcarla como leída.
+Las imágenes pasan por moderación antes de aparecer públicamente.
 
 ---
 
-## 12. Historial
+## 6. Publicar un Talento (Servicio)
 
-- Accede a "Historial" desde el menú para ver:
-  - Tus compras realizadas con estado y detalles.
-  - Tus publicaciones activas.
-  - Tus negociaciones de intercambio.
-
----
-
-## 13. Delivery y Envíos
-
-- El costo de envío se calcula automáticamente según:
-  - Tu ubicación (dirección predeterminada).
-  - El peso y dimensiones del artículo.
-  - La zona de entrega (corta, larga o especial).
-- Los servicios (talentos) no generan costo de envío.
-- Los tiempos de entrega varían según la zona.
+1. Ve a **Mis Talentos** → **Nuevo talento**
+2. Completa: nombre, precio, cantidad de cupos, modalidad, descripción
+3. Sube imagen/video principal
+4. Haz click en **Publicar talento**
+5. Se abrirá un modal de pago — selecciona tu tarjeta e ingresa el CVV
+6. El costo de publicación es: `monto_base × cantidad_de_cupos`
+7. Tras el pago exitoso, el talento queda publicado
 
 ---
 
-## 14. Preguntas Frecuentes
+## 7. Historial
 
-**¿Necesito verificar mi email?**
-Sí, es obligatorio para publicar y comprar.
+Ve a `/historial` para ver:
+- **Compras**: órdenes realizadas con estado, artículos y seguimiento de envío
+- **Ventas**: artículos tuyos que fueron comprados
+- **Intercambios**: negociaciones en las que participas
 
-**¿Puedo vender e intercambiar al mismo tiempo?**
-Sí, al publicar selecciona "Ambos" como tipo de transacción.
+---
 
-**¿Qué pasa si el pago falla?**
-Si el cobro se procesó pero hubo un error al registrarlo, el sistema intenta un reembolso automático. Si no es posible, recibirás un código de autorización para contactar soporte.
+## 8. Mis Productos y Talentos
 
-**¿Cómo calculo el envío?**
-El envío se calcula automáticamente al momento del checkout basado en tu dirección y las dimensiones del producto.
+- **Mis Productos** (`/mis-productos`): lista, edita o elimina tus artículos
+- **Mis Talentos** (`/talentos`): lista, edita o elimina tus servicios
+- Haz click en la imagen para ampliarla
+- Usa los iconos de acción: ver, editar, eliminar
+
+---
+
+## 9. Preguntas Frecuentes
+
+**¿Puedo comprar mis propios artículos?**
+No. El sistema lo bloquea automáticamente.
+
+**¿Qué pasa si el pago se procesa pero hay un error?**
+El sistema intenta un reembolso automático. Si falla, contacta soporte con el código de aprobación que aparece en pantalla.
+
+**¿Cuántos cupos puedo publicar para un talento?**
+Hasta 999. Cada compra o intercambio aceptado consume 1 cupo.
+
+**¿Puedo mezclar productos y talentos en el carrito?**
+No. Debes hacer compras separadas.

@@ -18,13 +18,13 @@
                 <div style="position:relative;width:64px;height:64px;flex-shrink:0;">
                     @php
                         $photoPath = Auth::user()->profile_photo_path;
-                        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->nombres . ' ' . Auth::user()->apellidos) . '&background=f58634&color=fff&size=128&rounded=true';
-                        $photoUrl = $photoPath ? asset($photoPath) : $avatarUrl;
+                        $defaultAvatar = asset('imgs/defaults/profile_default.svg');
+                        $photoUrl = $photoPath ? asset($photoPath) : $defaultAvatar;
                     @endphp
                     <img id="preview-foto"
                          src="{{ $photoUrl }}"
                          alt="Foto de perfil"
-                         onerror="this.onerror=null;this.src='{{ $avatarUrl }}'"
+                         onerror="this.onerror=null;this.src='{{ $defaultAvatar }}'"
                          style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #f58634;display:block;">
 
                     {{-- Botón animado encima de la foto --}}

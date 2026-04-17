@@ -248,11 +248,14 @@
             }
 
         html {
-            scroll-behavior: smooth
+            scroll-behavior: smooth;
+            max-width: 100%;
         }
 
         body {
-            font-family: Roboto, sans-serif
+            font-family: Roboto, sans-serif;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .number-slide1 {

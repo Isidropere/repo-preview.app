@@ -158,7 +158,7 @@
                     <img src="{{ \App\Helpers\ImageHelper::urlPerfil($user->foto_perfil) }}"
                          alt="Foto de perfil"
                          style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid #e2e8f0;"
-                         onerror="this.src='{{ asset('images/default-avatar.png') }}'">
+                         onerror="this.src='{{ asset('imgs/defaults/profile_default.svg') }}'">
                 </td>
                 <td style="padding:10px 16px;color:#1e293b;font-weight:500;">
                     {{ $user->name }}

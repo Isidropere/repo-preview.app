@@ -1361,16 +1361,19 @@ class ItemController extends Controller
     public function search_header(Request $request)
     {
         try {
+            $searchTerm = $request->q ?? '';
+            $hasSearch = !empty($searchTerm);
+            
             $query = Item::where('estatus', 1)
                 ->whereIn('tipo_trans', [1, 2, 3]);
 
-            if ($request->has('q') && !empty($request->q)) {
-                $searchTerm = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('item', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('presentacion', 'like', '%' . $searchTerm . '%')
-                        ->orWhereHas('categoria', function ($catQuery) use ($searchTerm) {
-                            $catQuery->where('categoria', 'like', '%' . $searchTerm . '%');
+            if ($hasSearch) {
+                $cleanTerm = str_replace(['%', '_'], ['\\%', '\\_'], $searchTerm);
+                $query->where(function ($q) use ($cleanTerm) {
+                    $q->where('item', 'like', '%' . $cleanTerm . '%')
+                        ->orWhere('presentacion', 'like', '%' . $cleanTerm . '%')
+                        ->orWhereHas('categoria', function ($catQuery) use ($cleanTerm) {
+                            $catQuery->where('categoria', 'like', '%' . $cleanTerm . '%');
                         });
                 });
             }
@@ -1380,17 +1383,28 @@ class ItemController extends Controller
                 ->paginate(12)
                 ->appends($request->query());
 
-            return view('compras.compra', compact('items'));
+            // Si no hay resultados y hubo búsqueda, obtener items relevantes
+            $noResults = $hasSearch && $items->isEmpty();
+            $relevantItems = collect();
+            
+            if ($noResults) {
+                $relevantItems = Item::where('estatus', 1)
+                    ->whereIn('tipo_trans', [1, 2, 3])
+                    ->with(['categoria', 'direcciones', 'imagenes'])
+                    ->inRandomOrder()
+                    ->limit(12)
+                    ->get();
+            }
+
+            return view('compras.compra', compact('items', 'searchTerm', 'noResults', 'relevantItems'));
         } catch (Throwable $e) {
             $this->logError($e, [
                 'method' => 'search_header',
                 'request_params' => $request->all()
             ]);
 
-            abort(500, 'Error en la bÃºsqueda');
+            abort(500, 'Error en la búsqueda');
         }
-
-
     }
     public function gestion()
     {

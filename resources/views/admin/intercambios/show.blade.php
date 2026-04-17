@@ -80,7 +80,7 @@
                                     <img src="{{ \App\Helpers\ImageHelper::urlMedia($imgSol->ruta, $imgSol->nombre) }}"
                                          alt="{{ $itemSolicitado->item }}"
                                          class="w-full h-full object-cover"
-                                         onerror="this.onerror=null;this.src='/imgs/no-product.jpg'">
+                                         onerror="this.onerror=null;this.src='/imgs/defaults/producto_default.svg'">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-gray-300">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

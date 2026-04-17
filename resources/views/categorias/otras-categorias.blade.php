@@ -21,7 +21,7 @@
         15 => '/imgs/icons/side-bar-icons/deportes.svg',
         17 => '/imgs/icons/side-bar-icons/jardin.svg',
         21 => '/imgs/icons/side-bar-icons/Antiguedades.svg',
-        22 => '/imgs/icons/side-bar-icons/vehiculos.svg',
+        22 => '/imgs/icons/side-bar-icons/niños.svg',
         23 => '/imgs/icons/side-bar-icons/mascotas.svg',
         24 => '/imgs/icons/side-bar-icons/tecnología.svg',
         25 => '/imgs/icons/side-bar-icons/librería.svg',
