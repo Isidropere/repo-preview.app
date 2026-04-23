@@ -6,6 +6,15 @@ use Illuminate\Contracts\Http\Kernel;
 
 define('LARAVEL_START', microtime(true));
 
+// Capturar errores fatales y escribirlos al log
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $msg = date('[Y-m-d H:i:s]') . ' FATAL: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] . "\n";
+        file_put_contents(__DIR__ . '/../storage/logs/cabialoErrores.log', $msg, FILE_APPEND);
+    }
+});
+
 /* ===================================================
    VERIFICACIÓN DE MODO MANTENIMIENTO
    =================================================== */

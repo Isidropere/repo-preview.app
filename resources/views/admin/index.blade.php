@@ -119,6 +119,14 @@
                                   {{ $tab === 'envio' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                             Envío
                         </a>
+                        <a href="{{ route('admin.index', ['tab' => 'intercambios_confirmados']) }}"
+                           class="px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+                                  {{ $tab === 'intercambios_confirmados' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            🤝 Intercambios Confirmados
+                            @if(isset($intercambiosConfirmados) && $intercambiosConfirmados->total() > 0)
+                            <span class="ml-1.5 bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold">{{ $intercambiosConfirmados->total() }}</span>
+                            @endif
+                        </a>
                     </nav>
                 </div>
 
@@ -171,6 +179,8 @@
                     @include('admin.partials.tabla-intencion-compra', ['intencionCompra' => $intencionCompra])
                 @elseif($tab === 'intencion_intercambio')
                     @include('admin.partials.tabla-intencion-intercambio', ['intencionIntercambio' => $intencionIntercambio])
+                @elseif($tab === 'intercambios_confirmados')
+                    @include('admin.partials.tabla-intercambios-confirmados', ['intercambiosConfirmados' => $intercambiosConfirmados])
                 @elseif($tab === 'envio')
                     <div id="envio-tab-content" class="p-5">
                         <p class="text-xs text-gray-400 mb-4">Tarifas y porcentajes actuales de envío. Para modificarlos, ve a Estadísticas.</p>

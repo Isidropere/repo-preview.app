@@ -32,24 +32,31 @@ class CarritoService
      */
     public function obtenerCarritoConTotales(int $userId): array
     {
-        $carrito = Carrito::where('id_user', $userId)
+        // Obtener ambos carritos del usuario
+        $carritos = Carrito::where('id_user', $userId)
             ->with([
                 'itemsIntencionCompra.item.categoria',
                 'itemsIntencionCompra.imagenes',
                 'itemsIntencionCompra.inventario',
-            ])->first();
+            ])->get();
+
+        // Carrito principal: el de productos (o el primero que exista)
+        $carrito = $carritos->firstWhere('tipo', 'producto') ?? $carritos->first();
 
         if (!$carrito) {
             return ['success' => false, 'message' => 'No tienes un carrito creado.'];
         }
 
-        $items = $carrito->itemsIntencionCompra;
-        $totales = $this->calcularTotales($items);
+        // Combinar items de todos los carritos para la vista
+        $todosLosItems = $carritos->flatMap(fn($c) => $c->itemsIntencionCompra);
+        $totales = $this->calcularTotales($todosLosItems);
 
         return [
             'success' => true,
             'data' => [
                 'carrito'              => $carrito,
+                'carritos'             => $carritos,
+                'todosLosItems'        => $todosLosItems,
                 'totales'              => $totales,
                 'mensajesPredefinidos' => PredefinedMessage::all(),
                 'accion'               => PredefinedMessage::select('tipo')->distinct()->get(),
@@ -63,7 +70,6 @@ class CarritoService
      */
     public function agregarItem(int $userId, int $idItem, int $cantidad): array
     {
-        $carrito = Carrito::firstOrCreate(['id_user' => $userId]);
         $itemBase = Item::findOrFail($idItem);
 
         // No permitir auto-compra
@@ -71,20 +77,13 @@ class CarritoService
             return ['success' => false, 'message' => 'No puedes comprar tu propio artículo.'];
         }
 
-        // No permitir mezclar talentos (cat 29) con productos físicos en el mismo carrito
-        $itemsExistentes = $carrito->itemsIntencionCompra()->with('item')->get();
-        if ($itemsExistentes->isNotEmpty()) {
-            $esNuevoTalento = (int) $itemBase->id_categoria_item === 29;
-            $tieneProductos = $itemsExistentes->contains(fn($i) => (int) $i->item?->id_categoria_item !== 29);
-            $tieneTalentos = $itemsExistentes->contains(fn($i) => (int) $i->item?->id_categoria_item === 29);
+        // Determinar tipo de carrito según categoría del item
+        $tipoCarrito = (int) $itemBase->id_categoria_item === 29 ? 'servicio' : 'producto';
 
-            if ($esNuevoTalento && $tieneProductos) {
-                return ['success' => false, 'message' => 'No puedes mezclar servicios y productos físicos en el mismo carrito.'];
-            }
-            if (!$esNuevoTalento && $tieneTalentos) {
-                return ['success' => false, 'message' => 'No puedes mezclar productos físicos y servicios en el mismo carrito.'];
-            }
-        }
+        // Obtener o crear el carrito del tipo correcto
+        $carrito = Carrito::firstOrCreate(
+            ['id_user' => $userId, 'tipo' => $tipoCarrito]
+        );
 
         // Validar stock disponible
         $stockDisponible = $itemBase->inventarios?->cantidad ?? 0;
@@ -115,10 +114,14 @@ class CarritoService
             ]
         );
 
+        // Contar total de items en ambos carritos del usuario
+        $totalItems = ItemIntencionCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
+            ->count();
+
         return [
             'success'    => true,
             'message'    => 'Item agregado al carrito',
-            'cart_count' => $carrito->itemsIntencionCompra()->count(),
+            'cart_count' => $totalItems,
         ];
     }
 
@@ -127,11 +130,15 @@ class CarritoService
      */
     public function eliminarItem(int $userId, int $idItem): array
     {
-        $carrito = Carrito::where('id_user', $userId)->firstOrFail();
+        // Buscar en todos los carritos del usuario
+        $carritos = Carrito::where('id_user', $userId)->get();
 
-        $carrito->itemsIntencionCompra()
-            ->where('id_item', $idItem)
-            ->delete();
+        foreach ($carritos as $carrito) {
+            $deleted = $carrito->itemsIntencionCompra()
+                ->where('id_item', $idItem)
+                ->delete();
+            if ($deleted) break;
+        }
 
         return ['success' => true, 'message' => 'Item eliminado del carrito'];
     }
@@ -141,8 +148,10 @@ class CarritoService
      */
     public function vaciar(int $userId): array
     {
-        $carrito = Carrito::where('id_user', $userId)->firstOrFail();
-        $carrito->itemsIntencionCompra()->delete();
+        $carritos = Carrito::where('id_user', $userId)->get();
+        foreach ($carritos as $carrito) {
+            $carrito->itemsIntencionCompra()->delete();
+        }
 
         return ['success' => true, 'message' => 'Carrito vaciado'];
     }
@@ -150,11 +159,16 @@ class CarritoService
     /**
      * Prepara datos para la vista de checkout.
      */
-    public function prepararCheckout(int $userId): array
+    public function prepararCheckout(int $userId, ?string $tipo = null): array
     {
-        $carrito = Carrito::with(['itemsIntencionCompra.item', 'itemsIntencionCompra.imagenes'])
-            ->where('id_user', $userId)
-            ->firstOrFail();
+        $query = Carrito::with(['itemsIntencionCompra.item', 'itemsIntencionCompra.imagenes'])
+            ->where('id_user', $userId);
+
+        if ($tipo) {
+            $query->where('tipo', $tipo);
+        }
+
+        $carrito = $query->firstOrFail();
 
         $carrito->itemsIntencionCompra = $carrito->itemsIntencionCompra
             ->filter(fn($item) => $item->es_seleccionado);

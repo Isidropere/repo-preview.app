@@ -9,12 +9,10 @@
     <link rel="stylesheet" href="{{ asset('css/_astro/index.D-AOIgCY.css') }}">
     <link rel="stylesheet" href="{{ asset('css/_astro/index.BneVErea.css') }}">
     <title>@yield('title', 'Cambialord - Inicio')</title>
-    {{-- keen-slider: una sola vez, con preload --}}
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css"></noscript>
-    {{-- Font Awesome diferido --}}
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    {{-- keen-slider --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css">
+    {{-- Font Awesome --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {{-- Leaflet solo si la página lo necesita --}}
     @stack('head_styles')
  
@@ -438,7 +436,7 @@
         @include('partials.footer')
     </footer>
 
-    <!-- Scripts -->
+    {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.js" defer></script>
     @stack('scripts')
       <script src="{{ asset('js/global-loader.js') }}"></script>
@@ -482,44 +480,51 @@
 
     // Define el token CSRF globalmente
         window.csrfToken = "{{ csrf_token() }}";
+    window._usuarioAutenticado = {{ auth()->check() ? 'true' : 'false' }};
     
     @if(session('alerta'))
         alert("{{ session('alerta') }}");
     @endif
 
-    // Función global para sincronizar indicadores de carrito
+    // Función global para actualizar el badge del carrito
+    window.updateCartBadge = function(count) {
+        var badge = document.getElementById('cartBadge');
+        if (badge && count !== undefined) {
+            badge.textContent = count;
+            // Animación de pulso
+            badge.style.transform = 'scale(1.4)';
+            setTimeout(function() { badge.style.transform = 'scale(1)'; }, 200);
+        }
+    };
+
+    // Función global para sincronizar indicadores de carrito (sin parpadeo)
     window.syncCartIndicators = async function() {
         @guest return; @endguest
         try {
             const res = await fetch('{{ route("carrito.item_ids") }}');
             const itemIds = await res.json();
             
-            // Buscar todos los botones de "Agregar al carrito"
             document.querySelectorAll('[id^="add-to-cart-"]').forEach(btn => {
                 const itemId = parseInt(btn.id.replace('add-to-cart-', ''));
-                const btnText = btn.querySelector('.button-text');
+                const btnText = btn.querySelector('.button-text') || btn.querySelector('.btn-txt');
                 const originalText = btn.dataset.originalText || (btnText ? btnText.textContent : 'Agregar');
                 
-                // Guardar texto original si no existe
                 if (!btn.dataset.originalText) btn.dataset.originalText = originalText;
                 
                 if (itemIds.includes(itemId)) {
                     btn.classList.add('in-cart');
-                    if (btnText) {
-                        btnText.innerHTML = '<i class="fas fa-check mr-1"></i> En el carrito';
-                    }
+                    if (btnText) btnText.textContent = '✓ En carrito';
                 } else {
                     btn.classList.remove('in-cart');
                     if (btnText) btnText.textContent = originalText;
                 }
             });
-        } catch (e) {
-            console.error('Error sincronizando carrito:', e);
-        }
+        } catch (e) { /* silencioso */ }
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        window.syncCartIndicators();
+    // Ejecutar después de que la página esté completamente cargada (no en DOMContentLoaded)
+    window.addEventListener('load', function() {
+        setTimeout(window.syncCartIndicators, 500);
     });
 
 </script>

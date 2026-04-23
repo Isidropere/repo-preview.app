@@ -175,6 +175,7 @@
                         </div>
                         @endif
 
+                        @if($carrito->tipo !== 'servicio')
                         <div class="mb-5">
                             <a href="{{ route('direcciones.index') }}"
                                 class="flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition group">
@@ -190,6 +191,11 @@
                                 </svg>
                             </a>
                         </div>
+                        @else
+                        <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                            <p class="text-sm text-orange-700 font-medium">⭐ Servicio digital — no requiere envío</p>
+                        </div>
+                        @endif
 
                         <button type="submit" id="btnPagar"
                             class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white
@@ -297,10 +303,12 @@
                             <span>Descuento</span><span>&minus; RD$ {{ number_format($totalDescuento, 2) }}</span>
                         </div>
                         @endif
+                        @if($carrito->tipo !== 'servicio')
                         <div class="flex justify-between text-sm text-gray-500">
                             <span>Envío</span>
                             <span id="envio-costo" class="font-medium text-gray-400 text-xs">Calculando...</span>
                         </div>
+                        @endif
                         <div id="envio-dias" class="text-right text-xs text-gray-400 hidden"></div>
                     </div>
 

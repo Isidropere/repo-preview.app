@@ -33,9 +33,17 @@ class AppServiceProvider extends ServiceProvider
             $carrito = null;
 
             if (auth()->check()) {
-                $carrito = \App\Models\Carrito::with('itemsIntencionCompra')
+                // Obtener todos los carritos del usuario y combinar items
+                $carritos = \App\Models\Carrito::with('itemsIntencionCompra')
                     ->where('id_user', auth()->id())
-                    ->first();
+                    ->get();
+
+                // Crear un objeto virtual con todos los items combinados
+                $carrito = $carritos->first();
+                if ($carrito) {
+                    $todosLosItems = $carritos->flatMap(fn($c) => $c->itemsIntencionCompra);
+                    $carrito->setRelation('itemsIntencionCompra', $todosLosItems);
+                }
             }
 
             $view->with('carrito', $carrito);

@@ -40,6 +40,7 @@ class CarritoController extends Controller
 
         return view('carrito.carrito_show', [
             'carrito'              => $data['carrito'],
+            'carritos'             => $data['carritos'],
             'totales'              => $data['totales'],
             'mensajesPredefinidos' => $data['mensajesPredefinidos'],
             'accion'               => $data['accion'],
@@ -79,9 +80,10 @@ class CarritoController extends Controller
         return back()->with('success', $resultado['message']);
     }
 
-    public function checkout()
+    public function checkout(\Illuminate\Http\Request $request)
     {
-        $resultado = $this->carritoService->prepararCheckout(auth()->id());
+        $tipo = $request->get('tipo'); // 'producto' o 'servicio' (null = carrito por defecto)
+        $resultado = $this->carritoService->prepararCheckout(auth()->id(), $tipo);
         $data = $resultado['data'];
 
         return view('carrito.checkout', [

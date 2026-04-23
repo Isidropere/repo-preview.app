@@ -24,12 +24,15 @@ class ItemController extends Controller
 {
     public function AddTalento(Request $request)
     {
+        // Evitar que el servidor corte la conexión durante el pago (CardNet puede tardar ~15s)
+        set_time_limit(120);
+        ignore_user_abort(true);
         Log::info('AddTalento: request recibido', [
             'ajax' => $request->ajax(),
             'wantsJson' => $request->wantsJson(),
             'has_id_tarjeta' => $request->has('id_tarjeta'),
         ]);
-        // Punto 1: Verificar recepciÃ³n de datos (MANTENIENDO TUS LOGS)
+        // Punto 1: Verificar recepción de datos (MANTENIENDO TUS LOGS)
         Log::info('Inicio de store() - Datos recibidos:', [
             'form_data' => $request->except(['imagen_principal', 'imagenes']),
             'has_imagen_principal' => $request->hasFile('imagen_principal'),
@@ -39,7 +42,7 @@ class ItemController extends Controller
         DB::beginTransaction();
 
         try {
-            // Punto 2: ValidaciÃ³n de datos con mensajes personalizados descuento
+            // Punto 2: Validación de datos con mensajes personalizados descuento
             $rules = [
                 'item' => 'required|string|max:255',
                 'id_categoria_item' => 'required|exists:categorias_item,id_categoria_item',
@@ -60,31 +63,31 @@ class ItemController extends Controller
 
             $messages = [
                 'item.required' => 'El nombre del producto es obligatorio',
-                'id_categoria_item.required' => 'Debe seleccionar una categorÃ­a',
+                'id_categoria_item.required' => 'Debe seleccionar una categorí­a',
                 'valor.required' => 'El precio es obligatorio',
-                'valor.numeric' => 'El precio debe ser un nÃºmero vÃ¡lido',
+                'valor.numeric' => 'El precio debe ser un níºmero válido',
                 'valor.min' => 'El precio no puede ser negativo',
-                'condicion.required' => 'Debe especificar la condiciÃ³n del producto',
-                'condicion.in' => 'La condiciÃ³n seleccionada no es vÃ¡lida',
-                'tipo_trans.required' => 'Debe seleccionar un tipo de transacciÃ³n',
-                'tipo_trans.in' => 'El tipo de transacciÃ³n seleccionado no es vÃ¡lido',
+                'condicion.required' => 'Debe especificar la condición del producto',
+                'condicion.in' => 'La condición seleccionada no es válida',
+                'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
+                'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
                 'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video vÃ¡lido',
-                'imagen_principal.mimes' => 'Solo se permiten imÃ¡genes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar mÃ¡s de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imÃ¡genes vÃ¡lidas',
-                'imagenes.*.mimes' => 'Solo se permiten imÃ¡genes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imÃ¡genes no deben pesar mÃ¡s de 2MB',
-                'peso_lbs.numeric' => 'El peso debe ser un nÃºmero vÃ¡lido',
-                'alto_cm.numeric' => 'La altura debe ser un nÃºmero vÃ¡lido',
-                'ancho_cm.numeric' => 'El ancho debe ser un nÃºmero vÃ¡lido',
-                'profundo_cm.numeric' => 'La profundidad debe ser un nÃºmero vÃ¡lido',
-                'presentacion.required' => 'Rellene la descripciÃ³n de su producto o servicio, que se encuentra en la secciÃ³n de Especificar Dimensiones.',
+                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
+                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
+                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
+                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
+                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
+                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
+                'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
+                'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
+                'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
+                'profundo_cm.numeric' => 'La profundidad debe ser un níºmero válido',
+                'presentacion.required' => 'Rellene la descripción de su producto o servicio, que se encuentra en la sección de Especificar Dimensiones.',
             ];
 
             $validatedData = $request->validate($rules, $messages);
 
-            // MANTENIENDO TU LOG DE VALIDACIÃ“N
+            // MANTENIENDO TU LOG DE VALIDACIí“N
             Log::debug('Datos validados correctamente', $validatedData);
 
             // Preparar datos del item (necesario antes del bloque de pago)
@@ -263,13 +266,13 @@ class ItemController extends Controller
 
                 } catch (\Exception $e) {
                     Log::error('Error al guardar imagen/video principal', ['error' => $e->getMessage()]);
-                    throw $e; // Relanzamos la excepciÃ³n para que caiga en el catch general
+                    throw $e; // Relanzamos la excepción para que caiga en el catch general
                 }
             }
 
-            // Punto 6: Procesar imÃ¡genes adicionales (MANTENIENDO TUS LOGS)
+            // Punto 6: Procesar imágenes adicionales (MANTENIENDO TUS LOGS)
             if ($request->hasFile('imagenes')) {
-                Log::debug('Procesando imÃ¡genes adicionales...');
+                Log::debug('Procesando imágenes adicionales...');
                 $orden = 2;
 
                 foreach ($request->file('imagenes') as $index => $file) {
@@ -280,14 +283,14 @@ class ItemController extends Controller
                             $orden++;
                         } catch (\Exception $e) {
                             Log::error("Error al guardar imagen adicional {$index}", ['error' => $e->getMessage()]);
-                            // Continuamos con las siguientes imÃ¡genes aunque falle una
+                            // Continuamos con las siguientes imágenes aunque falle una
                         }
                     }
                 }
             }
 
             DB::commit();
-            Log::info('TransacciÃ³n completada exitosamente');
+            Log::info('Transacción completada exitosamente');
 
             // Registrar pago de talento si aplica (categoría 29)
             $pagoResultado = session('_talento_pago_resultado');
@@ -408,11 +411,11 @@ class ItemController extends Controller
         DB::beginTransaction();
 
         try {
-            // Punto 2: ValidaciÃ³n de datos con mensajes personalizados descuento
+            // Punto 2: Validación de datos con mensajes personalizados descuento
             $rules = [
                 'item' => 'required|string|max:255',
                 'id_categoria_item' => 'required|exists:categorias_item,id_categoria_item',
-                'valor' => 'required|numeric|min:0',
+                'valor' => 'nullable|numeric|min:0',
                 'descuento' => 'nullable|numeric|min:0',
                 'presentacion' => 'required|string',
                 'condicion' => 'required|integer|in:1,2,3,4',
@@ -433,35 +436,35 @@ class ItemController extends Controller
 
             $messages = [
                 'item.required' => 'El nombre del producto es obligatorio',
-                'id_categoria_item.required' => 'Debe seleccionar una categorÃ­a',
+                'id_categoria_item.required' => 'Debe seleccionar una categorí­a',
                 'valor.required' => 'El precio es obligatorio',
-                'valor.numeric' => 'El precio debe ser un nÃºmero vÃ¡lido',
+                'valor.numeric' => 'El precio debe ser un níºmero válido',
                 'valor.min' => 'El precio no puede ser negativo',
-                'condicion.required' => 'Debe especificar la condiciÃ³n del producto',
-                'condicion.in' => 'La condiciÃ³n seleccionada no es vÃ¡lida',
-                'tipo_trans.required' => 'Debe seleccionar un tipo de transacciÃ³n',
-                'tipo_trans.in' => 'El tipo de transacciÃ³n seleccionado no es vÃ¡lido',
+                'condicion.required' => 'Debe especificar la condición del producto',
+                'condicion.in' => 'La condición seleccionada no es válida',
+                'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
+                'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
                 'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video vÃ¡lido',
-                'imagen_principal.mimes' => 'Solo se permiten imÃ¡genes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar mÃ¡s de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imÃ¡genes vÃ¡lidas',
-                'imagenes.*.mimes' => 'Solo se permiten imÃ¡genes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imÃ¡genes no deben pesar mÃ¡s de 2MB',
-                'peso_lbs.numeric' => 'El peso debe ser un nÃºmero vÃ¡lido',
-                'alto_cm.numeric' => 'La altura debe ser un nÃºmero vÃ¡lido',
-                'ancho_cm.numeric' => 'El ancho debe ser un nÃºmero vÃ¡lido',
-                'profundo_cm.numeric' => 'La profundidad debe ser un nÃºmero vÃ¡lido',
-                'presentacion.required' => 'Rellene la descripciÃ³n de su producto o servicio, que se encuentra en la secciÃ³n de Especificar Dimensiones.',
-                'cantidad.numeric' => 'La cantidad debe ser un nÃºmero vÃ¡lido',
+                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
+                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
+                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
+                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
+                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
+                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
+                'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
+                'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
+                'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
+                'profundo_cm.numeric' => 'La profundidad debe ser un níºmero válido',
+                'presentacion.required' => 'Rellene la descripción de su producto o servicio, que se encuentra en la sección de Especificar Dimensiones.',
+                'cantidad.numeric' => 'La cantidad debe ser un níºmero válido',
             ];
 
             $validatedData = $request->validate($rules, $messages);
 
-            // MANTENIENDO TU LOG DE VALIDACIÃ“N
+            // MANTENIENDO TU LOG DE VALIDACIí“N
             Log::debug('Datos validados correctamente', $validatedData);
 
-            // Punto 4: CreaciÃ³n del Ã­tem (MANTENIENDO TU ESTRUCTURA ORIGINAL)
+            // Punto 4: Creación del í­tem (MANTENIENDO TU ESTRUCTURA ORIGINAL)
             $itemData = [
                 'item' => $validatedData['item'],
                 'id_categoria_item' => $validatedData['id_categoria_item'],
@@ -481,7 +484,7 @@ class ItemController extends Controller
                 'tiene_video' => false // Inicializamos como falso
             ];
 
-            // MANTENIENDO TU LOG DE CREACIÃ“N
+            // MANTENIENDO TU LOG DE CREACIí“N
             Log::debug('Intentando crear item con datos:', $itemData);
 
 
@@ -542,7 +545,7 @@ class ItemController extends Controller
             }
 
             DB::commit();
-            Log::info('TransacciÃ³n completada exitosamente');
+            Log::info('Transacción completada exitosamente');
 
             // Invalidar cache del home para reflejar el nuevo item
             \Illuminate\Support\Facades\Cache::forget('home_intercambio');
@@ -552,8 +555,8 @@ class ItemController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
-            // MANTENIENDO TU LOG DE ERROR DE VALIDACIÃ“N
-            Log::error('Error de validaciÃ³n', ['errors' => $e->errors()]);
+            // MANTENIENDO TU LOG DE ERROR DE VALIDACIí“N
+            Log::error('Error de Validación', ['errors' => $e->errors()]);
             return back()->withErrors($e->validator)->withInput();
 
         } catch (\Exception $e) {
@@ -649,10 +652,10 @@ class ItemController extends Controller
 
     public function itemsCategoria29()
     {
-        // Forzar parÃ¡metro de categorÃ­a 29
+        // Forzar parámetro de categorí­a 29
         request()->merge(['category_id' => 29]);
 
-        // Ejecutar el mÃ©todo index normal
+        // Ejecutar el método index normal
         return $this->index();
     }
   
@@ -670,7 +673,7 @@ class ItemController extends Controller
                 'imagenes:id_imagen,id_item,ruta,orden_visualizacion'
             ]);
 
-            // Filtro por categorÃ­a (opcional)
+            // Filtro por categorí­a (opcional)
             if ($categoryId = request()->query('category_id')) {
                 $query->where('id_categoria_item', $categoryId);
             }
@@ -682,7 +685,7 @@ class ItemController extends Controller
                 $query->where('id_tipo_item', $type);
             }
 
-            // OrdenaciÃ³n
+            // Ordenación
             $sortField = request()->query('sort', 'created_at');
             $sortDirection = request()->query('direction', 'desc');
 
@@ -706,7 +709,7 @@ class ItemController extends Controller
 
             $items = $query->paginate($perPage);
 
-            // RedirecciÃ³n si la pÃ¡gina estÃ¡ vacÃ­a
+            // Redirección si la página está vací­a
             if ($items->isEmpty() && $items->currentPage() > 1) {
                 return redirect()->route('items.index', array_merge(
                     request()->except('page'),
@@ -786,7 +789,7 @@ class ItemController extends Controller
                 ])
                 ->findOrFail($id);
 
-            // Registrar vista si no es el dueÃ±o
+            // Registrar vista si no es el dueño
             if (auth()->id() !== $item->id_user) {
                 \App\Models\ItemView::create([
                     'id_item'    => $item->id_item,
@@ -835,7 +838,7 @@ class ItemController extends Controller
         try {
             $item = Item::findOrFail($id);
 
-            // Eliminar imÃ¡genes asociadas
+            // Eliminar imágenes asociadas
             foreach ($item->imagenes as $imagen) {
                 Storage::delete(str_replace('storage/', 'public/', $imagen->ruta));
                 $imagen->delete();
@@ -888,9 +891,9 @@ class ItemController extends Controller
 
             Log::debug('Item encontrado correctamente', ['item_id' => $item->id]);
 
-            // Registrar la visualizaciÃ³n si no es el dueÃ±o
+            // Registrar la visualización si no es el dueño
             if (auth()->id() != $item->id_user) {
-                Log::debug('Registrando visualizaciÃ³n del item', [
+                Log::debug('Registrando visualización del item', [
                     'user_id' => auth()->id(),
                     'item_user_id' => $item->id_user,
                     'ip' => request()->ip()
@@ -902,10 +905,10 @@ class ItemController extends Controller
                     'user_agent' => request()->userAgent()
                 ]);
 
-                Log::debug('VisualizaciÃ³n registrada');
+                Log::debug('Visualización registrada');
             }
 
-            // Obtener productos relacionados (misma categorÃ­a)
+            // Obtener productos relacionados (misma categorí­a)
             $relatedItems = Item::where('id_categoria_item', $item->id_categoria_item)
                 ->where('id_item', '!=', $item->id_item)
                 ->with(['categoria'])
@@ -917,7 +920,7 @@ class ItemController extends Controller
                 'cantidad' => $relatedItems->count()
             ]);
 
-            // Texto para condiciÃ³n
+            // Texto para condición
             $item->condicion_text = match ($item->condicion) {
                 1 => 'Nuevo',
                 2 => 'Usado - Como nuevo',
@@ -926,7 +929,7 @@ class ItemController extends Controller
                 default => 'No especificado'
             };
 
-            Log::debug('CondiciÃ³n del producto definida', [
+            Log::debug('Condición del producto definida', [
                 'condicion_text' => $item->condicion_text
             ]);
 
@@ -1010,7 +1013,7 @@ class ItemController extends Controller
     }
 
     /**
-     * Devuelve datos bÃ¡sicos de un item para mostrar en modales (JSON).
+     * Devuelve datos básicos de un item para mostrar en modales (JSON).
      */
     public function info($id)
     {
@@ -1069,7 +1072,7 @@ class ItemController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Error en la bÃºsqueda',
+                'error' => 'Error en la bíºsqueda',
                 'details' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -1152,7 +1155,7 @@ class ItemController extends Controller
                 'request_params' => request()->all()
             ]);
 
-            abort(404, 'CategorÃ­a no encontrada');
+            abort(404, 'Categorí­a no encontrada');
         }
     }
 
@@ -1172,7 +1175,7 @@ class ItemController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Error al obtener items por categorÃ­a',
+                'error' => 'Error al obtener items por categorí­a',
                 'details' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -1192,7 +1195,7 @@ class ItemController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Error al obtener items pÃºblicos',
+                'error' => 'Error al obtener items píºblicos',
                 'details' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -1203,22 +1206,22 @@ class ItemController extends Controller
     {
          
         try {
-            \Log::info('Iniciando mÃ©todo talentoAdd1');
+            \Log::info('Iniciando método talentoAdd1');
             $categorias = CategoriaItem::all();
          
-            \Log::debug('CategorÃ­as obtenidas:', $categorias->toArray());
+            \Log::debug('Categorí­as obtenidas:', $categorias->toArray());
 
             if ($categorias->isEmpty()) {
-                \Log::info('No hay categorÃ­as, creando una por defecto');
+                \Log::info('No hay categorí­as, creando una por defecto');
                 CategoriaItem::create(['categoria' => 'General']);
                 $categorias = CategoriaItem::all();
-                \Log::debug('CategorÃ­as despuÃ©s de creaciÃ³n:', $categorias->toArray());
+                \Log::debug('Categorí­as después de Creación:', $categorias->toArray());
             }
 
-            // VerificaciÃ³n final antes de enviar a la vista
+            // Verificación final antes de enviar a la vista
             if ($categorias->isEmpty()) {
-                \Log::error('No se pudieron obtener categorÃ­as');
-                throw new \Exception('No hay categorÃ­as disponibles');
+                \Log::error('No se pudieron obtener categorí­as');
+                throw new \Exception('No hay categorí­as disponibles');
             }
 
             return view('talentos.agregar-talentos', compact('categorias'));
@@ -1238,24 +1241,24 @@ class ItemController extends Controller
     public function create()
     {
         try {
-            \Log::info('Iniciando mÃ©todo create');
+            \Log::info('Iniciando método create');
             $categorias = CategoriaItem::all();
             $colors = Color::all(); // Obtener todos los colores
             $groupedColors = $this->groupColorsByFamily($colors);
 
-            \Log::debug('CategorÃ­as obtenidas:', $categorias->toArray());
+            \Log::debug('Categorí­as obtenidas:', $categorias->toArray());
 
             if ($categorias->isEmpty()) {
-                \Log::info('No hay categorÃ­as, creando una por defecto');
+                \Log::info('No hay categorí­as, creando una por defecto');
                 CategoriaItem::create(['categoria' => 'General']);
                 $categorias = CategoriaItem::all();
-                \Log::debug('CategorÃ­as despuÃ©s de creaciÃ³n:', $categorias->toArray());
+                \Log::debug('Categorí­as después de Creación:', $categorias->toArray());
             }
 
-            // VerificaciÃ³n final antes de enviar a la vista
+            // Verificación final antes de enviar a la vista
             if ($categorias->isEmpty()) {
-                \Log::error('No se pudieron obtener categorÃ­as');
-                throw new \Exception('No hay categorÃ­as disponibles');
+                \Log::error('No se pudieron obtener categorí­as');
+                throw new \Exception('No hay categorí­as disponibles');
             }
 
             return view('addProduct.addProduct', compact('categorias', 'groupedColors', 'colors'));
@@ -1320,20 +1323,29 @@ class ItemController extends Controller
 
     public function showItemsTipo2y3()
     {
+        Log::info('[showItemsTipo2y3] INICIO', ['user_id' => auth()->id(), 'auth' => auth()->check()]);
         try {
+            Log::info('[showItemsTipo2y3] Consultando items...');
             $items = Item::whereIn('tipo_trans', [2, 3])
                 ->where('estatus', 1)
                 ->with(['categoria', 'direccionPredeterminada.provincia', 'imagenes', 'inventarios'])
                 ->orderBy('fecha', 'desc')
                 ->paginate(12);
 
-            return view('blank-intercambiar.intercambio', compact('items'));
+            Log::info('[showItemsTipo2y3] Items cargados: ' . $items->count() . '. Renderizando vista...');
+            $view = view('blank-intercambiar.intercambio', compact('items'));
+            Log::info('[showItemsTipo2y3] Vista renderizada OK');
+            return $view;
         } catch (Throwable $e) {
+            Log::error('[showItemsTipo2y3] ERROR: ' . $e->getMessage(), [
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+                'trace' => collect(explode("\n", $e->getTraceAsString()))->take(8)->implode("\n"),
+            ]);
             $this->logError($e, [
                 'method' => 'showItemsTipo2y3',
                 'request_params' => request()->all()
             ]);
-
             abort(500, 'Error al cargar los items para intercambio');
         }
     }
@@ -1435,7 +1447,7 @@ class ItemController extends Controller
     {
         try {
             $items = Item::where('id_user', auth()->id())
-                ->where('id_categoria_item', 29) // â† Filtrar por categorÃ­a 29
+                ->where('id_categoria_item', 29) // â† Filtrar por categorí­a 29
                 ->with(['categoria', 'imagenes'])
                 ->withCount('views')
                 ->orderByDesc('fecha')
@@ -1465,7 +1477,7 @@ class ItemController extends Controller
 
         // Obtener todos los colores
         $colors = Color::all();
-        // Agrupar colores por familia usando tu mÃ©todo
+        // Agrupar colores por familia usando tu método
         $groupedColors = $this->groupColorsByFamily($colors);
 
         // Colores seleccionados y stock
@@ -1551,28 +1563,28 @@ class ItemController extends Controller
 
             $messages = [
                 'item.required' => 'El nombre del producto es obligatorio',
-                'id_categoria_item.required' => 'Debe seleccionar una categorÃ­a',
+                'id_categoria_item.required' => 'Debe seleccionar una categorí­a',
                 'valor.required' => 'El precio es obligatorio',
-                'valor.numeric' => 'El precio debe ser un nÃºmero vÃ¡lido',
+                'valor.numeric' => 'El precio debe ser un níºmero válido',
                 'valor.min' => 'El precio no puede ser negativo',
-                'condicion.required' => 'Debe especificar la condiciÃ³n del producto',
-                'condicion.in' => 'La condiciÃ³n seleccionada no es vÃ¡lida',
-                'tipo_trans.required' => 'Debe seleccionar un tipo de transacciÃ³n',
-                'tipo_trans.in' => 'El tipo de transacciÃ³n seleccionado no es vÃ¡lido',
+                'condicion.required' => 'Debe especificar la condición del producto',
+                'condicion.in' => 'La condición seleccionada no es válida',
+                'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
+                'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
                 'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video vÃ¡lido',
-                'imagen_principal.mimes' => 'Solo se permiten imÃ¡genes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar mÃ¡s de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imÃ¡genes vÃ¡lidas',
-                'imagenes.*.mimes' => 'Solo se permiten imÃ¡genes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imÃ¡genes no deben pesar mÃ¡s de 2MB',
-                'peso_lbs.numeric' => 'El peso debe ser un nÃºmero vÃ¡lido',
-                'alto_cm.numeric' => 'La altura debe ser un nÃºmero vÃ¡lido',
-                'ancho_cm.numeric' => 'El ancho debe ser un nÃºmero vÃ¡lido',
-                'profundo_cm.numeric' => 'La profundidad debe ser un nÃºmero vÃ¡lido',
-                'presentacion.required' => 'Rellene la descripciÃ³n de su producto o servicio, que se encuentra en la secciÃ³n de Especificar Dimensiones.',
+                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
+                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
+                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
+                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
+                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
+                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
+                'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
+                'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
+                'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
+                'profundo_cm.numeric' => 'La profundidad debe ser un níºmero válido',
+                'presentacion.required' => 'Rellene la descripción de su producto o servicio, que se encuentra en la sección de Especificar Dimensiones.',
                 'cantidad.required' => 'La cantidad es obligatorio',
-                'cantidad.numeric' => 'La cantidad debe ser un nÃºmero vÃ¡lido',
+                'cantidad.numeric' => 'La cantidad debe ser un níºmero válido',
                 'cantidad.min' => 'La cantidad no puede ser negativa',
             ];
 
@@ -1634,7 +1646,7 @@ class ItemController extends Controller
                 }
             }
 
-            // ImÃ¡genes secundarias existentes
+            // Imágenes secundarias existentes
             $idsConservar = $request->input('imagenes_existentes', []);
             $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
 
@@ -1645,7 +1657,7 @@ class ItemController extends Controller
                 }
             }
 
-            // Nuevas imÃ¡genes
+            // Nuevas imágenes
             if ($request->hasFile('imagenes')) {
                 try {
                     $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
@@ -1656,7 +1668,7 @@ class ItemController extends Controller
                     }
                 } catch (\Throwable $e) {
                     DB::rollBack();
-                    Log::error('Error al guardar imÃ¡genes secundarias', ['error' => $e->getMessage()]);
+                    Log::error('Error al guardar imágenes secundarias', ['error' => $e->getMessage()]);
                     return redirect()->back()->withErrors(['imagenes' => $e->getMessage()])->withInput();
                 }
             }
@@ -1706,26 +1718,26 @@ class ItemController extends Controller
 
             $messages = [
                 'item.required' => 'El nombre del producto es obligatorio',
-                'id_categoria_item.required' => 'Debe seleccionar una categorÃ­a',
+                'id_categoria_item.required' => 'Debe seleccionar una categorí­a',
                 'valor.required' => 'El precio es obligatorio',
-                'valor.numeric' => 'El precio debe ser un nÃºmero vÃ¡lido',
+                'valor.numeric' => 'El precio debe ser un níºmero válido',
                 'valor.min' => 'El precio no puede ser negativo',
-                'condicion.required' => 'Debe especificar la condiciÃ³n del producto',
-                'condicion.in' => 'La condiciÃ³n seleccionada no es vÃ¡lida',
-                'tipo_trans.required' => 'Debe seleccionar un tipo de transacciÃ³n',
-                'tipo_trans.in' => 'El tipo de transacciÃ³n seleccionado no es vÃ¡lido',
+                'condicion.required' => 'Debe especificar la condición del producto',
+                'condicion.in' => 'La condición seleccionada no es válida',
+                'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
+                'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
                 'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video vÃ¡lido',
-                'imagen_principal.mimes' => 'Solo se permiten imÃ¡genes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar mÃ¡s de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imÃ¡genes vÃ¡lidas',
-                'imagenes.*.mimes' => 'Solo se permiten imÃ¡genes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imÃ¡genes no deben pesar mÃ¡s de 2MB',
-                'peso_lbs.numeric' => 'El peso debe ser un nÃºmero vÃ¡lido',
-                'alto_cm.numeric' => 'La altura debe ser un nÃºmero vÃ¡lido',
-                'ancho_cm.numeric' => 'El ancho debe ser un nÃºmero vÃ¡lido',
-                'profundo_cm.numeric' => 'La profundidad debe ser un nÃºmero vÃ¡lido',
-                'presentacion.required' => 'Rellene la descripciÃ³n de su producto o servicio, que se encuentra en la secciÃ³n de Especificar Dimensiones.',
+                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
+                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
+                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
+                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
+                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
+                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
+                'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
+                'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
+                'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
+                'profundo_cm.numeric' => 'La profundidad debe ser un níºmero válido',
+                'presentacion.required' => 'Rellene la descripción de su producto o servicio, que se encuentra en la sección de Especificar Dimensiones.',
             ];
 
 
@@ -1769,7 +1781,7 @@ class ItemController extends Controller
                 }
             }
 
-            // Eliminar imÃ¡genes secundarias que no estÃ¡n marcadas como existentes
+            // Eliminar imágenes secundarias que no están marcadas como existentes
             $idsConservar = $request->input('imagenes_existentes', []);
             $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
 
@@ -1786,7 +1798,7 @@ class ItemController extends Controller
 
 
 
-            // Subir nuevas imÃ¡genes adicionales
+            // Subir nuevas imágenes adicionales
             if ($request->hasFile('imagenes')) {
                 try {
                     $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
@@ -1799,13 +1811,13 @@ class ItemController extends Controller
 
                 } catch (\Throwable $e) {
                     DB::rollBack();
-                    Log::error('Error al guardar imÃ¡genes secundarias con helper', [
+                    Log::error('Error al guardar imágenes secundarias con helper', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
 
                     return redirect()->back()
-                        ->withErrors(['imagenes' => 'Error al guardar imÃ¡genes secundarias: ' . $e->getMessage()])
+                        ->withErrors(['imagenes' => 'Error al guardar imágenes secundarias: ' . $e->getMessage()])
                         ->withInput();
                 }
             }
@@ -1842,7 +1854,7 @@ class ItemController extends Controller
             'Amarillos' => [],
             'Verdes' => [],
             'Azules' => [],
-            'PÃºrpuras' => [],
+            'Píºrpuras' => [],
             'Rosas' => [],
             'Neutrales' => [],
         ];
@@ -1867,8 +1879,8 @@ class ItemController extends Controller
                 } elseif ($h < 255) {
                     $family = 'Azules';
                 } elseif ($h < 285) {
-                    $family = 'PÃºrpuras';
-                } else { // 285â€“344
+                    $family = 'Píºrpuras';
+                } else { // 285"“344
                     $family = 'Rosas';
                 }
             }
@@ -1893,7 +1905,7 @@ class ItemController extends Controller
             'Amarillos' => $families['Amarillos'],
             'Verdes' => $families['Verdes'],
             'Azules' => $families['Azules'],
-            'PÃºrpuras' => $families['PÃºrpuras'],
+            'Píºrpuras' => $families['Píºrpuras'],
             'Rosas' => $families['Rosas'],
             'Neutrales' => $families['Neutrales'],
         ];
@@ -1958,18 +1970,18 @@ class ItemController extends Controller
             $user = auth()->user();
 
             if (!$user) {
-                Log::warning('Usuario no autenticado intentÃ³ acceder a items-usuario', [
+                Log::warning('Usuario no autenticado intentó acceder a items-usuario', [
                     'ip' => $request->ip(),
                     'route' => $request->path()
                 ]);
                 return response()->json(['error' => 'Usuario no autenticado'], 401);
             }
 
-            // Traer los items de ese usuario â€” solo intercambiables (tipo_trans 2 o 3)
+            // Traer los items de ese usuario "” solo intercambiables (tipo_trans 2 o 3)
             $items = Item::where('id_user', $user->id)
                 ->whereIn('tipo_trans', [2, 3])
                 ->where('estatus', 1)
-                ->get(['id_item', 'item', 'valor']);
+                ->get(['id_item', 'item', 'valor', 'tipo_trans', 'condicion']);
 
             Log::info('Items del usuario obtenidos correctamente', [
                 'user_id' => $user->id,

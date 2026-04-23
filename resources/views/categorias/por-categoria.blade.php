@@ -96,6 +96,15 @@
                                 Ver detalles
                                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                            @if(in_array($item->tipo_trans, [2, 3]) && ($item->inventarios?->cantidad ?? 0) > 0 && auth()->id() != $item->id_user)
+                                <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
+                                    style="font-size:0.75rem;font-weight:600;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;padding:4px 10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:3px;transition:background .2s;"
+                                    onmouseover="this.style.background='#fed7aa'" onmouseout="this.style.background='#fff7ed'">
+                                    <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                    Intercambio
+                                </button>
+                            @endif
                             @if($item->estatus == 1 && ($item->inventarios?->cantidad ?? 0) > 0)
                                 @auth
                                     <button onclick="agregarAlCarrito({{ $item->id_item }})"
@@ -108,12 +117,10 @@
                                         <span class="loading" style="display:none;"><svg style="width:14px;height:14px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24"><circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></span>
                                     </button>
                                 @endauth
-                                @guest
-                                    <a href="{{ route('login') }}" style="font-size:0.8rem;font-weight:500;color:#479bd5;text-decoration:none;">Iniciar sesión</a>
-                                @endguest
                             @elseif($item->estatus == 1 && ($item->inventarios?->cantidad ?? 0) <= 0)
                                 <span style="font-size:0.8rem;font-weight:600;color:#94a3b8;">Agotado</span>
                             @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -150,6 +157,8 @@
         </div>
     @endif
 </div>
+
+@include('components.modal-intercambio')
 @endsection
 
 @push('styles')
@@ -163,6 +172,12 @@
 @endpush
 
 @push('scripts')
+<script>
+window._urlLogin = "{{ route('login') }}";
+window._urlItemsUsuario = "{{ route('carrito.items_usuario') }}";
+window._urlNegStore = "{{ route('negociaciones.store') }}";
+</script>
+<script src="{{ asset('js/modal-intercambio.js') }}"></script>
 <script>
     window.agregarAlCarrito = async function(id_item) {
         if (!id_item) return showNotification("Producto no válido", "error");
@@ -183,7 +198,7 @@
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || "Error al agregar al carrito");
             showNotification("Producto agregado al carrito", "success");
-            if (data.cart_count) updateCartCounter(data.cart_count);
+            if (data.cart_count !== undefined) window.updateCartBadge(data.cart_count);
             if (window.syncCartIndicators) window.syncCartIndicators();
         } catch (e) { showNotification(e.message, "error"); }
         finally { button.disabled = false; buttonText.textContent = originalText; loadingIcon.style.display = "none"; }

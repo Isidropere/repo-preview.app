@@ -1,6 +1,21 @@
 
-<section class="flex justify-center items-center w-full bg-primary font-medium text-center py-1">
-    Encuentra lo que deseas cambiar
+<section class="w-full bg-primary overflow-hidden py-1">
+    <div class="marquee-track whitespace-nowrap text-white text-sm font-medium">
+        <span class="mx-8">✨ Encuentra lo que deseas cambiar</span>
+        <span class="mx-8">🔄 Intercambia tus productos</span>
+        <span class="mx-8">🛒 Compra lo que necesitas</span>
+        <span class="mx-8">⭐ Publica tus talentos</span>
+        <span class="mx-8">💡 Si no puedes venderlo ¡Cámbialo!</span>
+        <span class="mx-8">✨ Encuentra lo que deseas cambiar</span>
+        <span class="mx-8">🔄 Intercambia tus productos</span>
+        <span class="mx-8">🛒 Compra lo que necesitas</span>
+        <span class="mx-8">⭐ Publica tus talentos</span>
+        <span class="mx-8">💡 Si no puedes venderlo ¡Cámbialo!</span>
+    </div>
+    <style>
+    .marquee-track { display:inline-block; animation:marquee 20s linear infinite; }
+    @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    </style>
 </section>
 
 <!-- Header principal -->
@@ -83,36 +98,59 @@
 
 
                     <!-- Menú principal -->
-                    <div class="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
-                            <a class="text-gray-700 hover:text-primary transition-colors" href="{{ route('intercambio') }}">Intercambiar</a>
-                            <a class="text-gray-700 hover:text-primary transition-colors" href="{{ route('compra') }}">Comprar</a>
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-5">
+                            {{-- Links de navegación con iconos --}}
+                            <a class="inline-flex items-center gap-1.5 text-gray-700 hover:text-primary transition-colors text-sm font-medium" href="{{ route('intercambio') }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                Intercambiar
+                            </a>
+                            <a class="inline-flex items-center gap-1.5 text-gray-700 hover:text-primary transition-colors text-sm font-medium" href="{{ route('compra') }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                Comprar
+                            </a>
+
+                            @auth
+                            {{-- Botones de creación --}}
+                            <a href="{{ route('items.talento_create') }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-hoverPrimary text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                                Crear Talento
+                            </a>
+                            <a href="{{ route('items.create') }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-hoverSecondary text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                                Crear Producto
+                            </a>
+                            @endauth
 
 
                         <!-- Iconos de acciones -->
-                        <div class="flex items-center gap-4 lg:gap-6">
+                        <div class="flex items-center gap-3 lg:gap-4">
 
                         <div class="flex items-center gap-x-2 h-full z-auto" data-astro-cid-pwmmw5ba>
 
-                           <a class="relative flex items-center justify-center text-primary hover:text-hoverPrimary p-2 no-tooltip"   data-astro-cid-pwmmw5ba
+                           {{-- Carrito --}}
+                           <a class="relative flex items-center justify-center text-primary hover:text-hoverPrimary p-2 no-tooltip" data-astro-cid-pwmmw5ba
                            href="{{ route('carrito.show') }}" 
-                           data-tooltip="Carrito">
+                           data-tooltip="Carrito" title="Mi carrito">
                           
                                @if($carrito && $carrito->itemsIntencionCompra)
-                                <span class="absolute top-1 right-1 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none">
+                                <span id="cartBadge" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
                                     {{ $carrito->itemsIntencionCompra->where('es_seleccionado', 1)->count() }}
                                 </span>
                             @else
-                                <span class="absolute top-1 right-1 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none">
+                                <span id="cartBadge" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
                                     0
                                 </span>
                             @endif
 
-                                <svg class="h-7 w-7 fill-primary hover:fill-hoverPrimary"
+                                <svg class="h-6 w-6 fill-primary hover:fill-hoverPrimary"
                                      xmlns="http://www.w3.org/2000/svg"
-                                     viewBox="0 0 24 24" fill="none" 
-                                     stroke-width="2"
-                                     stroke-linecap="round"
-                                     stroke-linejoin="round"> 
+                                     viewBox="0 0 24 24"> 
                                     <path d="M21.822 7.431A1 1 0 0 0 21 7H7.333L6.179 4.23A1.994 1.994 0 0 0 4.333 3H2v2h2.333l4.744 11.385A1 1 0 0 0 10 17h8c.417 0 .79-.259.937-.648l3-8a1 1 0 0 0-.115-.921zM17.307 15h-6.64l-2.5-6h11.39l-2.25 6z"></path>
                                     <circle cx="10.5" cy="19.5" r="1.5"></circle>
                                     <circle cx="17.5" cy="19.5" r="1.5"></circle>
@@ -120,7 +158,15 @@
                             </a>
         
                             @auth
-                            <x-negociaciones-modal/>
+                            {{-- Mis intercambios --}}
+                            <a href="{{ route('negociaciones.mis') }}"
+                               class="relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary"
+                               title="Mis intercambios">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                </svg>
+                            </a>
                             <x-notificaciones />
                             @endauth
 
@@ -174,7 +220,7 @@
                                             </a>
                                             @endif
 
-                                        <form method="POST" action="{{ route('logout') }}" class="hs-dropdown-toggle flex items-center w-full text-sm text-primary hover:text-hoverPrimary relative" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown"
+                                        <form method="POST" action="{{ route('logout') }}" class="flex items-center w-full"
                                                 data-astro-cid-pwmmw5ba>
                                         @csrf
                                         <button type="submit" class="flex items-center gap-x-3.5 py-2 md:px-3 w-full justify-left rounded-lg text-red-600 hover:text-red-700 focus:outline-none hover:bg-gray-100 hover:underline transition-all">

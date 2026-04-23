@@ -23,7 +23,7 @@ class Carrito extends Model
 
     protected $table = 'carritos';
     protected $primaryKey = 'id_carrito';
-    protected $fillable = ['id_user'];
+    protected $fillable = ['id_user', 'tipo'];
     public $timestamps = false;
 
     public function direcciones()

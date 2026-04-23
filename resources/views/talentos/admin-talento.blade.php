@@ -7,9 +7,9 @@
     <div class="max-w-5xl mx-auto px-4">
         @auth
         <div class="mb-4">
-            <a href="{{ route('home') }}" class="inline-flex items-center text-sm text-gray-500 hover:text-primary">
+            <a href="{{ route('admin.index') }}" class="inline-flex items-center text-sm text-gray-500 hover:text-primary">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Volver al inicio
+                Volver al panel
             </a>
         </div>
         @endauth
@@ -157,7 +157,43 @@ document.addEventListener('DOMContentLoaded', function() {
     status.addEventListener('change', filter);
     type.addEventListener('change', filter);
 });
-function confirmDelete(btn) { if (confirm('¿Eliminar este talento?')) btn.closest('form').submit(); }
+function confirmDelete(btn) {
+    window._deleteForm = btn.closest('form');
+    document.getElementById('modalEliminarTalento').classList.remove('hidden');
+}
 function abrirImagen(src) { if (!src) return; document.getElementById('imgLightboxSrc').src = src; document.getElementById('imgLightbox').classList.remove('hidden'); }
 </script>
+
+{{-- Modal confirmación eliminar talento --}}
+<div id="modalEliminarTalento" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800">¿Eliminar este talento?</h3>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-sm text-amber-800 leading-relaxed">
+            <p class="font-semibold mb-1">⚠️ Aviso importante</p>
+            <p>Cambialord RD <strong>no se hace responsable</strong> de los talentos o servicios eliminados por el usuario, y <strong>no realiza reembolsos</strong> del monto pagado por la publicación de este servicio.</p>
+            <p class="mt-2">Esta acción es <strong>irreversible</strong>.</p>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="button"
+                onclick="document.getElementById('modalEliminarTalento').classList.add('hidden')"
+                class="flex-1 border-2 border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Cancelar
+            </button>
+            <button type="button"
+                onclick="document.getElementById('modalEliminarTalento').classList.add('hidden'); window._deleteForm.submit();"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-bold transition-colors">
+                Sí, eliminar
+            </button>
+        </div>
+    </div>
+</div>
 @endpush

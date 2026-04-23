@@ -205,30 +205,7 @@ Route::get('/contraseña', function () {
     return view('contraseña.contrasenna');
 })->name('contraseña');
 
-Route::get('/historial', function () {
-    $userId = auth()->id();
-
-    // Compras: pagos realizados por el usuario
-    $compras = \App\Models\PagoCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
-        ->with(['trazabilidad', 'tarjeta', 'pagoItems.item.imagenes', 'carrito.itemsIntencionCompra'])
-        ->orderByDesc('fecha')
-        ->get();
-
-    // Ventas: items de otros usuarios que fueron comprados (intenciones de compra sobre mis items)
-    $ventas = \App\Models\ItemIntencionCompra::whereHas('item', fn($q) => $q->where('id_user', $userId))
-        ->with(['item.imagenes', 'carrito.pagosCompra'])
-        ->orderByDesc('id_item_intencion_compra')
-        ->get();
-
-    // Negociaciones donde el usuario participa (como emisor o receptor)
-    $negociaciones = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
-        ->orWhere('usuario_receptor_id', $userId)
-        ->with(['item.imagenes', 'usuario', 'usuarioReceptor'])
-        ->orderByDesc('id_negociacion')
-        ->get();
-
-    return view('historial.historial', compact('compras', 'ventas', 'negociaciones'));
-})->middleware('auth')->name('historial');
+Route::get('/historial', [\App\Http\Controllers\HistorialController::class, 'index'])->middleware('auth')->name('historial');
 
 Route::get('/items/search_header', [ItemController::class, 'search_header'])->middleware('throttle:30,1')->name('items.search_header');
 // /buscar redirige a search_header (consolidado)
@@ -321,19 +298,23 @@ Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function
 });
 
 Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
-    Route::get('/{item}', [NegociacionController::class, 'index'])->name('negociaciones.index');
+    Route::get('/',        [NegociacionController::class, 'misIntercambios'])->name('negociaciones.mis');
+    Route::get('/{item}',  [NegociacionController::class, 'index'])->name('negociaciones.index');
     Route::post('/{id}/aceptar', [NegociacionController::class, 'aceptar'])->name('negociaciones.aceptar');
     Route::post('/{id}/rechazar', [NegociacionController::class, 'rechazar'])->name('negociaciones.rechazar');
     Route::get('/{id}/contraoferta', [NegociacionController::class, 'contraoferta'])->name('negociaciones.contraoferta');
     Route::post('/{id}/contraoferta', [NegociacionController::class, 'storeContraoferta'])->name('negociaciones.store_contraoferta');
     Route::post('/{id}/cancelar', [NegociacionController::class, 'cancelar'])->name('negociaciones.cancelar');
     Route::post('/{id}/completar', [NegociacionController::class, 'completar'])->name('negociaciones.completar');
+    Route::post('/{id}/confirmar-emisor', [NegociacionController::class, 'confirmarEmisor'])->name('negociaciones.confirmar_emisor');
 
     Route::post('/enviar', [App\Http\Controllers\NegociacionController::class, 'store'])
         ->middleware('throttle.sensitive:10,1')
         ->name('negociaciones.store');
 
     Route::get('/ver-chat/{id}', [NegociacionController::class, 'verChat'])->name('negociaciones.verChat');
+    Route::get('/{id}/pago',    [NegociacionController::class, 'mostrarPago'])->name('negociaciones.pago');
+    Route::post('/{id}/pago',   [NegociacionController::class, 'procesarPago'])->name('negociaciones.pago.procesar');
 });
 
 
@@ -421,6 +402,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('logout', [LoginController::class, 'logout'])->name('logout.get');
 
 // Social OAuth unificado: Google, Facebook, Instagram
 // Rutas: /auth/{provider}  y  /auth/{provider}/callback
