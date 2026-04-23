@@ -48,8 +48,29 @@
         </div>
 
         {{-- Body scrollable --}}
-        <div id="negociacionesBody" style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;font-size:0.85rem;">
+        <div id="negociacionesBody" style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;min-height:0;font-size:0.85rem;">
             <p style="color:#94a3b8;text-align:center;">Selecciona una notificación</p>
+        </div>
+
+        {{-- Footer fijo con botones --}}
+        <div id="negociacionesFooter" style="display:none;padding:1rem 1.5rem;border-top:1px solid #fff7ed;flex-shrink:0;background:#fafafa;">
+            <div style="display:flex;gap:0.75rem;">
+                <button onclick="cerrarNegociacionesModal()"
+                        style="flex:1;border:2px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:0.875rem;padding:0.75rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .15s;"
+                        onmouseover="this.style.background='#f9fafb';this.style.borderColor='#d1d5db'"
+                        onmouseout="this.style.background='#fff';this.style.borderColor='#e5e7eb'">
+                    Cancelar
+                </button>
+                <button id="enviarNegociacionBtn"
+                        style="flex:2;background:linear-gradient(135deg,#f58634,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;letter-spacing:-0.01em;"
+                        onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
+                        onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
+                    <svg style="width:1.1rem;height:1.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Enviar
+                </button>
+            </div>
         </div>
 
     </div>
