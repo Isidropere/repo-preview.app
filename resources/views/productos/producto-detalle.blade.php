@@ -523,7 +523,7 @@
 <p style="text-align:center;color:#9ca3af;font-size:0.82rem;padding:1rem 0;">Cargando...</p>
 </div></div>
 <div><p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;">Mensaje de propuesta <span style="color:#ef4444;">*</span></p>
-<textarea id="modalIntercambioMensaje" rows="3" maxlength="500" style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;resize:none;outline:none;background:#fff7ed;color:#374151;box-sizing:border-box;"></textarea>
+<textarea id="modalIntercambioMensaje" rows="3" maxlength="500" readonly style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;resize:none;outline:none;background:#fff7ed;color:#374151;box-sizing:border-box;cursor:not-allowed;"></textarea>
 <p style="font-size:0.72rem;color:#9ca3af;text-align:right;margin-top:0.25rem;"><span id="modalIntercambioCharCount">0</span>/500</p>
 </div></div>
 <div style="padding:1rem 1.5rem;border-top:1px solid #f0fdf4;display:flex;gap:0.75rem;flex-shrink:0;background:#fafafa;">

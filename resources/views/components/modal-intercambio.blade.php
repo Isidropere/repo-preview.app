@@ -46,9 +46,8 @@
                     <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">2</span>
                     Mensaje de propuesta <span style="color:#ef4444;">*</span>
                 </p>
-                <textarea id="modalIntercambioMensaje" rows="3" maxlength="500"
-                          style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;resize:none;outline:none;background:#fff7ed;color:#374151;box-sizing:border-box;transition:border-color .15s;"
-                          onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fff7ed'"></textarea>
+                <textarea id="modalIntercambioMensaje" rows="3" maxlength="500" readonly
+                          style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;resize:none;outline:none;background:#fff7ed;color:#374151;box-sizing:border-box;cursor:not-allowed;"></textarea>
                 <p style="font-size:0.72rem;color:#9ca3af;text-align:right;margin-top:0.25rem;"><span id="modalIntercambioCharCount">0</span>/500</p>
             </div>
         </div>
