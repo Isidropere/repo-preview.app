@@ -47,7 +47,7 @@ async function cargarMisProductosIntercambio() {
         var items = await resp.json();
         if (!Array.isArray(items)) items = items.items || [];
         var list = items.filter(function(i) {
-            return [2, 3].includes(parseInt(i.tipo_trans));
+            return [1, 2, 3].includes(parseInt(i.tipo_trans));
         });
         if (!list.length) {
             lista.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">No tienes productos disponibles para intercambiar.</p>';
