@@ -174,7 +174,6 @@
                     </div>
                 </div>
                 <div class="flex justify-between mt-4">
-                    xxxxxx
                     <button type="button" onclick="goToStep(1)" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Anterior
                     </button>

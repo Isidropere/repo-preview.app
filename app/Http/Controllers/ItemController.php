@@ -1540,10 +1540,16 @@ class ItemController extends Controller
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
 
+            // Limpiar campo imagen_principal si no tiene archivo válido
+            if (!$request->hasFile('imagen_principal')) {
+                $request->request->remove('imagen_principal');
+                $request->files->remove('imagen_principal');
+            }
+
             $rules = [
                 'item' => 'required|string|max:255',
                 'id_categoria_item' => 'required|exists:categorias_item,id_categoria_item',
-                'valor' => 'required|numeric|min:0',
+                'valor' => 'nullable|numeric|min:0',
                 'descuento' => 'nullable|numeric|min:0',
                 'presentacion' => 'required|string',
                 'condicion' => 'required|integer|in:1,2,3,4',
@@ -1564,7 +1570,6 @@ class ItemController extends Controller
             $messages = [
                 'item.required' => 'El nombre del producto es obligatorio',
                 'id_categoria_item.required' => 'Debe seleccionar una categorí­a',
-                'valor.required' => 'El precio es obligatorio',
                 'valor.numeric' => 'El precio debe ser un níºmero válido',
                 'valor.min' => 'El precio no puede ser negativo',
                 'condicion.required' => 'Debe especificar la condición del producto',
@@ -1696,6 +1701,12 @@ class ItemController extends Controller
 
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
+
+            // Limpiar campo imagen_principal si no tiene archivo válido
+            if (!$request->hasFile('imagen_principal')) {
+                $request->request->remove('imagen_principal');
+                $request->files->remove('imagen_principal');
+            }
 
             // Validaciones
             $rules = [
