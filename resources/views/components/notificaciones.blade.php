@@ -343,12 +343,14 @@ document.addEventListener('click', async function (e) {
 // ABRIR / CERRAR MODAL
 // ─────────────────────────────────────────────────────────────
 function abrirNegociacionesModal() {
-    document.getElementById('negociacionesNotificacionesModal')?.classList.remove('hidden');
+    var m = document.getElementById('negociacionesNotificacionesModal');
+    if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; }
     document.body.classList.add('overflow-hidden');
 }
 
 function cerrarNegociacionesModal() {
-    document.getElementById('negociacionesNotificacionesModal')?.classList.add('hidden');
+    var m = document.getElementById('negociacionesNotificacionesModal');
+    if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
     document.body.classList.remove('overflow-hidden');
 }
 

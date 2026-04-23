@@ -1,8 +1,8 @@
 <div id="negociacionesNotificacionesModal"
-     class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4"
-     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
+     class="hidden"
+     style="position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
 
-    <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden" style="max-height:92vh;">
+    <div style="background:#fff;border-radius:1.5rem;width:100%;max-width:32rem;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 2rem);margin:auto;">
 
         {{-- Header con gradiente naranja --}}
         <div style="background:linear-gradient(135deg,#f58634 0%,#f58634 50%,#fb923c 100%);padding:1.25rem 1.5rem;flex-shrink:0;">
@@ -14,7 +14,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 style="font-size:1rem;font-weight:800;color:#fff;margin:0;letter-spacing:-0.01em;">🤝 Negociación</h3>
+                        <h3 style="font-size:1rem;font-weight:800;color:#fff;margin:0;">🤝 Negociación</h3>
                         <p style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin:0.1rem 0 0;font-weight:500;">Intercambio con negociación</p>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                     Cancelar
                 </button>
                 <button id="enviarNegociacionBtn"
-                        style="flex:2;background:linear-gradient(135deg,#f58634,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;letter-spacing:-0.01em;"
+                        style="flex:2;background:linear-gradient(135deg,#f58634,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;"
                         onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
                         onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
                     <svg style="width:1.1rem;height:1.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
