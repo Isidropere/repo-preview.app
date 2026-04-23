@@ -88,6 +88,7 @@ class SocialAuthController extends Controller
                 'nombres'           => $nombres,
                 'apellidos'         => $apellidos,
                 'email'             => $socialUser->getEmail() ?? $socialUser->getId() . '@' . $provider . '.oauth',
+                'telefono'          => '',
                 $idField            => $socialUser->getId(),
                 'nombre_usuario'    => $username,
                 'password'          => bcrypt(Str::random(24)),
