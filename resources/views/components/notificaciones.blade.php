@@ -238,45 +238,57 @@ function poblarSelectPredefinidos(mensajes, rol) {
 function plantillaNegociacion() {
     return `
         <div id="mensajesContainer"
-             style="height:14rem;overflow-y:auto;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;background:#fff;margin-bottom:1rem;">
-            <p class="text-gray-400 text-center text-sm">Cargando mensajes...</p>
+             style="height:14rem;overflow-y:auto;border:2px solid #fff7ed;border-radius:1rem;padding:0.75rem;background:#fff7ed;margin-bottom:1rem;">
+            <p style="color:#9ca3af;text-align:center;font-size:0.85rem;">Cargando mensajes...</p>
         </div>
 
-        <div style="margin-bottom:0.75rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
+        <div style="margin-bottom:1rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">1</span>
                 Mensaje predefinido
-            </label>
+            </p>
             <select id="mensajePredefinido"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#fff;outline:none;">
+                    style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fff7ed;outline:none;color:#374151;box-sizing:border-box;transition:border-color .15s;"
+                    onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fff7ed'">
                 <option value="">-- Selecciona un mensaje --</option>
             </select>
         </div>
 
-        <div style="margin-bottom:0.75rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
+        <div style="margin-bottom:1rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">2</span>
                 Mensaje
-                <span style="font-size:0.7rem;font-weight:400;color:#94a3b8;margin-left:0.35rem;">(selecciona un mensaje predefinido)</span>
-            </label>
+                <span style="font-size:0.72rem;font-weight:400;color:#9ca3af;">(se llena al seleccionar)</span>
+            </p>
             <textarea id="mensaje" rows="3" readonly
-                      style="width:100%;resize:none;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#f1f5f9;color:#475569;outline:none;box-sizing:border-box;cursor:not-allowed;"
+                      style="width:100%;resize:none;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;background:#fff7ed;color:#374151;outline:none;box-sizing:border-box;cursor:not-allowed;"
                       placeholder="Se llenará al seleccionar un mensaje predefinido..."></textarea>
         </div>
 
-        <div style="margin-bottom:1rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
-                Monto de la oferta (opcional)
-            </label>
-            <input type="number" id="montoOferta" min="0" step="0.01" placeholder="Ej. 1000"
-                   style="width:100%;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#fff;outline:none;box-sizing:border-box;">
+        <div style="margin-bottom:1.25rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">3</span>
+                Monto de la oferta <span style="font-size:0.72rem;font-weight:400;color:#9ca3af;">(opcional)</span>
+            </p>
+            <input type="number" id="montoOferta" min="0" step="0.01" placeholder="Ej. 1,000.00"
+                   style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fff7ed;outline:none;box-sizing:border-box;transition:border-color .15s;"
+                   onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fff7ed'">
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+        <div style="display:flex;gap:0.75rem;">
             <button onclick="cerrarNegociacionesModal()"
-                    style="padding:0.45rem 1rem;border:1px solid #d1d5db;border-radius:0.4rem;background:#fff;font-size:0.82rem;cursor:pointer;">
+                    style="flex:1;border:2px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:0.875rem;padding:0.75rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .15s;"
+                    onmouseover="this.style.background='#f9fafb';this.style.borderColor='#d1d5db'"
+                    onmouseout="this.style.background='#fff';this.style.borderColor='#e5e7eb'">
                 Cancelar
             </button>
             <button id="enviarNegociacionBtn"
-                    style="padding:0.45rem 1rem;background:#2563eb;color:#fff;border:none;border-radius:0.4rem;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                    style="flex:2;background:linear-gradient(135deg,#f58634,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;letter-spacing:-0.01em;"
+                    onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
+                <svg style="width:1.1rem;height:1.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
                 Enviar
             </button>
         </div>
