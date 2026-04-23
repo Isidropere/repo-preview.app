@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ConfigTarifaCategoria29;
 use App\Models\TarjetaPago;
 use App\Services\TalentoRegistroPagoService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -37,7 +36,7 @@ class TalentoRegistroPagoController extends Controller
     /**
      * Procesa el pago con Cardnet y, si es aprobado, crea el talento.
      */
-    public function procesarPago(Request $request): RedirectResponse
+    public function procesarPago(Request $request)
     {
         $request->validate([
             'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
@@ -50,6 +49,17 @@ class TalentoRegistroPagoController extends Controller
             cvv:       $request->input('cvv'),
             clientIp:  $request->ip(),
         );
+
+        if ($request->expectsJson()) {
+            if (!$resultado['success']) {
+                return response()->json(['success' => false, 'message' => $resultado['error']], 422);
+            }
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Tu talento fue publicado exitosamente.',
+                'redirect' => route('items.admintalento'),
+            ]);
+        }
 
         if (!$resultado['success']) {
             return redirect()->back()->with('error', $resultado['error']);

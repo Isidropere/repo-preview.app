@@ -55,7 +55,7 @@
                     {{-- Nombre --}}
                     <div>
                         <label for="item" class="block text-xs font-medium text-gray-700 mb-0.5">Nombre del producto <span class="text-red-500">*</span></label>
-                        <input type="text" id="item" name="item"  value="{{ old('item') }}" placeholder="Ej: iPhone 14 Pro Max"
+                        <input type="text" id="item" name="item" required value="{{ old('item') }}" placeholder="Ej: iPhone 14 Pro Max"
                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                         @error('item')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                     </div>
@@ -63,10 +63,10 @@
                     {{-- Precio y Descuento en fila --}}
                     <div class="grid grid-cols-2 gap-3" style="align-items:end">
                         <div>
-                            <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
+                            <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-gray-400">(opcional)</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
-                                <input type="text" id="valor" name="valor"  value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
+                                <input type="text" id="valor" name="valor" value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
                                        class="w-full pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" style="padding-left:3rem">
                             </div>
                             @error('valor')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
@@ -86,7 +86,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label for="cantidad" class="block text-xs font-medium text-gray-700 mb-0.5">Cantidad <span class="text-red-500">*</span></label>
-                            <input type="number" id="cantidad" name="cantidad"  min="1" value="{{ old('cantidad', 1) }}" placeholder="1"
+                            <input type="number" id="cantidad" name="cantidad" required min="1" value="{{ old('cantidad', 1) }}" placeholder="1"
                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                             @error('cantidad')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                         </div>
@@ -104,7 +104,7 @@
                 </div>
 
                 <div class="flex justify-end mt-4">
-                    <button type="button" onclick="goToStep(2)" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
+                    <button type="button" onclick="validarPaso1Producto()" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
                         Siguiente <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>
@@ -121,25 +121,26 @@
                 <div class="mb-6">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Imagen o video principal <span class="text-red-500">*</span></label>
                     @error('imagen_principal')<span class="text-red-500 text-xs mb-2 block">{{ $message }}</span>@enderror
-                    <label for="imagen_principal"
-                        class="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-gray-50 border-gray-300 hover:border-primary/50 hover:bg-primary/5 overflow-hidden group transition-all">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none text-center preview-default">
+                    <div class="relative w-full rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary/50 hover:bg-primary/5 transition-all" style="min-height:180px;">
+                        <div id="imgPrincipalPlaceholder" class="flex flex-col items-center justify-center py-10 text-center pointer-events-none">
                             <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                                 <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
                             <p class="text-sm text-gray-600 font-medium">Arrastra o haz clic para subir</p>
                             <p class="text-xs text-gray-400 mt-1">JPEG, PNG, WebP o MP4 (Máx. 10MB)</p>
                         </div>
-                        <img id="imagen_principal_preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
-                        <video id="video_principal_preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl" controls></video>
-                        <span id="imagen_principal_filename" class="file-name text-xs text-gray-700 absolute bottom-2 left-2 bg-white/90 px-2 py-0.5 rounded-full max-w-[90%] truncate hidden"></span>
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center hidden preview-actions transition-opacity">
-                            <button type="button" class="text-white bg-red-500 rounded-full p-2.5 hover:bg-red-600 transition-colors shadow-lg" data-action="remove">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <img id="imagen_principal_preview" class="hidden w-full rounded-xl object-cover" style="max-height:320px;" alt="Vista previa"/>
+                        <video id="video_principal_preview" class="hidden w-full rounded-xl" style="max-height:320px;" controls></video>
+                        <div id="imgPrincipalActions" class="hidden flex items-center justify-between px-3 py-2 bg-white/90 border-t border-gray-200">
+                            <span id="imagen_principal_filename" class="text-xs text-gray-600 truncate max-w-[70%]"></span>
+                            <button type="button" id="btnRemoveImgPrincipal" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Eliminar
                             </button>
                         </div>
-                        <input id="imagen_principal" hidden name="imagen_principal" type="file" class="imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4">
-                    </label>
+                        <label for="imagen_principal" class="absolute inset-0 cursor-pointer" id="labelImgPrincipal"></label>
+                        <input id="imagen_principal" name="imagen_principal" type="file" class="hidden imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4" required>
+                    </div>
                 </div>
 
                 {{-- Imágenes adicionales --}}
@@ -170,7 +171,7 @@
                     <button type="button" onclick="goToStep(1)" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Anterior
                     </button>
-                    <button type="button" onclick="goToStep(3)" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
+                    <button type="button" onclick="validarPaso2Producto()" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
                         Siguiente <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>
@@ -221,13 +222,7 @@
                     </div>
 
                     {{-- Tipo artículo --}}
-                    <div>
-                        <label for="id_tipo_item" class="block text-xs font-medium text-gray-700 mb-0.5">Tipo de artículo</label>
-                        <select id="id_tipo_item" name="id_tipo_item" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
-                            <option value="1" {{ old('id_tipo_item') == 1 ? 'selected' : '' }}>Producto</option>
-                            <option value="2" {{ old('id_tipo_item') == 2 ? 'selected' : '' }}>Servicio</option>
-                        </select>
-                    </div>
+                    <input type="hidden" name="id_tipo_item" value="1">
 
                     {{-- Dimensiones colapsable --}}
                     <div class="border border-gray-200 rounded-lg overflow-hidden">
@@ -403,11 +398,38 @@ document.querySelectorAll('.color-checkbox').forEach(cb => {
 // ═══ Imagen principal ═══
 document.addEventListener('DOMContentLoaded', function() {
     const inp = document.getElementById('imagen_principal');
-    const prevDef = document.querySelector('#step-2 .preview-default');
+    const placeholder = document.getElementById('imgPrincipalPlaceholder');
     const prevImg = document.getElementById('imagen_principal_preview');
     const prevVid = document.getElementById('video_principal_preview');
     const fname = document.getElementById('imagen_principal_filename');
-    const prevAct = document.querySelector('#step-2 .preview-actions');
+    const actions = document.getElementById('imgPrincipalActions');
+    const labelClick = document.getElementById('labelImgPrincipal');
+
+    function mostrarPreviewPrincipal(file) {
+        placeholder.classList.add('hidden');
+        labelClick.style.pointerEvents = 'none';
+        if (file.type.startsWith('image/')) {
+            prevVid.classList.add('hidden');
+            const r = new FileReader();
+            r.onload = e => { prevImg.src = e.target.result; prevImg.classList.remove('hidden'); };
+            r.readAsDataURL(file);
+        } else {
+            prevImg.classList.add('hidden');
+            prevVid.src = URL.createObjectURL(file);
+            prevVid.classList.remove('hidden');
+        }
+        fname.textContent = file.name;
+        actions.classList.remove('hidden');
+    }
+
+    function limpiarPreviewPrincipal() {
+        inp.value = '';
+        prevImg.src = ''; prevImg.classList.add('hidden');
+        prevVid.src = ''; prevVid.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        actions.classList.add('hidden');
+        labelClick.style.pointerEvents = '';
+    }
 
     inp.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -415,23 +437,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const valid = ['image/jpeg','image/png','image/webp','video/mp4'];
         if (!valid.includes(file.type)) { alert('Solo JPEG, PNG, WebP o MP4'); this.value=''; return; }
         if (file.size > 10*1024*1024) { alert('Máximo 10MB'); this.value=''; return; }
-        prevDef.classList.add('hidden'); prevImg.classList.add('hidden'); prevVid.classList.add('hidden');
-        if (file.type.startsWith('image/')) {
-            const r = new FileReader();
-            r.onload = e => { prevImg.src=e.target.result; prevImg.classList.remove('hidden'); fname.textContent=file.name; fname.classList.remove('hidden'); if(prevAct) prevAct.classList.remove('hidden'); };
-            r.readAsDataURL(file);
-        } else {
-            prevVid.src = URL.createObjectURL(file); prevVid.classList.remove('hidden'); fname.textContent=file.name; fname.classList.remove('hidden'); if(prevAct) prevAct.classList.remove('hidden');
-        }
+        mostrarPreviewPrincipal(file);
     });
 
-    if (prevAct) {
-        prevAct.querySelector('[data-action="remove"]').addEventListener('click', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            inp.value=''; prevImg.src=''; prevImg.classList.add('hidden'); prevVid.src=''; prevVid.classList.add('hidden');
-            prevDef.classList.remove('hidden'); fname.classList.add('hidden'); prevAct.classList.add('hidden');
-        });
-    }
+    document.getElementById('btnRemoveImgPrincipal').addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        limpiarPreviewPrincipal();
+    });
 
     // ═══ Imágenes adicionales ═══
     document.querySelectorAll('.imagen-input').forEach(input => {
@@ -466,5 +478,61 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Publicando...';
 });
+
+// ═══ Validaciones por paso ═══
+function mostrarErrorCampo(el, msg) {
+    el.classList.add('border-red-400');
+    let span = el.parentElement.querySelector('.campo-error');
+    if (!span) { span = document.createElement('span'); span.className = 'campo-error text-red-500 text-xs mt-1 block'; el.parentElement.appendChild(span); }
+    span.textContent = msg;
+}
+function limpiarErrorCampo(el) {
+    el.classList.remove('border-red-400');
+    const span = el.parentElement.querySelector('.campo-error');
+    if (span) span.remove();
+}
+
+function validarPaso1Producto() {
+    const campos = [
+        { id: 'item', label: 'Nombre del producto' },
+        { id: 'cantidad', label: 'Cantidad' },
+    ];
+    let valido = true;
+    campos.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (!el.value.trim() || el.value.trim() === '0') {
+            valido = false;
+            mostrarErrorCampo(el, c.label + ' es obligatorio.');
+        } else {
+            limpiarErrorCampo(el);
+        }
+    });
+    if (valido) goToStep(2);
+}
+
+function validarPaso2Producto() {
+    const inp = document.getElementById('imagen_principal');
+    const contenedor = inp ? inp.closest('div[style]') : null;
+    let msg = document.getElementById('error-imagen-principal');
+
+    if (!inp || !inp.files || inp.files.length === 0) {
+        if (!msg) {
+            msg = document.createElement('p');
+            msg.id = 'error-imagen-principal';
+            msg.className = 'text-red-500 text-xs mt-2 font-medium';
+            if (contenedor && contenedor.parentElement) {
+                contenedor.parentElement.insertBefore(msg, contenedor.nextSibling);
+            }
+        }
+        msg.textContent = '⚠ La imagen o video principal es obligatoria.';
+        if (contenedor) contenedor.classList.add('border-red-400');
+        return;
+    }
+
+    if (msg) msg.remove();
+    if (contenedor) contenedor.classList.remove('border-red-400');
+    goToStep(3);
+}
 </script>
 @endpush

@@ -41,6 +41,7 @@ class AdminComprasService
             'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
             'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
             'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar)->paginate(20, ['*'], 'page_ii')->withQueryString(),
+            'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
             'totalCompras'               => PagoCompra::count(),
             'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
             'totalIntercambios'          => Negociacion::count(),
@@ -172,6 +173,28 @@ class AdminComprasService
         if ($tab === 'intencion_intercambio' && $buscar) {
             $query->where(fn($q) => $q
                 ->whereHas('usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('item', fn($q2) => $q2
+                    ->where('item', 'like', "%$buscar%")));
+        }
+
+        return $query;
+    }
+
+    private function queryIntercambiosConfirmados(string $tab, ?string $buscar)
+    {
+        $query = Negociacion::with(['item.imagenes', 'item.categoria', 'usuario', 'usuarioReceptor'])
+            ->where('estado', 'aceptado')
+            ->where('emisor_confirmado', true)
+            ->orderByDesc('id_negociacion');
+
+        if ($tab === 'intercambios_confirmados' && $buscar) {
+            $query->where(fn($q) => $q
+                ->whereHas('usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('usuarioReceptor', fn($q2) => $q2
                     ->where('nombres', 'like', "%$buscar%")
                     ->orWhere('email', 'like', "%$buscar%"))
                 ->orWhereHas('item', fn($q2) => $q2

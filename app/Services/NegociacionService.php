@@ -93,6 +93,7 @@ class NegociacionService
             'monto_oferta'        => $datos['monto_oferta'] ?? null,
             'estado'              => 'Inicial',
             'fecha_creacion'      => now(),
+            'items_ofrecidos'     => !empty($datos['items_ofrecidos']) ? $datos['items_ofrecidos'] : null,
         ]);
 
         $this->crearMensaje(
@@ -102,6 +103,11 @@ class NegociacionService
             $emisorPaquete?->id_paquete,
             $datos['mensaje']
         );
+
+        // Notificar al receptor
+        $emisor = \App\Models\User::find($emisorId);
+        $textoNotif = "Tienes una nueva propuesta de intercambio por tu producto \"{$receptorItem->item}\" de {$emisor->nombres}.";
+        event(new \App\Events\NuevaNotificacion($textoNotif, $receptorItem->id_user));
 
         return $this->ok('Negociación enviada correctamente.');
     }
@@ -162,6 +168,13 @@ class NegociacionService
                 }
             });
 
+            // Notificar al emisor que fue aceptado
+            $receptor = \App\Models\User::find($userId);
+            event(new \App\Events\NuevaNotificacion(
+                "¡Tu propuesta de intercambio fue aceptada por {$receptor->nombres}! Confirma para continuar.",
+                $neg->usuario_emisor_id
+            ));
+
             return $this->ok('Negociación aceptada.');
         } catch (\RuntimeException $e) {
             return $this->error($e->getMessage());
@@ -190,6 +203,14 @@ class NegociacionService
         }
 
         $neg->update(['estado' => 'rechazado']);
+
+        // Notificar al emisor
+        $receptor = \App\Models\User::find($userId);
+        event(new \App\Events\NuevaNotificacion(
+            "Tu propuesta de intercambio fue rechazada por {$receptor->nombres}.",
+            $neg->usuario_emisor_id
+        ));
+
         return $this->ok('Negociación rechazada.');
     }
 
@@ -249,6 +270,66 @@ class NegociacionService
         }
 
         return $this->ok('Contraoferta enviada.');
+    }
+
+    /**
+     * Emisor confirma el intercambio después de que el receptor aceptó.
+     * Una vez confirmado por ambos, se notifica a los administradores.
+     */
+    public function confirmarEmisor(int $userId, int $negociacionId): array
+    {
+        $neg = Negociacion::find($negociacionId);
+        if (!$neg) {
+            return $this->error('Negociación no encontrada.');
+        }
+
+        if ($userId != $neg->usuario_emisor_id) {
+            return $this->error('Solo el emisor puede confirmar.');
+        }
+
+        if ($neg->estado !== 'aceptado') {
+            return $this->error('Solo se puede confirmar una negociación aceptada por el receptor.');
+        }
+
+        if ($neg->emisor_confirmado) {
+            return $this->error('Ya confirmaste este intercambio.');
+        }
+
+        $neg->update(['emisor_confirmado' => true]);
+
+        // Notificar a administradores
+        $this->notificarAdmins($neg);
+
+        return $this->ok('Confirmación registrada. Los administradores han sido notificados para gestionar el envío.');
+    }
+
+    /**
+     * Notifica a todos los administradores que un intercambio está listo para envío.
+     */
+    private function notificarAdmins(Negociacion $neg): void
+    {
+        try {
+            $admins = \App\Models\User::where('isAdmin', true)->get();
+            $texto = "Intercambio #{$neg->id_negociacion} confirmado por ambas partes. Gestiona el envío.";
+            foreach ($admins as $admin) {
+                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo notificar a admins', ['error' => $e->getMessage()]);
+        }
+    }
+
+    public function notificarAdminsCompletado(Negociacion $neg): void
+    {
+        try {
+            $admins = \App\Models\User::where('isAdmin', true)->get();
+            $texto  = "✅ Intercambio #{$neg->id_negociacion} completado. Ambos usuarios pagaron. Procede con el envío.";
+            foreach ($admins as $admin) {
+                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo notificar a admins (completado)', ['error' => $e->getMessage()]);
+        }
     }
 
     /**

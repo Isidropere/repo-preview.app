@@ -98,7 +98,7 @@ class CardnetProvider implements PaymentProviderInterface
                 'tip'              => $opciones['tip'] ?? 0,
             ];
 
-            $response = Http::timeout(30)->withHeaders([
+            $response = Http::timeout(60)->retry(2, 1000)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
             ])->post("{$this->baseUrl}/transactions/sales", $payload);
@@ -121,7 +121,11 @@ class CardnetProvider implements PaymentProviderInterface
             ];
 
         } catch (\Throwable $e) {
-            Log::error('[CardNet] Error en cobro', ['error' => $e->getMessage()]);
+            Log::error('[CardNet] Error en cobro', [
+                'error'   => $e->getMessage(),
+                'class'   => get_class($e),
+                'baseUrl' => $this->baseUrl,
+            ]);
             return $this->errorResponse($e->getMessage());
         }
     }
@@ -239,15 +243,22 @@ class CardnetProvider implements PaymentProviderInterface
      */
     private function obtenerIdempotencyKey(): string
     {
-        $response = Http::timeout(30)->withHeaders([
-            'Accept' => 'text/plain',
-        ])->post("{$this->baseUrl}/idenpotency-keys");
-
-        if (!$response->successful()) {
-            throw new \RuntimeException('No se pudo obtener idempotency-key de CardNet');
+        try {
+            $response = Http::timeout(60)->retry(2, 1000)->withHeaders([
+                'Accept' => 'text/plain',
+            ])->post("{$this->baseUrl}/idenpotency-keys");
+        } catch (\Throwable $e) {
+            Log::error('[CardNet] Error obteniendo idempotency-key', [
+                'error'   => $e->getMessage(),
+                'baseUrl' => $this->baseUrl,
+            ]);
+            throw new \RuntimeException('No se pudo conectar con CardNet: ' . $e->getMessage());
         }
 
-        // Respuesta: "ikey:c0930d79506f4cc49730232b0f6e0b5c"
+        if (!$response->successful()) {
+            throw new \RuntimeException('No se pudo obtener idempotency-key de CardNet: ' . $response->status());
+        }
+
         $body = $response->body();
         return str_replace('ikey:', '', trim($body));
     }

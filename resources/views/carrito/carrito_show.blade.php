@@ -53,9 +53,30 @@
         <div class="lg:col-span-2 space-y-6">
           @csrf <!-- Para que tu AJAX tenga el token -->
 
-@foreach($carrito->itemsIntencionCompra as $item)
+@php
+    // Combinar items de todos los carritos
+    $todosLosItems = $carritos->flatMap(fn($c) => $c->itemsIntencionCompra);
+@endphp
+
+@if($todosLosItems->isEmpty())
+<div class="bg-white shadow rounded-2xl p-8 text-center text-gray-400">
+    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+    <p class="text-sm">Tu carrito está vacío</p>
+</div>
+@endif
+
+{{-- Productos --}}
+@php $itemsProducto = $todosLosItems->filter(fn($i) => (int)($i->item?->id_categoria_item ?? 0) !== 29); @endphp
+@if($itemsProducto->isNotEmpty())
+<div class="mb-2 flex items-center gap-2">
+    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    <span class="text-sm font-bold text-gray-700">Productos ({{ $itemsProducto->count() }})</span>
+</div>
+@endif
+@foreach($itemsProducto as $item)
     <div class="bg-white shadow rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6">
-        <!-- Checkbox -->
         <div class="flex items-start mr-0">
             <input type="checkbox" 
                    class="item-checkbox item-seleccionado mt-1" 
@@ -97,16 +118,11 @@
             <div class="mt-2 text-sm text-gray-600">
 
                 @if(in_array($item->item->tipo_trans, [2, 3]))
-
-                 <p class="flex items-center gap-2">
-                    🤝 En negociación con {{ $item->item->id_user ?? 0 }} usuarios
-                </p>
-                <button  onclick="listarPaquetes()"
-                    class="text-blue-600 hover:underline text-xs open-negociaciones" 
+                <button onclick="listarPaquetes()"
+                    class="text-orange-600 hover:underline text-xs open-negociaciones font-semibold" 
                     data-id="{{ $item->item->id_item }}">
-                      negociaciones con vendedor 
+                      🤝 Negociar con el vendedor
                 </button>
-
                 @endif
 
                 <!-- Incrementar/Decrementar -->
@@ -159,6 +175,48 @@
     </div>
 @endforeach
 
+{{-- Servicios / Talentos --}}
+@php $itemsServicio = $todosLosItems->filter(fn($i) => (int)($i->item?->id_categoria_item ?? 0) === 29); @endphp
+@if($itemsServicio->isNotEmpty())
+<div class="mt-6 mb-2 flex items-center gap-2">
+    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+    <span class="text-sm font-bold text-gray-700">Servicios / Talentos ({{ $itemsServicio->count() }})</span>
+</div>
+@foreach($itemsServicio as $item)
+    <div class="bg-orange-50 border border-orange-200 shadow-sm rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 mb-4">
+        <div class="flex items-start mr-0">
+            <input type="checkbox"
+                   class="item-checkbox rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                   data-id="{{ $item->id_item_intencion_compra }}"
+                   {{ $item->es_seleccionado ? 'checked' : '' }}>
+        </div>
+        <div class="flex-1">
+            <div class="flex items-start gap-4">
+                @php
+                    $imgSrc = $item->item?->imagenes?->where('estado','aprobado')->first()?->nombre;
+                    $imgUrl = $imgSrc ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgSrc) : asset('imgs/defaults/servicio_default.svg');
+                @endphp
+                <img src="{{ $imgUrl }}" alt="{{ $item->item?->item }}"
+                     class="w-20 h-20 rounded-xl object-cover border border-orange-100 flex-shrink-0">
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-800 text-sm truncate">{{ $item->item?->item ?? 'Servicio' }}</h3>
+                    <p class="text-xs text-orange-600 font-medium mt-0.5">⭐ Servicio / Talento</p>
+                    <p class="text-sm font-bold text-gray-800 mt-1">RD$ {{ number_format($item->item?->valor ?? 0, 2) }}</p>
+                    <p class="text-xs text-gray-400">Cantidad: {{ $item->cantidad }}</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 mt-3">
+                <form action="{{ route('carrito.eliminarItem', $item->id_item) }}" method="POST"
+                      onsubmit="return confirm('¿Eliminar este servicio del carrito?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
+@endif
+
         </div>
 
         <!-- Resumen y métodos de pago -->
@@ -189,12 +247,43 @@
                     <span>Total estimado:</span>
                     <span id="total_estimado">{{ number_format($totales['total_estimado'] ?? 0, 2) }}</span>
                 </div>
+            @php
+                $carritoProducto = $carritos->firstWhere('tipo', 'producto');
+                $carritoServicio = $carritos->firstWhere('tipo', 'servicio');
+                $tieneAmbos = $carritoProducto && $carritoServicio 
+                    && $carritoProducto->itemsIntencionCompra->isNotEmpty() 
+                    && $carritoServicio->itemsIntencionCompra->isNotEmpty();
+            @endphp
+
+            @if($tieneAmbos)
+            {{-- Selector de carrito cuando hay ambos tipos --}}
+            <div class="mt-4 space-y-2">
+                <p class="text-sm font-semibold text-gray-700 mb-2">¿Qué deseas pagar?</p>
+                <form action="{{ route('carrito.checkout_index') }}" method="GET">
+                    <input type="hidden" name="tipo" value="producto">
+                    <button type="submit"
+                        style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:0.75rem;padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);margin-bottom:0.5rem;">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Pagar Productos ({{ $carritoProducto->itemsIntencionCompra->count() }})
+                    </button>
+                </form>
+                <form action="{{ route('carrito.checkout_index') }}" method="GET">
+                    <input type="hidden" name="tipo" value="servicio">
+                    <button type="submit"
+                        style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;border:none;border-radius:0.75rem;padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(245,134,52,0.3);">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                        Pagar Servicios ({{ $carritoServicio->itemsIntencionCompra->count() }})
+                    </button>
+                </form>
+            </div>
+            @else
             <form action="{{ route('carrito.checkout_index') }}" method="GET">
                 <button type="submit" 
                     class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow">
                     Proceder al Pago
                 </button>
             </form>
+            @endif
                         </div>
 
             <!-- Métodos de pago -->
@@ -225,17 +314,27 @@
 
     <!-- Modal negociaciones -->
 <div id="negociacionesModal"
-     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
 
-    <div style="background:#fff;border-radius:0.75rem;box-shadow:0 20px 60px rgba(0,0,0,.25);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;position:relative;">
+    <div style="background:#fff;border-radius:1.25rem;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
 
-        <!-- Botón cerrar -->
-        <button id="closeModal"
-            style="position:absolute;top:0.6rem;right:0.75rem;background:none;border:none;color:#ef4444;font-size:1.5rem;font-weight:700;cursor:pointer;line-height:1;z-index:1;">&times;</button>
-
-        <!-- Header fijo -->
-        <div style="padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
-            <h4 style="font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 0 0;">💬 Negociaciones</h4>
+        <!-- Header con gradiente naranja -->
+        <div style="background:linear-gradient(135deg,#ea580c 0%,#f58634 60%,#fb923c 100%);padding:1.1rem 1.4rem;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:2.2rem;height:2.2rem;background:rgba(255,255,255,0.2);border-radius:0.65rem;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:1.1rem;height:1.1rem;color:#fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 style="font-size:0.95rem;font-weight:800;color:#fff;margin:0;letter-spacing:-0.01em;">🤝 Negociación de Intercambio</h4>
+                    <p style="font-size:0.7rem;color:rgba(255,255,255,0.85);margin:0.1rem 0 0;">Propón tu oferta al vendedor</p>
+                </div>
+            </div>
+            <button id="closeModal"
+                style="width:1.9rem;height:1.9rem;background:rgba(255,255,255,0.2);border:none;border-radius:50%;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.35)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.2)'">&times;</button>
         </div>
 
         <!-- Body scrollable -->
@@ -243,15 +342,16 @@
 
             <!-- 📨 Mensajes previos -->
             <div id="mensajesContainer"
-                style="height:260px;max-height:260px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem;background:#f9fafb;font-size:0.82rem;color:#374151;scrollbar-width:thin;">
+                style="height:220px;max-height:220px;overflow-y:auto;border:2px solid #fed7aa;border-radius:0.75rem;padding:0.6rem;background:#fff7ed;font-size:0.82rem;color:#374151;scrollbar-width:thin;">
                 <p style="text-align:center;color:#9ca3af;font-size:0.82rem;">Cargando mensajes...</p>
             </div>
 
             <!-- 🧩 Acción predefinida -->
             <div>
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">Acción a realizar</label>
+                <label style="display:block;font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">Acción a realizar</label>
                 <select id="AccionPredefinido"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.82rem;padding:0.45rem 0.65rem;background:#fff;color:#374151;outline:none;">
+                    style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;font-size:0.82rem;padding:0.5rem 0.75rem;background:#fff7ed;color:#374151;outline:none;transition:border-color .15s;"
+                    onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'">
                     <option value="">-- Seleccione una acción --</option>
                     @foreach ($accion as $msg1Accion)
                         <option value="{{ $msg1Accion->tipo }}" data-tipo-accion="{{ $msg1Accion->tipo }}">
@@ -261,11 +361,12 @@
                 </select>
             </div>
 
-            <!-- 🧩 Mensaje predefinido (solo mensajes de rol emisor + general) -->
+            <!-- 🧩 Mensaje predefinido -->
             <div>
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">Mensaje predefinido</label>
+                <label style="display:block;font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">Mensaje predefinido</label>
                 <select id="mensajePredefinido"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.82rem;padding:0.45rem 0.65rem;background:#fff;color:#374151;outline:none;">
+                    style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;font-size:0.82rem;padding:0.5rem 0.75rem;background:#fff7ed;color:#374151;outline:none;transition:border-color .15s;"
+                    onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'">
                     <option value="">-- Selecciona --</option>
                     @foreach ($mensajesPredefinidos->where('activo', true)->whereIn('rol', ['emisor','general']) as $msg)
                         <option value="{{ $msg->mensaje }}" data-tipo="{{ $msg->tipo }}" data-rol="{{ $msg->rol }}">
@@ -277,17 +378,18 @@
 
             <!-- ✏️ Mensaje -->
             <div>
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">Mensaje</label>
+                <label style="display:block;font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">Mensaje</label>
                 <textarea id="mensaje" rows="2" readonly
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.5rem;padding:0.45rem 0.65rem;font-size:0.82rem;resize:none;box-sizing:border-box;background:#f9fafb;"
+                    style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;padding:0.5rem 0.75rem;font-size:0.82rem;resize:none;box-sizing:border-box;background:#fff7ed;outline:none;"
                     placeholder="Selecciona un mensaje predefinido..."></textarea>
             </div>
 
             <!-- 📦 Seleccionar paquete -->
             <div>
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">Seleccionar paquete</label>
+                <label style="display:block;font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">Seleccionar paquete</label>
                 <select id="paquete"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.82rem;padding:0.45rem 0.65rem;background:#fff;color:#374151;outline:none;">
+                    style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;font-size:0.82rem;padding:0.5rem 0.75rem;background:#fff7ed;color:#374151;outline:none;transition:border-color .15s;"
+                    onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'">
                     <option value="">-- Selecciona un paquete existente --</option>
                     @foreach ($todoLosPaquetes as $pkg)
                         <option value="{{ $pkg->id_paquete }}" data-tipo="{{ $pkg->nombre_paquete }}">
@@ -296,36 +398,46 @@
                     @endforeach
                 </select>
                 <button id="btnListaPaquetes" onclick="listarPaquetes()"
-                    style="font-size:0.78rem;color:#2563eb;background:none;border:none;cursor:pointer;margin-top:0.35rem;padding:0;">
+                    style="font-size:0.75rem;color:#f58634;background:none;border:none;cursor:pointer;margin-top:0.35rem;padding:0;font-weight:600;">
                     📦 Ver mis paquetes
                 </button>
                 <div id="contenedorPaquetes"
-                    style="margin-top:0.4rem;display:flex;gap:0.5rem;overflow-x:auto;padding:0.4rem;border:1px solid #e5e7eb;border-radius:0.5rem;white-space:nowrap;min-height:2rem;">
+                    style="margin-top:0.4rem;display:flex;gap:0.5rem;overflow-x:auto;padding:0.4rem;border:1px solid #fed7aa;border-radius:0.65rem;white-space:nowrap;min-height:2rem;background:#fff7ed;">
                     <p style="color:#9ca3af;font-size:0.78rem;">Esperando paquetes...</p>
                 </div>
                 <button id="crearPaqueteBtn" type="button"
-                    style="font-size:0.78rem;color:#2563eb;background:none;border:none;cursor:pointer;margin-top:0.35rem;padding:0;">
+                    style="font-size:0.75rem;color:#f58634;background:none;border:none;cursor:pointer;margin-top:0.35rem;padding:0;font-weight:600;">
                     + Crear nuevo paquete
                 </button>
             </div>
 
             <!-- 💰 Monto de oferta -->
             <div>
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">Monto de la oferta (opcional)</label>
-                <input type="number" id="montoOferta"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.5rem;padding:0.45rem 0.65rem;font-size:0.82rem;box-sizing:border-box;"
-                    placeholder="Ej: 1500.00">
+                <label style="display:block;font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">Monto de la oferta <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <div style="position:relative;">
+                    <span style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:0.82rem;pointer-events:none;">RD$</span>
+                    <input type="number" id="montoOferta"
+                        style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;padding:0.5rem 0.75rem 0.5rem 2.75rem;font-size:0.82rem;box-sizing:border-box;background:#fff7ed;outline:none;transition:border-color .15s;"
+                        onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'"
+                        placeholder="0.00">
+                </div>
             </div>
 
             <!-- 🔘 Botones -->
-            <div style="display:flex;justify-content:flex-end;gap:0.6rem;padding-top:0.25rem;flex-shrink:0;">
+            <div style="display:flex;gap:0.65rem;padding-top:0.25rem;flex-shrink:0;">
                 <button id="cancelarBtn"
-                    style="padding:0.45rem 1rem;border:1px solid #d1d5db;border-radius:0.5rem;background:#fff;color:#374151;font-size:0.82rem;cursor:pointer;">
+                    style="flex:1;padding:0.65rem 1rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .15s;"
+                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
                     Cancelar
                 </button>
                 <button id="enviarNegociacionBtn"
-                    style="padding:0.45rem 1rem;border:none;border-radius:0.5rem;background:#2563eb;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                    Enviar
+                    style="flex:2;padding:0.65rem 1rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:0.4rem;"
+                    onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
+                    <svg style="width:1rem;height:1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Enviar propuesta
                 </button>
             </div>
 

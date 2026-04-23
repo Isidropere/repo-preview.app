@@ -23,9 +23,15 @@ class AdminConfigTarifaController extends Controller
         ]);
 
         // Singleton: siempre actualizar la primera fila, o crearla si no existe
-        $config = ConfigTarifaCategoria29::first() ?? new ConfigTarifaCategoria29();
-        $config->fill($data);
-        $config->save();
+        $config = ConfigTarifaCategoria29::first();
+        if ($config) {
+            $config->update($data);
+        } else {
+            $config = ConfigTarifaCategoria29::create($data);
+        }
+
+        // Invalidar caché para que vigente() devuelva el valor actualizado
+        cache()->forget('config_tarifa_cat29');
 
         return response()->json(['success' => true, 'data' => $config]);
     }

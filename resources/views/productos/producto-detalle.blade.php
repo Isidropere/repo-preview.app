@@ -207,12 +207,12 @@
                     @elseif($esVenta && $stock <= 0)
                     <button disabled style="flex:1;min-width:150px;background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.7rem 1.1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">Agotado</button>
                     @endif
-                    @if($esIntercambio)
-                    <button onclick="mostrarModalOferta()"
-                            style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#fff;color:#059669;border:1.5px solid #10b981;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"
-                            onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#fff'">
+                    @if($esIntercambio && $item->id_user != auth()->id())
+                    <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
+                            style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#fff7ed;color:#c2410c;border:1.5px solid #f58634;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"
+                            onmouseover="this.style.background='#fed7aa'" onmouseout="this.style.background='#fff7ed'">
                         <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                        Intercambio
+                        Intercambio sin Negociación
                     </button>
                     @endif
                 </div>
@@ -497,9 +497,47 @@
 <textarea id="mensajeOferta" style="display:none;"></textarea>
 @endauth
 
+{{-- Modal intercambio se carga via JS estático --}}
+
 @endsection
 
 @push('scripts')
+<div id="modalIntercambio" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
+<div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden" style="max-height:92vh;">
+<div style="background:linear-gradient(135deg,#ea580c 0%,#f58634 60%,#fb923c 100%);padding:1.25rem 1.5rem;flex-shrink:0;">
+<div style="display:flex;align-items:center;justify-content:space-between;">
+<div style="display:flex;align-items:center;gap:0.75rem;">
+<div style="width:2.5rem;height:2.5rem;background:rgba(255,255,255,0.25);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;">
+<svg style="width:1.25rem;height:1.25rem;color:#fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+</div>
+<div><h3 style="font-size:1rem;font-weight:800;color:#fff;margin:0;">Intercambio con Negociación</h3>
+<p id="modalIntercambioItemNombre" style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin:0.1rem 0 0;font-weight:500;"></p></div>
+</div>
+<button onclick="cerrarModalIntercambio()" style="width:2rem;height:2rem;background:rgba(255,255,255,0.25);border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;">✕</button>
+</div></div>
+<div style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;">
+<div id="modalIntercambioError" class="hidden" style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:0.75rem;padding:0.75rem 1rem;margin-bottom:1rem;color:#dc2626;font-size:0.82rem;font-weight:600;"></div>
+<div style="margin-bottom:1.25rem;">
+<p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;">Selecciona los productos que ofreces a cambio:</p>
+<div id="misProductosLista" style="overflow-y:auto;max-height:200px;min-height:60px;border:2px solid #fff7ed;border-radius:1rem;padding:0.5rem;background:#fff7ed;display:flex;flex-direction:column;gap:0.4rem;">
+<p style="text-align:center;color:#9ca3af;font-size:0.82rem;padding:1rem 0;">Cargando...</p>
+</div></div>
+<div><p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;">Mensaje de propuesta <span style="color:#ef4444;">*</span></p>
+<textarea id="modalIntercambioMensaje" rows="3" maxlength="500" style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;resize:none;outline:none;background:#fff7ed;color:#374151;box-sizing:border-box;"></textarea>
+<p style="font-size:0.72rem;color:#9ca3af;text-align:right;margin-top:0.25rem;"><span id="modalIntercambioCharCount">0</span>/500</p>
+</div></div>
+<div style="padding:1rem 1.5rem;border-top:1px solid #f0fdf4;display:flex;gap:0.75rem;flex-shrink:0;background:#fafafa;">
+<button type="button" onclick="cerrarModalIntercambio()" style="flex:1;border:2px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:0.875rem;padding:0.75rem;font-size:0.85rem;font-weight:700;cursor:pointer;">Cancelar</button>
+<button type="button" id="btnEnviarIntercambio" onclick="enviarPropuestaIntercambio()" style="flex:2;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);">
+<svg style="width:1.1rem;height:1.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+Enviar propuesta</button>
+</div></div></div>
+<script>
+window._urlLogin = "{{ route('login') }}";
+window._urlItemsUsuario = "{{ route('carrito.items_usuario') }}";
+window._urlNegStore = "{{ route('negociaciones.store') }}";
+</script>
+<script src="{{ asset('js/modal-intercambio.js') }}"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -811,7 +849,7 @@ window.agregarAlCarrito = async function(id_item) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message||'Error');
         showNotification('Producto agregado al carrito','success');
-        if (data.cart_count) updateCartCounter(data.cart_count);
+        if (data.cart_count !== undefined) window.updateCartBadge(data.cart_count);
         if (window.syncCartIndicators) window.syncCartIndicators();
     } catch(e) { showNotification(e.message,'error'); }
     finally {

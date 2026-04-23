@@ -35,7 +35,7 @@ class AdminComprasController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'tab'     => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio',
+            'tab'     => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio,intercambios_confirmados',
             'estatus' => 'nullable|string|max:50',
             'buscar'  => 'nullable|string|max:100',
         ]);

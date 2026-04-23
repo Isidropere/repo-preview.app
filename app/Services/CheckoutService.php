@@ -59,10 +59,16 @@ class CheckoutService
             return $this->error('No puedes comprar tus propios artículos.');
         }
 
-        // 3. Validar dirección predeterminada
-        $direccion = $this->obtenerDireccionPredeterminada($userId);
-        if (!$direccion) {
-            return $this->error('Debes registrar una dirección de envío antes de realizar un pago. Ve a tu perfil → Direcciones.');
+        // 3. Determinar si es carrito de servicios (no requiere envío)
+        $esServicio = $carrito->tipo === 'servicio';
+
+        // 4. Validar dirección predeterminada (solo para productos)
+        $direccion = null;
+        if (!$esServicio) {
+            $direccion = $this->obtenerDireccionPredeterminada($userId);
+            if (!$direccion) {
+                return $this->error('Debes registrar una dirección de envío antes de realizar un pago. Ve a tu perfil → Direcciones.');
+            }
         }
 
         // 4. Verificar stock (con precios actualizados)
@@ -192,7 +198,7 @@ class CheckoutService
         TarjetaPago $tarjeta,
         array $resultadoPago,
         float $montoTotal,
-        Direcciones $direccion,
+        ?Direcciones $direccion,
         int $userId,
     ): array {
         try {
@@ -217,7 +223,7 @@ class CheckoutService
                     'transaction_id'    => $resultadoPago['transaction_id'] ?? null,
                     'total'             => $montoTotal,
                     'cantidad_items'    => $itemsSeleccionados->count(),
-                    'id_direccion'      => $direccion->id_direccion,
+                    'id_direccion'      => $direccion?->id_direccion,
                 ]);
 
                 CompraTrazabilidad::create([
@@ -225,7 +231,7 @@ class CheckoutService
                     'estado_anterior' => null,
                     'estado_nuevo'    => 'aprobado',
                     'nota'            => 'Pago procesado correctamente. Autorización: ' . ($resultadoPago['approval_code'] ?? 'N/A') .
-                                        ' | Dirección ID: ' . $direccion->id_direccion,
+                                        ' | Dirección ID: ' . ($direccion?->id_direccion ?? 'N/A (servicio)'),
                     'id_admin'        => null,
                 ]);
 

@@ -31,7 +31,11 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+            \Illuminate\Support\Facades\Log::error('[Exception] ' . $e->getMessage(), [
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+                'url'   => request()->fullUrl(),
+            ]);
         });
     }
 
@@ -102,6 +106,15 @@ class Handler extends ExceptionHandler
         // 🔵 Para peticiones web: guardar error y mostrar vista personalizada
         if (!$request->wantsJson() && !config('app.debug')) {
             try {
+                // SIEMPRE loguear el error completo
+                \Illuminate\Support\Facades\Log::error('[Handler] ' . $exception->getMessage(), [
+                    'url'        => $request->fullUrl(),
+                    'user_id'    => auth()->id(),
+                    'file'       => $exception->getFile(),
+                    'line'       => $exception->getLine(),
+                    'trace'      => $exception->getTraceAsString(),
+                ]);
+
                 $errorRef = \Illuminate\Support\Str::uuid()->toString();
                 \DB::table('application_errors')->insert([
                     'error_reference' => $errorRef,

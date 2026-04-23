@@ -107,8 +107,13 @@
                     {{-- Descripción --}}
                     <div>
                         <label for="presentacion" class="block text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
-                        <textarea id="presentacion" name="presentacion" rows="2" required placeholder="Describe tu talento o servicio: experiencia, qué incluye, horarios disponibles, etc."
+                        <textarea id="presentacion" name="presentacion" rows="2" required maxlength="250" placeholder="Describe tu talento o servicio: experiencia, qué incluye, horarios disponibles, etc."
+                                  oninput="contarCaracteres(this,'contadorTalento')"
                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none">{{ old('presentacion', $item->presentacion) }}</textarea>
+                        <div class="flex justify-between items-center mt-0.5">
+                            <span id="msgTalento" class="text-xs text-red-500 hidden">Máximo 250 caracteres</span>
+                            <span id="contadorTalento" class="text-xs text-gray-400 ml-auto">{{ strlen(old('presentacion', $item->presentacion ?? '')) }}/250</span>
+                        </div>
                         @error('presentacion')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                     </div>
 
@@ -123,7 +128,7 @@
                 </div>
 
                 <div class="flex justify-end mt-4">
-                    <button type="button" onclick="goToStep(2)" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
+                    <button type="button" onclick="validarPaso1Talento()" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-hoverPrimary transition-colors font-medium">
                         Siguiente <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>
@@ -142,9 +147,8 @@
                 <div class="mb-6">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Imagen o video principal</label>
                     @error('imagen_principal')<span class="text-red-500 text-xs mb-2 block">{{ $message }}</span>@enderror
-                    <label for="imagen_principal"
-                        class="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-gray-50 border-gray-300 hover:border-primary/50 hover:bg-primary/5 overflow-hidden group transition-all">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none text-center preview-default {{ $imagenPrincipal ? 'hidden' : '' }}">
+                    <div id="imgPrincipalContenedor" class="relative w-full rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary/50 hover:bg-primary/5 transition-all" style="min-height:180px;">
+                        <div id="imgPrincipalPlaceholder" class="flex flex-col items-center justify-center py-10 text-center pointer-events-none {{ $imagenPrincipal ? 'hidden' : '' }}">
                             <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                                 <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
@@ -152,19 +156,21 @@
                             <p class="text-xs text-gray-400 mt-1">JPEG, PNG, WebP o MP4 (Máx. 10MB)</p>
                         </div>
                         @if($imagenPrincipal)
-                            <img id="imagen_principal_preview" src="{{ \App\Helpers\ImageHelper::urlMedia($imagenPrincipal->ruta, $imagenPrincipal->nombre) }}" class="absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
+                            <img id="imagen_principal_preview" src="{{ \App\Helpers\ImageHelper::urlMedia($imagenPrincipal->ruta, $imagenPrincipal->nombre) }}" class="w-full rounded-xl object-cover" style="max-height:320px;" alt="Vista previa"/>
                         @else
-                            <img id="imagen_principal_preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl" alt="Vista previa"/>
+                            <img id="imagen_principal_preview" class="hidden w-full rounded-xl object-cover" style="max-height:320px;" alt="Vista previa"/>
                         @endif
-                        <video id="video_principal_preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl" controls></video>
-                        <span id="imagen_principal_filename" class="file-name text-xs text-gray-700 absolute bottom-2 left-2 bg-white/90 px-2 py-0.5 rounded-full max-w-[90%] truncate hidden"></span>
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center preview-actions {{ $imagenPrincipal ? '' : 'hidden' }} transition-opacity">
-                            <button type="button" class="text-white bg-red-500 rounded-full p-2.5 hover:bg-red-600 transition-colors shadow-lg" data-action="remove">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <video id="video_principal_preview" class="hidden w-full rounded-xl" style="max-height:320px;" controls></video>
+                        <div id="imgPrincipalActions" class="{{ $imagenPrincipal ? '' : 'hidden' }} flex items-center justify-between px-3 py-2 bg-white/90 border-t border-gray-200">
+                            <span id="imagen_principal_filename" class="text-xs text-gray-600 truncate max-w-[70%]">{{ $imagenPrincipal ? $imagenPrincipal->nombre : '' }}</span>
+                            <button type="button" id="btnRemoveImgPrincipal" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Eliminar
                             </button>
                         </div>
-                        <input id="imagen_principal" hidden name="imagen_principal" type="file" class="imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4">
-                    </label>
+                        <label for="imagen_principal" class="absolute inset-0 cursor-pointer" id="labelImgPrincipal" {{ $imagenPrincipal ? 'style=pointer-events:none' : '' }}></label>
+                        <input id="imagen_principal" name="imagen_principal" type="file" class="hidden imagen-principal-input" accept="image/jpeg,image/png,image/webp,video/mp4">
+                    </div>
                 </div>
 
                 {{-- Imágenes adicionales --}}
@@ -176,6 +182,7 @@
                         @php $imagen = $imagenesSecundarias[$i] ?? null; @endphp
                         <label class="block h-24 border-2 border-dashed rounded-xl cursor-pointer bg-gray-50 border-gray-300 hover:border-primary/50 hover:bg-primary/5 overflow-hidden relative group transition-all">
                             @if($imagen)<input type="hidden" name="imagenes_existentes[]" value="{{ $imagen->id_imagen }}">@endif
+                            <span class="file-name text-xs text-gray-700 absolute bottom-1 left-1 bg-white/80 px-1 rounded max-w-[90%] truncate {{ $imagen ? '' : 'hidden' }}">{{ $imagen ? $imagen->nombre : '' }}</span>
                             <input type="file" name="imagenes[]" accept="image/jpeg,image/png,image/webp" class="hidden imagen-input" data-index="{{ $i }}">
                             <div class="flex flex-col items-center justify-center h-full pointer-events-none text-center preview-default p-2 {{ $imagen ? 'hidden' : '' }}">
                                 <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
@@ -227,6 +234,11 @@ function goToStep(step) {
 }
 @if($errors->any())
 document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('hidden'));
+const submitBtn = document.getElementById('submitBtn');
+if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Guardar cambios';
+}
 @endif
 
 function formatPrice(input) {
@@ -234,48 +246,109 @@ function formatPrice(input) {
     input.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+function contarCaracteres(textarea, contadorId) {
+    const max = 250;
+    const len = textarea.value.length;
+    const contador = document.getElementById(contadorId);
+    const msg = document.getElementById(contadorId.replace('contador', 'msg'));
+    if (contador) contador.textContent = len + '/' + max;
+    if (len >= max) {
+        if (contador) contador.classList.replace('text-gray-400', 'text-red-500');
+        if (msg) msg.classList.remove('hidden');
+    } else {
+        if (contador) contador.classList.replace('text-red-500', 'text-gray-400');
+        if (msg) msg.classList.add('hidden');
+    }
+}
+
+function validarPaso1Talento() {
+    const campos = [
+        { id: 'item', label: 'Nombre del talento' },
+        { id: 'valor', label: 'Precio' },
+        { id: 'presentacion', label: 'Descripción' },
+    ];
+    let valido = true;
+    campos.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (!el.value.trim()) {
+            valido = false;
+            el.classList.add('border-red-400');
+            let msg = el.parentElement.querySelector('.campo-error');
+            if (!msg) {
+                msg = document.createElement('span');
+                msg.className = 'campo-error text-red-500 text-xs mt-1 block';
+                el.parentElement.appendChild(msg);
+            }
+            msg.textContent = c.label + ' es obligatorio.';
+        } else {
+            el.classList.remove('border-red-400');
+            const msg = el.parentElement.querySelector('.campo-error');
+            if (msg) msg.remove();
+        }
+    });
+    if (valido) goToStep(2);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // ═══ Imagen principal ═══
     const inp = document.getElementById('imagen_principal');
-    const prevDef = document.querySelector('#step-2 .preview-default');
+    const placeholder = document.getElementById('imgPrincipalPlaceholder');
     const prevImg = document.getElementById('imagen_principal_preview');
     const prevVid = document.getElementById('video_principal_preview');
     const fname = document.getElementById('imagen_principal_filename');
-    const prevAct = document.querySelector('#step-2 .preview-actions');
+    const actions = document.getElementById('imgPrincipalActions');
+    const labelClick = document.getElementById('labelImgPrincipal');
+
+    function mostrarPreviewPrincipal(file) {
+        placeholder.classList.add('hidden');
+        labelClick.style.pointerEvents = 'none';
+        if (file.type.startsWith('image/')) {
+            prevVid.classList.add('hidden');
+            const r = new FileReader();
+            r.onload = e => { prevImg.src = e.target.result; prevImg.classList.remove('hidden'); };
+            r.readAsDataURL(file);
+        } else {
+            prevImg.classList.add('hidden');
+            prevVid.src = URL.createObjectURL(file);
+            prevVid.classList.remove('hidden');
+        }
+        fname.textContent = file.name;
+        actions.classList.remove('hidden');
+    }
+
+    function limpiarPreviewPrincipal() {
+        inp.value = '';
+        prevImg.src = ''; prevImg.classList.add('hidden');
+        prevVid.src = ''; prevVid.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        actions.classList.add('hidden');
+        labelClick.style.pointerEvents = '';
+    }
 
     inp.addEventListener('change', function(e) {
         const file = e.target.files[0]; if (!file) return;
         const valid = ['image/jpeg','image/png','image/webp','video/mp4'];
         if (!valid.includes(file.type)) { alert('Solo JPEG, PNG, WebP o MP4'); this.value=''; return; }
         if (file.size > 10*1024*1024) { alert('Máximo 10MB'); this.value=''; return; }
-        prevDef.classList.add('hidden'); prevImg.classList.add('hidden'); prevVid.classList.add('hidden');
-        if (file.type.startsWith('image/')) {
-            const r = new FileReader();
-            r.onload = e => { prevImg.src=e.target.result; prevImg.classList.remove('hidden'); fname.textContent=file.name; fname.classList.remove('hidden'); if(prevAct) prevAct.classList.remove('hidden'); };
-            r.readAsDataURL(file);
-        } else {
-            prevVid.src=URL.createObjectURL(file); prevVid.classList.remove('hidden'); fname.textContent=file.name; fname.classList.remove('hidden'); if(prevAct) prevAct.classList.remove('hidden');
-        }
+        mostrarPreviewPrincipal(file);
     });
 
-    if (prevAct) {
-        prevAct.querySelector('[data-action="remove"]').addEventListener('click', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            inp.value=''; prevImg.src=''; prevImg.classList.add('hidden'); prevVid.src=''; prevVid.classList.add('hidden');
-            prevDef.classList.remove('hidden'); fname.classList.add('hidden'); prevAct.classList.add('hidden');
-        });
-    }
+    document.getElementById('btnRemoveImgPrincipal').addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        limpiarPreviewPrincipal();
+    });
 
     // ═══ Imágenes adicionales ═══
     document.querySelectorAll('.imagen-input').forEach(input => {
         input.addEventListener('change', function(e) {
             const file = e.target.files[0]; const label = input.closest('label'); if (!label || !file) return;
-            const pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), pa = label.querySelector('.preview-actions');
+            const pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), fn = label.querySelector('.file-name'), pa = label.querySelector('.preview-actions');
             const ok = ['image/jpeg','image/png','image/webp'];
             if (!ok.includes(file.type)) { alert('Solo JPG, PNG o WebP'); this.value=''; return; }
             if (file.size > 2*1024*1024) { alert('Máximo 2MB'); this.value=''; return; }
             const r = new FileReader();
-            r.onload = e => { if(pd) pd.classList.add('hidden'); if(pi) { pi.src=e.target.result; pi.classList.remove('hidden'); } if(pa) pa.classList.remove('hidden'); };
+            r.onload = e => { if(pd) pd.classList.add('hidden'); if(pi) { pi.src=e.target.result; pi.classList.remove('hidden'); } if(fn) { fn.textContent=file.name; fn.classList.remove('hidden'); } if(pa) pa.classList.remove('hidden'); };
             r.readAsDataURL(file);
         });
     });
@@ -284,8 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function(e) {
             e.preventDefault(); e.stopPropagation();
             const label = this.closest('label'); if (!label) return;
-            const inp = label.querySelector('.imagen-input'), pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), pa = label.querySelector('.preview-actions');
-            if (inp) inp.value=''; if (pi) { pi.src=''; pi.classList.add('hidden'); } if (pd) pd.classList.remove('hidden'); if (pa) pa.classList.add('hidden');
+            const inp = label.querySelector('.imagen-input'), pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), fn = label.querySelector('.file-name'), pa = label.querySelector('.preview-actions');
+            if (inp) inp.value=''; if (pi) { pi.src=''; pi.classList.add('hidden'); } if (pd) pd.classList.remove('hidden'); if (fn) fn.classList.add('hidden'); if (pa) pa.classList.add('hidden');
         });
     });
 });

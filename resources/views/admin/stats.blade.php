@@ -5,10 +5,35 @@
 
   @include('components.btn-volver', ['backUrl' => route('admin.index')])
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
     <h1 style="font-size:1.6rem;font-weight:700;color:#1e293b;margin:0;">Estadisticas</h1>
     <span id="actualizado" style="font-size:.8rem;color:#64748b;"></span>
   </div>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <button onclick="mostrarSeccion('resumen')" class="tab-btn active" id="tab-resumen" style="padding:8px 18px;font-size:.85rem;font-weight:600;border:2px solid #f58634;border-radius:8px;background:#f58634;color:#fff;cursor:pointer;transition:all .15s;">📊 Resumen</button>
+    <button onclick="mostrarSeccion('actividad')" class="tab-btn" id="tab-actividad" style="padding:8px 18px;font-size:.85rem;font-weight:600;border:2px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer;transition:all .15s;">📈 Actividad</button>
+    <button onclick="mostrarSeccion('operacion')" class="tab-btn" id="tab-operacion" style="padding:8px 18px;font-size:.85rem;font-weight:600;border:2px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer;transition:all .15s;">🔧 Operación</button>
+    <button onclick="mostrarSeccion('config')" class="tab-btn" id="tab-config" style="padding:8px 18px;font-size:.85rem;font-weight:600;border:2px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer;transition:all .15s;">⚙️ Configuración</button>
+  </div>
+  <script>
+  function mostrarSeccion(sec) {
+    ['resumen','actividad','operacion','config'].forEach(function(s) {
+      var panel = document.getElementById('seccion-' + s);
+      var tab = document.getElementById('tab-' + s);
+      if (panel) panel.style.display = (s === sec) ? 'block' : 'none';
+      if (tab) {
+        tab.style.background = (s === sec) ? '#f58634' : '#fff';
+        tab.style.color = (s === sec) ? '#fff' : '#64748b';
+        tab.style.borderColor = (s === sec) ? '#f58634' : '#e2e8f0';
+      }
+    });
+  }
+  </script>
+
+  <!-- SECCIÓN: Resumen -->
+  <div id="seccion-resumen">
 
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
     <div>
@@ -131,6 +156,11 @@
     </div>
   </div>
 
+  </div><!-- /seccion-resumen -->
+
+  <!-- SECCIÓN: Actividad -->
+  <div id="seccion-actividad" style="display:none;">
+
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
     <h3 style="margin:0 0 14px;font-size:.95rem;font-weight:600;color:#1e293b;">Tasa de conversion</h3>
     <div id="bloque-conversion"></div>
@@ -171,6 +201,11 @@
     <h3 style="margin:0 0 14px;font-size:.95rem;font-weight:600;color:#1e293b;">Actividad por provincia</h3>
     <canvas id="chart-provincias" height="160"></canvas>
   </div>
+
+  </div><!-- /seccion-actividad -->
+
+  <!-- SECCIÓN: Operación -->
+  <div id="seccion-operacion" style="display:none;">
 
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
     <h3 style="margin:0 0 14px;font-size:.95rem;font-weight:600;color:#1e293b;">Articulos sin movimiento (+30 dias)</h3>
@@ -222,7 +257,11 @@
     <div id="bloque-delivery"></div>
   </div>
 
-</div>
+  </div><!-- /seccion-operacion -->
+
+  <!-- SECCIÓN: Configuración -->
+  <div id="seccion-config" style="display:none;">
+
 
 <div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
@@ -787,6 +826,11 @@ document.addEventListener('DOMContentLoaded', () => {
     </p>
     <button id="btnGuardarTarifa" onclick="guardarConfigTarifa()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar configuración</button>
   </div>
+
+  </div><!-- /seccion-config -->
+
+</div><!-- /contenedor principal -->
+
 @endsection
 
 @push('scripts')
@@ -894,20 +938,23 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
       body: JSON.stringify(body)
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
+    .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+    .then(function(res) {
       btn.disabled = false;
-      btn.textContent = 'Guardar configuracion';
-      if (d.success) {
+      btn.textContent = 'Guardar configuración';
+      if (res.data.success) {
         var msg = document.getElementById('cfgMsgOk');
         msg.style.display = '';
         setTimeout(function() { msg.style.display = 'none'; }, 3000);
-      } else { alert('Error al guardar configuracion'); }
+      } else {
+        var errMsg = res.data.message || (res.data.errors ? Object.values(res.data.errors).flat().join(', ') : 'Error al guardar');
+        alert('Error: ' + errMsg);
+      }
     })
-    .catch(function() {
+    .catch(function(e) {
       btn.disabled = false;
-      btn.textContent = 'Guardar configuracion';
-      alert('Error de conexion');
+      btn.textContent = 'Guardar configuración';
+      alert('Error de conexión: ' + e.message);
     });
   };
 
