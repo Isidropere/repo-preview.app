@@ -354,9 +354,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // Mejorar la interacción de los labels
     inputs.forEach(input => {
+        // Saltar file inputs y checkboxes — no tienen label flotante
+        if (input.type === 'file' || input.type === 'checkbox') return;
+
         // Ocultar label cuando el campo tiene valor
         input.addEventListener('input', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             if (this.value) {
                 label.classList.add('hidden');
             } else {
@@ -367,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mover label al hacer focus
         input.addEventListener('focus', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             label.classList.add('text-primary', '-translate-y-6', 'scale-75');
             label.classList.remove('text-gray-500');
         });
@@ -374,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Restaurar label al perder focus
         input.addEventListener('blur', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             if (!this.value) {
                 label.classList.remove('text-primary', '-translate-y-6', 'scale-75');
                 label.classList.add('text-gray-500');
