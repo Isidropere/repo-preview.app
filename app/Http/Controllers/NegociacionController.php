@@ -174,7 +174,9 @@ class NegociacionController extends Controller
             ->orderByDesc('id_negociacion')
             ->get();
 
-        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor'));
+        $tarjetas = \App\Models\TarjetaPago::where('id_user', $userId)->where('estatus', 1)->get();
+
+        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas'));
     }
 
     public function contarPendientes()

@@ -91,7 +91,6 @@
 
             <p style="font-size:0.85rem;font-weight:700;color:#374151;margin-bottom:0.75rem;">Selecciona una tarjeta</p>
             <div id="listaTarjetasPagoIntercambio" style="max-height:180px;overflow-y:auto;margin-bottom:1rem;">
-                @php $tarjetas = auth()->user()->tarjetasPago ?? collect(); @endphp
                 @forelse($tarjetas as $tarjeta)
                 <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;cursor:pointer;margin-bottom:0.5rem;transition:all .15s;"
                        onclick="this.querySelector('input').checked=true;document.querySelectorAll('#listaTarjetasPagoIntercambio label').forEach(l=>l.style.borderColor='#e5e7eb');this.style.borderColor='#f58634';">
