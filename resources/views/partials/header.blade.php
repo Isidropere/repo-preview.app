@@ -162,13 +162,12 @@
                             <a href="{{ route('negociaciones.mis') }}"
                                class="relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary"
                                title="Mis intercambios">
+                                <span id="badgeIntercambios" class="absolute top-0 right-0 bg-orange-500 text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
+                                    0
+                                </span>
                                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                 </svg>
-                                <span id="badgeIntercambios" class="absolute -top-0.5 -right-0.5 hidden">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full px-1.5 text-white text-xs bg-orange-500 leading-none font-bold" style="min-width:16px;text-align:center;"></span>
-                                </span>
                             </a>
                             <x-notificaciones />
                             @endauth

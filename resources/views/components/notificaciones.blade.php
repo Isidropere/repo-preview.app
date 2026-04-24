@@ -363,13 +363,7 @@ async function actualizarBadgeIntercambios() {
         var data = await resp.json();
         var badge = document.getElementById('badgeIntercambios');
         if (!badge) return;
-        var count = data.count || 0;
-        if (count > 0) {
-            badge.classList.remove('hidden');
-            badge.querySelector('span:last-child').textContent = count;
-        } else {
-            badge.classList.add('hidden');
-        }
+        badge.textContent = data.count || 0;
     } catch (e) { /* silenciar */ }
 }
 
