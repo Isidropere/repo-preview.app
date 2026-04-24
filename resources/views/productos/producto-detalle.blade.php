@@ -834,7 +834,7 @@ window.updateCartCounter = function(c) {
 };
 
 window.agregarAlCarrito = async function(id_item) {
-    const url   = window.urlAgregarCarrito||'/carrito_show/agregar';
+    const url   = window.urlAgregarCarrito||'{{ route("carrito.agregar") }}';
     const token = window.csrfToken||document.querySelector('meta[name="csrf-token"]')?.content;
     const btn   = document.querySelector(`#add-to-cart-${id_item}`);
     const qty   = parseInt(document.getElementById('quantity')?.value||1);

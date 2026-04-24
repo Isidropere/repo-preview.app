@@ -190,7 +190,7 @@ window._urlNegStore = "{{ route('negociaciones.store') }}";
         loadingIcon.style.display = "inline";
 
         try {
-            const response = await fetch("{{ url('/carrito_show/agregar') }}", {
+            const response = await fetch("{{ route('carrito.agregar') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}", "Accept": "application/json" },
                 body: JSON.stringify({ id_item: id_item, cantidad: 1 })
