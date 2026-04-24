@@ -231,11 +231,6 @@ class NegociacionController extends Controller
 
     public function procesarPago(\Illuminate\Http\Request $request, $id)
     {
-        $request->validate([
-            'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
-            'cvv'        => 'nullable|string|max:4',
-        ]);
-
         $neg    = Negociacion::findOrFail($id);
         $userId = auth()->id();
 
@@ -244,16 +239,35 @@ class NegociacionController extends Controller
             abort(403);
         }
 
-        // Verificar que ambos aprobaron
-        if (!$neg->emisor_confirmado || !$neg->receptor_confirmado) {
-            $msg = 'Ambas partes deben aprobar antes de pagar.';
+        if (!$neg->emisor_confirmado || !($neg->receptor_confirmado ?? false)) {
+            $msg = 'Ambas partes deben aprobar antes de continuar.';
             if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
             return back()->with('error', $msg);
         }
 
         $campo = $userId == $neg->usuario_emisor_id ? 'pago_emisor' : 'pago_receptor';
 
-        // Cobrar via CardNet si hay monto
+        // Sin pago: marcar como pagado sin cobrar (servicio o aprobación sin pago)
+        if ($request->input('sin_pago')) {
+            $neg->update([$campo => true]);
+
+            $negFresh = $neg->fresh();
+            if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
+                $neg->update(['estado' => 'completado']);
+                $this->negociacionService->notificarAdminsCompletado($neg);
+            }
+
+            $msg = 'Aprobado correctamente.';
+            if ($request->wantsJson()) return response()->json(['success' => true, 'message' => $msg]);
+            return redirect()->route('negociaciones.mis')->with('success', $msg);
+        }
+
+        // Con pago: validar tarjeta
+        $request->validate([
+            'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
+            'cvv'        => 'nullable|string|max:4',
+        ]);
+
         if ($neg->monto_oferta > 0) {
             $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $request->id_tarjeta)
                 ->where('id_user', $userId)->firstOrFail();
@@ -274,7 +288,8 @@ class NegociacionController extends Controller
 
         $neg->update([$campo => true]);
 
-        if ($neg->fresh()->pago_emisor && $neg->fresh()->pago_receptor) {
+        $negFresh = $neg->fresh();
+        if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
             $neg->update(['estado' => 'completado']);
             $this->negociacionService->notificarAdminsCompletado($neg);
         }
