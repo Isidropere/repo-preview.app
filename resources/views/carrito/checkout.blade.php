@@ -76,8 +76,9 @@
 
                     @forelse($tarjetas as $tarjeta)
                     <div class="tarjeta-wrapper relative" data-id="{{ $tarjeta->id_tarjeta }}">
-                        <label class="tarjeta-item flex items-center gap-4 p-4 pr-14 border-2 rounded-xl cursor-pointer transition-all
+                        <label class="tarjeta-item flex items-center p-4 pr-14 border-2 rounded-xl cursor-pointer transition-all
                             {{ $tarjeta->usar_esta_tarjeta ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50' }}"
+                            style="gap:1rem;"
                             data-id="{{ $tarjeta->id_tarjeta }}">
 
                             <input type="radio" name="id_tarjeta_select" value="{{ $tarjeta->id_tarjeta }}"
