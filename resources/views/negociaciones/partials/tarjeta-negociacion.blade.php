@@ -139,8 +139,9 @@
         @if($ambosConfirmados && !$miPago)
         <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
             <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
-            <p class="text-xs mb-3" style="color:#9a3412;">Realiza el pago para completar el intercambio.</p>
-            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }})"
+            <p class="text-xs mb-1" style="color:#9a3412;">Monto a pagar: <span style="font-weight:800;">RD$ {{ number_format($neg->monto_oferta ?? 0, 2) }}</span></p>
+            <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
+            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $neg->monto_oferta ?? 0 }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
                     class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
                 💳 Realizar pago de envío
             </button>

@@ -89,6 +89,16 @@
         <div style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;min-height:0;">
             <div id="pagoIntercambioError" style="display:none;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:0.75rem;padding:0.75rem 1rem;margin-bottom:1rem;color:#dc2626;font-size:0.82rem;font-weight:600;"></div>
 
+            {{-- Resumen del pago --}}
+            <div id="resumenPagoIntercambio" style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:0.75rem;padding:1rem;margin-bottom:1rem;">
+                <p style="font-size:0.72rem;color:#9a3412;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.4rem;font-weight:700;">Resumen del intercambio</p>
+                <p id="pagoIntercambioItem" style="font-size:0.85rem;font-weight:600;color:#1e293b;margin:0 0 0.5rem;"></p>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:0.82rem;color:#64748b;">Monto de envío</span>
+                    <span id="pagoIntercambioMonto" style="font-size:1.15rem;font-weight:800;color:#c2410c;"></span>
+                </div>
+            </div>
+
             <p style="font-size:0.85rem;font-weight:700;color:#374151;margin-bottom:0.75rem;">Selecciona una tarjeta</p>
             <div id="listaTarjetasPagoIntercambio" style="max-height:180px;overflow-y:auto;margin-bottom:1rem;">
                 @forelse($tarjetas as $tarjeta)
@@ -130,11 +140,13 @@
 <script>
 var _pagoNegId = null;
 
-function abrirModalPagoIntercambio(negId) {
+function abrirModalPagoIntercambio(negId, monto, itemNombre) {
     _pagoNegId = negId;
     var m = document.getElementById('modalPagoIntercambio');
     m.style.display = 'flex';
     document.getElementById('pagoIntercambioError').style.display = 'none';
+    document.getElementById('pagoIntercambioItem').textContent = itemNombre || 'Intercambio';
+    document.getElementById('pagoIntercambioMonto').textContent = 'RD$ ' + parseFloat(monto || 0).toLocaleString('es-DO', {minimumFractionDigits: 2});
 }
 
 function cerrarModalPagoIntercambio() {

@@ -16,6 +16,8 @@
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Artículo solicitado</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Productos ofrecidos</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Monto</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pagos</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acción</th>
             </tr>
@@ -66,6 +68,29 @@
                     <span class="text-blue-700 font-semibold">RD$ {{ number_format($neg->monto_oferta, 2) }}</span>
                     @else
                     <span class="text-gray-400">Solo intercambio</span>
+                    @endif
+                </td>
+
+                {{-- Pagos --}}
+                <td class="px-4 py-3 text-xs">
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <span style="color:{{ $neg->pago_emisor ? '#16a34a' : '#f59e0b' }};">
+                            {{ $neg->pago_emisor ? '✅' : '⏳' }} Emisor
+                        </span>
+                        <span style="color:{{ $neg->pago_receptor ? '#16a34a' : '#f59e0b' }};">
+                            {{ $neg->pago_receptor ? '✅' : '⏳' }} Receptor
+                        </span>
+                    </div>
+                </td>
+
+                {{-- Estado --}}
+                <td class="px-4 py-3 text-xs">
+                    @if($neg->estado === 'completado')
+                    <span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:9999px;font-weight:600;">✅ Completado</span>
+                    @elseif($neg->pago_emisor && $neg->pago_receptor)
+                    <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:9999px;font-weight:600;">💳 Pagado — Pendiente envío</span>
+                    @else
+                    <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:9999px;font-weight:600;">⏳ Esperando pagos</span>
                     @endif
                 </td>
 
