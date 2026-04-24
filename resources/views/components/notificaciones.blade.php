@@ -4,8 +4,8 @@
         class="hs-dropdown-toggle relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary">
 
         <span id="contadorNotificaciones"
-              class="absolute top-0 right-0 rounded-full text-xs font-bold px-1.5 leading-none"
-              style="font-size:10px;transition:transform .2s;background:#479bd5;color:#fff;">0</span>
+              class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none"
+              style="font-size:10px;transition:transform .2s;">0</span>
 
         <svg class="h-7 w-7 fill-primary hover:fill-hoverPrimary"
              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
