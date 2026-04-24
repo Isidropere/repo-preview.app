@@ -9,17 +9,51 @@
         default       => 'bg-gray-100 text-gray-500',
     };
 
-    $ambosConfirmados = $neg->emisor_confirmado && $neg->receptor_confirmado;
+    $ambosConfirmados = $neg->emisor_confirmado && ($neg->receptor_confirmado ?? false);
+
+    // Determinar tipo de intercambio
+    $itemSolicitado = $neg->item;
+    $itemsOfrecidos = $neg->items_ofrecidos ? \App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() : collect();
+
+    $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
+    $todosOfrecidosServicio = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
+
+    // servicio ↔ servicio = no requiere pago de envío
+    $esServicioServicio = $solicitadoEsServicio && $todosOfrecidosServicio;
+    // producto ↔ servicio = solo el del producto paga envío
+    $esProductoServicio = ($solicitadoEsServicio && !$todosOfrecidosServicio) || (!$solicitadoEsServicio && $todosOfrecidosServicio);
+
+    // ¿Requiere pago este usuario?
+    // Producto ↔ Producto: ambos pagan envío
+    // Producto ↔ Servicio: dueño del producto puede pagar (opcional), dueño del servicio NO paga nunca
+    // Servicio ↔ Servicio: nadie paga
+    if ($esServicioServicio) {
+        $requierePago = false;
+        $pagoOpcional = false;
+        $montoEnvio = 0;
+    } elseif ($esProductoServicio) {
+        // Determinar si YO soy el del producto o el del servicio
+        $miItemEsServicio = ($rol === 'emisor') ? $todosOfrecidosServicio : $solicitadoEsServicio;
+        $requierePago = false; // nunca obligatorio en producto↔servicio
+        $pagoOpcional = !$miItemEsServicio; // solo el del producto tiene opción de pagar
+        $montoEnvio = $neg->monto_oferta ?? 0;
+    } else {
+        // producto ↔ producto: ambos pagan
+        $requierePago = true;
+        $pagoOpcional = false;
+        $montoEnvio = $neg->monto_oferta ?? 0;
+    }
 
     $estadoLabel = match(true) {
-        $neg->estado === 'completado' => '✅ Completado',
-        $neg->estado === 'rechazado'  => 'Rechazado',
-        $neg->estado === 'cancelado'  => 'Cancelado',
-        $ambosConfirmados             => '💳 Listo para pago',
-        $neg->estado === 'aceptado'   => 'Aceptado — Pendiente aprobación',
-        $neg->estado === 'contraoferta' => 'Contraoferta',
-        $neg->estado === 'Inicial'    => 'Propuesta enviada',
-        default                       => ucfirst($neg->estado),
+        $neg->estado === 'completado'                              => '✅ Completado',
+        $neg->estado === 'rechazado'                               => 'Rechazado',
+        $neg->estado === 'cancelado'                               => 'Cancelado',
+        $ambosConfirmados && ($esServicioServicio || $esProductoServicio) => '✅ Confirmado',
+        $ambosConfirmados                                          => '💳 Listo para pago',
+        $neg->estado === 'aceptado'                                => 'Aceptado — Pendiente aprobación',
+        $neg->estado === 'contraoferta'                            => 'Contraoferta',
+        $neg->estado === 'Inicial'                                 => 'Propuesta enviada',
+        default                                                    => ucfirst($neg->estado),
     };
 
     $imgNombre = $neg->item?->imagenes?->where('estado','aprobado')->first()?->nombre;
@@ -27,10 +61,10 @@
         ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgNombre)
         : asset('imgs/defaults/producto_default.svg');
     $otroUsuario = $rol === 'receptor' ? $neg->usuario : $neg->usuarioReceptor;
-    $miPago = $rol === 'emisor' ? $neg->pago_emisor : $neg->pago_receptor;
-    $otroPago = $rol === 'emisor' ? $neg->pago_receptor : $neg->pago_emisor;
-    $miConfirmado = $rol === 'emisor' ? $neg->emisor_confirmado : $neg->receptor_confirmado;
-    $otroConfirmado = $rol === 'emisor' ? $neg->receptor_confirmado : $neg->emisor_confirmado;
+    $miPago = $rol === 'emisor' ? ($neg->pago_emisor ?? false) : ($neg->pago_receptor ?? false);
+    $otroPago = $rol === 'emisor' ? ($neg->pago_receptor ?? false) : ($neg->pago_emisor ?? false);
+    $miConfirmado = $rol === 'emisor' ? ($neg->emisor_confirmado ?? false) : ($neg->receptor_confirmado ?? false);
+    $otroConfirmado = $rol === 'emisor' ? ($neg->receptor_confirmado ?? false) : ($neg->emisor_confirmado ?? false);
 @endphp
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 {{ $ambosConfirmados ? 'border-emerald-300' : '' }}">
@@ -88,7 +122,7 @@
                 @endif
             </div>
             <div class="flex items-center gap-1.5 text-xs">
-                @if($neg->receptor_confirmado)
+                @if($neg->receptor_confirmado ?? false)
                     <span style="color:#16a34a;">✅</span> <span class="text-gray-700">Receptor aprobó</span>
                 @else
                     <span style="color:#d1d5db;">⏳</span> <span class="text-gray-400">Receptor pendiente</span>
@@ -135,15 +169,66 @@
         </div>
         @endif
 
-        {{-- PAGO: cuando ambos aprobaron --}}
-        @if($ambosConfirmados && !$miPago)
+        {{-- PAGO: cuando ambos aprobaron y requiere pago obligatorio (producto↔producto) --}}
+        @if($ambosConfirmados && $requierePago && !$miPago)
         <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
             <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
-            <p class="text-xs mb-3" style="color:#9a3412;">Realiza el pago para completar el intercambio.</p>
-            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }})"
+            <p class="text-xs mb-1" style="color:#9a3412;">Monto a pagar: <span style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+            <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
+            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
                     class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
                 💳 Realizar pago de envío
             </button>
+        </div>
+        @endif
+
+        {{-- PAGO OPCIONAL: producto↔servicio, yo soy el del producto --}}
+        @if($ambosConfirmados && $pagoOpcional && !$miPago)
+        <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
+            <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
+            <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío de tu producto o aprobar directamente sin pago.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                    💳 Pagar envío (opcional)
+                </button>
+                <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
+                    @csrf
+                    <input type="hidden" name="sin_pago" value="1">
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                        ✅ Aprobar sin pago
+                    </button>
+                </form>
+            </div>
+        </div>
+        @endif
+
+        {{-- SOY DEL SERVICIO en producto↔servicio: aprobar sin pago --}}
+        @if($ambosConfirmados && $esProductoServicio && !$pagoOpcional && !$requierePago && !$miPago)
+        <div class="w-full p-4 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <p class="text-sm font-semibold mb-2" style="color:#166534;">✅ Tu parte es un servicio — no requiere pago</p>
+            <p class="text-xs mb-3" style="color:#166534;">Confirma para completar tu parte del intercambio.</p>
+            <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
+                @csrf
+                <input type="hidden" name="sin_pago" value="1">
+                <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                    ✅ Confirmar sin pago
+                </button>
+            </form>
+        </div>
+        @endif
+
+        {{-- SERVICIO ↔ SERVICIO: no requiere pago, auto-completar --}}
+        @if($ambosConfirmados && $esServicioServicio && $neg->estado !== 'completado')
+        <div class="w-full p-4 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <p class="text-sm font-semibold mb-2" style="color:#166534;">🎉 Intercambio de servicios confirmado</p>
+            <p class="text-xs mb-3" style="color:#166534;">No requiere pago de envío. Coordinen directamente la prestación de servicios.</p>
+            <form action="{{ route('negociaciones.completar', $neg->id_negociacion) }}" method="POST">
+                @csrf
+                <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                    ✅ Marcar como completado
+                </button>
+            </form>
         </div>
         @endif
 
@@ -162,4 +247,37 @@
         </form>
         @endif
     </div>
+
+    {{-- PUNTUACIÓN: cuando el intercambio está completado --}}
+    @if($neg->estado === 'completado')
+    @php
+        $otroUserId = $rol === 'emisor' ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
+        $yaCalifique = \App\Models\Rating::where('id_usuario', auth()->id())
+            ->where('id_user_rated', $otroUserId)
+            ->exists();
+    @endphp
+    <div class="mt-3 pt-3 border-t border-gray-100">
+        @if($yaCalifique)
+        <p class="text-xs" style="color:#16a34a;">⭐ Ya calificaste este intercambio. ¡Gracias!</p>
+        @else
+        <div class="p-3 rounded-xl" style="background:#fefce8;border:1px solid #fde68a;">
+            <p class="text-xs font-semibold mb-2" style="color:#92400e;">⭐ ¿Cómo fue tu experiencia? (opcional)</p>
+            <form action="{{ route('rating.store') }}" method="POST" style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                @csrf
+                <input type="hidden" name="id_user_rated" value="{{ $otroUserId }}">
+                <div style="display:flex;gap:2px;" id="stars-{{ $neg->id_negociacion }}">
+                    @for($s = 1; $s <= 5; $s++)
+                    <label style="cursor:pointer;font-size:1.25rem;color:#d1d5db;transition:color .15s;"
+                           onmouseover="highlightStars({{ $neg->id_negociacion }}, {{ $s }})"
+                           onmouseout="resetStars({{ $neg->id_negociacion }})">
+                        <input type="radio" name="rating" value="{{ $s }}" style="display:none;" onclick="selectStar({{ $neg->id_negociacion }}, {{ $s }})">★
+                    </label>
+                    @endfor
+                </div>
+                <button type="submit" class="px-3 py-1.5 text-white text-xs font-bold rounded-lg" style="background:#f58634;">Enviar</button>
+            </form>
+        </div>
+        @endif
+    </div>
+    @endif
 </div>

@@ -319,6 +319,115 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/pago',   [NegociacionController::class, 'procesarPago'])->name('negociaciones.pago.procesar');
 });
 
+// Rating de intercambios
+Route::post('/rating', function (\Illuminate\Http\Request $request) {
+    $request->validate(['id_user_rated' => 'required|integer|exists:users,id', 'rating' => 'required|integer|min:1|max:5']);
+    \App\Models\Rating::create(['id_usuario' => auth()->id(), 'id_user_rated' => $request->id_user_rated, 'rating' => $request->rating]);
+    return back()->with('success', '¡Gracias por tu calificación!');
+})->middleware('auth')->name('rating.store');
+
+// DEBUG: ruta temporal para diagnosticar /negociaciones
+Route::get('/debug-negociaciones', function () {
+    $log = [];
+    $log[] = '=== DEBUG /negociaciones ===';
+    $log[] = 'Fecha: ' . now();
+
+    // Paso 1: Auth
+    $log[] = '';
+    $log[] = '--- PASO 1: Autenticación ---';
+    $log[] = 'Auth check: ' . (auth()->check() ? 'SI' : 'NO');
+    $log[] = 'User ID: ' . (auth()->id() ?? 'NULL');
+
+    if (!auth()->check()) {
+        $log[] = 'ERROR: No hay usuario autenticado';
+        file_put_contents(storage_path('logs/debug-negociaciones.txt'), implode("\n", $log));
+        return 'Debug guardado en storage/logs/debug-negociaciones.txt';
+    }
+
+    $userId = auth()->id();
+
+    // Paso 2: Query emisor
+    $log[] = '';
+    $log[] = '--- PASO 2: Query comoEmisor ---';
+    try {
+        $comoEmisor = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
+            ->whereNotIn('estado', ['cancelado'])
+            ->with(['item.imagenes', 'usuarioReceptor', 'item.inventarios'])
+            ->orderByDesc('id_negociacion')
+            ->get();
+        $log[] = 'OK - ' . $comoEmisor->count() . ' registros';
+        foreach ($comoEmisor as $n) {
+            $log[] = '  #' . $n->id_negociacion . ' estado=' . $n->estado . ' item_id=' . $n->receptor_item_id . ' item_exists=' . ($n->item ? 'SI' : 'NO');
+        }
+    } catch (\Throwable $e) {
+        $log[] = 'ERROR: ' . $e->getMessage();
+        $log[] = 'FILE: ' . $e->getFile() . ':' . $e->getLine();
+    }
+
+    // Paso 3: Query receptor
+    $log[] = '';
+    $log[] = '--- PASO 3: Query comoReceptor ---';
+    try {
+        $comoReceptor = \App\Models\Negociacion::where('usuario_receptor_id', $userId)
+            ->whereNotIn('estado', ['cancelado'])
+            ->with(['item.imagenes', 'usuario', 'item.inventarios'])
+            ->orderByDesc('id_negociacion')
+            ->get();
+        $log[] = 'OK - ' . $comoReceptor->count() . ' registros';
+        foreach ($comoReceptor as $n) {
+            $log[] = '  #' . $n->id_negociacion . ' estado=' . $n->estado . ' item_id=' . $n->receptor_item_id . ' item_exists=' . ($n->item ? 'SI' : 'NO');
+        }
+    } catch (\Throwable $e) {
+        $log[] = 'ERROR: ' . $e->getMessage();
+        $log[] = 'FILE: ' . $e->getFile() . ':' . $e->getLine();
+    }
+
+    // Paso 4: Tarjetas
+    $log[] = '';
+    $log[] = '--- PASO 4: Tarjetas ---';
+    try {
+        $tarjetas = \App\Models\TarjetaPago::where('id_user', $userId)->where('estatus', 1)->get();
+        $log[] = 'OK - ' . $tarjetas->count() . ' tarjetas';
+    } catch (\Throwable $e) {
+        $log[] = 'ERROR: ' . $e->getMessage();
+    }
+
+    // Paso 5: Columnas de negociaciones
+    $log[] = '';
+    $log[] = '--- PASO 5: Columnas tabla negociaciones ---';
+    try {
+        $cols = \Illuminate\Support\Facades\Schema::getColumnListing('negociaciones');
+        $log[] = implode(', ', $cols);
+        $log[] = 'receptor_confirmado existe: ' . (in_array('receptor_confirmado', $cols) ? 'SI' : 'NO');
+    } catch (\Throwable $e) {
+        $log[] = 'ERROR: ' . $e->getMessage();
+    }
+
+    // Paso 6: Render vista
+    $log[] = '';
+    $log[] = '--- PASO 6: Render vista ---';
+    try {
+        $html = view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas'))->render();
+        $log[] = 'OK - ' . strlen($html) . ' bytes renderizados';
+    } catch (\Throwable $e) {
+        $log[] = 'ERROR: ' . $e->getMessage();
+        $log[] = 'FILE: ' . basename($e->getFile()) . ':' . $e->getLine();
+        // Buscar causa raíz
+        $prev = $e->getPrevious();
+        while ($prev) {
+            $log[] = 'CAUSED BY: ' . $prev->getMessage();
+            $log[] = '  AT: ' . basename($prev->getFile()) . ':' . $prev->getLine();
+            $prev = $prev->getPrevious();
+        }
+    }
+
+    $log[] = '';
+    $log[] = '=== FIN DEBUG ===';
+
+    file_put_contents(storage_path('logs/debug-negociaciones.txt'), implode("\n", $log));
+    return '<pre>' . implode("\n", $log) . '</pre>';
+})->middleware('auth');
+
 
 ///*
 //|--------------------------------------------------------------------------

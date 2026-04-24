@@ -185,8 +185,14 @@ class AdminComprasService
     private function queryIntercambiosConfirmados(string $tab, ?string $buscar)
     {
         $query = Negociacion::with(['item.imagenes', 'item.categoria', 'usuario', 'usuarioReceptor'])
-            ->where('estado', 'aceptado')
-            ->where('emisor_confirmado', true)
+            ->where(function ($q) {
+                // Ambos aprobaron (pendiente de pago) o ya completado
+                $q->where(function ($q2) {
+                    $q2->where('estado', 'aceptado')
+                       ->where('emisor_confirmado', true)
+                       ->where('receptor_confirmado', true);
+                })->orWhere('estado', 'completado');
+            })
             ->orderByDesc('id_negociacion');
 
         if ($tab === 'intercambios_confirmados' && $buscar) {
