@@ -55,6 +55,7 @@ document.addEventListener('click', (e) => {
 // CARGAR NOTIFICACIONES
 // ─────────────────────────────────────────────────────────────
 async function cargarNotificaciones() {
+    if (!document.getElementById('listaNotificaciones')) return;
     try {
         const resp = await fetch("{{ route('notificaciones.listar') }}");
         const data = await resp.json();
@@ -356,11 +357,12 @@ function cerrarNegociacionesModal() {
 // BADGE INTERCAMBIOS PENDIENTES
 // ─────────────────────────────────────────────────────────────
 async function actualizarBadgeIntercambios() {
+    var badge = document.getElementById('badgeIntercambios');
+    if (!badge) return;
     try {
         var resp = await fetch('/negociaciones/pendientes', { headers: { 'Accept': 'application/json' } });
+        if (!resp.ok) return;
         var data = await resp.json();
-        var badge = document.getElementById('badgeIntercambios');
-        if (!badge) return;
         badge.textContent = data.count || 0;
     } catch (e) { /* silenciar */ }
 }
