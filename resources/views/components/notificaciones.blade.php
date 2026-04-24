@@ -355,13 +355,38 @@ function cerrarNegociacionesModal() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// BADGE INTERCAMBIOS PENDIENTES
+// ─────────────────────────────────────────────────────────────
+async function actualizarBadgeIntercambios() {
+    try {
+        var resp = await fetch('/negociaciones/pendientes', { headers: { 'Accept': 'application/json' } });
+        var data = await resp.json();
+        var badge = document.getElementById('badgeIntercambios');
+        if (!badge) return;
+        var count = data.count || 0;
+        if (count > 0) {
+            badge.classList.remove('hidden');
+            badge.querySelector('span:last-child').textContent = count;
+        } else {
+            badge.classList.add('hidden');
+        }
+    } catch (e) { /* silenciar */ }
+}
+
+// ─────────────────────────────────────────────────────────────
 // INICIALIZACIÓN
 // ─────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', cargarNotificaciones);
+document.addEventListener('DOMContentLoaded', function() {
+    cargarNotificaciones();
+    actualizarBadgeIntercambios();
+});
 
 if (!window._notifIntervalSet) {
     window._notifIntervalSet = true;
-    setInterval(cargarNotificaciones, 60000);
+    setInterval(function() {
+        cargarNotificaciones();
+        actualizarBadgeIntercambios();
+    }, 60000);
 }
 </script>
 @endpush

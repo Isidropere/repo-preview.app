@@ -151,6 +151,16 @@ class NegociacionController extends Controller
         return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor'));
     }
 
+    public function contarPendientes()
+    {
+        $userId = auth()->id();
+        $count = \App\Models\Negociacion::where('usuario_receptor_id', $userId)
+            ->whereIn('estado', ['Inicial', 'contraoferta'])
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
     public function storeContraoferta(Request $request, $id)
     {
         $validated = $request->validate([

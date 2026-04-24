@@ -114,6 +114,7 @@ async function enviarPropuestaIntercambio() {
             toast.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-semibold z-[9999] flex items-center gap-2';
             toast.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Propuesta enviada correctamente';
             document.body.appendChild(toast);
+            if (typeof actualizarBadgeIntercambios === 'function') actualizarBadgeIntercambios();
             setTimeout(function() {
                 toast.remove();
             }, 3500);
