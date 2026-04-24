@@ -101,9 +101,9 @@
 
                             @php $brand = strtolower($tarjeta->tipo_tarjeta ?? '') @endphp
                             @if($brand && isset($logos[$brand]))
-                                <img src="{{ $logos[$brand] }}" alt="{{ $brand }}" class="h-7 flex-shrink-0">
+                                <img src="{{ $logos[$brand] }}" alt="{{ $brand }}" class="h-7 flex-shrink-0" style="margin-left:8px;">
                             @else
-                                <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg flex-shrink-0">
+                                <span class="text-xs text-gray-400 bg-gray-100 rounded-lg flex-shrink-0" style="padding:4px 8px;margin-left:8px;white-space:nowrap;">
                                     {{ strtoupper($tarjeta->tipo_tarjeta ?? 'CARD') }}
                                 </span>
                             @endif
