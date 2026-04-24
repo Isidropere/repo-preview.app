@@ -9,7 +9,7 @@
         default       => 'bg-gray-100 text-gray-500',
     };
 
-    $ambosConfirmados = $neg->emisor_confirmado && $neg->receptor_confirmado;
+    $ambosConfirmados = $neg->emisor_confirmado && ($neg->receptor_confirmado ?? false);
 
     // Determinar tipo de intercambio
     $itemSolicitado = $neg->item;
@@ -58,10 +58,10 @@
         ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgNombre)
         : asset('imgs/defaults/producto_default.svg');
     $otroUsuario = $rol === 'receptor' ? $neg->usuario : $neg->usuarioReceptor;
-    $miPago = $rol === 'emisor' ? $neg->pago_emisor : $neg->pago_receptor;
-    $otroPago = $rol === 'emisor' ? $neg->pago_receptor : $neg->pago_emisor;
-    $miConfirmado = $rol === 'emisor' ? $neg->emisor_confirmado : $neg->receptor_confirmado;
-    $otroConfirmado = $rol === 'emisor' ? $neg->receptor_confirmado : $neg->emisor_confirmado;
+    $miPago = $rol === 'emisor' ? ($neg->pago_emisor ?? false) : ($neg->pago_receptor ?? false);
+    $otroPago = $rol === 'emisor' ? ($neg->pago_receptor ?? false) : ($neg->pago_emisor ?? false);
+    $miConfirmado = $rol === 'emisor' ? ($neg->emisor_confirmado ?? false) : ($neg->receptor_confirmado ?? false);
+    $otroConfirmado = $rol === 'emisor' ? ($neg->receptor_confirmado ?? false) : ($neg->emisor_confirmado ?? false);
 @endphp
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 {{ $ambosConfirmados ? 'border-emerald-300' : '' }}">
@@ -119,7 +119,7 @@
                 @endif
             </div>
             <div class="flex items-center gap-1.5 text-xs">
-                @if($neg->receptor_confirmado)
+                @if($neg->receptor_confirmado ?? false)
                     <span style="color:#16a34a;">✅</span> <span class="text-gray-700">Receptor aprobó</span>
                 @else
                     <span style="color:#d1d5db;">⏳</span> <span class="text-gray-400">Receptor pendiente</span>
