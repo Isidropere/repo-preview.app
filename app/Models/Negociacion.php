@@ -16,7 +16,7 @@ class Negociacion extends Model
     protected $fillable = [
         'receptor_item_id', 'emisor_paquete_id', 'usuario_emisor_id', 'usuario_receptor_id',
         'mensaje_inicial', 'monto_oferta', 'monto_contra_oferta', 'estado', 'fecha_creacion',
-        'emisor_confirmado', 'items_ofrecidos', 'pago_emisor', 'pago_receptor',
+        'emisor_confirmado', 'receptor_confirmado', 'items_ofrecidos', 'pago_emisor', 'pago_receptor',
     ];
 
     protected $casts = [
@@ -24,6 +24,7 @@ class Negociacion extends Model
         'monto_contra_oferta' => 'decimal:2',
         'fecha_creacion'      => 'datetime',
         'emisor_confirmado'   => 'boolean',
+        'receptor_confirmado' => 'boolean',
         'items_ofrecidos'     => 'array',
         'pago_emisor'         => 'boolean',
         'pago_receptor'       => 'boolean',

@@ -109,6 +109,32 @@ class NegociacionController extends Controller
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
+    public function confirmarReceptor($id)
+    {
+        $neg = Negociacion::findOrFail($id);
+        $userId = auth()->id();
+
+        if ($userId != $neg->usuario_receptor_id) {
+            $msg = ['success' => false, 'message' => 'No tienes permiso.'];
+            return request()->wantsJson() ? response()->json($msg, 403) : back()->with('error', $msg['message']);
+        }
+
+        if ($neg->estado !== 'aceptado') {
+            $msg = ['success' => false, 'message' => 'La negociación no está en estado aceptado.'];
+            return request()->wantsJson() ? response()->json($msg, 422) : back()->with('error', $msg['message']);
+        }
+
+        $neg->update(['receptor_confirmado' => true]);
+
+        // Si ambos confirmaron, notificar
+        if ($neg->emisor_confirmado && $neg->receptor_confirmado) {
+            $this->negociacionService->notificarAdminsCompletado($neg);
+        }
+
+        $msg = ['success' => true, 'message' => 'Has aprobado el intercambio.'];
+        return request()->wantsJson() ? response()->json($msg) : back()->with('success', $msg['message']);
+    }
+
     public function index($item)
     {
         try {
@@ -148,7 +174,19 @@ class NegociacionController extends Controller
             ->orderByDesc('id_negociacion')
             ->get();
 
-        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor'));
+        $tarjetas = \App\Models\TarjetaPago::where('id_user', $userId)->where('estatus', 1)->get();
+
+        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas'));
+    }
+
+    public function contarPendientes()
+    {
+        $userId = auth()->id();
+        $count = \App\Models\Negociacion::where('usuario_receptor_id', $userId)
+            ->whereIn('estado', ['Inicial', 'contraoferta'])
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 
     public function storeContraoferta(Request $request, $id)
@@ -202,10 +240,17 @@ class NegociacionController extends Controller
         $userId = auth()->id();
 
         if ($userId != $neg->usuario_emisor_id && $userId != $neg->usuario_receptor_id) {
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
             abort(403);
         }
 
-        // Registrar pago del usuario actual
+        // Verificar que ambos aprobaron
+        if (!$neg->emisor_confirmado || !$neg->receptor_confirmado) {
+            $msg = 'Ambas partes deben aprobar antes de pagar.';
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
+            return back()->with('error', $msg);
+        }
+
         $campo = $userId == $neg->usuario_emisor_id ? 'pago_emisor' : 'pago_receptor';
 
         // Cobrar via CardNet si hay monto
@@ -221,20 +266,21 @@ class NegociacionController extends Controller
             );
 
             if (!$resultado['success']) {
-                return back()->with('error', 'Pago rechazado: ' . $resultado['error']);
+                $msg = 'Pago rechazado: ' . $resultado['error'];
+                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
+                return back()->with('error', $msg);
             }
         }
 
-        // Marcar pago del usuario
         $neg->update([$campo => true]);
 
-        // Si ambos pagaron → completar y notificar admins
-        if ($neg->pago_emisor && $neg->pago_receptor) {
+        if ($neg->fresh()->pago_emisor && $neg->fresh()->pago_receptor) {
             $neg->update(['estado' => 'completado']);
             $this->negociacionService->notificarAdminsCompletado($neg);
         }
 
-        return redirect()->route('negociaciones.mis')
-            ->with('success', 'Pago registrado correctamente.');
+        $msg = 'Pago registrado correctamente.';
+        if ($request->wantsJson()) return response()->json(['success' => true, 'message' => $msg]);
+        return redirect()->route('negociaciones.mis')->with('success', $msg);
     }
 }

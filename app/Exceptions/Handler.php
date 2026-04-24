@@ -103,49 +103,47 @@ class Handler extends ExceptionHandler
             return response()->json($response, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        // 🔵 Para peticiones web: guardar error y mostrar vista personalizada
-        if (!$request->wantsJson() && !config('app.debug')) {
-            try {
-                // SIEMPRE loguear el error completo
-                \Illuminate\Support\Facades\Log::error('[Handler] ' . $exception->getMessage(), [
-                    'url'        => $request->fullUrl(),
-                    'user_id'    => auth()->id(),
-                    'file'       => $exception->getFile(),
-                    'line'       => $exception->getLine(),
-                    'trace'      => $exception->getTraceAsString(),
-                ]);
+        // 🔵 Para peticiones web: SIEMPRE guardar error en BD (excepto 404, validación, CSRF)
+        if (!$request->wantsJson()) {
+            $errorRef = null;
+            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
+            $skipDb = $exception instanceof ValidationException
+                   || $exception instanceof TokenMismatchException
+                   || $exception instanceof ModelNotFoundException
+                   || $statusCode === 404;
 
-                $errorRef = \Illuminate\Support\Str::uuid()->toString();
-                \DB::table('application_errors')->insert([
-                    'error_reference' => $errorRef,
-                    'message'         => $exception->getMessage(),
-                    'stack_trace'     => $exception->getTraceAsString(),
-                    'url'             => $request->fullUrl(),
-                    'method'          => $request->method(),
-                    'user_id'         => auth()->id(),
-                    'ip_address'      => $request->ip(),
-                    'user_agent'      => $request->userAgent(),
-                    'input_data'      => json_encode($request->except(['password', 'password_confirmation'])),
-                    'created_at'      => now(),
-                ]);
-
-                $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
-
-                return response()->view('errors.custom', [
-                    'error_reference' => $errorRef,
-                    'status_code'     => $statusCode,
-                    'message'         => $statusCode === 404 ? 'Página no encontrada' : 'Algo salió mal',
-                ], $statusCode);
-            } catch (\Throwable $e) {
-                // Si falla guardar el error, mostrar vista con referencia N/A
-                \Illuminate\Support\Facades\Log::error('Error handler failed: ' . $e->getMessage());
-                $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
-                return response()->view('errors.custom', [
-                    'error_reference' => null,
-                    'status_code'     => $statusCode,
-                    'message'         => 'Algo salió mal',
-                ], $statusCode);
+            if (!$skipDb) {
+                try {
+                    $errorRef = \Illuminate\Support\Str::uuid()->toString();
+                    \DB::table('application_errors')->insert([
+                        'error_reference' => $errorRef,
+                        'message'         => $exception->getMessage(),
+                        'stack_trace'     => $exception->getTraceAsString(),
+                        'url'             => $request->fullUrl(),
+                        'method'          => $request->method(),
+                        'user_id'         => auth()->id(),
+                        'ip_address'      => $request->ip(),
+                        'user_agent'      => $request->userAgent(),
+                        'input_data'      => json_encode($request->except(['password', 'password_confirmation'])),
+                        'created_at'      => now(),
+                    ]);
+                } catch (\Throwable $dbErr) {
+                    \Illuminate\Support\Facades\Log::error('No se pudo guardar error en BD: ' . $dbErr->getMessage());
+                }
             }
+
+            // En modo debug, dejar que Laravel muestre su página detallada
+            if (config('app.debug')) {
+                return parent::render($request, $exception);
+            }
+
+            // En producción, mostrar vista personalizada
+            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
+            return response()->view('errors.custom', [
+                'error_reference' => $errorRef,
+                'status_code'     => $statusCode,
+                'message'         => $statusCode === 404 ? 'Página no encontrada' : 'Algo salió mal',
+            ], $statusCode);
         }
 
         return parent::render($request, $exception);

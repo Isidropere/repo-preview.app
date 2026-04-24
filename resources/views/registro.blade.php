@@ -150,14 +150,22 @@
                     Foto de perfil <span class="text-xs text-gray-400 font-normal">(opcional)</span>
                 </h2>
                 <div>
-                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div class="flex flex-col items-center justify-center pt-2 pb-2">
+                    <div id="fotoPerfilContenedor" class="relative w-full rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer" style="min-height:120px;" onclick="document.getElementById('profile_photo').click()">
+                        <div id="fotoPerfilPlaceholder" class="flex flex-col items-center justify-center py-6 text-center pointer-events-none">
                             <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                             <p class="text-xs text-gray-500">Haz clic para subir tu foto</p>
                             <p class="text-xs text-gray-400">JPG, PNG o WEBP (máx. 2MB)</p>
                         </div>
-                        <input type="file" name="profile_photo" accept="image/*" class="hidden">
-                    </label>
+                        <img id="fotoPerfilPreview" class="hidden w-full rounded-xl object-cover" style="max-height:220px;" alt="Vista previa"/>
+                        <div id="fotoPerfilActions" class="hidden flex items-center justify-between px-3 py-2 bg-white/90 border-t border-gray-200">
+                            <span id="fotoPerfilFilename" class="text-xs text-gray-600 truncate max-w-[70%]"></span>
+                            <button type="button" id="btnRemoveFotoPerfil" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="profile_photo" name="profile_photo" accept="image/jpeg,image/png,image/webp" class="hidden">
                 </div>
             </div>
 
@@ -211,5 +219,56 @@ function togglePwd(id) {
         open.classList.add('hidden');
     }
 }
+
+// Foto de perfil preview
+(function() {
+    var inp = document.getElementById('profile_photo');
+    var placeholder = document.getElementById('fotoPerfilPlaceholder');
+    var preview = document.getElementById('fotoPerfilPreview');
+    var actions = document.getElementById('fotoPerfilActions');
+    var fname = document.getElementById('fotoPerfilFilename');
+    var contenedor = document.getElementById('fotoPerfilContenedor');
+
+    if (!inp) return;
+
+    inp.addEventListener('change', function() {
+        var file = this.files[0];
+        if (!file) return;
+        var valid = ['image/jpeg','image/png','image/webp'];
+        if (!valid.includes(file.type)) {
+            alert('Solo JPG, PNG o WEBP.');
+            this.value = '';
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert('La imagen no debe exceder 2MB.');
+            this.value = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            placeholder.classList.add('hidden');
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            fname.textContent = file.name;
+            actions.classList.remove('hidden');
+            contenedor.style.cursor = 'default';
+            contenedor.onclick = null;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('btnRemoveFotoPerfil').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        inp.value = '';
+        preview.src = '';
+        preview.classList.add('hidden');
+        actions.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        contenedor.style.cursor = 'pointer';
+        contenedor.onclick = function() { inp.click(); };
+    });
+})();
 </script>
 @endpush

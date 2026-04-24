@@ -298,8 +298,9 @@ Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function
 });
 
 Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
-    Route::get('/',        [NegociacionController::class, 'misIntercambios'])->name('negociaciones.mis');
-    Route::get('/{item}',  [NegociacionController::class, 'index'])->name('negociaciones.index');
+    Route::get('/',           [NegociacionController::class, 'misIntercambios'])->name('negociaciones.mis');
+    Route::get('/pendientes', [NegociacionController::class, 'contarPendientes'])->name('negociaciones.pendientes');
+    Route::get('/{item}',     [NegociacionController::class, 'index'])->name('negociaciones.index');
     Route::post('/{id}/aceptar', [NegociacionController::class, 'aceptar'])->name('negociaciones.aceptar');
     Route::post('/{id}/rechazar', [NegociacionController::class, 'rechazar'])->name('negociaciones.rechazar');
     Route::get('/{id}/contraoferta', [NegociacionController::class, 'contraoferta'])->name('negociaciones.contraoferta');
@@ -307,6 +308,7 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/cancelar', [NegociacionController::class, 'cancelar'])->name('negociaciones.cancelar');
     Route::post('/{id}/completar', [NegociacionController::class, 'completar'])->name('negociaciones.completar');
     Route::post('/{id}/confirmar-emisor', [NegociacionController::class, 'confirmarEmisor'])->name('negociaciones.confirmar_emisor');
+    Route::post('/{id}/confirmar-receptor', [NegociacionController::class, 'confirmarReceptor'])->name('negociaciones.confirmar_receptor');
 
     Route::post('/enviar', [App\Http\Controllers\NegociacionController::class, 'store'])
         ->middleware('throttle.sensitive:10,1')

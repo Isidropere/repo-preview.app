@@ -1,46 +1,76 @@
 <div id="negociacionesNotificacionesModal"
-     class="fixed inset-0 bg-black/50 z-[9999] hidden flex items-center justify-center">
+     class="hidden"
+     style="position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
 
-    <div class="bg-white w-full max-w-lg rounded-xl shadow-xl relative" style="max-height:90vh;display:flex;flex-direction:column;">
+    <div style="background:#fff;border-radius:1.5rem;width:100%;max-width:32rem;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 2rem);margin:auto;">
 
-        <!-- Header fijo -->
-        <div style="padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;background:#f8fafc;flex-shrink:0;">
-            <!-- Título + cerrar -->
+        {{-- Header con gradiente naranja --}}
+        <div style="background:linear-gradient(135deg,#f58634 0%,#f58634 50%,#fb923c 100%);padding:1.25rem 1.5rem;flex-shrink:0;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <div style="width:1.75rem;height:1.75rem;background:#d1fae5;border-radius:0.45rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg style="width:0.9rem;height:0.9rem;color:#059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <div style="width:2.5rem;height:2.5rem;background:rgba(255,255,255,0.25);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+                        <svg style="width:1.25rem;height:1.25rem;color:#fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
                     </div>
-                    <h2 style="font-size:0.9rem;font-weight:700;color:#0f172a;margin:0;">Negociación</h2>
+                    <div>
+                        <h3 style="font-size:1rem;font-weight:800;color:#fff;margin:0;">🤝 Negociación</h3>
+                        <p style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin:0.1rem 0 0;font-weight:500;">Intercambio con negociación</p>
+                    </div>
                 </div>
                 <button onclick="cerrarNegociacionesModal()"
-                        style="background:#f1f5f9;border:none;color:#64748b;cursor:pointer;font-size:1rem;width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;">✕</button>
+                        style="width:2rem;height:2rem;background:rgba(255,255,255,0.25);border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:background .15s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.35)'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.25)'">✕</button>
             </div>
-            <!-- Tarjeta del item negociado (se rellena por JS) -->
-            <div id="negModalItemCard" style="display:none;align-items:center;gap:0.75rem;background:#fff;border:1px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.75rem;">
-                <img id="negModalItemImg" src="" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:0.5rem;flex-shrink:0;border:1px solid #f1f5f9;">
+
+            {{-- Tarjeta del item negociado --}}
+            <div id="negModalItemCard" style="display:none;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:0.75rem;padding:0.6rem 0.75rem;backdrop-filter:blur(4px);">
+                <img id="negModalItemImg" src="" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:0.5rem;flex-shrink:0;border:1px solid rgba(255,255,255,0.3);">
                 <div style="min-width:0;flex:1;">
-                    <p id="negModalItemNombre" style="font-size:0.8rem;font-weight:700;color:#0f172a;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
+                    <p id="negModalItemNombre" style="font-size:0.8rem;font-weight:700;color:#fff;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.2rem;flex-wrap:wrap;">
-                        <span id="negModalItemPrecio" style="font-size:0.78rem;font-weight:800;color:#2563eb;display:none;"></span>
-                        <span id="negModalItemBadge" style="font-size:0.68rem;font-weight:600;color:#059669;background:#d1fae5;padding:0.1rem 0.45rem;border-radius:9999px;display:none;">Intercambio</span>
-                        <span id="negModalItemSku" style="font-size:0.68rem;color:#94a3b8;"></span>
+                        <span id="negModalItemPrecio" style="font-size:0.78rem;font-weight:800;color:#fff;display:none;"></span>
+                        <span id="negModalItemBadge" style="font-size:0.68rem;font-weight:600;color:#fff;background:rgba(255,255,255,0.25);padding:0.1rem 0.45rem;border-radius:9999px;display:none;">Intercambio</span>
+                        <span id="negModalItemSku" style="font-size:0.68rem;color:rgba(255,255,255,0.7);"></span>
                     </div>
                 </div>
             </div>
-            <!-- Placeholder mientras carga -->
-            <div id="negModalItemLoading" style="display:flex;align-items:center;gap:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.75rem;">
-                <div style="width:52px;height:52px;background:#e2e8f0;border-radius:0.5rem;flex-shrink:0;animation:pulse 1.5s infinite;"></div>
+
+            {{-- Placeholder mientras carga --}}
+            <div id="negModalItemLoading" style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:0.75rem;padding:0.6rem 0.75rem;">
+                <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:0.5rem;flex-shrink:0;animation:pulse 1.5s infinite;"></div>
                 <div style="flex:1;">
-                    <div style="height:12px;background:#e2e8f0;border-radius:4px;width:60%;margin-bottom:6px;animation:pulse 1.5s infinite;"></div>
-                    <div style="height:10px;background:#e2e8f0;border-radius:4px;width:40%;animation:pulse 1.5s infinite;"></div>
+                    <div style="height:12px;background:rgba(255,255,255,0.2);border-radius:4px;width:60%;margin-bottom:6px;animation:pulse 1.5s infinite;"></div>
+                    <div style="height:10px;background:rgba(255,255,255,0.2);border-radius:4px;width:40%;animation:pulse 1.5s infinite;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Body scrollable -->
-        <div id="negociacionesBody" style="padding:1rem 1.25rem;overflow-y:auto;flex:1;font-size:0.85rem;">
+        {{-- Body scrollable --}}
+        <div id="negociacionesBody" style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;min-height:0;font-size:0.85rem;">
             <p style="color:#94a3b8;text-align:center;">Selecciona una notificación</p>
+        </div>
+
+        {{-- Footer fijo con botones --}}
+        <div id="negociacionesFooter" style="display:none;padding:1rem 1.5rem;border-top:1px solid #fff7ed;flex-shrink:0;background:#fafafa;">
+            <div style="display:flex;gap:0.75rem;">
+                <button onclick="cerrarNegociacionesModal()"
+                        style="flex:1;border:2px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:0.875rem;padding:0.75rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .15s;"
+                        onmouseover="this.style.background='#f9fafb';this.style.borderColor='#d1d5db'"
+                        onmouseout="this.style.background='#fff';this.style.borderColor='#e5e7eb'">
+                    Cancelar
+                </button>
+                <button id="enviarNegociacionBtn"
+                        style="flex:2;background:linear-gradient(135deg,#f58634,#f58634);color:#fff;border:none;border-radius:0.875rem;padding:0.75rem 1.25rem;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;"
+                        onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
+                        onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
+                    <svg style="width:1.1rem;height:1.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Enviar
+                </button>
+            </div>
         </div>
 
     </div>

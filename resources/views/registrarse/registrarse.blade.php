@@ -243,10 +243,16 @@
                                         <div>
                                             <label for="foto_perfil" class="block text-sm font-medium text-gray-500 mb-1"
                                                 data-astro-cid-phpud7wc>Foto de perfil</label>
+                                            <div class="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:border-primary/50 transition-colors" onclick="document.getElementById('foto_perfil').click()">
+                                                <img id="foto_perfil_preview" src="{{ asset('imgs/defaults/profile_default.svg') }}" class="w-full h-full object-cover" alt="Vista previa"/>
+                                                <div id="foto_perfil_overlay" class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                </div>
+                                            </div>
                                             <input type="file" name="foto_perfil" id="foto_perfil" accept="image/*"
-                                                class="relative pt-3 pb-2 block w-full px-0 mt-0 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 focus:border-primary border-gray-200"
+                                                class="hidden"
                                                 data-astro-cid-phpud7wc>
-                                            <p class="mt-1 text-sm text-gray-500" data-astro-cid-phpud7wc>Sube una imagen de perfil (opcional)</p>
+                                            <p class="text-center text-xs text-gray-400" data-astro-cid-phpud7wc>Haz clic para subir (opcional)</p>
                                         </div>    
                                     </div>
 
@@ -320,26 +326,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = form.querySelectorAll('input, select');
 
     const fileInput = form.querySelector('input[name="foto_perfil"]');
+    const preview = document.getElementById('foto_perfil_preview');
     fileInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
-            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                alert('Por favor, sube una imagen válida (JPEG, PNG, JPG o GIF).');
-                this.value = ''; // Limpiar el input
+                alert('Por favor, sube una imagen válida (JPEG, PNG, JPG, GIF o WebP).');
+                this.value = '';
+                preview.src = '{{ asset("imgs/defaults/profile_default.svg") }}';
+                return;
             }
             
-            if (file.size > 2 * 1024 * 1024) { // 2MB
+            if (file.size > 2 * 1024 * 1024) {
                 alert('La imagen no debe exceder los 2MB.');
-                this.value = ''; // Limpiar el input
+                this.value = '';
+                preview.src = '{{ asset("imgs/defaults/profile_default.svg") }}';
+                return;
             }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
     });
     // Mejorar la interacción de los labels
     inputs.forEach(input => {
+        // Saltar file inputs y checkboxes — no tienen label flotante
+        if (input.type === 'file' || input.type === 'checkbox') return;
+
         // Ocultar label cuando el campo tiene valor
         input.addEventListener('input', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             if (this.value) {
                 label.classList.add('hidden');
             } else {
@@ -350,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mover label al hacer focus
         input.addEventListener('focus', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             label.classList.add('text-primary', '-translate-y-6', 'scale-75');
             label.classList.remove('text-gray-500');
         });
@@ -357,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Restaurar label al perder focus
         input.addEventListener('blur', function() {
             const label = this.parentElement.querySelector('label');
+            if (!label) return;
             if (!this.value) {
                 label.classList.remove('text-primary', '-translate-y-6', 'scale-75');
                 label.classList.add('text-gray-500');

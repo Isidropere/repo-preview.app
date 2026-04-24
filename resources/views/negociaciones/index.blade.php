@@ -69,10 +69,9 @@
                 {{-- Mensaje --}}
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Tu mensaje <span class="text-red-500">*</span></label>
-                    <textarea id="mensajeNeg" rows="3"
-                              style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;padding:0.6rem 0.75rem;font-size:0.85rem;resize:none;background:#fff7ed;outline:none;box-sizing:border-box;"
-                              onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'"
-                              placeholder="Describe tu propuesta..."></textarea>
+                    <textarea id="mensajeNeg" rows="3" readonly
+                              style="width:100%;border:2px solid #fed7aa;border-radius:0.65rem;padding:0.6rem 0.75rem;font-size:0.85rem;resize:none;background:#fff7ed;outline:none;box-sizing:border-box;cursor:not-allowed;"
+                              placeholder="Selecciona un mensaje predefinido..."></textarea>
                 </div>
 
                 {{-- Paquete --}}

@@ -3,11 +3,9 @@
         type="button"
         class="hs-dropdown-toggle relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary">
 
-        <span class="absolute top-1 right-1 flex">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-            <span id="contadorNotificaciones"
-                  class="relative inline-flex rounded-full px-1.5 text-white text-xs bg-secondary leading-none">0</span>
-        </span>
+        <span id="contadorNotificaciones"
+              class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none"
+              style="font-size:10px;transition:transform .2s;">0</span>
 
         <svg class="h-7 w-7 fill-primary hover:fill-hoverPrimary"
              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -57,6 +55,7 @@ document.addEventListener('click', (e) => {
 // CARGAR NOTIFICACIONES
 // ─────────────────────────────────────────────────────────────
 async function cargarNotificaciones() {
+    if (!document.getElementById('listaNotificaciones')) return;
     try {
         const resp = await fetch("{{ route('notificaciones.listar') }}");
         const data = await resp.json();
@@ -122,6 +121,7 @@ async function abrirNegociacionRelacionada(idEmisor, itemId) {
 
     // Renderizar estructura del body (una sola vez)
     document.getElementById('negociacionesBody').innerHTML = plantillaNegociacion();
+    document.getElementById('negociacionesFooter').style.display = 'block';
 
     // Mostrar skeleton del item
     document.getElementById('negModalItemCard').style.display    = 'none';
@@ -238,47 +238,41 @@ function poblarSelectPredefinidos(mensajes, rol) {
 function plantillaNegociacion() {
     return `
         <div id="mensajesContainer"
-             style="height:14rem;overflow-y:auto;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;background:#fff;margin-bottom:1rem;">
-            <p class="text-gray-400 text-center text-sm">Cargando mensajes...</p>
+             style="height:10rem;overflow-y:auto;border:2px solid #fff7ed;border-radius:1rem;padding:0.75rem;background:#fff7ed;margin-bottom:1rem;">
+            <p style="color:#9ca3af;text-align:center;font-size:0.85rem;">Cargando mensajes...</p>
         </div>
 
-        <div style="margin-bottom:0.75rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
+        <div style="margin-bottom:1rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">1</span>
                 Mensaje predefinido
-            </label>
+            </p>
             <select id="mensajePredefinido"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#fff;outline:none;">
+                    style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fff7ed;outline:none;color:#374151;box-sizing:border-box;transition:border-color .15s;"
+                    onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fff7ed'">
                 <option value="">-- Selecciona un mensaje --</option>
             </select>
         </div>
 
-        <div style="margin-bottom:0.75rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
+        <div style="margin-bottom:1rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">2</span>
                 Mensaje
-                <span style="font-size:0.7rem;font-weight:400;color:#94a3b8;margin-left:0.35rem;">(selecciona un mensaje predefinido)</span>
-            </label>
+                <span style="font-size:0.72rem;font-weight:400;color:#9ca3af;">(se llena al seleccionar)</span>
+            </p>
             <textarea id="mensaje" rows="3" readonly
-                      style="width:100%;resize:none;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#f1f5f9;color:#475569;outline:none;box-sizing:border-box;cursor:not-allowed;"
+                      style="width:100%;resize:none;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.75rem 1rem;font-size:0.85rem;background:#fff7ed;color:#374151;outline:none;box-sizing:border-box;cursor:not-allowed;"
                       placeholder="Se llenará al seleccionar un mensaje predefinido..."></textarea>
         </div>
 
-        <div style="margin-bottom:1rem;">
-            <label style="display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:0.35rem;">
-                Monto de la oferta (opcional)
-            </label>
-            <input type="number" id="montoOferta" min="0" step="0.01" placeholder="Ej. 1000"
-                   style="width:100%;border:1px solid #d1d5db;border-radius:0.4rem;padding:0.45rem 0.6rem;font-size:0.82rem;background:#fff;outline:none;box-sizing:border-box;">
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
-            <button onclick="cerrarNegociacionesModal()"
-                    style="padding:0.45rem 1rem;border:1px solid #d1d5db;border-radius:0.4rem;background:#fff;font-size:0.82rem;cursor:pointer;">
-                Cancelar
-            </button>
-            <button id="enviarNegociacionBtn"
-                    style="padding:0.45rem 1rem;background:#2563eb;color:#fff;border:none;border-radius:0.4rem;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                Enviar
-            </button>
+        <div style="margin-bottom:1.25rem;">
+            <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                <span style="width:1.25rem;height:1.25rem;background:#f58634;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:800;flex-shrink:0;">3</span>
+                Monto de la oferta <span style="font-size:0.72rem;font-weight:400;color:#9ca3af;">(opcional)</span>
+            </p>
+            <input type="number" id="montoOferta" min="0" step="0.01" placeholder="Ej. 1,000.00"
+                   style="width:100%;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fff7ed;outline:none;box-sizing:border-box;transition:border-color .15s;"
+                   onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fff7ed'">
         </div>
     `;
 }
@@ -348,23 +342,45 @@ document.addEventListener('click', async function (e) {
 // ABRIR / CERRAR MODAL
 // ─────────────────────────────────────────────────────────────
 function abrirNegociacionesModal() {
-    document.getElementById('negociacionesNotificacionesModal')?.classList.remove('hidden');
+    var m = document.getElementById('negociacionesNotificacionesModal');
+    if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; }
     document.body.classList.add('overflow-hidden');
 }
 
 function cerrarNegociacionesModal() {
-    document.getElementById('negociacionesNotificacionesModal')?.classList.add('hidden');
+    var m = document.getElementById('negociacionesNotificacionesModal');
+    if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
     document.body.classList.remove('overflow-hidden');
+}
+
+// ─────────────────────────────────────────────────────────────
+// BADGE INTERCAMBIOS PENDIENTES
+// ─────────────────────────────────────────────────────────────
+async function actualizarBadgeIntercambios() {
+    var badge = document.getElementById('badgeIntercambios');
+    if (!badge) return;
+    try {
+        var resp = await fetch('/negociaciones/pendientes', { headers: { 'Accept': 'application/json' } });
+        if (!resp.ok) return;
+        var data = await resp.json();
+        badge.textContent = data.count || 0;
+    } catch (e) { /* silenciar */ }
 }
 
 // ─────────────────────────────────────────────────────────────
 // INICIALIZACIÓN
 // ─────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', cargarNotificaciones);
+document.addEventListener('DOMContentLoaded', function() {
+    cargarNotificaciones();
+    actualizarBadgeIntercambios();
+});
 
 if (!window._notifIntervalSet) {
     window._notifIntervalSet = true;
-    setInterval(cargarNotificaciones, 60000);
+    setInterval(function() {
+        cargarNotificaciones();
+        actualizarBadgeIntercambios();
+    }, 60000);
 }
 </script>
 @endpush
