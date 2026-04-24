@@ -319,6 +319,13 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/pago',   [NegociacionController::class, 'procesarPago'])->name('negociaciones.pago.procesar');
 });
 
+// Rating de intercambios
+Route::post('/rating', function (\Illuminate\Http\Request $request) {
+    $request->validate(['id_user_rated' => 'required|integer|exists:users,id', 'rating' => 'required|integer|min:1|max:5']);
+    \App\Models\Rating::create(['id_usuario' => auth()->id(), 'id_user_rated' => $request->id_user_rated, 'rating' => $request->rating]);
+    return back()->with('success', '¡Gracias por tu calificación!');
+})->middleware('auth')->name('rating.store');
+
 
 ///*
 //|--------------------------------------------------------------------------

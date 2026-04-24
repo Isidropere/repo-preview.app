@@ -208,5 +208,22 @@ function mostrarTab(tab) {
         ? 'tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-emerald-600 text-emerald-700 -mb-px'
         : 'tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px';
 }
+
+// Star rating helpers
+var _selectedStars = {};
+function highlightStars(negId, count) {
+    var container = document.getElementById('stars-' + negId);
+    if (!container) return;
+    var labels = container.querySelectorAll('label');
+    labels.forEach(function(l, i) { l.style.color = i < count ? '#f59e0b' : '#d1d5db'; });
+}
+function resetStars(negId) {
+    var sel = _selectedStars[negId] || 0;
+    highlightStars(negId, sel);
+}
+function selectStar(negId, count) {
+    _selectedStars[negId] = count;
+    highlightStars(negId, count);
+}
 </script>
 @endpush
