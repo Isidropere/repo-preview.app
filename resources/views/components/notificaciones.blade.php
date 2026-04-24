@@ -3,11 +3,9 @@
         type="button"
         class="hs-dropdown-toggle relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary">
 
-        <span class="absolute top-1 right-1 flex">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-            <span id="contadorNotificaciones"
-                  class="relative inline-flex rounded-full px-1.5 text-white text-xs bg-secondary leading-none">0</span>
-        </span>
+        <span id="contadorNotificaciones"
+              class="absolute top-0 right-0 rounded-full text-xs font-bold px-1.5 leading-none"
+              style="font-size:10px;transition:transform .2s;background:#479bd5;color:#fff;">0</span>
 
         <svg class="h-7 w-7 fill-primary hover:fill-hoverPrimary"
              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
