@@ -29,10 +29,7 @@
 <div style="max-width:1000px;margin:0 auto;padding:28px 16px;">
 
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
-    <a href="{{ route('tu_cuenta') }}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:.85rem;color:#374151;text-decoration:none;font-weight:500;">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      Volver
-    </a>
+    @include('components.btn-volver', ['backUrl' => route('tu_cuenta')])
     <h1 style="font-size:1.5rem;font-weight:700;color:#111827;margin:0;">Mis Direcciones</h1>
   </div>
 
