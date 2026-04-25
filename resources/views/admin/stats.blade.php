@@ -263,6 +263,29 @@
   <div id="seccion-config" style="display:none;">
 
 
+<div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
+    <button onclick="cerrarModalDelivery()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+    <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;">Configurar porcentajes de envio</div>
+    <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Estos porcentajes se aplican sobre el valor del articulo para calcular el costo de envio.</div>
+    <div id="delivery-form-fields"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="guardarConfigDelivery()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
+      <button onclick="cerrarModalDelivery()" style="background:#f1f5f9;color:#475569;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;">Cancelar</button>
+    </div>
+    <div id="delivery-save-msg" style="margin-top:10px;font-size:.82rem;"></div>
+  </div>
+</div>
+<div id="kpi-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
+    <button onclick="cerrarModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+    <div id="modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;"></div>
+    <div id="modal-subtitulo" style="font-size:.82rem;color:#64748b;margin-bottom:18px;"></div>
+    <div id="modal-kpis-mini" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px;"></div>
+    <canvas id="modal-chart" height="220"></canvas>
+  </div>
+</div>
+
 <style>
 .ct-btn{padding:3px 9px;font-size:.72rem;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;color:#475569;cursor:pointer;font-weight:500;}
 .ct-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;}
@@ -324,7 +347,9 @@ function renderKPIs(kpis) {
 function abrirModalKPI(key) {
   if (!datosCache) return;
   const d = datosCache;
-  document.getElementById('kpi-modal').style.display = 'flex';
+  var kpiModal = document.getElementById('kpi-modal');
+  document.body.appendChild(kpiModal);
+  kpiModal.style.display = 'flex';
   if (modalChart) { modalChart.destroy(); modalChart = null; }
   const cfg = {
     compras:{titulo:'Total de compras',sub:'Evolucion diaria de todas las ordenes',
@@ -596,7 +621,9 @@ function renderDelivery(zonas, config) {
     }).join('') + '</div>';
 }let deliveryConfigCache = [];
 function abrirModalDelivery() {
-  document.getElementById('delivery-modal').style.display = 'flex';
+  var modal = document.getElementById('delivery-modal');
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
   document.getElementById('delivery-save-msg').textContent = '';
   const fields = document.getElementById('delivery-form-fields');
   const cfg = datosCache && datosCache.delivery_config ? datosCache.delivery_config : [];
@@ -805,30 +832,6 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 
   </div><!-- /seccion-config -->
-
-  {{-- Modales globales (fuera de secciones) --}}
-  <div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
-      <button onclick="cerrarModalDelivery()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
-      <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;">Configurar porcentajes de envio</div>
-      <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Estos porcentajes se aplican sobre el valor del articulo para calcular el costo de envio.</div>
-      <div id="delivery-form-fields"></div>
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button onclick="guardarConfigDelivery()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
-        <button onclick="cerrarModalDelivery()" style="background:#f1f5f9;color:#475569;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;">Cancelar</button>
-      </div>
-      <div id="delivery-save-msg" style="margin-top:10px;font-size:.82rem;"></div>
-    </div>
-  </div>
-  <div id="kpi-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;padding:28px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
-      <button onclick="cerrarModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
-      <div id="modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;"></div>
-      <div id="modal-subtitulo" style="font-size:.82rem;color:#64748b;margin-bottom:18px;"></div>
-      <div id="modal-kpis-mini" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px;"></div>
-      <canvas id="modal-chart" height="220"></canvas>
-    </div>
-  </div>
 
 </div><!-- /contenedor principal -->
 
