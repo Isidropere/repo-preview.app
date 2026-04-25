@@ -724,6 +724,77 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
   {{-- 
+       Zonas de Delivery (mantenimiento)
+  --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0;">🚚 Zonas de Delivery</h2>
+      <button onclick="abrirModalZona(null)" style="background:#f58634;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:.85rem;cursor:pointer;font-weight:600;">+ Nueva zona</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Zona</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Tipo</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Pueblos</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Empresa</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Persona</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Días</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Estado</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyZonas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  {{-- Modal Zona --}}
+  <div id="modalZona" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
+      <button onclick="cerrarModalZona()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      <div id="modalZonaTitulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:16px;">Nueva zona</div>
+      <input type="hidden" id="zonaId">
+      <div style="display:grid;gap:12px;">
+        <div>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Nombre de la zona</label>
+          <input id="zonaName" type="text" placeholder="Ej: Sur Largo" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Tipo</label>
+          <select id="zonaTipo" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+            <option value="corta">Corta</option><option value="larga">Larga</option><option value="especial">Especial</option><option value="chequeado">Chequeado</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Pueblos (separados por coma)</label>
+          <textarea id="zonaPueblos" rows="3" placeholder="Bonao, La Vega, Santiago" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Precio empresa (RD$)</label>
+            <input id="zonaPrecioEmpresa" type="number" step="0.01" min="0" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Precio persona (RD$)</label>
+            <input id="zonaPrecioPersona" type="number" step="0.01" min="0" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Días de entrega</label>
+          <input id="zonaDias" type="text" placeholder="Lunes a Viernes" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="guardarZona()" style="background:#f58634;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
+        <button onclick="cerrarModalZona()" style="background:#f1f5f9;color:#475569;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;">Cancelar</button>
+      </div>
+      <div id="zonaSaveMsg" style="margin-top:10px;font-size:.82rem;"></div>
+    </div>
+  </div>
+
+  {{-- 
        Cuentas Bancarias (informativas)
         --}}
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
@@ -968,6 +1039,94 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   cargarCuentas();
+})();
+
+// ── Zonas de Delivery CRUD ──────────────────────────────
+(function() {
+  var csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+  function cargarZonas() {
+    fetch('/admin/delivery-zonas', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
+      .then(function(r) { return r.json(); })
+      .then(function(zonas) { renderZonas(zonas); })
+      .catch(function(e) { console.error('Error cargando zonas', e); });
+  }
+
+  function renderZonas(zonas) {
+    var tbody = document.getElementById('tbodyZonas');
+    if (!tbody) return;
+    if (!zonas.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:16px;">Sin zonas registradas</td></tr>'; return; }
+    tbody.innerHTML = zonas.map(function(z) {
+      var pueblos = (z.pueblos || []).join(', ');
+      var corto = pueblos.length > 60 ? pueblos.substring(0, 60) + '...' : pueblos;
+      return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+        '<td style="padding:10px 12px;font-weight:600;">' + z.zona + '</td>' +
+        '<td style="padding:10px 12px;"><span style="background:#f1f5f9;padding:2px 8px;border-radius:10px;font-size:.75rem;">' + z.tipo + '</span></td>' +
+        '<td style="padding:10px 12px;font-size:.78rem;max-width:200px;" title="' + pueblos.replace(/"/g, '') + '">' + corto + '</td>' +
+        '<td style="padding:10px 12px;">RD$ ' + Number(z.precio_empresa || 0).toFixed(2) + '</td>' +
+        '<td style="padding:10px 12px;">RD$ ' + Number(z.precio_persona || 0).toFixed(2) + '</td>' +
+        '<td style="padding:10px 12px;">' + (z.dias_entrega || '-') + '</td>' +
+        '<td style="padding:10px 12px;"><span style="padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600;background:' + (z.activo ? '#d1fae5' : '#fee2e2') + ';color:' + (z.activo ? '#065f46' : '#991b1b') + ';">' + (z.activo ? 'Activa' : 'Inactiva') + '</span></td>' +
+        '<td style="padding:10px 12px;"><div style="display:flex;gap:6px;">' +
+          '<button onclick="editarZona(' + JSON.stringify(z).replace(/"/g, '&quot;') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;">Editar</button>' +
+          '<button onclick="toggleZona(' + z.id + ',' + (z.activo ? 'false' : 'true') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">' + (z.activo ? 'Desactivar' : 'Activar') + '</button>' +
+          '<button onclick="eliminarZona(' + z.id + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #ef4444;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer;">Eliminar</button>' +
+        '</div></td></tr>';
+    }).join('');
+  }
+
+  window.abrirModalZona = function(zona) {
+    var m = document.getElementById('modalZona');
+    document.body.appendChild(m);
+    m.style.display = 'flex';
+    document.getElementById('zonaSaveMsg').textContent = '';
+    document.getElementById('modalZonaTitulo').textContent = zona ? 'Editar zona' : 'Nueva zona';
+    document.getElementById('zonaId').value = zona ? zona.id : '';
+    document.getElementById('zonaName').value = zona ? zona.zona : '';
+    document.getElementById('zonaTipo').value = zona ? zona.tipo : 'corta';
+    document.getElementById('zonaPueblos').value = zona ? (zona.pueblos || []).join(', ') : '';
+    document.getElementById('zonaPrecioEmpresa').value = zona ? zona.precio_empresa : '';
+    document.getElementById('zonaPrecioPersona').value = zona ? zona.precio_persona : '';
+    document.getElementById('zonaDias').value = zona ? (zona.dias_entrega || '') : 'Lunes a Viernes';
+  };
+
+  window.editarZona = function(z) { abrirModalZona(z); };
+  window.cerrarModalZona = function() { document.getElementById('modalZona').style.display = 'none'; };
+
+  window.guardarZona = function() {
+    var id = document.getElementById('zonaId').value;
+    var url = id ? '/admin/delivery-zonas/' + id : '/admin/delivery-zonas';
+    var method = id ? 'PUT' : 'POST';
+    var body = {
+      zona: document.getElementById('zonaName').value,
+      tipo: document.getElementById('zonaTipo').value,
+      pueblos: document.getElementById('zonaPueblos').value,
+      precio_empresa: document.getElementById('zonaPrecioEmpresa').value,
+      precio_persona: document.getElementById('zonaPrecioPersona').value,
+      dias_entrega: document.getElementById('zonaDias').value
+    };
+    fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(body) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) { cerrarModalZona(); cargarZonas(); }
+        else { document.getElementById('zonaSaveMsg').textContent = 'Error al guardar'; document.getElementById('zonaSaveMsg').style.color = '#ef4444'; }
+      }).catch(function() { document.getElementById('zonaSaveMsg').textContent = 'Error de conexión'; document.getElementById('zonaSaveMsg').style.color = '#ef4444'; });
+  };
+
+  window.toggleZona = function(id, activo) {
+    fetch('/admin/delivery-zonas/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify({ activo: activo }) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.success) cargarZonas(); });
+  };
+
+  window.eliminarZona = function(id) {
+    if (!confirm('¿Eliminar esta zona?')) return;
+    fetch('/admin/delivery-zonas/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.success) cargarZonas(); });
+  };
+
+  cargarZonas();
 })();
 </script>
 @endpush

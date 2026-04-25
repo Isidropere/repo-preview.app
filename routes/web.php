@@ -636,6 +636,29 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/estadisticas/data', [AdminStatsController::class, 'data'])->name('stats.data');
     Route::post('/estadisticas/delivery-config/{clave}', [\App\API\DeliveryZonaController::class, 'updateConfig'])->name('stats.delivery.config');
 
+    // CRUD Zonas de Delivery
+    Route::get('/delivery-zonas', function () {
+        return response()->json(\App\Models\DeliveryZona::orderBy('tipo')->orderBy('zona')->get());
+    })->name('delivery-zonas.index');
+    Route::post('/delivery-zonas', function (\Illuminate\Http\Request $request) {
+        $data = $request->validate(['zona'=>'required|string','tipo'=>'required|in:corta,larga,especial,chequeado','pueblos'=>'required|string','precio_empresa'=>'required|numeric','precio_persona'=>'required|numeric','dias_entrega'=>'nullable|string']);
+        $data['pueblos'] = array_map('trim', explode(',', $data['pueblos']));
+        $data['activo'] = true;
+        $zona = \App\Models\DeliveryZona::create($data);
+        return response()->json(['success'=>true,'data'=>$zona]);
+    })->name('delivery-zonas.store');
+    Route::put('/delivery-zonas/{id}', function (\Illuminate\Http\Request $request, $id) {
+        $zona = \App\Models\DeliveryZona::findOrFail($id);
+        $data = $request->validate(['zona'=>'sometimes|string','tipo'=>'sometimes|in:corta,larga,especial,chequeado','pueblos'=>'sometimes|string','precio_empresa'=>'sometimes|numeric','precio_persona'=>'sometimes|numeric','dias_entrega'=>'nullable|string','activo'=>'sometimes|boolean']);
+        if (isset($data['pueblos'])) $data['pueblos'] = array_map('trim', explode(',', $data['pueblos']));
+        $zona->update($data);
+        return response()->json(['success'=>true,'data'=>$zona->fresh()]);
+    })->name('delivery-zonas.update');
+    Route::delete('/delivery-zonas/{id}', function ($id) {
+        \App\Models\DeliveryZona::findOrFail($id)->delete();
+        return response()->json(['success'=>true]);
+    })->name('delivery-zonas.destroy');
+
     // Mensajes predefinidos — mutaciones solo superadmin
     Route::post('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'store'])->name('mensajes.store');
     Route::put('/mensajes-predefinidos/{id}', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'update'])->name('mensajes.update');
