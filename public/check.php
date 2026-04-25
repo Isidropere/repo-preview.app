@@ -1,63 +1,53 @@
 <?php
-// Diagnóstico básico - acceder via: https://cambialord.com/check.php
 echo "<pre>\n";
-echo "PHP: " . phpversion() . "\n";
-echo "Server: " . ($_SERVER['SERVER_SOFTWARE'] ?? 'N/A') . "\n";
-echo "Doc Root: " . ($_SERVER['DOCUMENT_ROOT'] ?? 'N/A') . "\n\n";
 
-// Intentar cargar Laravel
 try {
     require __DIR__ . '/../vendor/autoload.php';
-    echo "✅ Autoload OK\n";
-} catch (Throwable $e) {
-    echo "❌ Autoload: " . $e->getMessage() . "\n";
-    echo "</pre>";
-    exit;
-}
-
-try {
     $app = require __DIR__ . '/../bootstrap/app.php';
-    echo "✅ Bootstrap OK\n";
-} catch (Throwable $e) {
-    echo "❌ Bootstrap: " . $e->getMessage() . "\n";
-    echo "   File: " . $e->getFile() . ":" . $e->getLine() . "\n";
-    echo "</pre>";
-    exit;
-}
+    $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
 
-try {
-    $kernel = $app->make('Illuminate\Contracts\Console\Kernel');
-    $kernel->bootstrap();
-    echo "✅ Kernel OK\n";
-} catch (Throwable $e) {
-    echo "❌ Kernel: " . $e->getMessage() . "\n";
-    echo "   File: " . basename($e->getFile()) . ":" . $e->getLine() . "\n";
-    $prev = $e->getPrevious();
-    if ($prev) echo "   Caused by: " . $prev->getMessage() . "\n";
-    echo "</pre>";
-    exit;
-}
+    // Simular request a /home
+    $request = Illuminate\Http\Request::create('/home', 'GET');
+    $response = $kernel->handle($request);
 
-// Verificar BD
-try {
-    $pdo = Illuminate\Support\Facades\DB::connection()->getPdo();
-    echo "✅ BD conectada: " . config('database.default') . "\n";
-} catch (Throwable $e) {
-    echo "❌ BD: " . $e->getMessage() . "\n";
-}
+    echo "Status: " . $response->getStatusCode() . "\n";
 
-// Verificar migraciones pendientes
-try {
-    Illuminate\Support\Facades\Artisan::call('migrate:status');
-    $status = Illuminate\Support\Facades\Artisan::output();
-    $pending = substr_count($status, 'Pending');
-    echo "\nMigraciones pendientes: " . $pending . "\n";
-    if ($pending > 0) {
-        echo $status;
+    if ($response->getStatusCode() >= 400) {
+        $content = $response->getContent();
+        // Extraer el mensaje de error
+        if (preg_match('/exception-message[^>]*>(.*?)<\//s', $content, $m)) {
+            echo "Error: " . strip_tags($m[1]) . "\n";
+        }
+        if (preg_match('/class="trace-file-path"[^>]*>(.*?)<\//s', $content, $m)) {
+            echo "File: " . strip_tags($m[1]) . "\n";
+        }
+        // Buscar en el contenido cualquier mensaje de error
+        if (preg_match('/<title>(.*?)<\/title>/s', $content, $m)) {
+            echo "Title: " . trim(strip_tags($m[1])) . "\n";
+        }
+        // Si es producción (no debug), buscar el error en el log
+        $logFile = storage_path('logs/laravel.log');
+        if (!file_exists($logFile)) {
+            $logFile = storage_path('logs/cabialoErrores-' . date('Y-m-d') . '.log');
+        }
+        if (file_exists($logFile)) {
+            $lines = array_slice(file($logFile), -20);
+            echo "\n--- Últimas líneas del log ---\n";
+            echo implode('', $lines);
+        }
+    } else {
+        echo "✅ /home cargó correctamente (" . strlen($response->getContent()) . " bytes)\n";
     }
+
 } catch (Throwable $e) {
-    echo "❌ Migrate status: " . $e->getMessage() . "\n";
+    echo "❌ " . $e->getMessage() . "\n";
+    echo "File: " . basename($e->getFile()) . ":" . $e->getLine() . "\n";
+    $prev = $e->getPrevious();
+    while ($prev) {
+        echo "Caused by: " . $prev->getMessage() . "\n";
+        echo "  At: " . basename($prev->getFile()) . ":" . $prev->getLine() . "\n";
+        $prev = $prev->getPrevious();
+    }
 }
 
-echo "\n✅ Diagnóstico completo\n";
 echo "</pre>";
