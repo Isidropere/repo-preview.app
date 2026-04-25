@@ -75,6 +75,48 @@ Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcu
 
 // Crear symlink storage en hosting compartido (MochaHost)
 // Visitar /storage-link una sola vez después de deploy
+
+// Ruta temporal para correr migraciones y limpiar caches en hosting sin SSH
+// Visitar UNA SOLA VEZ: /deploy-migrate?key=CambiaRD2026
+// ELIMINAR DESPUÉS DE USAR
+Route::get('/deploy-migrate', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'CambiaRD2026') {
+        abort(404);
+    }
+
+    $output = [];
+
+    // 1. Migraciones
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output[] = '✅ Migraciones: ' . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Throwable $e) {
+        $output[] = '❌ Migraciones: ' . $e->getMessage();
+    }
+
+    // 2. Limpiar caches
+    $commands = ['view:clear', 'config:clear', 'route:clear', 'cache:clear'];
+    foreach ($commands as $cmd) {
+        try {
+            \Illuminate\Support\Facades\Artisan::call($cmd);
+            $output[] = '✅ ' . $cmd . ': OK';
+        } catch (\Throwable $e) {
+            $output[] = '❌ ' . $cmd . ': ' . $e->getMessage();
+        }
+    }
+
+    // 3. Info del estado
+    $output[] = '';
+    $output[] = '--- Estado ---';
+    $output[] = 'PHP: ' . phpversion();
+    $output[] = 'Laravel: ' . app()->version();
+    $output[] = 'APP_DEBUG: ' . (config('app.debug') ? 'true' : 'false');
+    $output[] = 'APP_ENV: ' . config('app.env');
+    $output[] = 'DB: ' . config('database.default');
+
+    return '<pre>' . implode("\n", $output) . '</pre>';
+});
+
 Route::get('/storage-link', function () {
     $target = storage_path('app/public');
     $link   = public_path('storage');
