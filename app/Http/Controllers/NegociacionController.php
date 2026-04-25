@@ -266,8 +266,8 @@ class NegociacionController extends Controller
         $tieneDireccion = \App\Models\Direcciones::where('id_user', $userId)->exists();
         if (!$tieneDireccion) {
             $msg = 'Debes registrar una dirección de envío antes de pagar.';
-            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.create')], 422);
-            return redirect()->route('direcciones.create')->with('error', $msg);
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.index')], 422);
+            return redirect()->route('direcciones.index')->with('error', $msg);
         }
 
         // Con pago: validar tarjeta

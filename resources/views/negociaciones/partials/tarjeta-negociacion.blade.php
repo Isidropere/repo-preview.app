@@ -178,7 +178,7 @@
             <div class="w-full p-4 rounded-xl border" style="background:#fef2f2;border-color:#fecaca;">
                 <p class="text-sm font-semibold mb-2" style="color:#dc2626;">� Necesitas una dirección de envío</p>
                 <p class="text-xs mb-3" style="color:#991b1b;">Debes registrar tu dirección antes de realizar el pago.</p>
-                <a href="{{ route('direcciones.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
+                <a href="{{ route('direcciones.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
                     � Crear dirección
                 </a>
             </div>
@@ -202,7 +202,7 @@
                 <p class="text-sm font-semibold mb-2" style="color:#dc2626;">📍 Necesitas una dirección de envío</p>
                 <p class="text-xs mb-3" style="color:#991b1b;">Si deseas pagar el envío, primero registra tu dirección. También puedes aprobar sin pago.</p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <a href="{{ route('direcciones.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
+                    <a href="{{ route('direcciones.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
                         � Crear dirección
                     </a>
                     <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
@@ -313,3 +313,4 @@
     </div>
     @endif
 </div>
+
