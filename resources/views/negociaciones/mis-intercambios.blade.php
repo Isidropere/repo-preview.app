@@ -138,6 +138,7 @@
 
 @push('scripts')
 <script>
+window._municipioUsuario = @json($costoEnvioPorNeg['_municipio'] ?? '');
 var _pagoNegId = null;
 
 function abrirModalPagoIntercambio(negId, monto, itemNombre) {
@@ -217,32 +218,21 @@ async function recalcularEnvio(negId, valorArticulo) {
     if (!spanMonto) return;
     spanMonto.textContent = 'Calculando...';
     try {
-        // Obtener municipio del usuario
-        var dirResp = await fetch('/direcciones', { headers: { 'Accept': 'application/json' } });
-        var dirData = await dirResp.json();
-        var dirs = Array.isArray(dirData) ? dirData : (dirData.data || []);
-        var municipio = '';
-        if (dirs.length > 0) {
-            var dir = dirs.find(function(d) { return d.predeterminada; }) || dirs[0];
-            municipio = (dir.municipio && dir.municipio.municipio) ? dir.municipio.municipio : '';
-        }
-        if (!municipio) { spanMonto.textContent = 'Sin dirección'; return; }
-
-        var resp = await fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + valorArticulo, {
+        var resp = await fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(window._municipioUsuario || '') + '&valor_articulo=' + valorArticulo, {
             headers: { 'Accept': 'application/json' }
         });
+        if (!resp.ok) { spanMonto.textContent = 'Error'; return; }
         var data = await resp.json();
+        if (!data.success) { spanMonto.textContent = data.message || 'Sin zona'; return; }
         var costo = parseFloat(data.costo_envio_total || 0);
         spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
 
-        // Actualizar el botón de pago con el nuevo monto
         var btnPago = document.getElementById('btn-pago-' + negId);
         if (btnPago) {
-            var itemNombre = btnPago.closest('div')?.querySelector('.text-xs')?.textContent || 'Intercambio';
-            btnPago.setAttribute('onclick', 'abrirModalPagoIntercambio(' + negId + ', ' + costo + ', "' + itemNombre.replace(/"/g, '') + '")');
+            btnPago.setAttribute('onclick', 'abrirModalPagoIntercambio(' + negId + ', ' + costo + ', "Intercambio")');
         }
     } catch (e) {
-        spanMonto.textContent = 'Error al calcular';
+        spanMonto.textContent = 'Error de conexión';
     }
 }
 function highlightStars(negId, count) {

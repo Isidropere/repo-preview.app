@@ -181,10 +181,11 @@ class NegociacionController extends Controller
             ->with('municipio')
             ->first();
 
-        $costoEnvioPorNeg = [];
+        $costoEnvioPorNeg = ['_municipio' => ''];
         if ($direccion && $direccion->municipio) {
             $deliveryService = app(\App\Services\DeliveryService::class);
             $municipio = $direccion->municipio->municipio ?? '';
+            $costoEnvioPorNeg['_municipio'] = $municipio;
 
             $todasNegs = $comoEmisor->merge($comoReceptor);
             foreach ($todasNegs as $neg) {
