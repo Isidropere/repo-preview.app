@@ -262,6 +262,14 @@ class NegociacionController extends Controller
             return redirect()->route('negociaciones.mis')->with('success', $msg);
         }
 
+        // Con pago: verificar dirección
+        $tieneDireccion = \App\Models\Direcciones::where('id_user', $userId)->exists();
+        if (!$tieneDireccion) {
+            $msg = 'Debes registrar una dirección de envío antes de pagar.';
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.create')], 422);
+            return redirect()->route('direcciones.create')->with('error', $msg);
+        }
+
         // Con pago: validar tarjeta
         $request->validate([
             'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',

@@ -65,6 +65,9 @@
     $otroPago = $rol === 'emisor' ? ($neg->pago_receptor ?? false) : ($neg->pago_emisor ?? false);
     $miConfirmado = $rol === 'emisor' ? ($neg->emisor_confirmado ?? false) : ($neg->receptor_confirmado ?? false);
     $otroConfirmado = $rol === 'emisor' ? ($neg->receptor_confirmado ?? false) : ($neg->emisor_confirmado ?? false);
+
+    // Verificar si el usuario tiene dirección
+    $tieneDireccion = \App\Models\Direcciones::where('id_user', auth()->id())->exists();
 @endphp
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 {{ $ambosConfirmados ? 'border-emerald-300' : '' }}">
@@ -171,36 +174,65 @@
 
         {{-- PAGO: cuando ambos aprobaron y requiere pago obligatorio (producto↔producto) --}}
         @if($ambosConfirmados && $requierePago && !$miPago)
-        <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
-            <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
-            <p class="text-xs mb-1" style="color:#9a3412;">Monto a pagar: <span style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
-            <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
-            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                💳 Realizar pago de envío
-            </button>
-        </div>
+            @if(!$tieneDireccion)
+            <div class="w-full p-4 rounded-xl border" style="background:#fef2f2;border-color:#fecaca;">
+                <p class="text-sm font-semibold mb-2" style="color:#dc2626;">� Necesitas una dirección de envío</p>
+                <p class="text-xs mb-3" style="color:#991b1b;">Debes registrar tu dirección antes de realizar el pago.</p>
+                <a href="{{ route('direcciones.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
+                    � Crear dirección
+                </a>
+            </div>
+            @else
+            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
+                <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
+                <p class="text-xs mb-1" style="color:#9a3412;">Monto a pagar: <span style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
+                <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                    💳 Realizar pago de envío
+                </button>
+            </div>
+            @endif
         @endif
 
         {{-- PAGO OPCIONAL: producto↔servicio, yo soy el del producto --}}
         @if($ambosConfirmados && $pagoOpcional && !$miPago)
-        <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
-            <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
-            <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío de tu producto o aprobar directamente sin pago.</p>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                    💳 Pagar envío (opcional)
-                </button>
-                <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
-                    @csrf
-                    <input type="hidden" name="sin_pago" value="1">
-                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
-                        ✅ Aprobar sin pago
-                    </button>
-                </form>
+            @if(!$tieneDireccion)
+            <div class="w-full p-4 rounded-xl border" style="background:#fef2f2;border-color:#fecaca;">
+                <p class="text-sm font-semibold mb-2" style="color:#dc2626;">📍 Necesitas una dirección de envío</p>
+                <p class="text-xs mb-3" style="color:#991b1b;">Si deseas pagar el envío, primero registra tu dirección. También puedes aprobar sin pago.</p>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <a href="{{ route('direcciones.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
+                        � Crear dirección
+                    </a>
+                    <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <input type="hidden" name="sin_pago" value="1">
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                            ✅ Aprobar sin pago
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
+            @else
+            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
+                <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
+                <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío de tu producto o aprobar directamente sin pago.</p>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                        💳 Pagar envío (opcional)
+                    </button>
+                    <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <input type="hidden" name="sin_pago" value="1">
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                            ✅ Aprobar sin pago
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
         @endif
 
         {{-- SOY DEL SERVICIO en producto↔servicio: aprobar sin pago --}}
