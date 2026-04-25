@@ -197,3 +197,24 @@ $resultado = $pagoService->reembolsar($transactionId, $monto, [
 3. **QA vs Producción** — cambiar `CARDNET_ENV=production` en .env y actualizar credenciales
 4. **Single-threaded** — `php artisan serve` puede dar timeout con CardNet; en producción usar Apache/Nginx
 5. **Idempotency key** — se obtiene una nueva antes de cada transacción para evitar cobros duplicados
+
+------------------------------------------------------------
+Cumple con los requisitos de CardNet:
+
+✅ Flujo de 2 pasos (idempotency-key → sale)
+✅ Todos los campos del payload requeridos
+✅ session-id (recién agregado)
+✅ Validación de respuesta (response-code "00" + internal-response-code "0000")
+✅ Anulación (void) y reembolso (refund)
+✅ TLS 1.2 (automático por PHP/cURL)
+✅ CVV no se almacena
+✅ Tarjetas encriptadas AES-256
+✅ Idempotency para evitar cobros duplicados
+✅ Moneda DOP (214)
+✅ Timeout 60s con 2 reintentos
+Pendiente para producción:
+
+Cambiar CARDNET_ENV=production en .env
+Actualizar CARDNET_MERCHANT_ID, CARDNET_TERMINAL_ID y CARDNET_TOKEN con credenciales reales de producción
+Verificar que el redirect_uri de la certificación CardNet coincida con el dominio de producción
+CardNet puede requerir una certificación/homologación antes de ir a producción — eso es un proceso con ellos directamente
