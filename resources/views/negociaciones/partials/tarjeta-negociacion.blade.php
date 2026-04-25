@@ -187,7 +187,7 @@
                 <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
                     <p class="text-xs" style="color:#9a3412;margin:0;">Monto a pagar: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
-                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }}, {{ $neg->item?->valor ?? 0 }})"
+                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
                             style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
                 </div>
                 <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
@@ -224,7 +224,7 @@
                 <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
                     <p class="text-xs" style="color:#9a3412;margin:0;">Envío estimado: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
-                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }}, {{ $neg->item?->valor ?? 0 }})"
+                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
                             style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
                 </div>
                 <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío o aprobar directamente sin pago.</p>
@@ -323,4 +323,5 @@
     </div>
     @endif
 </div>
+
 

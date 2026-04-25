@@ -213,12 +213,12 @@ function mostrarTab(tab) {
 // Star rating helpers
 var _selectedStars = {};
 
-async function recalcularEnvio(negId, valorArticulo) {
+async function recalcularEnvio(negId) {
     var spanMonto = document.getElementById('monto-envio-' + negId);
     if (!spanMonto) return;
     spanMonto.textContent = 'Calculando...';
     try {
-        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(window._municipioUsuario || '') + '&valor_articulo=' + valorArticulo, {
+        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(window._municipioUsuario || '') + '&valor_articulo=0', {
             headers: { 'Accept': 'application/json' }
         });
         if (!resp.ok) { spanMonto.textContent = 'Error'; return; }
