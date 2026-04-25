@@ -271,7 +271,7 @@
 .toggle-check.off{opacity:.45;text-decoration:line-through;}
 .kpi-card{cursor:pointer;transition:transform .15s,box-shadow .15s;}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1);}
-</style>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const DATA_URL = '/admin/estadisticas/data';
@@ -806,29 +806,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   </div><!-- /seccion-config -->
 
-{{-- Modales (fuera de las secciones para que siempre sean visibles) --}}
-<div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
-    <button onclick="cerrarModalDelivery()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
-    <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;">Configurar porcentajes de envio</div>
-    <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Estos porcentajes se aplican sobre el valor del articulo para calcular el costo de envio.</div>
-    <div id="delivery-form-fields"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="guardarConfigDelivery()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
-      <button onclick="cerrarModalDelivery()" style="background:#f1f5f9;color:#475569;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;">Cancelar</button>
+  {{-- Modales globales (fuera de secciones) --}}
+  <div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
+      <button onclick="cerrarModalDelivery()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;">Configurar porcentajes de envio</div>
+      <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Estos porcentajes se aplican sobre el valor del articulo para calcular el costo de envio.</div>
+      <div id="delivery-form-fields"></div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="guardarConfigDelivery()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
+        <button onclick="cerrarModalDelivery()" style="background:#f1f5f9;color:#475569;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;">Cancelar</button>
+      </div>
+      <div id="delivery-save-msg" style="margin-top:10px;font-size:.82rem;"></div>
     </div>
-    <div id="delivery-save-msg" style="margin-top:10px;font-size:.82rem;"></div>
   </div>
-</div>
-<div id="kpi-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:14px;padding:28px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
-    <button onclick="cerrarModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
-    <div id="modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;"></div>
-    <div id="modal-subtitulo" style="font-size:.82rem;color:#64748b;margin-bottom:18px;"></div>
-    <div id="modal-kpis-mini" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px;"></div>
-    <canvas id="modal-chart" height="220"></canvas>
+  <div id="kpi-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
+      <button onclick="cerrarModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      <div id="modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;"></div>
+      <div id="modal-subtitulo" style="font-size:.82rem;color:#64748b;margin-bottom:18px;"></div>
+      <div id="modal-kpis-mini" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px;"></div>
+      <canvas id="modal-chart" height="220"></canvas>
+    </div>
   </div>
-</div>
 
 </div><!-- /contenedor principal -->
 
