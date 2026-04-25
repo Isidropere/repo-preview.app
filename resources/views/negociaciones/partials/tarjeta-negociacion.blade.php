@@ -36,12 +36,12 @@
         $miItemEsServicio = ($rol === 'emisor') ? $todosOfrecidosServicio : $solicitadoEsServicio;
         $requierePago = false; // nunca obligatorio en producto↔servicio
         $pagoOpcional = !$miItemEsServicio; // solo el del producto tiene opción de pagar
-        $montoEnvio = $neg->monto_oferta ?? 0;
+        $montoEnvio = $costoEnvioPorNeg[$neg->id_negociacion] ?? 0;
     } else {
         // producto ↔ producto: ambos pagan
         $requierePago = true;
         $pagoOpcional = false;
-        $montoEnvio = $neg->monto_oferta ?? 0;
+        $montoEnvio = $costoEnvioPorNeg[$neg->id_negociacion] ?? 0;
     }
 
     $estadoLabel = match(true) {
