@@ -70,6 +70,9 @@ use App\Http\Controllers\Auth\VerificationController;
 // Ruta principal
 Route::get('/', fn() => redirect()->route('home'));
 
+// Delivery calcular (ruta web)
+Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcular'])->name('delivery.calcular');
+
 // Crear symlink storage en hosting compartido (MochaHost)
 // Visitar /storage-link una sola vez después de deploy
 Route::get('/storage-link', function () {
@@ -325,9 +328,6 @@ Route::post('/rating', function (\Illuminate\Http\Request $request) {
     \App\Models\Rating::create(['id_usuario' => auth()->id(), 'id_user_rated' => $request->id_user_rated, 'rating' => $request->rating]);
     return back()->with('success', '¡Gracias por tu calificación!');
 })->middleware('auth')->name('rating.store');
-
-// Delivery calcular (web route para que funcione sin prefijo /api)
-Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcular'])->name('delivery.calcular');
 
 // DEBUG: ruta temporal para diagnosticar /negociaciones
 Route::get('/debug-negociaciones', function () {
