@@ -91,6 +91,7 @@ class CardnetProvider implements PaymentProviderInterface
                 'amount'           => $monto,
                 'currency'         => $currency,
                 'environment'      => $this->environment,
+                'session-id'       => $opciones['session_id'] ?? session()->getId() ?? uniqid(),
                 'invoice-number'   => substr($opciones['invoice_number'] ?? uniqid(), 0, 15),
                 'reference-number' => $opciones['reference_number'] ?? uniqid(),
                 'client-ip'        => $opciones['client_ip'] ?? request()->ip(),
