@@ -211,6 +211,40 @@ function mostrarTab(tab) {
 
 // Star rating helpers
 var _selectedStars = {};
+
+async function recalcularEnvio(negId, valorArticulo) {
+    var spanMonto = document.getElementById('monto-envio-' + negId);
+    if (!spanMonto) return;
+    spanMonto.textContent = 'Calculando...';
+    try {
+        // Obtener municipio del usuario
+        var dirResp = await fetch('/direcciones', { headers: { 'Accept': 'application/json' } });
+        var dirData = await dirResp.json();
+        var dirs = Array.isArray(dirData) ? dirData : (dirData.data || []);
+        var municipio = '';
+        if (dirs.length > 0) {
+            var dir = dirs.find(function(d) { return d.predeterminada; }) || dirs[0];
+            municipio = (dir.municipio && dir.municipio.municipio) ? dir.municipio.municipio : '';
+        }
+        if (!municipio) { spanMonto.textContent = 'Sin dirección'; return; }
+
+        var resp = await fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + valorArticulo, {
+            headers: { 'Accept': 'application/json' }
+        });
+        var data = await resp.json();
+        var costo = parseFloat(data.costo_envio_total || 0);
+        spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
+
+        // Actualizar el botón de pago con el nuevo monto
+        var btnPago = document.getElementById('btn-pago-' + negId);
+        if (btnPago) {
+            var itemNombre = btnPago.closest('div')?.querySelector('.text-xs')?.textContent || 'Intercambio';
+            btnPago.setAttribute('onclick', 'abrirModalPagoIntercambio(' + negId + ', ' + costo + ', "' + itemNombre.replace(/"/g, '') + '")');
+        }
+    } catch (e) {
+        spanMonto.textContent = 'Error al calcular';
+    }
+}
 function highlightStars(negId, count) {
     var container = document.getElementById('stars-' + negId);
     if (!container) return;

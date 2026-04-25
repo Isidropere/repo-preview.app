@@ -185,9 +185,14 @@
             @else
             <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
                 <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
-                <p class="text-xs mb-1" style="color:#9a3412;">Monto a pagar: <span style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+                    <p class="text-xs" style="color:#9a3412;margin:0;">Monto a pagar: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }}, {{ $neg->item?->valor ?? 0 }})"
+                            style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
+                </div>
                 <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
                 <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                        id="btn-pago-{{ $neg->id_negociacion }}"
                         class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
                     💳 Realizar pago de envío
                 </button>
@@ -217,7 +222,12 @@
             @else
             <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
                 <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
-                <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío de tu producto o aprobar directamente sin pago.</p>
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                    <p class="text-xs" style="color:#9a3412;margin:0;">Envío estimado: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }}, {{ $neg->item?->valor ?? 0 }})"
+                            style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
+                </div>
+                <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío o aprobar directamente sin pago.</p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                     <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
                             class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
