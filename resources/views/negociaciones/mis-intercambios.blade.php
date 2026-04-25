@@ -100,7 +100,7 @@
             </div>
 
             <p style="font-size:0.85rem;font-weight:700;color:#374151;margin-bottom:0.75rem;">Selecciona una tarjeta</p>
-            <div id="listaTarjetasPagoIntercambio" style="max-height:180px;overflow-y:auto;margin-bottom:1rem;">
+            <div id="listaTarjetasPagoIntercambio" style="max-height:180px;overflow-y:auto;margin-bottom:0.75rem;">
                 @forelse($tarjetas as $tarjeta)
                 <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;cursor:pointer;margin-bottom:0.5rem;transition:all .15s;"
                        onclick="this.querySelector('input').checked=true;document.querySelectorAll('#listaTarjetasPagoIntercambio label').forEach(l=>l.style.borderColor='#e5e7eb');this.style.borderColor='#f58634';">
@@ -111,17 +111,39 @@
                     </div>
                 </label>
                 @empty
-                <p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:1rem 0;">No tienes tarjetas guardadas. Agrega una desde el checkout.</p>
+                <p id="sinTarjetasMsgInt" style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:0.5rem 0;">No tienes tarjetas guardadas.</p>
                 @endforelse
             </div>
 
-            @if($tarjetas->count())
-            <div style="margin-bottom:1rem;">
+            {{-- Botón agregar tarjeta --}}
+            <button type="button" onclick="toggleFormTarjetaInt()" id="btnToggleTarjetaInt"
+                    style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;border:2px dashed #fed7aa;background:#fff7ed;color:#c2410c;border-radius:0.75rem;padding:0.6rem;font-size:0.82rem;font-weight:600;cursor:pointer;margin-bottom:1rem;">
+                + Agregar nueva tarjeta
+            </button>
+
+            {{-- Formulario nueva tarjeta (oculto) --}}
+            <div id="formNuevaTarjetaInt" style="display:none;border:2px solid #fff7ed;border-radius:0.75rem;padding:1rem;margin-bottom:1rem;background:#fffbf5;">
+                <p style="font-size:0.82rem;font-weight:700;color:#374151;margin:0 0 0.75rem;">Nueva tarjeta</p>
+                <div id="tarjetaIntError" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:0.5rem;padding:0.5rem;margin-bottom:0.75rem;color:#dc2626;font-size:0.78rem;"></div>
+                <div style="display:grid;gap:0.5rem;">
+                    <input id="ntIntNombre" type="text" placeholder="Nombre del titular" style="border:1.5px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.82rem;width:100%;box-sizing:border-box;">
+                    <input id="ntIntNumero" type="text" placeholder="Número de tarjeta" maxlength="19" style="border:1.5px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.82rem;font-family:monospace;letter-spacing:0.1em;width:100%;box-sizing:border-box;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                        <input id="ntIntMes" type="text" placeholder="MM" maxlength="2" style="border:1.5px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.82rem;text-align:center;width:100%;box-sizing:border-box;">
+                        <input id="ntIntAnio" type="text" placeholder="YYYY" maxlength="4" style="border:1.5px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.82rem;text-align:center;width:100%;box-sizing:border-box;">
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                    <button type="button" onclick="guardarTarjetaInt()" id="btnGuardarTarjetaInt" style="flex:1;background:#f58634;color:#fff;border:none;border-radius:0.5rem;padding:0.5rem;font-size:0.82rem;font-weight:700;cursor:pointer;">Guardar</button>
+                    <button type="button" onclick="toggleFormTarjetaInt()" style="flex:1;background:#f1f5f9;color:#475569;border:none;border-radius:0.5rem;padding:0.5rem;font-size:0.82rem;cursor:pointer;">Cancelar</button>
+                </div>
+            </div>
+
+            <div id="seccionCvvInt" style="{{ $tarjetas->count() ? '' : 'display:none;' }}margin-bottom:1rem;">
                 <label style="display:block;font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.4rem;">CVV</label>
                 <input type="password" id="cvvPagoIntercambio" maxlength="4" placeholder="3-4 dígitos"
                        style="width:7rem;border:2px solid #fff7ed;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:1rem;text-align:center;letter-spacing:0.2em;font-family:monospace;outline:none;background:#fff7ed;">
             </div>
-            @endif
         </div>
         {{-- Footer --}}
         <div style="padding:1rem 1.5rem;border-top:1px solid #fff7ed;flex-shrink:0;background:#fafafa;display:flex;gap:0.75rem;">
@@ -138,6 +160,7 @@
 
 @push('scripts')
 <script>
+window._municipioUsuario = @json($costoEnvioPorNeg['_municipio'] ?? '');
 var _pagoNegId = null;
 
 function abrirModalPagoIntercambio(negId, monto, itemNombre) {
@@ -210,7 +233,95 @@ function mostrarTab(tab) {
 }
 
 // Star rating helpers
+// Tarjeta nueva en modal de pago
+function toggleFormTarjetaInt() {
+    var f = document.getElementById('formNuevaTarjetaInt');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    document.getElementById('tarjetaIntError').style.display = 'none';
+}
+
+// Formato número tarjeta
+document.addEventListener('input', function(e) {
+    if (e.target.id === 'ntIntNumero') {
+        var v = e.target.value.replace(/\D/g, '').substring(0, 16);
+        e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+    }
+});
+
+async function guardarTarjetaInt() {
+    var errDiv = document.getElementById('tarjetaIntError');
+    var btn = document.getElementById('btnGuardarTarjetaInt');
+    errDiv.style.display = 'none';
+
+    var nombre = document.getElementById('ntIntNombre').value.trim();
+    var numero = document.getElementById('ntIntNumero').value.replace(/\s/g, '');
+    var mes = document.getElementById('ntIntMes').value.trim();
+    var anio = document.getElementById('ntIntAnio').value.trim();
+
+    if (!nombre || !numero || numero.length < 13 || !mes) {
+        errDiv.textContent = 'Completa nombre, número y mes.';
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+        var fd = new FormData();
+        fd.append('_token', '{{ csrf_token() }}');
+        fd.append('nombre_titular', nombre);
+        fd.append('no_tarjeta', numero);
+        fd.append('mes_expiracion', mes);
+        if (anio) fd.append('anio_expiracion', anio);
+
+        var resp = await fetch('{{ route("carrito.tarjetas_store") }}', {
+            method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        var data = await resp.json();
+
+        if (!resp.ok && data.errors) {
+            errDiv.textContent = Object.values(data.errors).flat()[0] || 'Datos inválidos.';
+            errDiv.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Guardar';
+            return;
+        }
+
+        if (data.success) {
+            var t = data.data;
+            var last4 = t.last4 || numero.slice(-4);
+            // Quitar mensaje "sin tarjetas"
+            var msg = document.getElementById('sinTarjetasMsgInt');
+            if (msg) msg.remove();
+            // Agregar tarjeta a la lista
+            var html = '<label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;cursor:pointer;margin-bottom:0.5rem;" onclick="this.querySelector(\'input\').checked=true;document.querySelectorAll(\'#listaTarjetasPagoIntercambio label\').forEach(l=>l.style.borderColor=\'#e5e7eb\');this.style.borderColor=\'#f58634\';">' +
+                '<input type="radio" name="tarjeta_intercambio" value="' + t.id_tarjeta + '" style="accent-color:#f58634;">' +
+                '<div style="flex:1;"><p style="font-size:0.85rem;font-weight:600;color:#1e293b;margin:0;">**** ' + last4 + '</p><p style="font-size:0.72rem;color:#94a3b8;margin:0;">' + nombre + '</p></div></label>';
+            document.getElementById('listaTarjetasPagoIntercambio').insertAdjacentHTML('beforeend', html);
+            // Seleccionar la nueva
+            var labels = document.querySelectorAll('#listaTarjetasPagoIntercambio label');
+            var ultima = labels[labels.length - 1];
+            if (ultima) ultima.click();
+            // Mostrar CVV
+            document.getElementById('seccionCvvInt').style.display = '';
+            // Limpiar y cerrar form
+            ['ntIntNombre','ntIntNumero','ntIntMes','ntIntAnio'].forEach(function(id) { document.getElementById(id).value = ''; });
+            toggleFormTarjetaInt();
+        } else {
+            errDiv.textContent = data.message || 'Error al guardar.';
+            errDiv.style.display = 'block';
+        }
+    } catch (e) {
+        errDiv.textContent = 'Error de conexión.';
+        errDiv.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Guardar';
+}
+
 var _selectedStars = {};
+
+async function recalcularEnvio(negId) {
+    // Recargar la página para recalcular desde el servidor
+    window.location.reload();
+}
 function highlightStars(negId, count) {
     var container = document.getElementById('stars-' + negId);
     if (!container) return;

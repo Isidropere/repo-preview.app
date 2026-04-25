@@ -164,19 +164,42 @@ class NegociacionController extends Controller
 
         $comoEmisor = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
-            ->with(['item.imagenes', 'usuarioReceptor', 'item.inventarios'])
+            ->with(['item.imagenes', 'item.categoria', 'usuarioReceptor', 'item.inventarios'])
             ->orderByDesc('id_negociacion')
             ->get();
 
         $comoReceptor = \App\Models\Negociacion::where('usuario_receptor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
-            ->with(['item.imagenes', 'usuario', 'item.inventarios'])
+            ->with(['item.imagenes', 'item.categoria', 'usuario', 'item.inventarios'])
             ->orderByDesc('id_negociacion')
             ->get();
 
         $tarjetas = \App\Models\TarjetaPago::where('id_user', $userId)->where('estatus', 1)->get();
 
-        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas'));
+        // Calcular costo de envío para cada negociación que lo requiera
+        $direccion = \App\Models\Direcciones::where('id_user', $userId)
+            ->with('municipio')
+            ->first();
+
+        $costoEnvioPorNeg = ['_municipio' => ''];
+        if ($direccion && $direccion->municipio) {
+            $deliveryService = app(\App\Services\DeliveryService::class);
+            $municipio = $direccion->municipio->municipio ?? '';
+            $costoEnvioPorNeg['_municipio'] = $municipio;
+
+            $todasNegs = $comoEmisor->merge($comoReceptor);
+            foreach ($todasNegs as $neg) {
+                if ($neg->item) {
+                    // Intercambio: valor_articulo = 0 (no se cobra seguro sobre el valor)
+                    $resultado = $deliveryService->calcular($municipio, 'persona', 0);
+                    $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
+                } else {
+                    $costoEnvioPorNeg[$neg->id_negociacion] = 0;
+                }
+            }
+        }
+
+        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas', 'costoEnvioPorNeg'));
     }
 
     public function contarPendientes()
@@ -262,27 +285,46 @@ class NegociacionController extends Controller
             return redirect()->route('negociaciones.mis')->with('success', $msg);
         }
 
+        // Con pago: verificar dirección
+        $tieneDireccion = \App\Models\Direcciones::where('id_user', $userId)->exists();
+        if (!$tieneDireccion) {
+            $msg = 'Debes registrar una dirección de envío antes de pagar.';
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.index')], 422);
+            return redirect()->route('direcciones.index')->with('error', $msg);
+        }
+
         // Con pago: validar tarjeta
         $request->validate([
             'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
             'cvv'        => 'nullable|string|max:4',
         ]);
 
-        if ($neg->monto_oferta > 0) {
-            $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $request->id_tarjeta)
-                ->where('id_user', $userId)->firstOrFail();
+        if ($neg->monto_oferta > 0 || $request->input('monto_envio')) {
+            // Calcular el monto real de envío
+            $montoACobrar = 0;
+            $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
+            if ($direccion && $direccion->municipio && $neg->item) {
+                $deliveryService = app(\App\Services\DeliveryService::class);
+                $resultado = $deliveryService->calcular($direccion->municipio->municipio ?? '', 'persona', 0);
+                $montoACobrar = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
+            }
 
-            $pagoService = app(\App\Services\PagoService::class);
-            $resultado   = $pagoService->cobrarTarjeta(
-                (float) $neg->monto_oferta, '214',
-                $tarjeta->datosCardnet($request->cvv),
-                ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
-            );
+            if ($montoACobrar > 0) {
+                $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $request->id_tarjeta)
+                    ->where('id_user', $userId)->firstOrFail();
 
-            if (!$resultado['success']) {
-                $msg = 'Pago rechazado: ' . $resultado['error'];
-                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
-                return back()->with('error', $msg);
+                $pagoService = app(\App\Services\PagoService::class);
+                $resultado   = $pagoService->cobrarTarjeta(
+                    (float) $montoACobrar, '214',
+                    $tarjeta->datosCardnet($request->cvv),
+                    ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
+                );
+
+                if (!$resultado['success']) {
+                    $msg = 'Pago rechazado: ' . $resultado['error'];
+                    if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
+                    return back()->with('error', $msg);
+                }
             }
         }
 
