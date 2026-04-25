@@ -75,7 +75,6 @@ Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcu
 
 // Crear symlink storage en hosting compartido (MochaHost)
 // Visitar /storage-link una sola vez después de deploy
-Route::get('/storage-link', function () {
 
 // Ruta temporal para correr migraciones y limpiar caches en hosting sin SSH
 // Visitar UNA SOLA VEZ: /deploy-migrate?key=CambiaRD2026
