@@ -347,7 +347,9 @@ function renderKPIs(kpis) {
 function abrirModalKPI(key) {
   if (!datosCache) return;
   const d = datosCache;
-  document.getElementById('kpi-modal').style.display = 'flex';
+  var km = document.getElementById('kpi-modal');
+  if (km.parentElement !== document.body) document.body.appendChild(km);
+  km.style.display = 'flex';
   if (modalChart) { modalChart.destroy(); modalChart = null; }
   const cfg = {
     compras:{titulo:'Total de compras',sub:'Evolucion diaria de todas las ordenes',
@@ -618,13 +620,17 @@ function renderDelivery(zonas, config) {
         '<div style="font-size:.7rem;color:#94a3b8;margin-top:2px;">'+(z.dias_entrega||'')+'</div></div>';
     }).join('') + '</div>';
 }let deliveryConfigCache = [];
+
 function abrirModalDelivery() {
-  document.getElementById('delivery-modal').style.display = 'flex';
+  var m = document.getElementById('delivery-modal');
+  if (m.parentElement.id !== 'app' && m.parentElement !== document.body) document.body.appendChild(m);
+  m.style.display = 'flex';
   document.getElementById('delivery-save-msg').textContent = '';
   const fields = document.getElementById('delivery-form-fields');
   const cfg = datosCache && datosCache.delivery_config ? datosCache.delivery_config : [];
   if (!cfg.length) { fields.innerHTML = '<p style="color:#94a3b8;">Sin datos de configuracion.</p>'; return; }
   deliveryConfigCache = cfg;
+  
   // cfg is array of {clave, porcentaje, porcentaje_plataforma, porcentaje_seguro, porcentaje_manejo, descripcion}
   const fieldLabels = {
     porcentaje:'Ganancia negocio (%)',
@@ -632,6 +638,7 @@ function abrirModalDelivery() {
     porcentaje_seguro:'Seguro (%)',
     porcentaje_manejo:'Manejo (%)'
   };
+ 
   const claveLabel = {cortas:'Rutas cortas', largas:'Rutas largas', especiales:'Rutas especiales'};
   fields.innerHTML = cfg.map(row => {
     const titulo = claveLabel[row.clave] || row.clave;
@@ -645,7 +652,9 @@ function abrirModalDelivery() {
       '<div style="font-size:.85rem;font-weight:700;color:#1e293b;margin-bottom:10px;">'+titulo+'</div>' +
       inputs + '</div>';
   }).join('');
+    console.log("llega completa");
 }
+
 function cerrarModalDelivery() { document.getElementById('delivery-modal').style.display = 'none'; }
 async function guardarConfigDelivery() {
   const msg = document.getElementById('delivery-save-msg');
