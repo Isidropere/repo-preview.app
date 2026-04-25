@@ -218,7 +218,7 @@ async function recalcularEnvio(negId, valorArticulo) {
     if (!spanMonto) return;
     spanMonto.textContent = 'Calculando...';
     try {
-        var resp = await fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(window._municipioUsuario || '') + '&valor_articulo=' + valorArticulo, {
+        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(window._municipioUsuario || '') + '&valor_articulo=' + valorArticulo, {
             headers: { 'Accept': 'application/json' }
         });
         if (!resp.ok) { spanMonto.textContent = 'Error'; return; }

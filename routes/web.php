@@ -326,6 +326,9 @@ Route::post('/rating', function (\Illuminate\Http\Request $request) {
     return back()->with('success', '¡Gracias por tu calificación!');
 })->middleware('auth')->name('rating.store');
 
+// Delivery calcular (web route para que funcione sin prefijo /api)
+Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcular'])->name('delivery.calcular');
+
 // DEBUG: ruta temporal para diagnosticar /negociaciones
 Route::get('/debug-negociaciones', function () {
     $log = [];
