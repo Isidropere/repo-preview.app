@@ -360,6 +360,7 @@
                     @endforeach
                 </select>
             </div>
+            <input type="hidden" name="accionInput" id="accionInput">
 
             <!-- 🧩 Mensaje predefinido -->
             <div>
@@ -850,13 +851,54 @@ document.addEventListener("DOMContentLoaded", () => {
     [closeModal, cancelarBtn].forEach(b => b?.addEventListener("click", () => { modal.style.display = 'none'; }));
     modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = 'none'; });
 
+// =============================
+// 🔴 VALIDACIÓN VISUAL INLINE
+// =============================
+function mostrarErrorModal(campo, msg) {
+    limpiarErrorModal(campo);
+    if (!campo.dataset.originalBorder) {
+        campo.dataset.originalBorder = campo.style.border || '';
+    }
+    campo.style.border = '2px solid #ef4444';
+    const span = document.createElement('span');
+    span.className = 'modal-error-msg';
+    span.style.cssText = 'color:#ef4444;font-size:0.75rem;margin-top:0.25rem;display:block;';
+    span.textContent = msg;
+    campo.parentNode.insertBefore(span, campo.nextSibling);
+}
+
+function limpiarErrorModal(campo) {
+    campo.style.border = campo.dataset.originalBorder || '';
+    const siguiente = campo.nextElementSibling;
+    if (siguiente && siguiente.classList.contains('modal-error-msg')) {
+        siguiente.remove();
+    }
+}
+
+// Limpiar errores al escribir/cambiar
+mensajeInput?.addEventListener('input', () => limpiarErrorModal(mensajeInput));
+mensajePredefinidoSelect?.addEventListener('change', () => limpiarErrorModal(mensajePredefinidoSelect));
+
 enviarBtn?.addEventListener("click", async () => {
     const itemId = modal.dataset.itemId;
     const mensaje = mensajeInput.value.trim();
     const paquete = paqueteSelect.value || null;
     const monto = montoInput.value || null;
 
-    if (!mensaje) return alert("⚠️ Por favor, escribe un mensaje antes de enviar.");
+    // Validación inline
+    let hayError = false;
+
+    if (!mensajePredefinidoSelect.value) {
+        mostrarErrorModal(mensajePredefinidoSelect, 'Selecciona un mensaje predefinido');
+        hayError = true;
+    }
+
+    if (!mensaje) {
+        mostrarErrorModal(mensajeInput, 'El mensaje es obligatorio');
+        hayError = true;
+    }
+
+    if (hayError) return;
 
     try {
         await conProcesando(async () => {
@@ -871,7 +913,8 @@ enviarBtn?.addEventListener("click", async () => {
                     item_id: itemId, 
                     mensaje, 
                     paquete_id: paquete, 
-                    monto_oferta: monto 
+                    monto_oferta: monto,
+                    accionInput: document.getElementById("accionInput")?.value || null
                 })
             });
 
@@ -892,6 +935,7 @@ enviarBtn?.addEventListener("click", async () => {
             paqueteSelect.value = "";
             mensajePredefinidoSelect.value = "";
             AccionPredefinidoSelect.value = "";
+            if (document.getElementById("accionInput")) document.getElementById("accionInput").value = "";
             modal.style.display = 'none';
         });
     } catch (err) {
@@ -1068,8 +1112,11 @@ window.recalcularEnvio = function() {
         return;
     }
 
-    fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
-        .then(r => r.json())
+    fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(d => {
             if (!elCosto) return;
             const costo = parseFloat(d.costo_envio_total ?? 0);
@@ -1093,7 +1140,11 @@ window.recalcularEnvio = function() {
         })
         .catch(() => {
             window.costoEnvioActual = 0;
-            if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.style.color = '#16a34a'; }
+            if (elCosto) {
+                elCosto.textContent = 'No se pudo calcular el envío';
+                elCosto.style.color = '#ef4444';
+            }
+            if (elDias) elDias.classList.add('hidden');
             totalEstEl.textContent = totalSinEnvio.toFixed(2);
         });
 };

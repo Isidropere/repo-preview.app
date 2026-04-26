@@ -48,6 +48,52 @@ class NegociacionController extends Controller
         ], $status);
     }
 
+    public function enviarMensaje(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'mensaje'     => 'required|string|max:500',
+            'tipo_accion' => 'nullable|string',
+        ]);
+
+        $negociacion = Negociacion::findOrFail($id);
+        $userId = auth()->id();
+
+        // Verify user is either emisor or receptor
+        if ($userId != $negociacion->usuario_emisor_id && $userId != $negociacion->usuario_receptor_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para enviar mensajes en esta negociación.',
+            ], 403);
+        }
+
+        // Verify negociacion is in an active state
+        $estadosActivos = ['Inicial', 'aceptado', 'contraoferta'];
+        if (!in_array($negociacion->estado, $estadosActivos)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pueden enviar mensajes en una negociación en estado "' . $negociacion->estado . '".',
+            ], 422);
+        }
+
+        // Determine the receptor of the message (the other party)
+        $receptorId = $userId == $negociacion->usuario_emisor_id
+            ? $negociacion->usuario_receptor_id
+            : $negociacion->usuario_emisor_id;
+
+        $this->negociacionService->crearMensaje(
+            $userId,
+            $receptorId,
+            $negociacion->receptor_item_id,
+            $negociacion->emisor_paquete_id,
+            $validated['mensaje']
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mensaje enviado correctamente.',
+        ]);
+    }
+
     public function getNegociaciones($itemId)
     {
         $data = $this->negociacionService->obtenerNegociaciones(auth()->id(), $itemId);
@@ -199,7 +245,10 @@ class NegociacionController extends Controller
             }
         }
 
-        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas', 'costoEnvioPorNeg'));
+        $mensajesPredefinidos = \App\Models\PredefinedMessage::where('activo', true)->get();
+        $accionesPredefinidas = \App\Models\PredefinedMessage::where('activo', true)->select('tipo')->distinct()->pluck('tipo');
+
+        return view('negociaciones.mis-intercambios', compact('comoEmisor', 'comoReceptor', 'tarjetas', 'costoEnvioPorNeg', 'mensajesPredefinidos', 'accionesPredefinidas'));
     }
 
     public function contarPendientes()

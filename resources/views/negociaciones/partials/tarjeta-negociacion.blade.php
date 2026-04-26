@@ -112,6 +112,54 @@
     <p class="text-xs text-gray-500 mb-4">Monto adicional: <span class="font-bold text-blue-700">RD$ {{ number_format($neg->monto_oferta, 2) }}</span></p>
     @endif
 
+    {{-- CHAT COLAPSABLE: solo para estados activos --}}
+    @if(in_array($neg->estado, ['Inicial', 'aceptado', 'contraoferta']))
+    @php $chatId = $neg->id_negociacion; @endphp
+    <div style="margin-bottom:1rem;">
+        <button type="button" id="btn-chat-{{ $chatId }}" onclick="toggleChat({{ $chatId }})"
+                style="display:inline-flex;align-items:center;gap:0.4rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.75rem;font-size:0.78rem;font-weight:600;color:#475569;cursor:pointer;">
+            💬 Mensajes
+        </button>
+
+        <div id="chat-{{ $chatId }}" style="display:none;margin-top:0.75rem;border:1px solid #e2e8f0;border-radius:0.75rem;overflow:hidden;"
+             data-emisor="{{ $neg->usuario_emisor_id }}" data-receptor="{{ $neg->usuario_receptor_id }}" data-rol="{{ $rol }}" data-item="{{ $neg->receptor_item_id }}"
+        >
+            {{-- Mensajes container --}}
+            <div id="mensajes-{{ $chatId }}" style="max-height:220px;overflow-y:auto;padding:0.75rem;background:#fafafa;">
+                <p style="text-align:center;color:#94a3b8;font-size:0.78rem;">Cargando mensajes...</p>
+            </div>
+
+            {{-- Selector de acción y mensajes predefinidos --}}
+            <div style="padding:0.75rem;border-top:1px solid #e2e8f0;background:#fff;">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                    <select id="tipo-accion-{{ $chatId }}" onchange="filtrarMensajesPredefinidos({{ $chatId }})"
+                            style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#fff;">
+                        <option value="">-- Tipo de acción --</option>
+                        @if(isset($accionesPredefinidas))
+                        @foreach($accionesPredefinidas as $tipo)
+                        <option value="{{ $tipo }}">{{ ucfirst($tipo) }}</option>
+                        @endforeach
+                        @endif
+                    </select>
+                    <select id="msg-predefinido-{{ $chatId }}" onchange="previsualizarMensaje({{ $chatId }})"
+                            style="flex:2;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#fff;">
+                        <option value="">-- Mensaje predefinido --</option>
+                    </select>
+                </div>
+                <textarea id="preview-msg-{{ $chatId }}" readonly rows="2"
+                          style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#f8fafc;resize:none;box-sizing:border-box;margin-bottom:0.5rem;"
+                          placeholder="Selecciona un mensaje predefinido..."></textarea>
+                <div style="display:flex;justify-content:flex-end;">
+                    <button type="button" id="btn-enviar-{{ $chatId }}" onclick="enviarMensajeChat({{ $chatId }})"
+                            style="background:#f58634;color:#fff;border:none;border-radius:0.5rem;padding:0.4rem 1rem;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Estado de aprobaciones --}}
     @if($neg->estado === 'aceptado')
     <div class="mb-4 p-3 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
