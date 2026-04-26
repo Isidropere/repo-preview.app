@@ -118,7 +118,7 @@
             <div class="mt-2 text-sm text-gray-600">
 
                 @if(in_array($item->item->tipo_trans, [2, 3]))
-                <button onclick="listarPaquetes()"
+                <button
                     class="text-orange-600 hover:underline text-xs open-negociaciones font-semibold" 
                     data-id="{{ $item->item->id_item }}">
                       🤝 Negociar con el vendedor
@@ -807,8 +807,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".open-negociaciones").forEach(btn => {
         btn.addEventListener("click", async () => {
             const itemId = btn.dataset.id;
+            if (!itemId) { alert('Error: no se identificó el producto.'); return; }
             modal.style.display = 'flex';
             modal.dataset.itemId = itemId;
+            if (typeof listarPaquetes === 'function') listarPaquetes();
             mensajesContainer.innerHTML = `<p style="text-align:center;color:#9ca3af;font-size:0.82rem;">Cargando negociaciones...</p>`;
 
             try {
