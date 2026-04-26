@@ -431,7 +431,7 @@
                     onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
                     Cancelar
                 </button>
-                <button id="enviarNegociacionBtn"
+                <button id="enviarNegociacionBtnCarrito"
                     style="flex:2;padding:0.65rem 1rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:0.4rem;"
                     onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
                     onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
@@ -782,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("negociacionesModal");
     const closeModal = document.getElementById("closeModal");
     const cancelarBtn = document.getElementById("cancelarBtn");
-    const enviarBtn = document.getElementById("enviarNegociacionBtn");
+    const enviarBtn = document.getElementById("enviarNegociacionBtnCarrito");
     const mensajesContainer = document.getElementById("mensajesContainer");
     const mensajeInput = document.getElementById("mensaje");
     const paqueteSelect = document.getElementById("paquete");
