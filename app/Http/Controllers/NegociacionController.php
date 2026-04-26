@@ -30,8 +30,6 @@ class NegociacionController extends Controller
 
     public function store(Request $request)
     {
-        \Log::info('[NegociacionController::store] Request data:', $request->all());
-
         $validated = $request->validate([
             'item_id'         => 'required|exists:items,id_item',
             'mensaje'         => 'required|string|max:500',
