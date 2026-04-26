@@ -888,6 +888,12 @@ enviarBtn?.addEventListener("click", async () => {
     // Validación inline
     let hayError = false;
 
+    if (!itemId) {
+        console.error('item_id no definido. modal.dataset:', modal.dataset);
+        mostrarErrorModal(mensajeInput, 'Error: no se identificó el producto. Cierra y abre el modal de nuevo.');
+        return;
+    }
+
     if (!mensajePredefinidoSelect.value) {
         mostrarErrorModal(mensajePredefinidoSelect, 'Selecciona un mensaje predefinido');
         hayError = true;
