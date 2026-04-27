@@ -345,6 +345,7 @@ Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function
 Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::get('/',           [NegociacionController::class, 'misIntercambios'])->name('negociaciones.mis');
     Route::get('/pendientes', [NegociacionController::class, 'contarPendientes'])->name('negociaciones.pendientes');
+    Route::post('/{id}/mensaje', [NegociacionController::class, 'enviarMensaje'])->name('negociaciones.mensaje');
     Route::get('/{item}',     [NegociacionController::class, 'index'])->name('negociaciones.index');
     Route::post('/{id}/aceptar', [NegociacionController::class, 'aceptar'])->name('negociaciones.aceptar');
     Route::post('/{id}/rechazar', [NegociacionController::class, 'rechazar'])->name('negociaciones.rechazar');

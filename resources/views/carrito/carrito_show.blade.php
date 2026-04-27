@@ -118,7 +118,7 @@
             <div class="mt-2 text-sm text-gray-600">
 
                 @if(in_array($item->item->tipo_trans, [2, 3]))
-                <button onclick="listarPaquetes()"
+                <button
                     class="text-orange-600 hover:underline text-xs open-negociaciones font-semibold" 
                     data-id="{{ $item->item->id_item }}">
                       🤝 Negociar con el vendedor
@@ -360,6 +360,7 @@
                     @endforeach
                 </select>
             </div>
+            <input type="hidden" name="accionInput" id="accionInput">
 
             <!-- 🧩 Mensaje predefinido -->
             <div>
@@ -430,7 +431,7 @@
                     onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
                     Cancelar
                 </button>
-                <button id="enviarNegociacionBtn"
+                <button id="enviarNegociacionBtnCarrito"
                     style="flex:2;padding:0.65rem 1rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,134,52,0.4);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:0.4rem;"
                     onmouseover="this.style.boxShadow='0 6px 20px rgba(245,134,52,0.5)';this.style.transform='translateY(-1px)'"
                     onmouseout="this.style.boxShadow='0 4px 14px rgba(245,134,52,0.4)';this.style.transform='translateY(0)'">
@@ -781,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("negociacionesModal");
     const closeModal = document.getElementById("closeModal");
     const cancelarBtn = document.getElementById("cancelarBtn");
-    const enviarBtn = document.getElementById("enviarNegociacionBtn");
+    const enviarBtn = document.getElementById("enviarNegociacionBtnCarrito");
     const mensajesContainer = document.getElementById("mensajesContainer");
     const mensajeInput = document.getElementById("mensaje");
     const paqueteSelect = document.getElementById("paquete");
@@ -806,8 +807,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".open-negociaciones").forEach(btn => {
         btn.addEventListener("click", async () => {
             const itemId = btn.dataset.id;
+            if (!itemId) { alert('Error: no se identificó el producto.'); return; }
             modal.style.display = 'flex';
             modal.dataset.itemId = itemId;
+            if (typeof listarPaquetes === 'function') listarPaquetes();
             mensajesContainer.innerHTML = `<p style="text-align:center;color:#9ca3af;font-size:0.82rem;">Cargando negociaciones...</p>`;
 
             try {
@@ -850,13 +853,60 @@ document.addEventListener("DOMContentLoaded", () => {
     [closeModal, cancelarBtn].forEach(b => b?.addEventListener("click", () => { modal.style.display = 'none'; }));
     modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = 'none'; });
 
+// =============================
+// 🔴 VALIDACIÓN VISUAL INLINE
+// =============================
+function mostrarErrorModal(campo, msg) {
+    limpiarErrorModal(campo);
+    if (!campo.dataset.originalBorder) {
+        campo.dataset.originalBorder = campo.style.border || '';
+    }
+    campo.style.border = '2px solid #ef4444';
+    const span = document.createElement('span');
+    span.className = 'modal-error-msg';
+    span.style.cssText = 'color:#ef4444;font-size:0.75rem;margin-top:0.25rem;display:block;';
+    span.textContent = msg;
+    campo.parentNode.insertBefore(span, campo.nextSibling);
+}
+
+function limpiarErrorModal(campo) {
+    campo.style.border = campo.dataset.originalBorder || '';
+    const siguiente = campo.nextElementSibling;
+    if (siguiente && siguiente.classList.contains('modal-error-msg')) {
+        siguiente.remove();
+    }
+}
+
+// Limpiar errores al escribir/cambiar
+mensajeInput?.addEventListener('input', () => limpiarErrorModal(mensajeInput));
+mensajePredefinidoSelect?.addEventListener('change', () => limpiarErrorModal(mensajePredefinidoSelect));
+
 enviarBtn?.addEventListener("click", async () => {
     const itemId = modal.dataset.itemId;
     const mensaje = mensajeInput.value.trim();
     const paquete = paqueteSelect.value || null;
     const monto = montoInput.value || null;
 
-    if (!mensaje) return alert("⚠️ Por favor, escribe un mensaje antes de enviar.");
+    // Validación inline
+    let hayError = false;
+
+    if (!itemId) {
+        console.error('item_id no definido. modal.dataset:', modal.dataset);
+        mostrarErrorModal(mensajeInput, 'Error: no se identificó el producto. Cierra y abre el modal de nuevo.');
+        return;
+    }
+
+    if (!mensajePredefinidoSelect.value) {
+        mostrarErrorModal(mensajePredefinidoSelect, 'Selecciona un mensaje predefinido');
+        hayError = true;
+    }
+
+    if (!mensaje) {
+        mostrarErrorModal(mensajeInput, 'El mensaje es obligatorio');
+        hayError = true;
+    }
+
+    if (hayError) return;
 
     try {
         await conProcesando(async () => {
@@ -871,7 +921,8 @@ enviarBtn?.addEventListener("click", async () => {
                     item_id: itemId, 
                     mensaje, 
                     paquete_id: paquete, 
-                    monto_oferta: monto 
+                    monto_oferta: monto,
+                    accionInput: document.getElementById("accionInput")?.value || null
                 })
             });
 
@@ -892,6 +943,7 @@ enviarBtn?.addEventListener("click", async () => {
             paqueteSelect.value = "";
             mensajePredefinidoSelect.value = "";
             AccionPredefinidoSelect.value = "";
+            if (document.getElementById("accionInput")) document.getElementById("accionInput").value = "";
             modal.style.display = 'none';
         });
     } catch (err) {
@@ -1068,8 +1120,11 @@ window.recalcularEnvio = function() {
         return;
     }
 
-    fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
-        .then(r => r.json())
+    fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(d => {
             if (!elCosto) return;
             const costo = parseFloat(d.costo_envio_total ?? 0);
@@ -1093,7 +1148,11 @@ window.recalcularEnvio = function() {
         })
         .catch(() => {
             window.costoEnvioActual = 0;
-            if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.style.color = '#16a34a'; }
+            if (elCosto) {
+                elCosto.textContent = 'No se pudo calcular el envío';
+                elCosto.style.color = '#ef4444';
+            }
+            if (elDias) elDias.classList.add('hidden');
             totalEstEl.textContent = totalSinEnvio.toFixed(2);
         });
 };

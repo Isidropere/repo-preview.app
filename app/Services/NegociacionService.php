@@ -426,7 +426,7 @@ class NegociacionService
     // Helpers privados
     // ───────────────────────────────────────────────────────
 
-    private function crearMensaje(int $emisorId, int $receptorId, ?int $itemId, ?int $paqueteId, string $texto): void
+    public function crearMensaje(int $emisorId, int $receptorId, ?int $itemId, ?int $paqueteId, string $texto): void
     {
         try {
             Message::create([

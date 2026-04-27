@@ -318,6 +318,160 @@ async function guardarTarjetaInt() {
 
 var _selectedStars = {};
 
+// ============================================================
+// CHAT DE NEGOCIACIONES
+// ============================================================
+var _allPredefinedMessages = @json($mensajesPredefinidos ?? []);
+var _chatLoaded = {};
+
+function toggleChat(negId) {
+    var chatDiv = document.getElementById('chat-' + negId);
+    if (!chatDiv) return;
+    var isHidden = chatDiv.style.display === 'none';
+    chatDiv.style.display = isHidden ? 'block' : 'none';
+    if (isHidden && !_chatLoaded[negId]) {
+        cargarMensajesChat(negId);
+    }
+}
+
+function cargarMensajesChat(negId) {
+    var container = document.getElementById('mensajes-' + negId);
+    if (!container) return;
+    var chatBtn = container.closest('[id^="chat-"]');
+    var emisorId = chatBtn ? chatBtn.getAttribute('data-emisor') : null;
+    var receptorId = chatBtn ? chatBtn.getAttribute('data-receptor') : null;
+    if (!emisorId || !receptorId) {
+        // Fallback: get from data attributes on the chat div
+        var chatEl = document.getElementById('chat-' + negId);
+        emisorId = chatEl.dataset.emisor;
+        receptorId = chatEl.dataset.receptor;
+    }
+    container.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.78rem;">Cargando mensajes...</p>';
+    fetch('/carrito/negociaciones/mensajes/' + emisorId + '/' + receptorId, {
+        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        _chatLoaded[negId] = true;
+        var msgs = data.mensajes || [];
+        if (msgs.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.78rem;">No hay mensajes aún.</p>';
+            return;
+        }
+        var html = '';
+        msgs.forEach(function(m) {
+            var align = m.propio ? 'flex-end' : 'flex-start';
+            var bg = m.propio ? '#dbeafe' : '#f1f5f9';
+            var borderColor = m.propio ? '#93c5fd' : '#e2e8f0';
+            html += '<div style="display:flex;justify-content:' + align + ';margin-bottom:0.4rem;">';
+            html += '<div style="max-width:80%;background:' + bg + ';border:1px solid ' + borderColor + ';border-radius:0.5rem;padding:0.4rem 0.6rem;">';
+            html += '<p style="font-size:0.78rem;color:#1e293b;margin:0;word-break:break-word;">' + escapeHtml(m.mensaje) + '</p>';
+            html += '<p style="font-size:0.65rem;color:#94a3b8;margin:0.15rem 0 0;text-align:right;">' + (m.fecha || '') + '</p>';
+            html += '</div></div>';
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    })
+    .catch(function() {
+        container.innerHTML = '<p style="text-align:center;color:#ef4444;font-size:0.78rem;">Error al cargar mensajes. Intenta de nuevo.</p>';
+    });
+}
+
+function escapeHtml(text) {
+    var d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+function filtrarMensajesPredefinidos(negId) {
+    var tipoSelect = document.getElementById('tipo-accion-' + negId);
+    var msgSelect = document.getElementById('msg-predefinido-' + negId);
+    var preview = document.getElementById('preview-msg-' + negId);
+    if (!tipoSelect || !msgSelect) return;
+
+    var tipoSeleccionado = tipoSelect.value;
+    // Determine user role for this negotiation
+    var chatEl = document.getElementById('chat-' + negId);
+    var userRol = chatEl ? chatEl.dataset.rol : 'general';
+
+    msgSelect.innerHTML = '<option value="">-- Mensaje predefinido --</option>';
+    if (preview) preview.value = '';
+
+    _allPredefinedMessages.forEach(function(pm) {
+        var matchTipo = !tipoSeleccionado || pm.tipo === tipoSeleccionado;
+        var matchRol = pm.rol === 'general' || pm.rol === userRol;
+        if (matchTipo && matchRol) {
+            var opt = document.createElement('option');
+            opt.value = pm.mensaje;
+            opt.textContent = pm.titulo;
+            opt.setAttribute('data-tipo', pm.tipo || '');
+            msgSelect.appendChild(opt);
+        }
+    });
+}
+
+function previsualizarMensaje(negId) {
+    var msgSelect = document.getElementById('msg-predefinido-' + negId);
+    var preview = document.getElementById('preview-msg-' + negId);
+    if (!msgSelect || !preview) return;
+    preview.value = msgSelect.value;
+}
+
+function enviarMensajeChat(negId) {
+    var preview = document.getElementById('preview-msg-' + negId);
+    var tipoSelect = document.getElementById('tipo-accion-' + negId);
+    var btn = document.getElementById('btn-enviar-' + negId);
+    if (!preview || !preview.value.trim()) return;
+
+    var mensaje = preview.value.trim();
+    var tipoAccion = tipoSelect ? tipoSelect.value : '';
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch('/negociaciones/' + negId + '/mensaje', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ mensaje: mensaje, tipo_accion: tipoAccion || null })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.textContent = 'Enviar';
+        if (data.success) {
+            // Add the message bubble to the chat
+            var container = document.getElementById('mensajes-' + negId);
+            // Remove "no messages" placeholder if present
+            var placeholder = container.querySelector('p[style*="text-align:center"]');
+            if (placeholder && container.children.length === 1) container.innerHTML = '';
+            var div = document.createElement('div');
+            div.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:0.4rem;';
+            div.innerHTML = '<div style="max-width:80%;background:#dbeafe;border:1px solid #93c5fd;border-radius:0.5rem;padding:0.4rem 0.6rem;">' +
+                '<p style="font-size:0.78rem;color:#1e293b;margin:0;word-break:break-word;">' + escapeHtml(mensaje) + '</p>' +
+                '<p style="font-size:0.65rem;color:#94a3b8;margin:0.15rem 0 0;text-align:right;">Ahora</p>' +
+                '</div>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            // Reset form
+            preview.value = '';
+            var msgSelect = document.getElementById('msg-predefinido-' + negId);
+            if (msgSelect) msgSelect.value = '';
+        } else {
+            alert(data.message || 'Error al enviar mensaje.');
+        }
+    })
+    .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Enviar';
+        alert('Error de conexión al enviar mensaje.');
+    });
+}
+// ============================================================
+
 async function recalcularEnvio(negId) {
     // Recargar la página para recalcular desde el servidor
     window.location.reload();
