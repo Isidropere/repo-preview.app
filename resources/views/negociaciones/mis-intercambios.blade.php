@@ -473,8 +473,27 @@ function enviarMensajeChat(negId) {
 // ============================================================
 
 async function recalcularEnvio(negId) {
-    // Recargar la página para recalcular desde el servidor
-    window.location.reload();
+    var spanMonto = document.getElementById('monto-envio-' + negId);
+    if (!spanMonto) { window.location.reload(); return; }
+    var municipio = window._municipioUsuario || '';
+    if (!municipio) { spanMonto.textContent = 'Sin dirección'; return; }
+    spanMonto.textContent = 'Calculando...';
+    try {
+        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=0', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) { spanMonto.textContent = 'Error (' + resp.status + ')'; return; }
+        var data = await resp.json();
+        if (!data.success) { spanMonto.textContent = data.message || 'Sin zona'; return; }
+        var costo = parseFloat(data.costo_envio_total || 0);
+        spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
+        var btnPago = document.getElementById('btn-pago-' + negId);
+        if (btnPago) {
+            btnPago.setAttribute('onclick', 'abrirModalPagoIntercambio(' + negId + ', ' + costo + ', "Intercambio")');
+        }
+    } catch (e) {
+        spanMonto.textContent = 'Error de conexión';
+    }
 }
 function highlightStars(negId, count) {
     var container = document.getElementById('stars-' + negId);
