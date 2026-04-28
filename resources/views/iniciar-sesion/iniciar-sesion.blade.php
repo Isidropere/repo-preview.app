@@ -163,7 +163,7 @@
                         </div>
 
                         <!-- Botón de Inicio de Sesión -->
-                        <button type="submit" class="w-full py-3 px-4 bg-secondary text-white font-semibold rounded-lg hover:bg-hoverSecondary transition-colors">
+                        <button type="submit" id="btnLogin" onclick="this.disabled=true;this.textContent='Ingresando...';this.form.submit();" class="w-full py-3 px-4 bg-secondary text-white font-semibold rounded-lg hover:bg-hoverSecondary transition-colors">
                             Iniciar Sesión
                         </button>
 
@@ -193,6 +193,12 @@
     </div>
     <br>
 </main>
+<script>
+document.querySelector('form[action*="login"]')?.addEventListener('submit', function() {
+    var btn = document.getElementById('btnLogin');
+    if (btn) { btn.disabled = true; btn.textContent = 'Ingresando...'; }
+});
+</script>
 </body>
 
 </html>

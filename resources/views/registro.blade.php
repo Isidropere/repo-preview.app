@@ -179,6 +179,7 @@
                     </label>
                 </div>
                 <button type="submit" id="submitButton"
+                        onclick="this.disabled=true;this.textContent='Creando cuenta...';this.form.submit();"
                         class="w-full py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary transition-colors">
                     Crear mi cuenta
                 </button>

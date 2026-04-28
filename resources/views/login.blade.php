@@ -100,6 +100,7 @@
                                 <div class="m-3" data-astro-cid-zp6vblvr> <label for="remember-me" class="text-sm"
                                         data-astro-cid-zp6vblvr>Recordarme</label> </div>
                             </div> <!-- End Checkbox --> <button type="submit"
+                                onclick="this.disabled=true;this.textContent='Ingresando...';this.form.submit();"
                                 class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary disabled:opacity-50 disabled:pointer-events-none"
                                 data-astro-cid-zp6vblvr>Iniciar Sesión</button>
                         </form>
