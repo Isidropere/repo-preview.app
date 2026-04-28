@@ -18,6 +18,11 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        // Si ya está autenticado, redirigir directamente
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
