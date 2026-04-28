@@ -342,9 +342,13 @@
     @if($neg->estado === 'completado')
     @php
         $otroUserId = $rol === 'emisor' ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
-        $yaCalifique = \App\Models\Rating::where('id_usuario', auth()->id())
-            ->where('id_user_rated', $otroUserId)
-            ->exists();
+        try {
+            $yaCalifique = \App\Models\Rating::where('id_usuario', auth()->id())
+                ->where('id_user_rated', $otroUserId)
+                ->exists();
+        } catch (\Throwable $e) {
+            $yaCalifique = false;
+        }
     @endphp
     <div class="mt-3 pt-3 border-t border-gray-100">
         @if($yaCalifique)
