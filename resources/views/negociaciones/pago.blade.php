@@ -60,7 +60,7 @@
                 <input type="password" name="cvv" maxlength="4" placeholder="•••"
                        class="w-28 border-2 border-gray-200 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:border-blue-500">
             </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all">
+            <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all">
                 💳 Confirmar pago
             </button>
             @endif
@@ -72,7 +72,7 @@
                 <p class="text-emerald-700 font-semibold">Este intercambio no requiere pago monetario.</p>
                 <p class="text-xs text-emerald-600 mt-1">Solo confirma tu participación.</p>
             </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm">
+            <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm">
                 ✅ Confirmar participación
             </button>
         </form>

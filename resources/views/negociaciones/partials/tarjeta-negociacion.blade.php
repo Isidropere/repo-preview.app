@@ -190,11 +190,11 @@
         @if($rol === 'receptor' && in_array($neg->estado, ['Inicial','contraoferta']))
         <form action="{{ route('negociaciones.aceptar', $neg->id_negociacion) }}" method="POST">
             @csrf
-            <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">✓ Aceptar propuesta</button>
+            <button type="submit" onclick="this.disabled=true;this.textContent='Aceptando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">✓ Aceptar propuesta</button>
         </form>
         <form action="{{ route('negociaciones.rechazar', $neg->id_negociacion) }}" method="POST" onsubmit="return confirm('¿Rechazar esta propuesta?')">
             @csrf
-            <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#ef4444;">✕ Rechazar</button>
+            <button type="submit" onclick="this.disabled=true;this.textContent='Rechazando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#ef4444;">✕ Rechazar</button>
         </form>
         @endif
 
@@ -206,7 +206,7 @@
             </p>
             <form action="{{ route($rol === 'emisor' ? 'negociaciones.confirmar_emisor' : 'negociaciones.confirmar_receptor', $neg->id_negociacion) }}" method="POST">
                 @csrf
-                <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                <button type="submit" onclick="this.disabled=true;this.textContent='Aprobando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
                     ✅ Aprobar intercambio
                 </button>
             </form>
@@ -261,7 +261,7 @@
                     <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
                         @csrf
                         <input type="hidden" name="sin_pago" value="1">
-                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                        <button type="submit" onclick="this.disabled=true;this.textContent='Aprobando...';this.form.submit();" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
                             ✅ Aprobar sin pago
                         </button>
                     </form>
@@ -284,7 +284,7 @@
                     <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
                         @csrf
                         <input type="hidden" name="sin_pago" value="1">
-                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                        <button type="submit" onclick="this.disabled=true;this.textContent='Aprobando...';this.form.submit();" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
                             ✅ Aprobar sin pago
                         </button>
                     </form>
@@ -301,7 +301,7 @@
             <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
                 @csrf
                 <input type="hidden" name="sin_pago" value="1">
-                <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                <button type="submit" onclick="this.disabled=true;this.textContent='Confirmando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
                     ✅ Confirmar sin pago
                 </button>
             </form>
@@ -315,7 +315,7 @@
             <p class="text-xs mb-3" style="color:#166534;">No requiere pago de envío. Coordinen directamente la prestación de servicios.</p>
             <form action="{{ route('negociaciones.completar', $neg->id_negociacion) }}" method="POST">
                 @csrf
-                <button type="submit" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                <button type="submit" onclick="this.disabled=true;this.textContent='Completando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
                     ✅ Marcar como completado
                 </button>
             </form>
@@ -333,7 +333,7 @@
         @if($rol === 'emisor' && in_array($neg->estado, ['Inicial','contraoferta']))
         <form action="{{ route('negociaciones.cancelar', $neg->id_negociacion) }}" method="POST" onsubmit="return confirm('¿Cancelar esta propuesta?')">
             @csrf
-            <button type="submit" class="px-3 py-2 text-gray-600 text-xs font-semibold rounded-lg" style="background:#f1f5f9;">Cancelar propuesta</button>
+            <button type="submit" onclick="this.disabled=true;this.textContent='Cancelando...';this.form.submit();" class="px-3 py-2 text-gray-600 text-xs font-semibold rounded-lg" style="background:#f1f5f9;">Cancelar propuesta</button>
         </form>
         @endif
     </div>
