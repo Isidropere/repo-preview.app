@@ -100,6 +100,22 @@ class Handler extends ExceptionHandler
                 'request' => $request->all()
             ]);
 
+            // Guardar error en BD también para JSON
+            try {
+                \DB::table('application_errors')->insert([
+                    'error_reference' => \Illuminate\Support\Str::uuid()->toString(),
+                    'message'         => $exception->getMessage(),
+                    'stack_trace'     => substr($exception->getTraceAsString(), 0, 5000),
+                    'url'             => $request->fullUrl(),
+                    'method'          => $request->method(),
+                    'user_id'         => auth()->id(),
+                    'ip_address'      => $request->ip(),
+                    'user_agent'      => $request->userAgent(),
+                    'input_data'      => json_encode($request->except(['password', 'password_confirmation', 'cvv'])),
+                    'created_at'      => now(),
+                ]);
+            } catch (\Throwable $dbErr) { /* silenciar */ }
+
             return response()->json($response, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
