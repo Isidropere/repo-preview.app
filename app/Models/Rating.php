@@ -16,7 +16,7 @@ class Rating extends Model
     protected $fillable = [
         'rating',
         'id_usuario',      // quien califica
-        'id_user_rated',   // quien recibe la calificación (antes id_miembro)
+        'id_miembro',      // quien recibe la calificación
     ];
 
     protected $casts = [
@@ -33,6 +33,6 @@ class Rating extends Model
     /** Usuario que recibe la calificación */
     public function usuarioCalificado()
     {
-        return $this->belongsTo(User::class, 'id_user_rated');
+        return $this->belongsTo(User::class, 'id_miembro');
     }
 }

@@ -344,7 +344,7 @@
         $otroUserId = $rol === 'emisor' ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
         try {
             $yaCalifique = \App\Models\Rating::where('id_usuario', auth()->id())
-                ->where('id_user_rated', $otroUserId)
+                ->where('id_miembro', $otroUserId)
                 ->exists();
         } catch (\Throwable $e) {
             $yaCalifique = false;
@@ -358,7 +358,7 @@
             <p class="text-xs font-semibold mb-2" style="color:#92400e;">⭐ ¿Cómo fue tu experiencia? (opcional)</p>
             <form action="{{ route('rating.store') }}" method="POST" style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
                 @csrf
-                <input type="hidden" name="id_user_rated" value="{{ $otroUserId }}">
+                <input type="hidden" name="id_miembro" value="{{ $otroUserId }}">
                 <div style="display:flex;gap:2px;" id="stars-{{ $neg->id_negociacion }}">
                     @for($s = 1; $s <= 5; $s++)
                     <label style="cursor:pointer;font-size:1.25rem;color:#d1d5db;transition:color .15s;"
