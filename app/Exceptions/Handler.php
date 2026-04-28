@@ -13,157 +13,113 @@ use Illuminate\Session\TokenMismatchException;
 
 class Handler extends ExceptionHandler
 {
-    /**
-     * The list of the inputs that are never flashed to the session on validation exceptions.
-     *
-     * @var array<int, string>
-     */
     use ErrorLoggerTrait;
+
     protected $dontFlash = [
         'current_password',
         'password',
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
             \Illuminate\Support\Facades\Log::error('[Exception] ' . $e->getMessage(), [
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'url'   => request()->fullUrl(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'url'  => request()->fullUrl(),
             ]);
         });
     }
 
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Symfony\Component\HttpFoundation\Response
-     *
-     * @throws \Throwable
-     */
     public function render($request, Throwable $exception)
     {
-        // 🔴 SESIÓN EXPIRADA → LOGIN
-        if ($exception instanceof TokenMismatchException) {
+        // ══════════════════════════════════════════════════════
+        // GUARDAR TODOS LOS ERRORES EN BD (sin excepciones)
+        // ══════════════════════════════════════════════════════
+        $errorRef = $this->guardarErrorEnBD($request, $exception);
 
-            // Si es una petición AJAX / API
+        // ── SESIÓN EXPIRADA → LOGIN ──
+        if ($exception instanceof TokenMismatchException) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'La sesión expiró, vuelva a iniciar sesión',
-                    'redirect' => route('login')
+                    'redirect' => route('login'),
+                    'error_reference' => $errorRef,
                 ], 419);
             }
-
-            // Petición normal (web)
-            return redirect()
-                ->route('login')
+            return redirect()->route('login')
                 ->with('message', 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
         }
 
-        // 🔵 TU CÓDIGO EXISTENTE
+        // ── RESPUESTAS JSON ──
         if ($request->wantsJson()) {
             $response = [
                 'success' => false,
-                'message' => $exception->getMessage()
+                'message' => $exception->getMessage(),
+                'error_reference' => $errorRef,
             ];
 
             if ($exception instanceof HttpException) {
-                $response['message'] = Response::$statusTexts[$exception->getStatusCode()];
-                $response['data'] = $exception->getMessage();
+                $response['message'] = Response::$statusTexts[$exception->getStatusCode()] ?? $exception->getMessage();
                 return response()->json($response, $exception->getStatusCode());
             }
-
             if ($exception instanceof ModelNotFoundException) {
-                return response()->json($response, Response::HTTP_NOT_FOUND);
+                $response['message'] = 'Recurso no encontrado.';
+                return response()->json($response, 404);
             }
-
             if ($exception instanceof ValidationException) {
                 $response['errors'] = $exception->validator->errors()->getMessages();
-                return response()->json($response, Response::HTTP_UNPROCESSABLE_ENTITY);
+                return response()->json($response, 422);
             }
-
             if (config('app.debug')) {
                 $response['trace'] = $exception->getTrace();
             }
-
-            $this->logError($exception, [
-                'handler' => 'global',
-                'type' => 'render',
-                'request' => $request->all()
-            ]);
-
-            // Guardar error en BD también para JSON
-            try {
-                \DB::table('application_errors')->insert([
-                    'error_reference' => \Illuminate\Support\Str::uuid()->toString(),
-                    'message'         => $exception->getMessage(),
-                    'stack_trace'     => substr($exception->getTraceAsString(), 0, 5000),
-                    'url'             => $request->fullUrl(),
-                    'method'          => $request->method(),
-                    'user_id'         => auth()->id(),
-                    'ip_address'      => $request->ip(),
-                    'user_agent'      => $request->userAgent(),
-                    'input_data'      => json_encode($request->except(['password', 'password_confirmation', 'cvv'])),
-                    'created_at'      => now(),
-                ]);
-            } catch (\Throwable $dbErr) { /* silenciar */ }
-
-            return response()->json($response, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json($response, 500);
         }
 
-        // 🔵 Para peticiones web: SIEMPRE guardar error en BD (excepto 404, validación, CSRF)
-        if (!$request->wantsJson()) {
-            $errorRef = null;
-            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
-            $skipDb = $exception instanceof ValidationException
-                   || $exception instanceof TokenMismatchException
-                   || $exception instanceof ModelNotFoundException
-                   || $statusCode === 404;
-
-            if (!$skipDb) {
-                try {
-                    $errorRef = \Illuminate\Support\Str::uuid()->toString();
-                    \DB::table('application_errors')->insert([
-                        'error_reference' => $errorRef,
-                        'message'         => $exception->getMessage(),
-                        'stack_trace'     => $exception->getTraceAsString(),
-                        'url'             => $request->fullUrl(),
-                        'method'          => $request->method(),
-                        'user_id'         => auth()->id(),
-                        'ip_address'      => $request->ip(),
-                        'user_agent'      => $request->userAgent(),
-                        'input_data'      => json_encode($request->except(['password', 'password_confirmation'])),
-                        'created_at'      => now(),
-                    ]);
-                } catch (\Throwable $dbErr) {
-                    \Illuminate\Support\Facades\Log::error('No se pudo guardar error en BD: ' . $dbErr->getMessage());
-                }
-            }
-
-            // En modo debug, dejar que Laravel muestre su página detallada
-            if (config('app.debug')) {
-                return parent::render($request, $exception);
-            }
-
-            // En producción, mostrar vista personalizada
-            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
-            return response()->view('errors.custom', [
-                'error_reference' => $errorRef,
-                'status_code'     => $statusCode,
-                'message'         => $statusCode === 404 ? 'Página no encontrada' : 'Algo salió mal',
-            ], $statusCode);
+        // ── RESPUESTAS WEB ──
+        if (config('app.debug')) {
+            return parent::render($request, $exception);
         }
 
-        return parent::render($request, $exception);
+        $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
+        return response()->view('errors.custom', [
+            'error_reference' => $errorRef,
+            'status_code'     => $statusCode,
+            'message'         => $statusCode === 404 ? 'Página no encontrada' : 'Algo salió mal',
+        ], $statusCode);
     }
 
+    /**
+     * Guarda CUALQUIER error en la tabla application_errors.
+     * Retorna el error_reference (UUID) o null si falla.
+     */
+    private function guardarErrorEnBD($request, Throwable $exception): ?string
+    {
+        try {
+            $errorRef = \Illuminate\Support\Str::uuid()->toString();
+            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
 
+            \DB::table('application_errors')->insert([
+                'error_reference' => $errorRef,
+                'message'         => substr($exception->getMessage(), 0, 1000),
+                'stack_trace'     => substr($exception->getTraceAsString(), 0, 5000),
+                'url'             => substr($request->fullUrl(), 0, 500),
+                'method'          => $request->method(),
+                'user_id'         => auth()->id(),
+                'ip_address'      => $request->ip(),
+                'user_agent'      => substr($request->userAgent() ?? '', 0, 500),
+                'input_data'      => substr(json_encode($request->except(['password', 'password_confirmation', 'cvv', 'no_tarjeta'])), 0, 2000),
+                'created_at'      => now(),
+            ]);
+
+            return $errorRef;
+        } catch (\Throwable $e) {
+            // Si no se puede guardar en BD, al menos loguear
+            \Illuminate\Support\Facades\Log::error('Handler: no se pudo guardar error en BD: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
