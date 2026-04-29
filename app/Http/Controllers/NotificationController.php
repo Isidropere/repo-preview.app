@@ -36,23 +36,15 @@ class NotificationController extends Controller
                 return response()->json(['error' => 'Usuario no autenticado'], 401);
             }
 
-            $mensajesPredefinidos = PredefinedMessage::all();
-
-            // Un mensaje por emisor (el más reciente), máx 10
+            // Solo notificaciones NO leídas
             $mensajes = Message::where('id_receptor', $userId)
-                ->whereIn('id', function ($sub) use ($userId) {
-                    $sub->selectRaw('MAX(id)')
-                        ->from('messages')
-                        ->where('id_receptor', $userId)
-                        ->groupBy('id_emisor');
-                })
+                ->where('leido', 0)
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
+                ->limit(20)
                 ->get();
 
             return response()->json([
                 'mensajes' => $mensajes,
-                'mensajesPredefinidos' => $mensajesPredefinidos
             ]);
 
         } catch (\Exception $e) {
@@ -65,8 +57,29 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+     * Página completa de notificaciones del usuario
+     */
+    public function misNotificaciones()
+    {
+        $mensajes = Message::where('id_receptor', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(30);
 
-    public function marcarLeido($id)
+        return view('notificaciones.index', compact('mensajes'));
+    }
+
+    public function marcarTodasLeidas()
+    {
+        Message::where('id_receptor', Auth::id())
+            ->where('leido', 0)
+            ->update(['leido' => 1]);
+
+        return back()->with('success', 'Todas las notificaciones marcadas como leídas.');
+    }
+
+
+    public function marcarLeido(Request $request, $id)
     {
         $mensaje = Message::find($id);
         if ($mensaje && $mensaje->id_receptor === Auth::id()) {
@@ -74,7 +87,12 @@ class NotificationController extends Controller
             $mensaje->save();
         }
 
-        return response()->json(['success' => true]);
+        // Si es AJAX retornar JSON, si es form normal redirigir
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back();
     }
 
 
