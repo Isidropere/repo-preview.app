@@ -38,7 +38,7 @@
                 $imgSrc = $imgNombre ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgNombre) : asset('imgs/defaults/producto_default.svg');
             @endphp
             <div class="flex items-center gap-4 p-4 bg-orange-50 border border-orange-200 rounded-xl mb-6">
-                <img src="{{ $imgSrc }}" alt="{{ $itemModel->item }}" class="w-16 h-16 rounded-xl object-cover border border-orange-100 flex-shrink-0">
+                <img src="{{ $imgSrc }}" alt="{{ $itemModel->item }}" class="w-16 h-16 rounded-xl object-cover border border-orange-100 flex-shrink-0" loading="lazy" width="64" height="64">
                 <div>
                     <p class="font-bold text-gray-800">{{ $itemModel->item }}</p>
                     <p class="text-sm text-orange-600 font-semibold">

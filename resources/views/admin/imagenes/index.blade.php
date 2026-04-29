@@ -69,6 +69,7 @@
                     <img src="{{ asset($img->ruta . '/' . ($img->nombre ?? '')) }}"
                          alt="Imagen artículo"
                          style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"
+                         loading="lazy" width="64" height="64"
                          onerror="this.src='{{ asset('images/placeholder.png') }}'">
                 </td>
                 <td style="padding:10px 16px;color:#1e293b;font-weight:500;">
@@ -158,6 +159,7 @@
                     <img src="{{ \App\Helpers\ImageHelper::urlPerfil($user->foto_perfil) }}"
                          alt="Foto de perfil"
                          style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid #e2e8f0;"
+                         loading="lazy" width="56" height="56"
                          onerror="this.src='{{ asset('imgs/defaults/profile_default.svg') }}'">
                 </td>
                 <td style="padding:10px 16px;color:#1e293b;font-weight:500;">

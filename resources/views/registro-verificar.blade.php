@@ -34,10 +34,11 @@
 
                 <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Ingresa el código</label>
 
-                <div class="flex justify-center gap-2 mb-4" id="codeInputs">
+                <div class="flex justify-center gap-1.5 mb-4" id="codeInputs">
                     @for($i = 0; $i < 6; $i++)
                     <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                           class="code-digit w-11 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                           class="code-digit text-center font-bold border border-gray-300 rounded-md focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                           style="width:36px;height:40px;font-size:1rem;"
                            data-index="{{ $i }}" autocomplete="off">
                     @endfor
                 </div>

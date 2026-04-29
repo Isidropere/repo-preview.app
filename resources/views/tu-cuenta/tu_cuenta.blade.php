@@ -61,7 +61,7 @@
 
                 <a href="{{ route('items.talento_create') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/agregartalentos.svg" alt="">
+                    <img src="/imgs/icons/agregartalentos.svg" alt="Agregar talento" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Agregar un nuevo talento</h2>
                         <p class="text-sm text-gray-500">Publica tus talentos</p>
@@ -70,7 +70,7 @@
 
                 <a href="{{ route('items.admintalento') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/talentos.svg" alt="">
+                    <img src="/imgs/icons/talentos.svg" alt="Talentos" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Administrar tus talentos</h2>
                         <p class="text-sm text-gray-500">Gestiona tus talentos</p>
@@ -79,7 +79,7 @@
 
                 <a href="{{ route('items.create') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/addProduct.svg" alt="">
+                    <img src="/imgs/icons/addProduct.svg" alt="Agregar producto" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Agregar productos</h2>
                         <p class="text-sm text-gray-500">Publica tus articulos</p>
@@ -88,7 +88,7 @@
 
                 <a href="{{ route('items.user') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/editProduct.svg" alt="">
+                    <img src="/imgs/icons/editProduct.svg" alt="Gestionar productos" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Gestionar productos</h2>
                         <p class="text-sm text-gray-500">Elimina tus articulos</p>
@@ -97,7 +97,7 @@
 
                 <a href="{{ route('direcciones.index') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/EditLocation.svg" alt="">
+                    <img src="/imgs/icons/EditLocation.svg" alt="Direcciones" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Direccion</h2>
                         <p class="text-sm text-gray-500">Actualiza y guarda tu direccion preferida</p>
@@ -106,7 +106,7 @@
 
                 <a href="{{ route('contraseña') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/ShieldPlus.svg" alt="">
+                    <img src="/imgs/icons/ShieldPlus.svg" alt="Seguridad" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Modificacion de contrasena</h2>
                         <p class="text-sm text-gray-500">Cambia tu contrasena de manera segura</p>
@@ -115,7 +115,7 @@
 
                 <a href="{{ route('historial') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/History.svg" alt="">
+                    <img src="/imgs/icons/History.svg" alt="Historial" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Historial general</h2>
                         <p class="text-sm text-gray-500">Revisa tus intercambios o compras pasadas</p>
@@ -124,7 +124,7 @@
 
                 <a href="{{ route('usuario.tipo.edit') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
-                    <img src="/imgs/icons/premium.svg" alt="">
+                    <img src="/imgs/icons/premium.svg" alt="Premium" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Cambiar cuenta a premium</h2>
                         <p class="text-sm text-gray-500">Descubre los beneficios premium</p>

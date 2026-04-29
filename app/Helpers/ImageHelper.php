@@ -24,7 +24,6 @@ class ImageHelper
      */
     public static function guardar(UploadedFile $file, string $directory, string $prefix, int $id): array
     {
-        // Leer contenido y metadata INMEDIATAMENTE antes de que el temp desaparezca
         $origen = $file->getRealPath();
         $contenido = file_get_contents($origen);
         if ($contenido === false) {
@@ -34,6 +33,34 @@ class ImageHelper
         $mime = $file->getClientMimeType();
         $isVideo = str_starts_with($mime, 'video/');
         $ext = $file->getClientOriginalExtension() ?: ($isVideo ? 'mp4' : 'jpg');
+
+        // Convertir imágenes a WebP si GD lo soporta (reduce peso 25-35%)
+        $isImage = in_array($mime, ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']);
+        if ($isImage && !$isVideo && function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+            try {
+                $gdImage = imagecreatefromstring($contenido);
+                if ($gdImage !== false) {
+                    // Preservar transparencia para PNG
+                    imagepalettetotruecolor($gdImage);
+                    imagealphablending($gdImage, true);
+                    imagesavealpha($gdImage, true);
+
+                    ob_start();
+                    imagewebp($gdImage, null, 82);
+                    $webpContent = ob_get_clean();
+                    imagedestroy($gdImage);
+
+                    if ($webpContent && strlen($webpContent) < strlen($contenido)) {
+                        $contenido = $webpContent;
+                        $ext = 'webp';
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Si falla la conversión, usar el original
+                Log::warning('WebP conversion failed, using original', ['error' => $e->getMessage()]);
+            }
+        }
+
         $fileName = $prefix . $id . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $ext;
 
         $destino = public_path($directory);
@@ -46,7 +73,6 @@ class ImageHelper
             throw new \Exception("No se pudo escribir el archivo en {$destinoFinal}");
         }
 
-        // Limpiar temp
         @unlink($origen);
 
         return [

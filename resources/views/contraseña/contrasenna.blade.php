@@ -30,14 +30,9 @@
 
                     {{-- Info del usuario --}}
                     @auth
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-5">
-                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-                            {{ strtoupper(substr(auth()->user()->nombres, 0, 1)) }}{{ strtoupper(substr(auth()->user()->apellidos, 0, 1)) }}
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->nombres }} {{ auth()->user()->apellidos }}</p>
-                            <p class="text-xs text-gray-400">{{ auth()->user()->email }}</p>
-                        </div>
+                    <div class="p-3 bg-gray-50 rounded-xl mb-5">
+                        <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->nombres }} {{ auth()->user()->apellidos }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ auth()->user()->email }}</p>
                     </div>
                     @endauth
 

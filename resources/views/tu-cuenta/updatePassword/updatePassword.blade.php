@@ -77,7 +77,7 @@
     <main>
         <main class="flex flex-col justify-center items-center min-h-screen" data-astro-cid-7ljavjvg>
             <div class="my-8" data-astro-cid-7ljavjvg> <img src="/logoTypes/logoFooter.png" class="object-cover h-20"
-                    alt="" data-astro-cid-7ljavjvg> </div>
+                    alt="Logo Cambialord" data-astro-cid-7ljavjvg width="160" height="80"> </div>
             <div class="bg-white border-gray-200 p-8 rounded-lg shadow-lg w-full max-w-md" data-astro-cid-7ljavjvg>
                 <h2 class="text-2xl font-semibold mb-6" data-astro-cid-7ljavjvg>Cambiar contraseña</h2>
                 <p class="mb-4" data-astro-cid-7ljavjvg>

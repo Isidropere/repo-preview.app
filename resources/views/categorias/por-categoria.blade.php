@@ -61,7 +61,7 @@
                 <a href="{{ route('producto.detalle', $item->slug) }}" style="display:block;position:relative;height:220px;overflow:hidden;background:#f3f4f6;">
                     <img src="{{ $rutaImagen }}" alt="{{ $item->item }}"
                          style="width:100%;height:100%;object-fit:cover;transition:transform .4s;"
-                         loading="lazy"
+                         loading="lazy" width="300" height="220"
                          onmouseover="this.style.transform='scale(1.08)'"
                          onmouseout="this.style.transform='scale(1)'">
                     @if($item->estatus != 1)

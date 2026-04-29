@@ -76,7 +76,7 @@
     <div class="flex items-start justify-between gap-3 mb-4">
         <div class="flex items-center gap-3">
             <img src="{{ $imgSrc }}" alt="{{ $neg->item?->item }}"
-                 class="w-14 h-14 rounded-xl object-cover border border-gray-100 flex-shrink-0">
+                 class="w-14 h-14 rounded-xl object-cover border border-gray-100 flex-shrink-0" loading="lazy" width="56" height="56">
             <div>
                 <p class="font-semibold text-gray-800 text-sm">{{ $neg->item?->item ?? 'Producto eliminado' }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">

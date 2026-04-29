@@ -62,21 +62,21 @@
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
                     <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
-                         class="w-full h-16 object-contain w-1/2 h-16 object-cover">
+                         class="w-full h-16 object-contain w-1/2 h-16 object-cover" loading="lazy" width="150" height="64">
                 </div>
                @elseif($index === 2|| $index === 3)
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
                     <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
-                         class="w-full h-16 object-contain w-1/2 h-16 object-cover">
+                         class="w-full h-16 object-contain w-1/2 h-16 object-cover" loading="lazy" width="150" height="64">
                 </div>
             @elseif($index === 4)
                 <!-- Imagen más grande que abarca dos columnas -->
                 <div class="col-span-2 cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
                     <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
-                         class="w-full h-16  object-contain  w-1/2 h-16 object-cover">
+                         class="w-full h-16  object-contain  w-1/2 h-16 object-cover" loading="lazy" width="300" height="64">
                 </div>
             @endif
         @endforeach
