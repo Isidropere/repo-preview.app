@@ -24,8 +24,16 @@ class ImageHelper
      */
     public static function guardar(UploadedFile $file, string $directory, string $prefix, int $id): array
     {
-        $isVideo = str_starts_with($file->getMimeType(), 'video/');
-        $ext = $file->extension();
+        // Leer contenido y metadata INMEDIATAMENTE antes de que el temp desaparezca
+        $origen = $file->getRealPath();
+        $contenido = file_get_contents($origen);
+        if ($contenido === false) {
+            throw new \Exception("No se pudo leer el archivo: {$origen}");
+        }
+
+        $mime = $file->getClientMimeType();
+        $isVideo = str_starts_with($mime, 'video/');
+        $ext = $file->getClientOriginalExtension() ?: ($isVideo ? 'mp4' : 'jpg');
         $fileName = $prefix . $id . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $ext;
 
         $destino = public_path($directory);
@@ -33,7 +41,13 @@ class ImageHelper
             mkdir($destino, 0755, true);
         }
 
-        $file->move($destino, $fileName);
+        $destinoFinal = $destino . DIRECTORY_SEPARATOR . $fileName;
+        if (file_put_contents($destinoFinal, $contenido) === false) {
+            throw new \Exception("No se pudo escribir el archivo en {$destinoFinal}");
+        }
+
+        // Limpiar temp
+        @unlink($origen);
 
         return [
             'fileName' => $fileName,
