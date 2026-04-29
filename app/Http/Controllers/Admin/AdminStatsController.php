@@ -335,6 +335,14 @@ class AdminStatsController extends Controller
             'top_compradores'         => $topCompradores,
             'top_intercambiadores'    => $topIntercambiadores,
             'items_sin_movimiento'    => $itemsSinMovimiento,
+            'top_items_vistos'        => DB::table('item_views')
+                ->join('items', 'item_views.id_item', '=', 'items.id_item')
+                ->whereBetween('item_views.created_at', [$desde, $hasta])
+                ->selectRaw('items.id_item, items.item as nombre, items.id_categoria_item, COUNT(item_views.id) as vistas')
+                ->groupBy('items.id_item', 'items.item', 'items.id_categoria_item')
+                ->orderByDesc('vistas')
+                ->limit(10)
+                ->get(),
             'ingresos_semanal'        => $ingresosSemanal,
             'ingresos_mensual'        => $ingresosMensual,
             'actividad_provincia'     => $actividadProvincia,

@@ -184,6 +184,10 @@
       <h3 style="margin:0 0 12px;font-size:.95rem;font-weight:600;color:#1e293b;">Top intercambiadores</h3>
       <div id="top-intercambiadores"></div>
     </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;">
+      <h3 style="margin:0 0 12px;font-size:.95rem;font-weight:600;color:#1e293b;">👁️ Productos más vistos</h3>
+      <div id="top-items-vistos"></div>
+    </div>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:20px;margin-bottom:28px;">
@@ -548,6 +552,20 @@ function renderTopUsuarios(vendedores, compradores, intercambiadores) {
   document.getElementById('top-intercambiadores').innerHTML = lista(intercambiadores,'intercambios', '#8b5cf6');
 }
 
+function renderTopItemsVistos(items) {
+  var el = document.getElementById('top-items-vistos');
+  if (!el) return;
+  if (!items || !items.length) { el.innerHTML = '<p style="color:#94a3b8;font-size:.82rem;">Sin datos.</p>'; return; }
+  el.innerHTML = items.map(function(r, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;">' +
+      '<span style="font-size:.75rem;font-weight:700;color:#f97316;min-width:20px;">#' + (i+1) + '</span>' +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-size:.82rem;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.nombre || '-') + '</div>' +
+      '</div>' +
+      '<div style="font-size:.82rem;font-weight:700;color:#f97316;white-space:nowrap;">' + (r.vistas || 0) + ' vistas</div></div>';
+  }).join('');
+}
+
 function renderItemsSinMovimiento(items) {
   const tbody = document.getElementById('tabla-sin-movimiento');
   if (!items||!items.length){ tbody.innerHTML='<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8;">No hay articulos parados.</td></tr>'; return; }
@@ -703,6 +721,7 @@ async function cargarDatos() {
     renderConversion(datos.tasa_conversion || null);
     renderTiempoCierre(datos.tiempo_cierre || []);
     renderTopUsuarios(datos.top_vendedores||[], datos.top_compradores||[], datos.top_intercambiadores||[]);
+    renderTopItemsVistos(datos.top_items_vistos || []);
     renderItemsSinMovimiento(datos.items_sin_movimiento || []);
     renderIngresos(datos.ingresos_semanal||[], datos.ingresos_mensual||[]);
     renderProvincias(datos.actividad_provincia || []);
