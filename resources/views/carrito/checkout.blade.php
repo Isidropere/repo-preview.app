@@ -278,10 +278,10 @@
                             <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
                                 @if($item->imagenes->first())
                                     <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}"
-                                         alt="{{ $item->item->item }}" class="w-full h-full object-cover">
+                                         alt="{{ $item->item->item }}" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @else
                                     <img src="{{ asset('storage/imgs/producto_defaul.png') }}"
-                                         alt="Sin imagen" class="w-full h-full object-cover">
+                                         alt="Sin imagen" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">

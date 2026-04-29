@@ -53,7 +53,7 @@
            onmouseout="this.style.boxShadow='none';this.style.transform='none';this.style.borderColor='#e5e7eb'">
             <img src="{{ $iconos[$cat->id_categoria_item] ?? '/imgs/icons/side-bar-icons/otros.svg' }}"
                  alt="{{ $cat->categoria }}"
-                 style="width:48px;height:48px;object-fit:contain;">
+                 style="width:48px;height:48px;object-fit:contain;" loading="lazy" width="48" height="48">
             <span style="font-size:0.9rem;font-weight:500;color:#111827;">{{ $cat->categoria }}</span>
             <span style="font-size:0.75rem;color:#9ca3af;">{{ $cat->items()->where('estatus', 1)->count() }} productos</span>
         </a>

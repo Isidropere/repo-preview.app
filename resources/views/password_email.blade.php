@@ -12,7 +12,7 @@
                  
                      <br>
                     <div class="mb-8">
-                        <img src="{{ asset('imgs/logoTypes/logoFooter.png') }}" class="h-24 object-contain" alt="Logo Cambialord">
+                        <img src="{{ asset('imgs/logoTypes/logoFooter.png') }}" class="h-24 object-contain" alt="Logo Cambialord" width="200" height="96">
                     </div>
                 <div class="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-sm sm:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2" data-astro-cid-zp6vblvr>
                     <div class="p-4 sm:p-7" data-astro-cid-zp6vblvr>

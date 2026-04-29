@@ -29,7 +29,11 @@
             <div class="flex items-center w-full lg:w-auto" style="gap:8px; min-width:0;">
                 <!-- Logo -->
                 <a class="flex-shrink-0" href="/" aria-label="Brand">
-                    <img src="/imgs/logoTypes/header-logo.png" id="logoHeader" class="object-cover h-auto" style="width:120px;" alt="Brand Logo">
+                    <img src="/imgs/logoTypes/header-logo.png" id="logoHeader" class="object-cover h-auto"
+                         style="width:120px;transition:transform .3s ease, filter .3s ease;cursor:pointer;"
+                         onmouseover="this.style.transform='scale(1.1)';this.style.filter='brightness(1.15)'"
+                         onmouseout="this.style.transform='scale(1)';this.style.filter='brightness(1)'"
+                         alt="Brand Logo" width="120" height="40">
                 </a>
                 <!-- Buscador móvil con input + botón pegado -->
                 <form method="GET" action="{{ route('items.search_header') }}" class="lg:hidden flex min-w-0" style="flex:0 1 140px; min-width:0;">
@@ -50,17 +54,17 @@
 
                 <!-- Botón menú hamburguesa (solo móvil) -->
                 <button type="button"
+                        id="btnHamburguesa"
                         class="lg:hidden flex-shrink-0 flex justify-center items-center rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100"
                         style="padding:6px; min-width:36px; min-height:36px;"
-                        data-hs-collapse="#navbar-collapse-with-animation"
                         aria-controls="navbar-collapse-with-animation"
                         aria-label="Toggle navigation">
-                    <svg class="hs-collapse-open:hidden flex-shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg id="iconHamOpen" class="flex-shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" x2="21" y1="6" y2="6"></line>
                         <line x1="3" x2="21" y1="12" y2="12"></line>
                         <line x1="3" x2="21" y1="18" y2="18"></line>
                     </svg>
-                    <svg class="hs-collapse-open:block hidden flex-shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg id="iconHamClose" class="hidden flex-shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18"></path>
                         <path d="m6 6 12 12"></path>
                     </svg>
@@ -68,7 +72,7 @@
             </div>
 
             <!-- Contenido colapsable (menú completo) -->
-            <div id="navbar-collapse-with-animation" class="hs-collapse hidden overflow-hidden lg:overflow-visible transition-all duration-300 basis-full lg:block">
+            <div id="navbar-collapse-with-animation" class="hidden lg:block overflow-hidden transition-all duration-300 basis-full">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pt-4 lg:pt-0">
 
                     <!-- Buscador escritorio (visible solo en desktop) -->
@@ -209,7 +213,7 @@
                                         </div>
                                         <hr class="border border-gray-200 w-full" data-astro-cid-pwmmw5ba>
                                             <a class="flex gap-x-3.5 py-2 md:px-3 w-full items-center justify-left rounded-lg hover:bg-gray-100 focus:outline-none hover:underline transition-all" href="{{ route('tu_cuenta') }}" data-astro-cid-pwmmw5ba>
-                                                <img src="/imgs/dropdown_icons/account.png" class="h-8 w-8 rounded-full mr-4" alt="Mi cuenta">
+                                                <img src="/imgs/dropdown_icons/account.png" class="h-8 w-8 rounded-full mr-4" alt="Mi cuenta" loading="lazy" width="32" height="32">
                                                 Mi cuenta
                                             </a>
 
@@ -226,7 +230,7 @@
                                                 data-astro-cid-pwmmw5ba>
                                         @csrf
                                         <button type="submit" class="flex items-center gap-x-3.5 py-2 md:px-3 w-full justify-left rounded-lg text-red-600 hover:text-red-700 focus:outline-none hover:bg-gray-100 hover:underline transition-all">
-                                            <img src="/imgs/dropdown_icons/logout1.png" class="h-8 w-8 rounded-full mr-4" alt="Cerrar sesion" data-astro-cid-pwmmw5ba>
+                                            <img src="/imgs/dropdown_icons/logout1.png" class="h-8 w-8 rounded-full mr-4" alt="Cerrar sesion" data-astro-cid-pwmmw5ba loading="lazy" width="32" height="32">
                                             Cerrar Sesion
                                         </button>
                                         </form>
@@ -282,4 +286,26 @@
     </div>
 
 </header>
+
+<script>
+(function(){
+    var btn = document.getElementById('btnHamburguesa');
+    var menu = document.getElementById('navbar-collapse-with-animation');
+    var iconOpen = document.getElementById('iconHamOpen');
+    var iconClose = document.getElementById('iconHamClose');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function(){
+        var isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            iconOpen.classList.add('hidden');
+            iconClose.classList.remove('hidden');
+        } else {
+            menu.classList.add('hidden');
+            iconOpen.classList.remove('hidden');
+            iconClose.classList.add('hidden');
+        }
+    });
+})();
+</script>
 

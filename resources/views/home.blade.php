@@ -20,9 +20,9 @@
             }" class="relative">
                     <div class="hs-carousel relative overflow-hidden w-full h-[530px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 left-0 flex flex-nowrap transition-transform duration-700">
-                            <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Encuentra lo que necesitas en Cambialord"> </div>
+                            <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Encuentra lo que necesitas en Cambialord" width="1200" height="530"> </div>
                         </div>
                     </div>
                 </div>
@@ -34,29 +34,29 @@
                             Categorías Populares
                                                 </h1>
                         <div class="p-0 lg:p-6 rounded-2xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-x-2 lg:gap-x-8 gap-y-1 md:gap-y-4 lg:max-w-[900px] mt-0 lg:mt-4 justify-items-center mx-auto">
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Damas</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Caballeros</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Niños</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Teléfonos</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Hogar</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Gamer</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Talentos</h2>
                             </a>
                                  <a href="{{ route('categorias.otras') }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
-                                <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2">
+                                <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Otras categorías</h2>
                             </a>
                         </div>
@@ -102,7 +102,7 @@
                                     <a href="{{ route('producto.detalle', $prod->slug) }}">
                                         @php $imgProd = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida = $imgProd && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd->nombre); @endphp
                                         @if($imgValida)
-                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy">
+                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy" width="400" height="224">
                                         @else
                                             <div class="h-56 w-full bg-gray-200 flex items-center justify-center text-gray-400">Sin imagen</div>
                                         @endif
@@ -193,9 +193,9 @@
                     <div class="hs-carousel relative overflow-hidden w-full min-h-[250px] lg:min-h-[250px] bg-white ">
                         <div class="hs-carousel-body absolute top-0 bottom-0 start-0 flex flex-nowrap transition-transform duration-700 opacity-0">
                             <div class="hs-carousel-slide">
-                            <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Banner publicitario Cambialord"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Promociones Cambialord"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Descubre productos en Cambialord"> </div>
+                            <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Banner publicitario Cambialord" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Promociones Cambialord" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Descubre productos en Cambialord" width="1200" height="530"> </div>
                         </div>
                     </div> <button type="button" class="hs-carousel-prev hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 start-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m15 18-6-6 6-6"></path> </svg> </span> <span class="sr-only">Previous</span> </button>                    <button type="button" class="hs-carousel-next hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 end-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="sr-only">Next</span> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m9 18 6-6-6-6"></path> </svg> </span> </button>
                     <div class="hs-carousel-pagination flex justify-center absolute bottom-3 start-0 end-0 space-x-2"> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>                        <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> </div>
@@ -222,7 +222,7 @@
                                     <a href="{{ route('producto.detalle', $prod->slug) }}">
                                         @php $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida2 = $imgProd2 && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd2->nombre); @endphp
                                         @if($imgValida2)
-                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd2, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy">
+                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd2, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy" width="400" height="224">
                                         @else
                                             <div class="h-56 w-full bg-gray-200 flex items-center justify-center text-gray-400">Sin imagen</div>
                                         @endif

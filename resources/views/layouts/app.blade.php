@@ -9,10 +9,14 @@
     <link rel="stylesheet" href="{{ asset('css/_astro/index.D-AOIgCY.css') }}">
     <link rel="stylesheet" href="{{ asset('css/_astro/index.BneVErea.css') }}">
     <title>@yield('title', 'Cambialord - Inicio')</title>
-    {{-- keen-slider --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css">
-    {{-- Font Awesome --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {{-- keen-slider (no crítico) --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css" media="print" onload="this.media='all'">
+    {{-- Font Awesome (no crítico) --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </noscript>
     {{-- Leaflet solo si la página lo necesita --}}
     @stack('head_styles')
  
@@ -439,7 +443,7 @@
     {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.js" defer></script>
     @stack('scripts')
-      <script src="{{ asset('js/global-loader.js') }}"></script>
+      <script src="{{ asset('js/global-loader.js') }}" defer></script>
 
         <!-- Carga tus librerías base aquí -->
    <!--<script>

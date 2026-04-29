@@ -84,7 +84,7 @@
            <br>
             <!-- Logo -->
             <div class="mb-8">
-                <img src="{{ asset('imgs/logoTypes/logoFooter.png') }}" class="h-24 object-contain" alt="Logo Cambialord">
+                <img src="{{ asset('imgs/logoTypes/logoFooter.png') }}" class="h-24 object-contain" alt="Logo Cambialord" width="200" height="96">
             </div>
 
             <!-- Contenedor del formulario -->

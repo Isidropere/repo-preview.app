@@ -13,7 +13,7 @@
     <a href="{{ route('producto.detalle', $item->slug) }}" class="block overflow-hidden">
         <img src="{{ $imgSrc }}"
              class="w-full h-48 object-cover hover:scale-105 transition-transform duration-200"
-             alt="{{ $item->item }}" loading="lazy"
+             alt="{{ $item->item }}" loading="lazy" width="300" height="192"
              onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
     </a>
 

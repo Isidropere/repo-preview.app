@@ -90,11 +90,11 @@
             @if($item->imagenes->first())
                 <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}" 
                      alt="{{ $item->item->item }}" 
-                     class="w-full h-full object-cover rounded-xl border">
+                     class="w-full h-full object-cover rounded-xl border" loading="lazy" width="128" height="128">
             @else
                 <img src="{{ asset('storage/imgs/producto_defaul.png') }}" 
                      alt="Sin imagen" 
-                     class="w-full h-full object-cover rounded-xl border">
+                     class="w-full h-full object-cover rounded-xl border" loading="lazy" width="128" height="128">
             @endif
         </div>
 
@@ -197,7 +197,7 @@
                     $imgUrl = $imgSrc ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgSrc) : asset('imgs/defaults/servicio_default.svg');
                 @endphp
                 <img src="{{ $imgUrl }}" alt="{{ $item->item?->item }}"
-                     class="w-20 h-20 rounded-xl object-cover border border-orange-100 flex-shrink-0">
+                     class="w-20 h-20 rounded-xl object-cover border border-orange-100 flex-shrink-0" loading="lazy" width="80" height="80">
                 <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-800 text-sm truncate">{{ $item->item?->item ?? 'Servicio' }}</h3>
                     <p class="text-xs text-orange-600 font-medium mt-0.5">⭐ Servicio / Talento</p>

@@ -6,7 +6,7 @@
     <main>
         <div class="flex flex-col justify-center items-center min-h-screen bg-gray-100 p-4" data-astro-cid-zp6vblvr>
             <div class="my-8" data-astro-cid-zp6vblvr>
-                <img src="{{ asset('/imgs/appLogo/logoFooter.png') }}" class="object-cover h-20" alt="" data-astro-cid-zp6vblvr>
+                <img src="{{ asset('/imgs/appLogo/logoFooter.png') }}" class="object-cover h-20" alt="Logo Cambialord" data-astro-cid-zp6vblvr width="160" height="80">
             </div>
             <div class="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-sm sm:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2" data-astro-cid-zp6vblvr>
                 <div class="p-4 sm:p-7" data-astro-cid-zp6vblvr>

@@ -910,12 +910,12 @@ document.addEventListener('DOMContentLoaded', () => {
                style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
       </div>
       <div>
-        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Descuento venta masiva (%)</label>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Dto. en venta masiva (%)</label>
         <input id="cfgDescuento" type="number" min="0" max="100" step="0.01" value="{{ $configTarifa->descuento_venta_masiva ?? 0 }}"
                style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
       </div>
       <div>
-        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Cantidad mínima para descuento</label>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Cant. mín. para Dto.</label>
         <input id="cfgCantidad" type="number" min="1" step="1" value="{{ $configTarifa->cantidad_minima_descuento ?? 1 }}"
                style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
       </div>
