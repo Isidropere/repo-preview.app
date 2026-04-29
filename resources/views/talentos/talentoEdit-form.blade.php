@@ -358,6 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault(); e.stopPropagation();
             const label = this.closest('label'); if (!label) return;
             const inp = label.querySelector('.imagen-input'), pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), fn = label.querySelector('.file-name'), pa = label.querySelector('.preview-actions');
+            const hiddenExist = label.querySelector('input[name="imagenes_existentes[]"]');
+            if (hiddenExist) hiddenExist.remove();
             if (inp) inp.value=''; if (pi) { pi.src=''; pi.classList.add('hidden'); } if (pd) pd.classList.remove('hidden'); if (fn) fn.classList.add('hidden'); if (pa) pa.classList.add('hidden');
         });
     });

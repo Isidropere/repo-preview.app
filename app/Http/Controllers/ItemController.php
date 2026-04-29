@@ -334,48 +334,9 @@ class ItemController extends Controller
     }
 
 
-    protected function guardarImagenTalento($file, $itemId, $orden)
+    protected function guardarImagenTalento($file, $itemId, $orden, $estado = 'aprobado')
     {
-        if (!$file || !$file->isValid()) {
-            \Log::error('Archivo inválido', ['error' => $file->getErrorMessage()]);
-            throw new \Exception('El archivo no es válido: ' . $file->getErrorMessage());
-        }
-
-        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
-        $mime = $file->getMimeType();
-        $isVideo = str_starts_with($mime, 'video/');
-
-        if (!in_array($mime, $allowedMimeTypes)) {
-            throw new \Exception('Tipo de archivo no permitido: ' . $mime);
-        }
-
-        $directory = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
-        $prefix = $isVideo ? 'video_' : 'item_';
-
-        try {
-            $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, $prefix, $itemId);
-
-            DB::table('imagenes_item')->insert([
-                'nombre'              => $resultado['fileName'],
-                'extension'           => $file->extension(),
-                'id_item'             => $itemId,
-                'orden_visualizacion' => $orden,
-                'ruta'                => $directory,
-                'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
-            ]);
-
-            return [
-                'path'     => $resultado['path'],
-                'url'      => asset($resultado['path']),
-                'is_video' => $isVideo,
-            ];
-        } catch (\Exception $e) {
-            \Log::error('Error al guardar archivo', ['error' => $e->getMessage(), 'file_type' => $isVideo ? 'video' : 'imagen']);
-            if (!empty($resultado['path'])) {
-                \App\Helpers\ImageHelper::eliminar($resultado['path']);
-            }
-            throw new \Exception('Error al guardar archivo: ' . $e->getMessage());
-        }
+        return $this->guardarImagen($file, $itemId, $orden, $estado);
     }
 
     public function store(Request $request)
@@ -571,34 +532,31 @@ class ItemController extends Controller
         }
     }
 
-    protected function guardarImagen($file, $itemId, $orden)
+    protected function guardarImagen($file, $itemId, $orden, $estado = 'aprobado')
     {
-        if (!$file || !$file->isValid()) {
-            \Log::error('Archivo inválido', ['error' => $file->getErrorMessage()]);
-            throw new \Exception('El archivo no es válido: ' . $file->getErrorMessage());
-        }
-
-        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
-        $mime = $file->getMimeType();
+        $mime = $file->getClientMimeType();
         $isVideo = str_starts_with($mime, 'video/');
 
+        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
         if (!in_array($mime, $allowedMimeTypes)) {
             throw new \Exception('Tipo de archivo no permitido: ' . $mime);
         }
 
         $directory = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
         $prefix = $isVideo ? 'video_' : 'item_';
+        $resultado = null;
 
         try {
             $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, $prefix, $itemId);
 
             DB::table('imagenes_item')->insert([
                 'nombre'              => $resultado['fileName'],
-                'extension'           => $file->extension(),
+                'extension'           => pathinfo($resultado['fileName'], PATHINFO_EXTENSION),
                 'id_item'             => $itemId,
                 'orden_visualizacion' => $orden,
                 'ruta'                => $directory,
-                'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
+                'tipo'                => $isVideo ? 'video' : 'imagen',
+                'estado'              => $estado,
             ]);
 
             return [
@@ -608,10 +566,10 @@ class ItemController extends Controller
             ];
         } catch (\Exception $e) {
             \Log::error('Error al guardar archivo', ['error' => $e->getMessage()]);
-            if (!empty($resultado['path'])) {
+            if ($resultado && !empty($resultado['path'])) {
                 \App\Helpers\ImageHelper::eliminar($resultado['path']);
             }
-            throw new \Exception('Error al guardar archivo: ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -1540,10 +1498,24 @@ class ItemController extends Controller
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
 
-            // Limpiar campo imagen_principal si no tiene archivo válido o legible
-            if (!$request->hasFile('imagen_principal') || !$request->file('imagen_principal')->isValid()) {
-                $request->request->remove('imagen_principal');
-                $request->files->remove('imagen_principal');
+            // ── Resguardar archivos ANTES de validar (el Validator puede invalidar el temp file) ──
+            $archivosPrincipal = null;
+            $archivosSecundarios = [];
+            if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+                $f = $request->file('imagen_principal');
+                $tmpName = 'img_' . uniqid() . '.' . $f->getClientOriginalExtension();
+                $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpName;
+                copy($f->getRealPath(), $tmpPath);
+                $archivosPrincipal = new \Illuminate\Http\UploadedFile($tmpPath, $f->getClientOriginalName(), $f->getClientMimeType(), null, true);
+            }
+            if ($request->hasFile('imagenes')) {
+                foreach ($request->file('imagenes') as $f) {
+                    if (!$f || !$f->isValid()) { $archivosSecundarios[] = null; continue; }
+                    $tmpName = 'img_' . uniqid() . '.' . $f->getClientOriginalExtension();
+                    $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpName;
+                    copy($f->getRealPath(), $tmpPath);
+                    $archivosSecundarios[] = new \Illuminate\Http\UploadedFile($tmpPath, $f->getClientOriginalName(), $f->getClientMimeType(), null, true);
+                }
             }
 
             $rules = [
@@ -1554,8 +1526,6 @@ class ItemController extends Controller
                 'presentacion' => 'required|string',
                 'condicion' => 'required|integer|in:1,2,3,4',
                 'tipo_trans' => 'required|integer|in:1,2,3',
-                'imagen_principal' => 'nullable|file|mimes:mp4,mov,jpeg,png,jpg,gif,webp|max:20480', // 10MB para videos
-                'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'peso_lbs' => 'nullable|numeric|min:0',
                 'alto_cm' => 'nullable|numeric|min:0',
                 'ancho_cm' => 'nullable|numeric|min:0',
@@ -1576,13 +1546,6 @@ class ItemController extends Controller
                 'condicion.in' => 'La condición seleccionada no es válida',
                 'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
                 'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
-                'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
-                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
-                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
                 'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
                 'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
                 'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
@@ -1634,29 +1597,19 @@ class ItemController extends Controller
 
             $item->update($validated);
 
-            // Imagen principal
-            if ($request->hasFile('imagen_principal')) {
-                $file = $request->file('imagen_principal');
-                // Verificar que el archivo temporal realmente existe antes de procesar
-                if ($file && $file->isValid() && file_exists($file->getRealPath())) {
-                    try {
-                        $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                        if ($imagenAnterior) {
-                            \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
-                            $imagenAnterior->delete();
-                        }
-                        $this->guardarImagen($file, $item->id_item, 1);
-                    } catch (\Throwable $e) {
-                        // No romper el flujo si falla la imagen — el resto del update sigue
-                        Log::warning('No se pudo actualizar imagen principal (archivo temporal expirado)', ['error' => $e->getMessage()]);
-                    }
+            // ── Imagen principal ──
+            if ($archivosPrincipal) {
+                $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
+                if ($imagenAnterior) {
+                    \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
+                    $imagenAnterior->delete();
                 }
+                $this->guardarImagen($archivosPrincipal, $item->id_item, 1, 'pendiente');
             }
 
-            // Imágenes secundarias existentes
+            // ── Imágenes secundarias: eliminar las que el usuario quitó ──
             $idsConservar = $request->input('imagenes_existentes', []);
             $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
-
             foreach ($imagenesActuales as $imagen) {
                 if (!in_array($imagen->id_imagen, $idsConservar)) {
                     \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
@@ -1664,20 +1617,13 @@ class ItemController extends Controller
                 }
             }
 
-            // Nuevas imágenes
-            if ($request->hasFile('imagenes')) {
-                try {
-                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
-
-                    foreach ($request->file('imagenes') as $imagen) {
-                        if (!$imagen || !$imagen->isValid()) continue;
-                        $maxOrden++;
-                        $this->guardarImagen($imagen, $item->id_item, $maxOrden);
-                    }
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    Log::error('Error al guardar imágenes secundarias', ['error' => $e->getMessage()]);
-                    return redirect()->back()->withErrors(['imagenes' => $e->getMessage()])->withInput();
+            // ── Nuevas imágenes secundarias ──
+            if (!empty($archivosSecundarios)) {
+                $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                foreach ($archivosSecundarios as $img) {
+                    if (!$img) continue;
+                    $maxOrden++;
+                    $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
                 }
             }
 
@@ -1705,10 +1651,24 @@ class ItemController extends Controller
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
 
-            // Limpiar campo imagen_principal si no tiene archivo válido o legible
-            if (!$request->hasFile('imagen_principal') || !$request->file('imagen_principal')->isValid()) {
-                $request->request->remove('imagen_principal');
-                $request->files->remove('imagen_principal');
+            // ── Resguardar archivos ANTES de validar ──
+            $archivosPrincipal = null;
+            $archivosSecundarios = [];
+            if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+                $f = $request->file('imagen_principal');
+                $tmpName = 'img_' . uniqid() . '.' . $f->getClientOriginalExtension();
+                $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpName;
+                copy($f->getRealPath(), $tmpPath);
+                $archivosPrincipal = new \Illuminate\Http\UploadedFile($tmpPath, $f->getClientOriginalName(), $f->getClientMimeType(), null, true);
+            }
+            if ($request->hasFile('imagenes')) {
+                foreach ($request->file('imagenes') as $f) {
+                    if (!$f || !$f->isValid()) { $archivosSecundarios[] = null; continue; }
+                    $tmpName = 'img_' . uniqid() . '.' . $f->getClientOriginalExtension();
+                    $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpName;
+                    copy($f->getRealPath(), $tmpPath);
+                    $archivosSecundarios[] = new \Illuminate\Http\UploadedFile($tmpPath, $f->getClientOriginalName(), $f->getClientMimeType(), null, true);
+                }
             }
 
             // Validaciones
@@ -1720,14 +1680,12 @@ class ItemController extends Controller
                 'presentacion' => 'required|string',
                 'condicion' => 'required|integer|in:1,2,3,4',
                 'tipo_trans' => 'required|integer|in:1,2,3',
-                'imagen_principal' => 'nullable|file|mimes:mp4,mov,jpeg,png,jpg,gif,webp|max:20480',
-                'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'peso_lbs' => 'nullable|numeric|min:0',
                 'alto_cm' => 'nullable|numeric|min:0',
                 'ancho_cm' => 'nullable|numeric|min:0',
                 'profundo_cm' => 'nullable|numeric|min:0',
                 'id_tipo_item' => 'required|numeric',
-                'estatus' => 'required|integer|in:1,2' // Nuevo campo
+                'estatus' => 'required|integer|in:1,2'
             ];
 
             $messages = [
@@ -1740,20 +1698,12 @@ class ItemController extends Controller
                 'condicion.in' => 'La condición seleccionada no es válida',
                 'tipo_trans.required' => 'Debe seleccionar un tipo de transacción',
                 'tipo_trans.in' => 'El tipo de transacción seleccionado no es válido',
-                'imagen_principal.required' => 'La imagen/video principal es obligatorio',
-                'imagen_principal.file' => 'El archivo debe ser una imagen o video válido',
-                'imagen_principal.mimes' => 'Solo se permiten imágenes (JPEG, PNG, JPG, GIF, WEBP) o videos (MP4, MOV)',
-                'imagen_principal.max' => 'El archivo no debe pesar más de 10MB',
-                'imagenes.*.image' => 'Los archivos adicionales deben ser imágenes válidas',
-                'imagenes.*.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP',
-                'imagenes.*.max' => 'Las imágenes no deben pesar más de 2MB',
                 'peso_lbs.numeric' => 'El peso debe ser un níºmero válido',
                 'alto_cm.numeric' => 'La altura debe ser un níºmero válido',
                 'ancho_cm.numeric' => 'El ancho debe ser un níºmero válido',
                 'profundo_cm.numeric' => 'La profundidad debe ser un níºmero válido',
                 'presentacion.required' => 'Rellene la descripción de su producto o servicio, que se encuentra en la sección de Especificar Dimensiones.',
             ];
-
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
@@ -1770,72 +1720,37 @@ class ItemController extends Controller
             // Actualizar datos del item
             $item->update($validated);
 
-            // Eliminar imagen principal anterior si existe y guardar la nueva
-            if ($request->hasFile('imagen_principal')) {
-                $file = $request->file('imagen_principal');
-                if ($file && $file->isValid() && file_exists($file->getRealPath())) {
-                    try {
-                        $imagenPrincipalAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                        if ($imagenPrincipalAnterior) {
-                            \App\Helpers\ImageHelper::eliminar($imagenPrincipalAnterior->ruta . '/' . $imagenPrincipalAnterior->nombre);
-                            $imagenPrincipalAnterior->delete();
-                        }
-                        $resultado = $this->guardarImagenTalento($file, $item->id_item, 1);
-                        Log::info('Imagen principal actualizada correctamente', $resultado);
-                    } catch (\Throwable $e) {
-                        Log::warning('No se pudo actualizar imagen principal talento', ['error' => $e->getMessage()]);
-                    }
+            // ── Imagen principal ──
+            if ($archivosPrincipal) {
+                $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
+                if ($imagenAnterior) {
+                    \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
+                    $imagenAnterior->delete();
                 }
+                $this->guardarImagen($archivosPrincipal, $item->id_item, 1, 'pendiente');
             }
 
-            // Eliminar imágenes secundarias que no están marcadas como existentes
+            // ── Imágenes secundarias: eliminar las que el usuario quitó ──
             $idsConservar = $request->input('imagenes_existentes', []);
             $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
-
             foreach ($imagenesActuales as $imagen) {
                 if (!in_array($imagen->id_imagen, $idsConservar)) {
                     \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
-                    Log::info('Imagen secundaria eliminada', [
-                        'id_imagen' => $imagen->id_imagen,
-                        'path' => $imagen->ruta . '/' . $imagen->nombre
-                    ]);
                     $imagen->delete();
                 }
             }
 
-
-
-            // Subir nuevas imágenes adicionales
-            if ($request->hasFile('imagenes')) {
-                try {
-                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
-
-                    foreach ($request->file('imagenes') as $imageFile) {
-                        if (!$imageFile || !$imageFile->isValid()) continue;
-                        $maxOrden++;
-                        $resultado = $this->guardarImagenTalento($imageFile, $item->id_item, $maxOrden);
-                        Log::info('Imagen secundaria guardada correctamente', $resultado);
-                    }
-
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    Log::error('Error al guardar imágenes secundarias con helper', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-
-                    return redirect()->back()
-                        ->withErrors(['imagenes' => 'Error al guardar imágenes secundarias: ' . $e->getMessage()])
-                        ->withInput();
+            // ── Nuevas imágenes secundarias ──
+            if (!empty($archivosSecundarios)) {
+                $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                foreach ($archivosSecundarios as $img) {
+                    if (!$img) continue;
+                    $maxOrden++;
+                    $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
                 }
             }
 
             DB::commit();
-            Log::info('Producto actualizado exitosamente', [
-                'item_id' => $item->id_item,
-                'total_imagenes' => $item->imagenes()->count()
-            ]);
-
             return redirect()->route('items.admintalento')->with('success', 'Talento actualizado exitosamente');
 
         } catch (\Throwable $e) {

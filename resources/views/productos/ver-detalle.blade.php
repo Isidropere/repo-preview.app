@@ -41,8 +41,9 @@
                     <!-- Main Image -->
                     <div class="mb-4 rounded-lg overflow-hidden bg-gray-100" style="height: 400px;">
                         @if($item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty())
+                            @php $firstApproved = $item->imagenes->where('estado', 'aprobado')->first(); @endphp
                             <img id="mainImage"  
-                                 src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->where('estado', 'aprobado')->first()->nombre) }}" 
+                                 src="{{ \App\Helpers\ImageHelper::urlMedia($firstApproved->ruta, $firstApproved->nombre) }}" 
                                  class="w-full h-full object-contain"
                                  alt="Imagen del artículo">
                         @else
@@ -59,21 +60,21 @@
             @if($index === 0 || $index === 1 )
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16 object-contain w-1/2 h-16 object-cover">
                 </div>
                @elseif($index === 2|| $index === 3)
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16 object-contain w-1/2 h-16 object-cover">
                 </div>
             @elseif($index === 4)
                 <!-- Imagen más grande que abarca dos columnas -->
                 <div class="col-span-2 cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imagen->nombre) }}" 
+                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
                          onclick="changeMainImage(this)" 
                          class="w-full h-16  object-contain  w-1/2 h-16 object-cover">
                 </div>
