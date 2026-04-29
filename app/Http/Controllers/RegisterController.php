@@ -60,13 +60,11 @@ class RegisterController extends Controller
             if ($request->hasFile('profile_photo')) {
                 try {
                     $file = $request->file('profile_photo');
-                    $directory = public_path('imgs/profiles');
-                    if (!file_exists($directory)) {
-                        mkdir($directory, 0755, true);
-                    }
-                    $fileName = 'profile_' . $usuario->id . '_' . time() . '.' . $file->extension();
-                    $file->move($directory, $fileName);
-                    $usuario->profile_photo_path = 'imgs/profiles/' . $fileName;
+                    $directory = 'imgs/profiles';
+                    $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                    $fileName = 'profile_' . $usuario->id . '_' . time() . '.' . $ext;
+                    $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, 'profile_', $usuario->id);
+                    $usuario->profile_photo_path = $resultado['path'];
                     $usuario->save();
                 } catch (\Throwable $e) {
                     Log::error('Error al guardar foto de perfil', ['error' => $e->getMessage()]);

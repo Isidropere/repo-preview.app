@@ -75,11 +75,8 @@ class UserController extends Controller
 
         if ($request->hasFile('profile_photo')) {
             $file = $request->file('profile_photo');
-            $fileName = 'profile_' . $user->id . '_' . time() . '.' . $file->extension();
-            // Guardar en public/ de Laravel Y en htdocs de Apache
-            $file->move(public_path('imgs/profiles'), $fileName);
-            @copy(public_path('imgs/profiles/' . $fileName), 'C:/xampp/htdocs/imgs/profiles/' . $fileName);
-            $user->profile_photo_path = 'imgs/profiles/' . $fileName;
+            $resultado = \App\Helpers\ImageHelper::guardar($file, 'imgs/profiles', 'profile_', $user->id);
+            $user->profile_photo_path = $resultado['path'];
         }
 
         $fields = array_filter($request->only('nombres', 'apellidos', 'telefono', 'nombre_usuario'));

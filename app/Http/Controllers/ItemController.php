@@ -1599,31 +1599,40 @@ class ItemController extends Controller
 
             // ── Imagen principal ──
             if ($archivosPrincipal) {
-                $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                if ($imagenAnterior) {
-                    \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
-                    $imagenAnterior->delete();
+                // Si cambia la principal, borrar TODAS las imágenes viejas del item
+                foreach ($item->imagenes as $imgVieja) {
+                    \App\Helpers\ImageHelper::eliminar($imgVieja->ruta . '/' . $imgVieja->nombre);
+                    $imgVieja->delete();
                 }
                 $this->guardarImagen($archivosPrincipal, $item->id_item, 1, 'pendiente');
-            }
 
-            // ── Imágenes secundarias: eliminar las que el usuario quitó ──
-            $idsConservar = $request->input('imagenes_existentes', []);
-            $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
-            foreach ($imagenesActuales as $imagen) {
-                if (!in_array($imagen->id_imagen, $idsConservar)) {
-                    \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
-                    $imagen->delete();
+                // Guardar nuevas secundarias junto con la nueva principal
+                if (!empty($archivosSecundarios)) {
+                    $orden = 1;
+                    foreach ($archivosSecundarios as $img) {
+                        if (!$img) continue;
+                        $orden++;
+                        $this->guardarImagen($img, $item->id_item, $orden, 'pendiente');
+                    }
                 }
-            }
+            } else {
+                // No cambió la principal — solo gestionar secundarias
+                $idsConservar = $request->input('imagenes_existentes', []);
+                $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
+                foreach ($imagenesActuales as $imagen) {
+                    if (!in_array($imagen->id_imagen, $idsConservar)) {
+                        \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
+                        $imagen->delete();
+                    }
+                }
 
-            // ── Nuevas imágenes secundarias ──
-            if (!empty($archivosSecundarios)) {
-                $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
-                foreach ($archivosSecundarios as $img) {
-                    if (!$img) continue;
-                    $maxOrden++;
-                    $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
+                if (!empty($archivosSecundarios)) {
+                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                    foreach ($archivosSecundarios as $img) {
+                        if (!$img) continue;
+                        $maxOrden++;
+                        $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
+                    }
                 }
             }
 
@@ -1722,31 +1731,40 @@ class ItemController extends Controller
 
             // ── Imagen principal ──
             if ($archivosPrincipal) {
-                $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                if ($imagenAnterior) {
-                    \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
-                    $imagenAnterior->delete();
+                // Si cambia la principal, borrar TODAS las imágenes viejas del item
+                foreach ($item->imagenes as $imgVieja) {
+                    \App\Helpers\ImageHelper::eliminar($imgVieja->ruta . '/' . $imgVieja->nombre);
+                    $imgVieja->delete();
                 }
                 $this->guardarImagen($archivosPrincipal, $item->id_item, 1, 'pendiente');
-            }
 
-            // ── Imágenes secundarias: eliminar las que el usuario quitó ──
-            $idsConservar = $request->input('imagenes_existentes', []);
-            $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
-            foreach ($imagenesActuales as $imagen) {
-                if (!in_array($imagen->id_imagen, $idsConservar)) {
-                    \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
-                    $imagen->delete();
+                // Guardar nuevas secundarias junto con la nueva principal
+                if (!empty($archivosSecundarios)) {
+                    $orden = 1;
+                    foreach ($archivosSecundarios as $img) {
+                        if (!$img) continue;
+                        $orden++;
+                        $this->guardarImagen($img, $item->id_item, $orden, 'pendiente');
+                    }
                 }
-            }
+            } else {
+                // No cambió la principal — solo gestionar secundarias
+                $idsConservar = $request->input('imagenes_existentes', []);
+                $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
+                foreach ($imagenesActuales as $imagen) {
+                    if (!in_array($imagen->id_imagen, $idsConservar)) {
+                        \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
+                        $imagen->delete();
+                    }
+                }
 
-            // ── Nuevas imágenes secundarias ──
-            if (!empty($archivosSecundarios)) {
-                $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
-                foreach ($archivosSecundarios as $img) {
-                    if (!$img) continue;
-                    $maxOrden++;
-                    $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
+                if (!empty($archivosSecundarios)) {
+                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                    foreach ($archivosSecundarios as $img) {
+                        if (!$img) continue;
+                        $maxOrden++;
+                        $this->guardarImagen($img, $item->id_item, $maxOrden, 'pendiente');
+                    }
                 }
             }
 
