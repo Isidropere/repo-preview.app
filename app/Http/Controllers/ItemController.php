@@ -197,7 +197,7 @@ class ItemController extends Controller
                     DB::table('imagenes_item')->insert([
                         'nombre' => $fileName, 'extension' => $sf['extension'],
                         'id_item' => $item->id_item, 'orden_visualizacion' => 1,
-                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen',
+                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
                     ]);
 
                     if ($isVideo) { $item->update(['tiene_video' => true]); }
@@ -211,7 +211,7 @@ class ItemController extends Controller
                     DB::table('imagenes_item')->insert([
                         'nombre' => $fileName, 'extension' => $sf['extension'],
                         'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
-                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen',
+                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'aprobado',
                     ]);
                 }
 
@@ -361,7 +361,7 @@ class ItemController extends Controller
                 'id_item'             => $itemId,
                 'orden_visualizacion' => $orden,
                 'ruta'                => $directory,
-                'tipo'                => $isVideo ? 'video' : 'imagen',
+                'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
             ]);
 
             return [
@@ -525,7 +525,7 @@ class ItemController extends Controller
                 DB::table('imagenes_item')->insert([
                     'nombre' => $fileName, 'extension' => $sf['extension'],
                     'id_item' => $item->id_item, 'orden_visualizacion' => 1,
-                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen',
+                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
                 ]);
 
                 if ($isVideo) { $item->update(['tiene_video' => true]); }
@@ -540,7 +540,7 @@ class ItemController extends Controller
                 DB::table('imagenes_item')->insert([
                     'nombre' => $fileName, 'extension' => $sf['extension'],
                     'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
-                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen',
+                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'aprobado',
                 ]);
             }
 
@@ -598,7 +598,7 @@ class ItemController extends Controller
                 'id_item'             => $itemId,
                 'orden_visualizacion' => $orden,
                 'ruta'                => $directory,
-                'tipo'                => $isVideo ? 'video' : 'imagen',
+                'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
             ]);
 
             return [
@@ -2010,3 +2010,4 @@ class ItemController extends Controller
         }
     }
 }
+
