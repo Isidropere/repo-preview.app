@@ -18,6 +18,9 @@
         <div id="listaNotificaciones"
              class="max-h-64 overflow-y-auto divide-y divide-gray-100 p-2">
         </div>
+        <div class="border-t border-gray-100 p-2 text-center">
+            <a href="/mis-notificaciones" class="text-xs text-primary hover:underline font-medium">Ver todas las notificaciones</a>
+        </div>
     </div>
 </div>
 
@@ -71,19 +74,20 @@ async function cargarNotificaciones() {
             return;
         }
 
-        contador.textContent = mensajes.filter(n => n.leido === 0).length;
+        contador.textContent = mensajes.length;
 
         lista.innerHTML = mensajes.map(n => `
             <div class="mb-3 px-3">
-                <div class="px-4 py-3 rounded-xl border ${n.leido === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-100 border-gray-200'} cursor-pointer hover:bg-gray-50"
-                     onclick="verMensajeRelacionado(${n.id}, ${n.id_emisor}, ${n.id_oferta ?? 'null'})">
-                    <p class="text-sm font-semibold">
-                        ${n.id_oferta ? 'Oferta #' + n.id_oferta : 'Mensaje nuevo'}
+                <a href="/mis-notificaciones"
+                   class="block px-4 py-3 rounded-xl border ${n.leido === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-100 border-gray-200'} hover:bg-gray-50 no-underline"
+                   onclick="marcarLeidaYNavegar(event, ${n.id})">
+                    <p class="text-sm font-semibold text-gray-800">
+                        ${n.id_emisor ? 'Mensaje' : '📢 Notificación'}
                         ${n.leido === 0 ? '<span class="ml-1 inline-block w-2 h-2 rounded-full bg-blue-500"></span>' : ''}
                     </p>
                     <p class="text-sm text-gray-700 truncate">${n.mensaje}</p>
                     <small class="text-xs text-gray-500">${new Date(n.created_at).toLocaleString()}</small>
-                </div>
+                </a>
             </div>
         `).join('');
 
@@ -93,20 +97,17 @@ async function cargarNotificaciones() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// CLICK EN UNA NOTIFICACIÓN
+// CLICK EN UNA NOTIFICACIÓN → marcar leída y navegar
 // ─────────────────────────────────────────────────────────────
-async function verMensajeRelacionado(idNotificacion, idEmisor, itemId) {
+async function marcarLeidaYNavegar(e, idNotificacion) {
+    e.preventDefault();
     try {
         await fetch(`/notificaciones/leido/${idNotificacion}`, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         });
-        panel.classList.add('hidden');
-        await cargarNotificaciones();
-        abrirNegociacionRelacionada(idEmisor, itemId);
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (_) {}
+    window.location.href = '/mis-notificaciones';
 }
 
 // ─────────────────────────────────────────────────────────────

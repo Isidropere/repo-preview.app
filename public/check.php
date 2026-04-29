@@ -27,6 +27,20 @@ try {
     echo "❌ Error: " . $e->getMessage() . "\n";
 }
 
+// Verificar y hacer id_emisor nullable en messages (para notificaciones del sistema)
+echo "\n=== Verificar messages.id_emisor nullable ===\n";
+try {
+    $col = collect(DB::select("SHOW COLUMNS FROM messages WHERE Field = 'id_emisor'"))->first();
+    if ($col && $col->Null === 'NO') {
+        DB::statement("ALTER TABLE messages MODIFY id_emisor BIGINT UNSIGNED NULL");
+        echo "✅ id_emisor cambiado a nullable\n";
+    } else {
+        echo "✅ id_emisor ya es nullable\n";
+    }
+} catch (Throwable $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+}
+
 // Limpiar caches
 $cmds = ['view:clear', 'config:clear', 'route:clear', 'cache:clear'];
 foreach ($cmds as $cmd) {

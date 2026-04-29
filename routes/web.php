@@ -530,7 +530,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Notificaciones
     Route::get('/notificaciones', [NotificationController::class, 'listar'])->name('notificaciones.listar');
+    Route::get('/mis-notificaciones', [NotificationController::class, 'misNotificaciones'])->name('notificaciones.pagina');
     Route::post('/notificaciones/leido/{id}', [NotificationController::class, 'marcarLeido'])->name('notificaciones.leido');
+    Route::post('/notificaciones/leer-todas', [NotificationController::class, 'marcarTodasLeidas'])->name('notificaciones.leerTodas');
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications', [NotificationController::class, 'store']);
@@ -582,7 +584,9 @@ Route::post('password/reset', [PasswordResetController::class, 'update'])->name(
 Route::controller(RegisterController::class)->group(function () {
     Route::post('/registro', 'registrarUsuario')->name('registro.usuario');
     Route::get('/registro', 'showRegistroForm')->name('registro');
-
+    Route::get('/registro/verificar', 'showVerificarForm')->name('registro.verificar.form');
+    Route::post('/registro/verificar', 'verificarCodigo')->name('registro.verificar');
+    Route::post('/registro/reenviar', 'reenviarCodigo')->name('registro.reenviar');
 });
 
 // Allow viewing items without verification (handled in prefix group above)
@@ -659,6 +663,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Mensajes predefinidos — solo lectura para admin normal
     Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');
+
+    // Notificaciones a usuarios
+    Route::get('/notificaciones', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'index'])->name('notificaciones.index');
+    Route::post('/notificaciones/enviar', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviar'])->name('notificaciones.enviar');
+    Route::get('/notificaciones/buscar-usuarios', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'buscarUsuarios'])->name('notificaciones.buscar');
 
     // Panel de aprobación de imágenes (accesible por admin y superadmin)
     Route::prefix('imagenes')->name('imagenes.')->group(function () {
