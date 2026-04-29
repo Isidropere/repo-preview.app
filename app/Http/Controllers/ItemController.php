@@ -1636,18 +1636,20 @@ class ItemController extends Controller
 
             // Imagen principal
             if ($request->hasFile('imagen_principal')) {
-                try {
-                    $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                    if ($imagenAnterior) {
-                        \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
-                        $imagenAnterior->delete();
+                $file = $request->file('imagen_principal');
+                // Verificar que el archivo temporal realmente existe antes de procesar
+                if ($file && $file->isValid() && file_exists($file->getRealPath())) {
+                    try {
+                        $imagenAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
+                        if ($imagenAnterior) {
+                            \App\Helpers\ImageHelper::eliminar($imagenAnterior->ruta . '/' . $imagenAnterior->nombre);
+                            $imagenAnterior->delete();
+                        }
+                        $this->guardarImagen($file, $item->id_item, 1);
+                    } catch (\Throwable $e) {
+                        // No romper el flujo si falla la imagen — el resto del update sigue
+                        Log::warning('No se pudo actualizar imagen principal (archivo temporal expirado)', ['error' => $e->getMessage()]);
                     }
-
-                    $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    Log::error('Error al guardar imagen principal', ['error' => $e->getMessage()]);
-                    return redirect()->back()->withErrors(['imagen_principal' => $e->getMessage()])->withInput();
                 }
             }
 
@@ -1770,26 +1772,19 @@ class ItemController extends Controller
 
             // Eliminar imagen principal anterior si existe y guardar la nueva
             if ($request->hasFile('imagen_principal')) {
-                try {
-                    $imagenPrincipalAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
-                    if ($imagenPrincipalAnterior) {
-                        \App\Helpers\ImageHelper::eliminar($imagenPrincipalAnterior->ruta . '/' . $imagenPrincipalAnterior->nombre);
-                        $imagenPrincipalAnterior->delete();
+                $file = $request->file('imagen_principal');
+                if ($file && $file->isValid() && file_exists($file->getRealPath())) {
+                    try {
+                        $imagenPrincipalAnterior = $item->imagenes()->where('orden_visualizacion', 1)->first();
+                        if ($imagenPrincipalAnterior) {
+                            \App\Helpers\ImageHelper::eliminar($imagenPrincipalAnterior->ruta . '/' . $imagenPrincipalAnterior->nombre);
+                            $imagenPrincipalAnterior->delete();
+                        }
+                        $resultado = $this->guardarImagenTalento($file, $item->id_item, 1);
+                        Log::info('Imagen principal actualizada correctamente', $resultado);
+                    } catch (\Throwable $e) {
+                        Log::warning('No se pudo actualizar imagen principal talento', ['error' => $e->getMessage()]);
                     }
-
-                    $resultado = $this->guardarImagenTalento($request->file('imagen_principal'), $item->id_item, 1);
-                    Log::info('Imagen principal actualizada correctamente', $resultado);
-
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    Log::error('Error al guardar imagen principal con helper', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-
-                    return redirect()->back()
-                        ->withErrors(['imagen_principal' => 'Error al guardar la imagen principal: ' . $e->getMessage()])
-                        ->withInput();
                 }
             }
 
