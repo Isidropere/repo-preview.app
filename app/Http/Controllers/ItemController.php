@@ -1540,8 +1540,8 @@ class ItemController extends Controller
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
 
-            // Limpiar campo imagen_principal si no tiene archivo válido
-            if (!$request->hasFile('imagen_principal')) {
+            // Limpiar campo imagen_principal si no tiene archivo válido o legible
+            if (!$request->hasFile('imagen_principal') || !$request->file('imagen_principal')->isValid()) {
                 $request->request->remove('imagen_principal');
                 $request->files->remove('imagen_principal');
             }
@@ -1668,6 +1668,7 @@ class ItemController extends Controller
                     $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
 
                     foreach ($request->file('imagenes') as $imagen) {
+                        if (!$imagen || !$imagen->isValid()) continue;
                         $maxOrden++;
                         $this->guardarImagen($imagen, $item->id_item, $maxOrden);
                     }
@@ -1702,8 +1703,8 @@ class ItemController extends Controller
         try {
             $item = Item::where('id_user', auth()->id())->findOrFail($id);
 
-            // Limpiar campo imagen_principal si no tiene archivo válido
-            if (!$request->hasFile('imagen_principal')) {
+            // Limpiar campo imagen_principal si no tiene archivo válido o legible
+            if (!$request->hasFile('imagen_principal') || !$request->file('imagen_principal')->isValid()) {
                 $request->request->remove('imagen_principal');
                 $request->files->remove('imagen_principal');
             }
@@ -1815,6 +1816,7 @@ class ItemController extends Controller
                     $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
 
                     foreach ($request->file('imagenes') as $imageFile) {
+                        if (!$imageFile || !$imageFile->isValid()) continue;
                         $maxOrden++;
                         $resultado = $this->guardarImagenTalento($imageFile, $item->id_item, $maxOrden);
                         Log::info('Imagen secundaria guardada correctamente', $resultado);
