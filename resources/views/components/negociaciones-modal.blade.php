@@ -2,7 +2,7 @@
      class="hidden"
      style="position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
 
-    <div style="background:#fff;border-radius:1.5rem;width:100%;max-width:32rem;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 2rem);margin:auto;">
+    <div style="background:#fff;border-radius:1.5rem;width:100%;max-width:32rem;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 2rem);max-height:600px;margin:auto;">
 
         {{-- Header con gradiente naranja --}}
         <div style="background:linear-gradient(135deg,#f58634 0%,#f58634 50%,#fb923c 100%);padding:1.25rem 1.5rem;flex-shrink:0;">
