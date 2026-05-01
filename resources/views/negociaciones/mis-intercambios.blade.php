@@ -177,7 +177,35 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre) {
     m.style.display = 'flex';
     document.getElementById('pagoIntercambioError').style.display = 'none';
     document.getElementById('pagoIntercambioItem').textContent = itemNombre || 'Intercambio';
-    document.getElementById('pagoIntercambioMonto').textContent = 'RD$ ' + parseFloat(monto || 0).toLocaleString('es-DO', {minimumFractionDigits: 2});
+
+    var montoNum = parseFloat(monto || 0);
+    var montoEl = document.getElementById('pagoIntercambioMonto');
+
+    if (montoNum > 0) {
+        montoEl.textContent = 'RD$ ' + montoNum.toLocaleString('es-DO', {minimumFractionDigits: 2});
+    } else {
+        // Monto no disponible aún — calcular en tiempo real
+        montoEl.textContent = 'Calculando...';
+        var municipio = window._municipioUsuario || '';
+        if (municipio) {
+            fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=0', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var costo = parseFloat(d.costo_envio_total || 0);
+                montoEl.textContent = d.success && costo > 0
+                    ? 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2})
+                    : 'Gratis / Sin costo';
+                // Actualizar también el span en la tarjeta
+                var spanMonto = document.getElementById('monto-envio-' + negId);
+                if (spanMonto && costo > 0) spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
+            })
+            .catch(function() { montoEl.textContent = 'No disponible'; });
+        } else {
+            montoEl.textContent = 'Sin dirección registrada';
+        }
+    }
 }
 
 function cerrarModalPagoIntercambio() {

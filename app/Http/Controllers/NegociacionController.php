@@ -369,8 +369,8 @@ class NegociacionController extends Controller
             'cvv'        => 'nullable|string|max:4',
         ]);
 
-        if ($neg->monto_oferta > 0 || $request->input('monto_envio')) {
-            // Calcular el monto real de envío
+        if ($neg->monto_oferta > 0 || $request->input('monto_envio') || true) {
+            // Calcular el monto real de envío siempre que haya tarjeta
             $montoACobrar = 0;
             $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
             if ($direccion && $direccion->municipio && $neg->item) {
@@ -384,17 +384,19 @@ class NegociacionController extends Controller
                     ->where('id_user', $userId)->firstOrFail();
 
                 $pagoService = app(\App\Services\PagoService::class);
-                $resultado   = $pagoService->cobrarTarjeta(
+                $resultadoPago = $pagoService->cobrarTarjeta(
                     (float) $montoACobrar, '214',
                     $tarjeta->datosCardnet($request->cvv),
                     ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
                 );
 
-                if (!$resultado['success']) {
-                    $msg = 'Pago rechazado: ' . $resultado['error'];
+                if (!$resultadoPago['success']) {
+                    $msg = 'Pago rechazado: ' . ($resultadoPago['error'] ?? 'Error desconocido');
                     if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
                     return back()->with('error', $msg);
                 }
+
+                $resultado = $resultadoPago; // para usar en PagoEnvioIntercambio
             }
         }
 
