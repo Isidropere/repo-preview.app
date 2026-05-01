@@ -443,7 +443,10 @@ class NegociacionService
             return $this->error('Solo el dueño del producto puede seleccionar el modo de entrega.');
         }
 
-        $neg->update(['modo_entrega' => $modo]);
+        // Guardar modo_entrega solo si la columna existe
+        if (\Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'modo_entrega')) {
+            $neg->update(['modo_entrega' => $modo]);
+        }
 
         // Notificar a la otra parte
         $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
@@ -475,6 +478,13 @@ class NegociacionService
         }
 
         if (!$neg->modo_entrega) {
+            // Si la columna no existe aún (migración pendiente), permitir continuar
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'modo_entrega')) {
+                $neg->update(['entrega_confirmada' => true, 'estado' => 'completado']);
+                $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
+                event(new \App\Events\NuevaNotificacion("✅ Intercambio #{$neg->id_negociacion} completado.", $otroId));
+                return $this->ok('Entrega confirmada. El intercambio está completado.');
+            }
             return $this->error('El dueño del producto aún no ha seleccionado el modo de entrega.');
         }
 
@@ -500,11 +510,19 @@ class NegociacionService
             return $this->error('Solo quien recibe el producto puede confirmar la entrega.');
         }
 
-        if ($neg->entrega_confirmada) {
+        $entregaConfirmada = \Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'entrega_confirmada')
+            ? (bool) $neg->entrega_confirmada
+            : false;
+
+        if ($entregaConfirmada) {
             return $this->error('La entrega ya fue confirmada.');
         }
 
-        $neg->update(['entrega_confirmada' => true, 'estado' => 'completado']);
+        $updateData = ['estado' => 'completado'];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'entrega_confirmada')) {
+            $updateData['entrega_confirmada'] = true;
+        }
+        $neg->update($updateData);
 
         $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
         event(new \App\Events\NuevaNotificacion(
