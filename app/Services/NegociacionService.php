@@ -397,6 +397,144 @@ class NegociacionService
     }
 
     /**
+     * Dueño del producto selecciona modo de entrega (envio | retiro).
+     * Solo aplica en intercambios producto↔servicio.
+     */
+    public function seleccionarModoEntrega(int $userId, int $negociacionId, string $modo): array
+    {
+        if (!in_array($modo, ['envio', 'retiro'])) {
+            return $this->error('Modo de entrega inválido.');
+        }
+
+        $neg = Negociacion::find($negociacionId);
+        if (!$neg) return $this->error('Negociación no encontrada.');
+
+        if ($neg->estado !== 'aceptado') {
+            return $this->error('Solo se puede seleccionar modo de entrega en negociaciones aceptadas.');
+        }
+
+        if (!$neg->emisor_confirmado || !$neg->receptor_confirmado) {
+            return $this->error('Ambas partes deben aprobar antes de seleccionar el modo de entrega.');
+        }
+
+        // Solo el dueño del producto puede elegir el modo
+        // En producto↔servicio: el receptor es dueño del producto solicitado
+        // El emisor ofrece servicio y solicita el producto del receptor
+        $itemSolicitado = Item::find($neg->receptor_item_id);
+        $itemsOfrecidos = $neg->items_ofrecidos
+            ? Item::whereIn('id_item', $neg->items_ofrecidos)->get()
+            : collect();
+
+        $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
+        $ofrecidosServicio    = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
+
+        // Determinar quién es el dueño del producto físico
+        if (!$solicitadoEsServicio && $ofrecidosServicio) {
+            // El receptor tiene el producto, el emisor ofrece servicio
+            $duenioProductoId = $neg->usuario_receptor_id;
+        } elseif ($solicitadoEsServicio && !$ofrecidosServicio) {
+            // El emisor tiene el producto, el receptor ofrece servicio
+            $duenioProductoId = $neg->usuario_emisor_id;
+        } else {
+            return $this->error('Este modo de entrega solo aplica en intercambios producto↔servicio.');
+        }
+
+        if ($userId != $duenioProductoId) {
+            return $this->error('Solo el dueño del producto puede seleccionar el modo de entrega.');
+        }
+
+        $neg->update(['modo_entrega' => $modo]);
+
+        // Notificar a la otra parte
+        $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
+        $textoModo = $modo === 'envio'
+            ? "El dueño del producto eligió enviarlo. Se notificará a los administradores para gestionar el envío."
+            : "El dueño del producto eligió entrega en persona. Coordinen el retiro directamente.";
+
+        event(new \App\Events\NuevaNotificacion($textoModo, $otroId));
+
+        if ($modo === 'envio') {
+            $this->notificarAdminsEntrega($neg, 'envio');
+        }
+
+        return $this->ok($modo === 'envio'
+            ? 'Seleccionaste envío. Los administradores gestionarán el envío.'
+            : 'Seleccionaste retiro en persona. Coordina con la otra parte.');
+    }
+
+    /**
+     * El receptor del producto confirma que lo recibió o retiró.
+     */
+    public function confirmarEntrega(int $userId, int $negociacionId): array
+    {
+        $neg = Negociacion::find($negociacionId);
+        if (!$neg) return $this->error('Negociación no encontrada.');
+
+        if ($neg->estado !== 'aceptado') {
+            return $this->error('La negociación no está en estado aceptado.');
+        }
+
+        if (!$neg->modo_entrega) {
+            return $this->error('El dueño del producto aún no ha seleccionado el modo de entrega.');
+        }
+
+        // Determinar quién recibe el producto
+        $itemSolicitado    = Item::find($neg->receptor_item_id);
+        $itemsOfrecidos    = $neg->items_ofrecidos
+            ? Item::whereIn('id_item', $neg->items_ofrecidos)->get()
+            : collect();
+        $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
+        $ofrecidosServicio    = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
+
+        if (!$solicitadoEsServicio && $ofrecidosServicio) {
+            // El emisor recibe el producto (lo solicitó)
+            $receptorProductoId = $neg->usuario_emisor_id;
+        } elseif ($solicitadoEsServicio && !$ofrecidosServicio) {
+            // El receptor recibe el producto (el emisor lo envía)
+            $receptorProductoId = $neg->usuario_receptor_id;
+        } else {
+            return $this->error('Confirmación de entrega solo aplica en intercambios producto↔servicio.');
+        }
+
+        if ($userId != $receptorProductoId) {
+            return $this->error('Solo quien recibe el producto puede confirmar la entrega.');
+        }
+
+        if ($neg->entrega_confirmada) {
+            return $this->error('La entrega ya fue confirmada.');
+        }
+
+        $neg->update(['entrega_confirmada' => true, 'estado' => 'completado']);
+
+        $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
+        event(new \App\Events\NuevaNotificacion(
+            "✅ El intercambio #{$neg->id_negociacion} fue completado. El receptor confirmó la entrega del producto.",
+            $otroId
+        ));
+
+        $this->notificarAdminsEntrega($neg, 'completado');
+
+        return $this->ok('Entrega confirmada. El intercambio está completado.');
+    }
+
+    private function notificarAdminsEntrega(Negociacion $neg, string $tipo): void
+    {
+        try {
+            $admins = \App\Models\User::where('isAdmin', true)->get();
+            $texto = match($tipo) {
+                'envio'      => "📦 Intercambio #{$neg->id_negociacion}: el dueño eligió envío. Gestiona la logística.",
+                'completado' => "✅ Intercambio #{$neg->id_negociacion}: entrega confirmada por el receptor. Intercambio completado.",
+                default      => "Intercambio #{$neg->id_negociacion} actualizado.",
+            };
+            foreach ($admins as $admin) {
+                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo notificar a admins (entrega)', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Notifica a todos los administradores que un intercambio está listo para envío.
      */
     private function notificarAdmins(Negociacion $neg): void

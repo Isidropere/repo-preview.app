@@ -272,45 +272,101 @@
 
         {{-- PAGO OPCIONAL: producto↔servicio, yo soy el del producto --}}
         @if($ambosConfirmados && $pagoOpcional && !$miPago)
-            @if(!$tieneDireccion)
-            <div class="w-full p-4 rounded-xl border" style="background:#fef2f2;border-color:#fecaca;">
-                <p class="text-sm font-semibold mb-2" style="color:#dc2626;">📍 Necesitas una dirección de envío</p>
-                <p class="text-xs mb-3" style="color:#991b1b;">Si deseas pagar el envío, primero registra tu dirección. También puedes aprobar sin pago.</p>
+        @php
+            // Determinar si YO soy el dueño del producto
+            $duenioProductoId = (!$solicitadoEsServicio && $todosOfrecidosServicio)
+                ? $neg->usuario_receptor_id   // receptor tiene el producto
+                : $neg->usuario_emisor_id;    // emisor tiene el producto
+            $soyDuenioProducto = auth()->id() == $duenioProductoId;
+            $modoYaElegido = !empty($neg->modo_entrega);
+        @endphp
+
+            @if($soyDuenioProducto && !$modoYaElegido)
+            {{-- Dueño del producto elige cómo entregarlo --}}
+            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
+                <p class="text-sm font-semibold mb-1" style="color:#c2410c;">📦 ¿Cómo entregarás tu producto?</p>
+                <p class="text-xs mb-3" style="color:#9a3412;">Elige si envías el producto o si la otra parte lo retira en persona.</p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <a href="{{ route('direcciones.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
-                        � Crear dirección
-                    </a>
-                    <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
+                    <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
                         @csrf
-                        <input type="hidden" name="sin_pago" value="1">
-                        <button type="submit" onclick="this.disabled=true;this.textContent='Aprobando...';this.form.submit();" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
-                            ✅ Aprobar sin pago
+                        <input type="hidden" name="modo" value="envio">
+                        <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                            🚚 Enviar el producto
+                        </button>
+                    </form>
+                    <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="modo" value="retiro">
+                        <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                            🤝 Retiro en persona
                         </button>
                     </form>
                 </div>
             </div>
-            @else
-            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
-                <p class="text-sm font-semibold mb-2" style="color:#c2410c;">🤝 Intercambio producto ↔ servicio aprobado</p>
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                    <p class="text-xs" style="color:#9a3412;margin:0;">Envío estimado: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
-                    <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
-                            style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
-                </div>
-                <p class="text-xs mb-3" style="color:#9a3412;">Puedes pagar el envío o aprobar directamente sin pago.</p>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+
+            @elseif($soyDuenioProducto && $modoYaElegido)
+            {{-- Dueño del producto ya eligió, mostrar estado --}}
+            <div class="w-full p-3 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+                @if($neg->modo_entrega === 'envio')
+                    <p class="text-sm" style="color:#166534;">🚚 Elegiste enviar el producto. Los administradores gestionarán el envío.</p>
+                    @if(!$miPago)
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
+                        <p class="text-xs" style="color:#9a3412;margin:0;">Costo de envío: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                        <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
+                                style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;">🔄</button>
+                    </div>
                     <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                        💳 Pagar envío (opcional)
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg mt-2" style="background:#f58634;">
+                        💳 Pagar envío
                     </button>
-                    <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST" style="display:inline;">
+                    @else
+                    <p class="text-xs mt-1" style="color:#166534;">✅ Pago de envío registrado.</p>
+                    @endif
+                @else
+                    <p class="text-sm" style="color:#166534;">🤝 Elegiste retiro en persona. Coordina con la otra parte para el retiro.</p>
+                @endif
+            </div>
+
+            @elseif(!$soyDuenioProducto && !$modoYaElegido)
+            {{-- Quien recibe espera que el dueño elija --}}
+            <div class="w-full p-3 rounded-xl border" style="background:#fefce8;border-color:#fde68a;">
+                <p class="text-sm" style="color:#92400e;">⏳ Esperando que el dueño del producto elija el modo de entrega (envío o retiro en persona).</p>
+            </div>
+
+            @elseif(!$soyDuenioProducto && $modoYaElegido)
+            {{-- Quien recibe ve el modo elegido y puede confirmar entrega --}}
+            <div class="w-full p-4 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+                @if($neg->modo_entrega === 'envio')
+                    <p class="text-sm font-semibold mb-1" style="color:#166534;">🚚 El producto será enviado</p>
+                    <p class="text-xs mb-3" style="color:#166534;">Los administradores gestionarán el envío. Cuando recibas el producto, confírmalo aquí.</p>
+                    @if(!$neg->entrega_confirmada)
+                    <form action="{{ route('negociaciones.confirmar_entrega', $neg->id_negociacion) }}" method="POST">
                         @csrf
-                        <input type="hidden" name="sin_pago" value="1">
-                        <button type="submit" onclick="this.disabled=true;this.textContent='Aprobando...';this.form.submit();" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
-                            ✅ Aprobar sin pago
+                        <button type="submit" onclick="return confirm('¿Confirmas que recibiste el producto?') && (this.disabled=true, this.textContent='Confirmando...', true);"
+                                class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                            ✅ Confirmar recepción del producto
                         </button>
                     </form>
-                </div>
+                    @else
+                    <p class="text-xs" style="color:#166534;">✅ Ya confirmaste la recepción.</p>
+                    @endif
+                @else
+                    <p class="text-sm font-semibold mb-1" style="color:#166534;">🤝 Retiro en persona</p>
+                    <p class="text-xs mb-3" style="color:#166534;">Coordina con el dueño del producto para el retiro. Cuando lo retires, confírmalo aquí.</p>
+                    @if(!$neg->entrega_confirmada)
+                    <form action="{{ route('negociaciones.confirmar_entrega', $neg->id_negociacion) }}" method="POST">
+                        @csrf
+                        <button type="submit" onclick="return confirm('¿Confirmas que retiraste el producto?') && (this.disabled=true, this.textContent='Confirmando...', true);"
+                                class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
+                            ✅ Confirmar retiro del producto
+                        </button>
+                    </form>
+                    @else
+                    <p class="text-xs" style="color:#166534;">✅ Ya confirmaste el retiro.</p>
+                    @endif
+                @endif
             </div>
             @endif
         @endif

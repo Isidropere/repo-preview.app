@@ -175,6 +175,25 @@ class NegociacionController extends Controller
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
+    public function seleccionarModoEntrega(Request $request, $id)
+    {
+        $request->validate(['modo' => 'required|in:envio,retiro']);
+        $resultado = $this->negociacionService->seleccionarModoEntrega(auth()->id(), $id, $request->modo);
+        if ($request->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
+        return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
+    }
+
+    public function confirmarEntrega($id)
+    {
+        $resultado = $this->negociacionService->confirmarEntrega(auth()->id(), $id);
+        if (request()->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
+        }
+        return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
+    }
+
     public function index($item)
     {
         try {

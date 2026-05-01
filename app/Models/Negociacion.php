@@ -17,6 +17,7 @@ class Negociacion extends Model
         'receptor_item_id', 'emisor_paquete_id', 'usuario_emisor_id', 'usuario_receptor_id',
         'mensaje_inicial', 'monto_oferta', 'monto_contra_oferta', 'estado', 'fecha_creacion',
         'emisor_confirmado', 'receptor_confirmado', 'items_ofrecidos', 'pago_emisor', 'pago_receptor',
+        'modo_entrega', 'entrega_confirmada',
     ];
 
     protected $casts = [
@@ -28,6 +29,7 @@ class Negociacion extends Model
         'items_ofrecidos'     => 'array',
         'pago_emisor'         => 'boolean',
         'pago_receptor'       => 'boolean',
+        'entrega_confirmada'  => 'boolean',
     ];
 
     public function usuario()

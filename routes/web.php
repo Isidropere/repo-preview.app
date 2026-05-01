@@ -356,6 +356,8 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/confirmar-emisor', [NegociacionController::class, 'confirmarEmisor'])->name('negociaciones.confirmar_emisor');
     Route::post('/{id}/confirmar-receptor', [NegociacionController::class, 'confirmarReceptor'])->name('negociaciones.confirmar_receptor');
     Route::post('/{id}/aceptar-contraoferta', [NegociacionController::class, 'aceptarComoEmisor'])->name('negociaciones.aceptar_contraoferta');
+    Route::post('/{id}/modo-entrega', [NegociacionController::class, 'seleccionarModoEntrega'])->name('negociaciones.modo_entrega');
+    Route::post('/{id}/confirmar-entrega', [NegociacionController::class, 'confirmarEntrega'])->name('negociaciones.confirmar_entrega');
 
     Route::post('/enviar', [App\Http\Controllers\NegociacionController::class, 'store'])
         ->middleware('throttle.sensitive:10,1')
