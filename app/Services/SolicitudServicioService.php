@@ -86,7 +86,7 @@ class SolicitudServicioService
             return ['success' => false, 'message' => 'Solicitud no encontrada.'];
         }
 
-        if ($solicitud->id_proveedor !== $proveedorId) {
+        if ($solicitud->id_proveedor != $proveedorId) {
             return ['success' => false, 'message' => 'No autorizado.', 'code' => 403];
         }
 
@@ -119,7 +119,7 @@ class SolicitudServicioService
             return ['success' => false, 'message' => 'Solicitud no encontrada.'];
         }
 
-        if ($solicitud->id_proveedor !== $proveedorId) {
+        if ($solicitud->id_proveedor != $proveedorId) {
             return ['success' => false, 'message' => 'No autorizado.', 'code' => 403];
         }
 
