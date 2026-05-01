@@ -27,6 +27,13 @@ class DireccionService
     public function crear(int $userId, array $datos): array
     {
         $datos['id_user'] = $userId;
+
+        // Si no tiene ninguna dirección aún, esta es la predeterminada automáticamente
+        $tieneDirecciones = Direcciones::where('id_user', $userId)->exists();
+        if (!$tieneDirecciones) {
+            $datos['es_predeterminada'] = true;
+        }
+
         $direccion = Direcciones::create($datos);
 
         return ['success' => true, 'data' => $direccion, 'message' => 'Dirección guardada exitosamente'];

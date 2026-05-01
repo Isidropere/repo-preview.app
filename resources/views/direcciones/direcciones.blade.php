@@ -46,7 +46,7 @@
         <div>
           @if($dir->es_predeterminada)
             <span class="dir-badge">&#10004; Predeterminada</span>
-          @else
+          @elseif($direcciones->count() > 1)
             <button class="btn-set-default" data-id="{{ $dir->id_direccion }}" style="font-size:.75rem;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;font-weight:500;">Establecer predeterminada</button>
           @endif
         </div>
