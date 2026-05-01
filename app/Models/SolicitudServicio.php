@@ -26,6 +26,8 @@ class SolicitudServicio extends Model
         'monto_total'         => 'decimal:2',
         'fecha_creacion'      => 'datetime',
         'fecha_actualizacion' => 'datetime',
+        'id_proveedor'        => 'integer',
+        'id_comprador'        => 'integer',
     ];
 
     public function comprador()
