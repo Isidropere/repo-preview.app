@@ -19,7 +19,12 @@ class HistorialController extends Controller
             ->get();
 
         $ventas = ItemIntencionCompra::whereHas('item', fn($q) => $q->where('id_user', $userId))
-            ->with(['item.imagenes', 'carrito.pagosCompra'])
+            ->with([
+                'item.imagenes',
+                'item.usuario',
+                'carrito.pagosCompra.trazabilidad',
+                'carrito.usuario',
+            ])
             ->orderByDesc('id_item_intencion_compra')
             ->get();
 

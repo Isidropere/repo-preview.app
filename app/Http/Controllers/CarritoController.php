@@ -82,14 +82,47 @@ class CarritoController extends Controller
 
     public function checkout(\Illuminate\Http\Request $request)
     {
-        $tipo = $request->get('tipo'); // 'producto' o 'servicio' (null = carrito por defecto)
+        $tipo = $request->get('tipo');
         $resultado = $this->carritoService->prepararCheckout(auth()->id(), $tipo);
         $data = $resultado['data'];
+
+        // Para servicios: cargar info del proveedor de cada item
+      $proveedoresInfo = [];
+
+if ($data['carrito']->tipo === 'servicio') {
+    foreach ($data['carrito']->itemsIntencionCompra as $itemIntencion) {
+        $item = $itemIntencion->item;
+        $proveedor = $item?->usuario;
+
+        if (!$proveedor) {
+            continue;
+        }
+
+        if (!isset($proveedoresInfo[$proveedor->id_usuario])) {
+
+            $dirProv = $proveedor->direcciones()
+                ->where('es_predeterminada', 1)
+                ->with('municipio')
+                ->first();
+
+            $proveedoresInfo[$proveedor->id_usuario] = [
+                'nombre' => ($proveedor->nombres ?? '') . ' ' . ($proveedor->apellidos ?? ''),
+                'municipio' => $dirProv?->municipio?->municipio ?? 'Ubicacion no disponible',
+                'calle' => $dirProv->calle ?? '',
+                'N_casa_edificio' => $dirProv->N_casa_edificio ?? '',
+                'apto' => $dirProv->apto ?? '',
+                'geolocalizacion' => $dirProv->geolocalizacion ?? '',
+                
+            ];
+        }
+    }
+}
 
         return view('carrito.checkout', [
             'carrito'          => $data['carrito'],
             'total'            => $data['total'],
             'stripeKey'        => config('services.stripe.key'),
+            'proveedoresInfo'  => $proveedoresInfo,
             'municipioDefault' => auth()->user()
                 ->direcciones()
                 ->with('municipio')

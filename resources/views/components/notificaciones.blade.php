@@ -76,20 +76,28 @@ async function cargarNotificaciones() {
 
         contador.textContent = mensajes.length;
 
-        lista.innerHTML = mensajes.map(n => `
+        lista.innerHTML = mensajes.map(n => {
+            var msg = n.mensaje || '';
+            var esServicio = msg.includes('[Servicio]');
+            var esVenta = msg.includes('[Venta]') || (msg.includes('orden #') && !msg.includes('[Compra]'));
+            var esCompra = msg.includes('[Compra]') || msg.includes('Tu orden #');
+            var esIntercambio = msg.includes('[Intercambio]') || msg.includes('intercambio') || msg.includes('negociaci');
+            var destino = esServicio ? '/mis-ventas-talentos' : (esCompra ? '/historial?tab=compras' : (esVenta ? '/historial?tab=ventas' : (esIntercambio ? '/negociaciones' : '/mis-notificaciones')));
+            var titulo = esServicio ? '⭐ Servicio' : (esCompra ? '💳 Compra' : (esVenta ? '🛒 Venta' : (esIntercambio ? '🔄 Intercambio' : (n.id_emisor ? 'Mensaje' : '📢 Notificación'))));
+            return `
             <div class="mb-3 px-3">
-                <a href="/mis-notificaciones"
+                <a href="${destino}"
                    class="block px-4 py-3 rounded-xl border ${n.leido === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-100 border-gray-200'} hover:bg-gray-50 no-underline"
-                   onclick="marcarLeidaYNavegar(event, ${n.id})">
+                   onclick="marcarLeidaYNavegar(event, ${n.id}, '${destino}')">
                     <p class="text-sm font-semibold text-gray-800">
-                        ${n.id_emisor ? 'Mensaje' : '📢 Notificación'}
+                        ${titulo}
                         ${n.leido === 0 ? '<span class="ml-1 inline-block w-2 h-2 rounded-full bg-blue-500"></span>' : ''}
                     </p>
-                    <p class="text-sm text-gray-700 truncate">${n.mensaje}</p>
+                    <p class="text-sm text-gray-700 truncate">${msg}</p>
                     <small class="text-xs text-gray-500">${new Date(n.created_at).toLocaleString()}</small>
                 </a>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
 
     } catch (e) {
         console.error('Error cargando notificaciones', e);
@@ -99,7 +107,7 @@ async function cargarNotificaciones() {
 // ─────────────────────────────────────────────────────────────
 // CLICK EN UNA NOTIFICACIÓN → marcar leída y navegar
 // ─────────────────────────────────────────────────────────────
-async function marcarLeidaYNavegar(e, idNotificacion) {
+async function marcarLeidaYNavegar(e, idNotificacion, destino) {
     e.preventDefault();
     try {
         await fetch(`/notificaciones/leido/${idNotificacion}`, {
@@ -107,7 +115,7 @@ async function marcarLeidaYNavegar(e, idNotificacion) {
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         });
     } catch (_) {}
-    window.location.href = '/mis-notificaciones';
+    window.location.href = destino || '/mis-notificaciones';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -381,7 +389,15 @@ if (!window._notifIntervalSet) {
     setInterval(function() {
         cargarNotificaciones();
         actualizarBadgeIntercambios();
-    }, 60000);
+    }, 15000);
+
+    // Recargar al volver a la pestaña
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            cargarNotificaciones();
+            actualizarBadgeIntercambios();
+        }
+    });
 }
 </script>
 @endpush

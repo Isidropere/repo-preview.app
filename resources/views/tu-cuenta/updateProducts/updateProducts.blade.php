@@ -571,7 +571,7 @@
                 </div>
             </a><a
                 class="group flex gap-x-5 text-gray-800 transition-all duration-300  hover:bg-gray-200 rounded-lg p-4"
-                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}" data-astro-cid-pwmmw5ba>
+                href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}" onclick="return confirmarAdultos(event, this)" data-astro-cid-pwmmw5ba>
                 <div class="grow flex gap-x-2 fill-secondary" data-astro-cid-pwmmw5ba> <img
                         src="/icons/side-bar-icons/age-limit.svg" alt="Adultos icon" data-astro-cid-pwmmw5ba>
                     <p class="font-normal group-hover:font-bold group-hover:underline-animation"

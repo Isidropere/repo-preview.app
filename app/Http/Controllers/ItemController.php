@@ -766,17 +766,24 @@ class ItemController extends Controller
 
             // Pasar config de descuento para categoría 29
             $configTarifa29 = null;
-            if ((int) $item->id_categoria_item === 29 && (int) $item->tipo_trans === 1) {
-                $configTarifa29 = \App\Models\ConfigTarifaCategoria29::vigente();
-                if ((float) $configTarifa29->descuento_venta_masiva <= 0) {
-                    $configTarifa29 = null;
+            $hojaVidaProveedor = null;
+            if ((int) $item->id_categoria_item === 29) {
+                // Cargar hoja de vida del proveedor para servicios
+                $hojaVidaProveedor = \App\Models\HojaVida::where('id_user', $item->id_user)->first();
+
+                if ((int) $item->tipo_trans === 1) {
+                    $configTarifa29 = \App\Models\ConfigTarifaCategoria29::vigente();
+                    if ((float) $configTarifa29->descuento_venta_masiva <= 0) {
+                        $configTarifa29 = null;
+                    }
                 }
             }
 
             return view('productos.producto-detalle', [
-                'item'           => $item,
-                'relatedItems'   => $relatedItems,
-                'configTarifa29' => $configTarifa29,
+                'item'               => $item,
+                'relatedItems'       => $relatedItems,
+                'configTarifa29'     => $configTarifa29,
+                'hojaVidaProveedor'  => $hojaVidaProveedor,
             ]);
 
         } catch (Throwable $e) {

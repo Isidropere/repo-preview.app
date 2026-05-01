@@ -220,21 +220,23 @@ class CarritoService
      */
     public function marcarSeleccionado(int $userId, int $itemIntencionId, bool $estado): array
     {
-        $carrito = Carrito::where('id_user', $userId)->firstOrFail();
+        // Buscar en TODOS los carritos del usuario (producto y servicio)
+        $carritos = Carrito::where('id_user', $userId)->pluck('id_carrito');
 
         $updated = ItemIntencionCompra::where('id_item_intencion_compra', $itemIntencionId)
-            ->where('id_carrito', $carrito->id_carrito)
+            ->whereIn('id_carrito', $carritos)
             ->update(['es_seleccionado' => $estado]);
 
         if (!$updated) {
             return ['success' => false, 'message' => 'Item no encontrado en tu carrito.'];
         }
 
-        $carrito = Carrito::where('id_user', $userId)
-            ->with('itemsIntencionCompra.item')
-            ->firstOrFail();
+        // Recalcular totales con items de TODOS los carritos
+        $todosLosItems = ItemIntencionCompra::whereIn('id_carrito', $carritos)
+            ->with('item')
+            ->get();
 
-        $totales = $this->calcularTotales($carrito->itemsIntencionCompra);
+        $totales = $this->calcularTotales($todosLosItems);
 
         return ['success' => true, 'data' => ['totales' => $totales]];
     }

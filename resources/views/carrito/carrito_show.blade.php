@@ -183,19 +183,44 @@
     <span class="text-sm font-bold text-gray-700">Servicios / Talentos ({{ $itemsServicio->count() }})</span>
 </div>
 @foreach($itemsServicio as $item)
-    <div class="bg-orange-50 border border-orange-200 shadow-sm rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 mb-4">
+@php
+    // Verificar estado de solicitud para este item
+    $solicitudItem = \App\Models\SolicitudServicio::where('id_comprador', auth()->id())
+        ->where('id_item', $item->id_item)
+        ->latest('fecha_creacion')
+        ->first();
+    $estadoSolicitud = $solicitudItem?->estado ?? null;
+    $solicitudId = $solicitudItem?->id_solicitud ?? null;
+    $imgSrc = $item->item?->imagenes?->where('estado','aprobado')->first()?->nombre;
+    $imgUrl = $imgSrc ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgSrc) : asset('imgs/defaults/servicio_default.svg');
+
+    // Datos del proveedor
+    $proveedor = $item->item?->usuario;
+    $dirProv = $proveedor?->direcciones()->where('es_predeterminada', 1)->with('municipio.provincia')->first();
+    $provData = [
+        'nombre'          => trim(($proveedor?->nombres ?? '') . ' ' . ($proveedor?->apellidos ?? '')),
+        'municipio'       => $dirProv?->municipio?->municipio ?? '',
+        'provincia'       => $dirProv?->municipio?->provincia?->provincia ?? '',
+        'calle'           => $dirProv?->calle ?? '',
+        'n_casa_edificio' => $dirProv?->N_casa_edificio ?? '',
+        'apto'            => $dirProv?->apto ?? '',
+        'geolocalizacion' => $dirProv?->geolocalizacion ?? '',
+    ];
+@endphp
+    <div class="bg-orange-50 border border-orange-200 shadow-sm rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 mb-4"
+         id="servicio-card-{{ $item->id_item_intencion_compra }}">
         <div class="flex items-start mr-0">
             <input type="checkbox"
-                   class="item-checkbox rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                   class="item-checkbox servicio-checkbox rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                   value="{{ $item->id_item_intencion_compra }}"
                    data-id="{{ $item->id_item_intencion_compra }}"
-                   {{ $item->es_seleccionado ? 'checked' : '' }}>
+                   data-item-id="{{ $item->id_item }}"
+                   data-estado-solicitud="{{ $estadoSolicitud }}"
+                   data-proveedor="{{ json_encode($provData, JSON_HEX_QUOT | JSON_HEX_APOS) }}"
+                   {{ ($item->es_seleccionado && $estadoSolicitud === 'aprobada') ? 'checked' : '' }}>
         </div>
         <div class="flex-1">
             <div class="flex items-start gap-4">
-                @php
-                    $imgSrc = $item->item?->imagenes?->where('estado','aprobado')->first()?->nombre;
-                    $imgUrl = $imgSrc ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgSrc) : asset('imgs/defaults/servicio_default.svg');
-                @endphp
                 <img src="{{ $imgUrl }}" alt="{{ $item->item?->item }}"
                      class="w-20 h-20 rounded-xl object-cover border border-orange-100 flex-shrink-0" loading="lazy" width="80" height="80">
                 <div class="flex-1 min-w-0">
@@ -203,6 +228,26 @@
                     <p class="text-xs text-orange-600 font-medium mt-0.5">⭐ Servicio / Talento</p>
                     <p class="text-sm font-bold text-gray-800 mt-1">RD$ {{ number_format($item->item?->valor ?? 0, 2) }}</p>
                     <p class="text-xs text-gray-400">Cantidad: {{ $item->cantidad }}</p>
+                    {{-- Badge de estado de solicitud --}}
+                    <div id="badge-solicitud-{{ $item->id_item_intencion_compra }}" class="mt-1">
+                        @if($estadoSolicitud === 'pendiente_aprobacion')
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#fef3c7;color:#92400e;">
+                                ⏳ Solicitud pendiente de aprobación
+                            </span>
+                        @elseif($estadoSolicitud === 'aprobada')
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#d1fae5;color:#065f46;">
+                                ✅ Aprobado — puedes proceder al pago
+                            </span>
+                        @elseif($estadoSolicitud === 'rechazada')
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#fee2e2;color:#991b1b;">
+                                ❌ Solicitud rechazada por el proveedor
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 text-xs text-gray-400 px-2 py-0.5 rounded-full" style="background:#f3f4f6;">
+                                Marca para solicitar aprobación al proveedor
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2 mt-3">
@@ -264,25 +309,71 @@
                     <button type="submit"
                         style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:0.75rem;padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);margin-bottom:0.5rem;">
                         <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                        Pagar Productos ({{ $carritoProducto->itemsIntencionCompra->count() }})
+                        Pagar Productos ({{ $carritoProducto->itemsIntencionCompra->where('es_seleccionado', 1)->count() }})
                     </button>
                 </form>
+                {{-- Servicios: solo si hay al menos uno aprobado --}}
+                @php
+                    $serviciosAprobados = $carritoServicio->itemsIntencionCompra->filter(function($i) {
+                        return \App\Models\SolicitudServicio::where('id_comprador', auth()->id())
+                            ->where('id_item', $i->id_item)
+                            ->where('estado', 'aprobada')
+                            ->exists();
+                    });
+                @endphp
+                @if($serviciosAprobados->isNotEmpty())
                 <form action="{{ route('carrito.checkout_index') }}" method="GET">
                     <input type="hidden" name="tipo" value="servicio">
                     <button type="submit"
                         style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;border:none;border-radius:0.75rem;padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(245,134,52,0.3);">
                         <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                        Pagar Servicios ({{ $carritoServicio->itemsIntencionCompra->count() }})
+                        Pagar Servicios aprobados ({{ $serviciosAprobados->count() }})
                     </button>
                 </form>
+                @else
+                <div style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:#f3f4f6;color:#9ca3af;border:none;border-radius:0.75rem;padding:0.75rem;font-size:0.85rem;font-weight:600;">
+                    <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Servicios pendientes de aprobación
+                </div>
+                @endif
             </div>
             @else
+            @php
+                $soloServicioCarrito = $carritos->firstWhere('tipo', 'servicio');
+                $soloProductoCarrito = $carritos->firstWhere('tipo', 'producto');
+                $esCarritoSoloServicio = $soloServicioCarrito && (!$soloProductoCarrito || $soloProductoCarrito->itemsIntencionCompra->isEmpty());
+            @endphp
+            @if($esCarritoSoloServicio)
+                @php
+                    $serviciosAprobadosSolo = $soloServicioCarrito->itemsIntencionCompra->filter(function($i) {
+                        return \App\Models\SolicitudServicio::where('id_comprador', auth()->id())
+                            ->where('id_item', $i->id_item)
+                            ->where('estado', 'aprobada')
+                            ->exists();
+                    });
+                @endphp
+                @if($serviciosAprobadosSolo->isNotEmpty())
+                <form action="{{ route('carrito.checkout_index') }}" method="GET">
+                    <input type="hidden" name="tipo" value="servicio">
+                    <button type="submit"
+                        class="w-full mt-4 text-white py-3 rounded-xl font-medium shadow"
+                        style="background:linear-gradient(135deg,#ea580c,#f58634);">
+                        Proceder al Pago de Servicios
+                    </button>
+                </form>
+                @else
+                <div class="mt-4 text-center text-sm text-gray-400 bg-gray-50 rounded-xl py-3 px-4">
+                    Marca un servicio para solicitar aprobación al proveedor antes de pagar.
+                </div>
+                @endif
+            @else
             <form action="{{ route('carrito.checkout_index') }}" method="GET">
-                <button type="submit" 
+                <button type="submit"
                     class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow">
                     Proceder al Pago
                 </button>
             </form>
+            @endif
             @endif
                         </div>
 
@@ -311,6 +402,45 @@
     </div>
 
 </main>
+
+{{-- ===== MODAL SOLICITUD DE SERVICIO ===== --}}
+<div id="modalSolicitudServicio"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:10001;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#fff;border-radius:1.25rem;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:420px;overflow:hidden;">
+        {{-- Header --}}
+        <div style="background:linear-gradient(135deg,#ea580c,#f58634);padding:1.1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:2.2rem;height:2.2rem;background:rgba(255,255,255,0.2);border-radius:0.65rem;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:1.1rem;height:1.1rem;color:#fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 style="font-size:0.95rem;font-weight:800;color:#fff;margin:0;">Solicitar aprobación</h4>
+                    <p style="font-size:0.7rem;color:rgba(255,255,255,0.85);margin:0.1rem 0 0;">El proveedor debe aprobar antes del pago</p>
+                </div>
+            </div>
+            <button id="closeSolicitudModal"
+                style="width:1.9rem;height:1.9rem;background:rgba(255,255,255,0.2);border:none;border-radius:50%;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+        </div>
+        {{-- Body --}}
+        <div style="padding:1.25rem;">
+            <div id="solicitudModalBody" style="margin-bottom:1rem;">
+                {{-- Contenido dinámico --}}
+            </div>
+            <div id="solicitudModalAcciones" style="display:flex;gap:0.65rem;">
+                <button id="cancelarSolicitudBtn"
+                    style="flex:1;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                    Cancelar
+                </button>
+                <button id="enviarSolicitudBtn"
+                    style="flex:2;padding:0.65rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,134,52,0.4);">
+                    Enviar solicitud al proveedor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Modal negociaciones -->
 <div id="negociacionesModal"
@@ -510,6 +640,235 @@
 @endsection
 
 @push('scripts')
+<script>
+// ===================================================
+// MODAL SOLICITUD DE SERVICIO
+// ===================================================
+(function() {
+    const modal       = document.getElementById('modalSolicitudServicio');
+    const body        = document.getElementById('solicitudModalBody');
+    const acciones    = document.getElementById('solicitudModalAcciones');
+    const btnEnviar   = document.getElementById('enviarSolicitudBtn');
+    const btnCancelar = document.getElementById('cancelarSolicitudBtn');
+    const btnClose    = document.getElementById('closeSolicitudModal');
+    const csrfToken   = () => document.querySelector('input[name="_token"]').value;
+
+    let pendingCheckbox = null;
+    let pendingItemId   = null;
+
+    function cerrarModal() {
+        modal.style.display = 'none';
+        // Si se cancela, revertir el checkbox
+        if (pendingCheckbox) {
+            pendingCheckbox.checked = false;
+            pendingCheckbox = null;
+            pendingItemId   = null;
+        }
+    }
+
+    btnClose?.addEventListener('click', cerrarModal);
+    btnCancelar?.addEventListener('click', cerrarModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) cerrarModal(); });
+
+    function setBadge(intencionId, estado) {
+        const badge = document.getElementById('badge-solicitud-' + intencionId);
+        if (!badge) return;
+        const map = {
+            'pendiente_aprobacion': '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#fef3c7;color:#92400e;">⏳ Solicitud pendiente de aprobación</span>',
+            'aprobada':  '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#d1fae5;color:#065f46;">✅ Aprobado — puedes proceder al pago</span>',
+            'rechazada': '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#fee2e2;color:#991b1b;">❌ Solicitud rechazada por el proveedor</span>',
+        };
+        badge.innerHTML = map[estado] || '<span class="inline-flex items-center gap-1 text-xs text-gray-400 px-2 py-0.5 rounded-full" style="background:#f3f4f6;">Marca para solicitar aprobación al proveedor</span>';
+    }
+
+    function buildProveedorHtml(prov) {
+        if (!prov || !prov.nombre) return '';
+        let html = `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:0.65rem;padding:0.75rem 1rem;margin-bottom:0.75rem;">
+            <p style="font-size:0.78rem;font-weight:700;color:#92400e;margin:0 0 0.35rem;">📍 Ubicación del proveedor</p>
+            <p style="font-size:0.82rem;font-weight:600;color:#374151;margin:0 0 0.2rem;">${prov.nombre}</p>`;
+        if (prov.municipio || prov.provincia) {
+            html += `<p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.15rem;">
+                ${[prov.municipio, prov.provincia].filter(Boolean).join(', ')}
+            </p>`;
+        }
+        html += `<div style="font-size:0.75rem;color:#92400e;margin-top:0.25rem;">`;
+        if (prov.calle)           html += `Calle: ${prov.calle}<br>`;
+        if (prov.n_casa_edificio) html += `Número de casa o edificio: ${prov.n_casa_edificio}<br>`;
+        if (prov.apto)            html += `Apartamento: ${prov.apto}<br>`;
+        if (prov.geolocalizacion) {
+            html += `<a href="https://www.google.com/maps?q=${encodeURIComponent(prov.geolocalizacion)}" target="_blank"
+                style="display:inline-flex;align-items:center;gap:4px;color:#b45309;text-decoration:underline;margin-top:0.2rem;">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>Ver ubicación en el mapa</a>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+
+    function abrirModalSolicitud(cb, itemId, intencionId, estadoActual) {
+        pendingCheckbox = cb;
+        pendingItemId   = itemId;
+
+        let prov = {};
+        try { prov = JSON.parse(cb.dataset.proveedor || '{}'); } catch(e) {}
+        const provHtml = buildProveedorHtml(prov);
+
+        if (estadoActual === 'pendiente_aprobacion') {
+            body.innerHTML = `
+                ${provHtml}
+                <div style="text-align:center;padding:0.5rem 0;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
+                    <p style="font-weight:700;color:#92400e;margin-bottom:0.25rem;">Solicitud ya enviada</p>
+                    <p style="font-size:0.85rem;color:#6b7280;">Estás esperando que el proveedor apruebe tu solicitud. Te notificaremos cuando responda.</p>
+                </div>`;
+            acciones.innerHTML = `<button onclick="document.getElementById('modalSolicitudServicio').style.display='none';"
+                style="width:100%;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                Entendido
+            </button>`;
+            cb.checked = false;
+            pendingCheckbox = null;
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (estadoActual === 'aprobada') {
+            pendingCheckbox = null;
+            return;
+        }
+
+        if (estadoActual === 'rechazada') {
+            body.innerHTML = `
+                ${provHtml}
+                <div style="text-align:center;padding:0.5rem 0;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">❌</div>
+                    <p style="font-weight:700;color:#991b1b;margin-bottom:0.25rem;">Solicitud rechazada</p>
+                    <p style="font-size:0.85rem;color:#6b7280;">El proveedor rechazó tu solicitud anterior. Puedes enviar una nueva solicitud si lo deseas.</p>
+                </div>`;
+            acciones.innerHTML = `
+                <button id="cancelarSolicitudBtnDyn"
+                    style="flex:1;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                    Cancelar
+                </button>
+                <button id="reenviarSolicitudBtn"
+                    style="flex:2;padding:0.65rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;">
+                    Reenviar solicitud
+                </button>`;
+            document.getElementById('cancelarSolicitudBtnDyn')?.addEventListener('click', cerrarModal);
+            document.getElementById('reenviarSolicitudBtn')?.addEventListener('click', () => enviarSolicitud(cb, itemId, intencionId));
+            cb.checked = false;
+            pendingCheckbox = null;
+            modal.style.display = 'flex';
+            return;
+        }
+
+        // Sin solicitud previa — mostrar confirmación con ubicación del proveedor
+        body.innerHTML = `
+            ${provHtml}
+            <div style="text-align:center;padding:0.25rem 0;">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">📋</div>
+                <p style="font-weight:700;color:#374151;margin-bottom:0.5rem;">Solicitar aprobación al proveedor</p>
+                <p style="font-size:0.85rem;color:#6b7280;line-height:1.5;">
+                    Para contratar este servicio, el proveedor debe aprobar tu solicitud primero.<br>
+                    <strong>¿Deseas enviar la solicitud ahora?</strong>
+                </p>
+            </div>`;
+        acciones.innerHTML = `
+            <button id="cancelarSolicitudBtnDyn"
+                style="flex:1;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                Cancelar
+            </button>
+            <button id="confirmarEnviarSolicitudBtn"
+                style="flex:2;padding:0.65rem;border:none;border-radius:0.75rem;background:linear-gradient(135deg,#ea580c,#f58634);color:#fff;font-size:0.88rem;font-weight:800;cursor:pointer;">
+                Enviar solicitud al proveedor
+            </button>`;
+        document.getElementById('cancelarSolicitudBtnDyn')?.addEventListener('click', cerrarModal);
+        document.getElementById('confirmarEnviarSolicitudBtn')?.addEventListener('click', () => enviarSolicitud(cb, itemId, intencionId));
+        cb.checked = false;
+        pendingCheckbox = null;
+        modal.style.display = 'flex';
+    }
+
+    async function enviarSolicitud(cb, itemId, intencionId) {
+        const btn = document.getElementById('confirmarEnviarSolicitudBtn') || document.getElementById('reenviarSolicitudBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+        try {
+            const res = await fetch('{{ route("solicitudes.enviar") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ id_item: itemId }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                body.innerHTML = `
+                    <div style="text-align:center;padding:0.5rem 0;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">✅</div>
+                        <p style="font-weight:700;color:#065f46;margin-bottom:0.25rem;">Solicitud enviada</p>
+                        <p style="font-size:0.85rem;color:#6b7280;">${data.message}</p>
+                    </div>`;
+                acciones.innerHTML = `<button onclick="document.getElementById('modalSolicitudServicio').style.display='none';"
+                    style="width:100%;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                    Entendido
+                </button>`;
+                // Actualizar badge y estado del checkbox
+                const cbEl = document.querySelector('.servicio-checkbox[data-id="' + intencionId + '"]');
+                if (cbEl) {
+                    cbEl.dataset.estadoSolicitud = 'pendiente_aprobacion';
+                    cbEl.checked = false;
+                }
+                setBadge(intencionId, 'pendiente_aprobacion');
+            } else {
+                body.innerHTML = `
+                    <div style="text-align:center;padding:0.5rem 0;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">⚠️</div>
+                        <p style="font-weight:700;color:#92400e;margin-bottom:0.25rem;">No se pudo enviar</p>
+                        <p style="font-size:0.85rem;color:#6b7280;">${data.message}</p>
+                    </div>`;
+                acciones.innerHTML = `<button onclick="document.getElementById('modalSolicitudServicio').style.display='none';"
+                    style="width:100%;padding:0.65rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;color:#6b7280;font-size:0.85rem;font-weight:700;cursor:pointer;">
+                    Cerrar
+                </button>`;
+                if (cb) cb.checked = false;
+            }
+        } catch (err) {
+            body.innerHTML = `<p style="color:#ef4444;text-align:center;">Error de conexión. Intenta de nuevo.</p>`;
+            if (cb) cb.checked = false;
+        }
+    }
+
+    // Interceptar clicks en checkboxes de servicios
+    document.addEventListener('change', function(e) {
+        const cb = e.target;
+        if (!cb.classList.contains('servicio-checkbox')) return;
+
+        const intencionId = cb.dataset.id;
+        const itemId      = cb.dataset.itemId;
+        const estado      = cb.dataset.estadoSolicitud;
+
+        if (!cb.checked) {
+            // Desmarcar: solo actualizar selección normal
+            return;
+        }
+
+        // Si está aprobado, dejar pasar (el handler normal de marcarSeleccionado lo maneja)
+        if (estado === 'aprobada') return;
+
+        // Para cualquier otro estado, prevenir el check y abrir modal
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        cb.checked = false;
+        abrirModalSolicitud(cb, itemId, intencionId, estado);
+    }, true); // capture=true para interceptar antes del handler de marcarSeleccionado
+})();
+</script>
+
 <script>
 window.paqueteId = null;
 window.itemsSeleccionados = [];
@@ -750,12 +1109,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector('.total_articulos').textContent = parseFloat(data.totales.total_articulos).toFixed(2);
                 document.querySelector('.total_descuento').textContent = '-' + parseFloat(data.totales.total_descuento).toFixed(2);
                 document.getElementById('total_estimado').textContent = parseFloat(data.totales.total_estimado).toFixed(2);
-                // Recalcular envío con el nuevo total
                 if (typeof recalcularEnvio === 'function') recalcularEnvio();
+                // Actualizar conteo de botones de pago
+                actualizarConteoBotones();
             }
             });
         } catch (err) {
             console.error("Error al marcar seleccionado:", err);
+        }
+    }
+
+    function actualizarConteoBotones() {
+        // Contar checkboxes seleccionados por tipo
+        var todosChecks = document.querySelectorAll('.item-checkbox');
+        var productosChecked = 0;
+        var serviciosChecked = 0;
+        todosChecks.forEach(function(cb) {
+            if (!cb.checked) return;
+            var card = cb.closest('.bg-orange-50');
+            if (card) serviciosChecked++;
+            else productosChecked++;
+        });
+        // Actualizar texto de botones si existen
+        var btnProd = document.querySelector('[name="tipo"][value="producto"]');
+        if (btnProd) {
+            var btnProdSubmit = btnProd.closest('form')?.querySelector('button');
+            if (btnProdSubmit) btnProdSubmit.innerHTML = btnProdSubmit.innerHTML.replace(/\(\d+\)/, '(' + productosChecked + ')');
+        }
+        var btnServ = document.querySelector('[name="tipo"][value="servicio"]');
+        if (btnServ) {
+            var btnServSubmit = btnServ.closest('form')?.querySelector('button');
+            if (btnServSubmit) btnServSubmit.innerHTML = btnServSubmit.innerHTML.replace(/\(\d+\)/, '(' + serviciosChecked + ')');
         }
     }
 

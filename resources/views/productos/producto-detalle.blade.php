@@ -217,6 +217,18 @@
                     @endif
                 </div>
 
+                {{-- Botón ver perfil del proveedor (solo servicios/talentos) --}}
+                @if((int)$item->id_categoria_item === 29 && isset($hojaVidaProveedor) && $hojaVidaProveedor)
+                <div style="margin-top:0.75rem;">
+                    <button onclick="document.getElementById('modalHojaVida').style.display='flex'"
+                            style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:0.65rem;padding:0.6rem 1rem;font-size:0.82rem;font-weight:700;cursor:pointer;transition:background .15s;"
+                            onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Ver perfil del proveedor
+                    </button>
+                </div>
+                @endif
+
                 {{-- Sección 6: Descripción corta (si existe) --}}
                 @if($item->presentacion)
                 <div style="padding:1rem 0;">
@@ -498,6 +510,55 @@
 @endauth
 
 {{-- Modal intercambio se carga via JS estático --}}
+
+{{-- Modal Hoja de Vida del Proveedor --}}
+@if((int)$item->id_categoria_item === 29 && isset($hojaVidaProveedor) && $hojaVidaProveedor)
+<div id="modalHojaVida" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:1.25rem;width:100%;max-width:28rem;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;max-height:calc(100vh - 2rem);display:flex;flex-direction:column;">
+        {{-- Header --}}
+        <div style="background:linear-gradient(135deg,#2563eb,#3b82f6);padding:1.25rem 1.5rem;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:2.5rem;height:2.5rem;background:rgba(255,255,255,0.2);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:1.25rem;height:1.25rem;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div>
+                    <h3 style="color:#fff;font-size:1rem;font-weight:700;margin:0;">Perfil del Proveedor</h3>
+                    <p style="color:rgba(255,255,255,0.8);font-size:0.75rem;margin:0;">Informacion profesional</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('modalHojaVida').style.display='none'"
+                    style="width:1.9rem;height:1.9rem;background:rgba(255,255,255,0.2);border:none;border-radius:50%;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">x</button>
+        </div>
+        {{-- Body --}}
+        <div style="padding:1.25rem 1.5rem;overflow-y:auto;flex:1;">
+            <div style="text-align:center;margin-bottom:1rem;">
+                <div style="width:3.5rem;height:3.5rem;background:#eff6ff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                    <span style="font-size:1.25rem;font-weight:800;color:#2563eb;">{{ strtoupper(substr($hojaVidaProveedor->nombres,0,1)) }}{{ strtoupper(substr($hojaVidaProveedor->apellidos,0,1)) }}</span>
+                </div>
+                <h4 style="font-size:1rem;font-weight:700;color:#111827;margin:0;">{{ $hojaVidaProveedor->nombres }} {{ $hojaVidaProveedor->apellidos }}</h4>
+                <p style="font-size:0.82rem;color:#3b82f6;font-weight:600;margin:0.25rem 0 0;">{{ $hojaVidaProveedor->titulo_profesional }}</p>
+                <p style="font-size:0.75rem;color:#6b7280;margin:0.25rem 0 0;">{{ $hojaVidaProveedor->ubicacion }}</p>
+            </div>
+
+            <div style="space-y:0.75rem;">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;margin-bottom:0.5rem;">
+                    <p style="font-size:0.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin:0 0 0.35rem;">Descripcion</p>
+                    <p style="font-size:0.8rem;color:#475569;line-height:1.5;margin:0;">{{ $hojaVidaProveedor->descripcion_bio }}</p>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;margin-bottom:0.5rem;">
+                    <p style="font-size:0.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin:0 0 0.35rem;">Habilidades</p>
+                    <p style="font-size:0.8rem;color:#475569;line-height:1.5;margin:0;">{{ $hojaVidaProveedor->habilidades }}</p>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;margin-bottom:0.5rem;">
+                    <p style="font-size:0.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin:0 0 0.35rem;">Experiencia</p>
+                    <p style="font-size:0.8rem;color:#475569;line-height:1.5;margin:0;">{{ $hojaVidaProveedor->experiencia }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection
 

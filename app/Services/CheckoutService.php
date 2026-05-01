@@ -9,6 +9,7 @@ use App\Models\PagoCompra;
 use App\Models\PagoItem;
 use App\Models\TarjetaPago;
 use App\Services\PagoService;
+use App\Services\SolicitudServicioService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +37,7 @@ class CheckoutService
 {
     public function __construct(
         private PagoService $pagoService,
+        private SolicitudServicioService $solicitudService,
     ) {}
 
     /**
@@ -61,6 +63,24 @@ class CheckoutService
 
         // 3. Determinar si es carrito de servicios (no requiere envío)
         $esServicio = $carrito->tipo === 'servicio';
+
+        // 3b. Para servicios: verificar si necesitan solicitud de aprobación
+        if ($esServicio) {
+            // Verificar si TODOS los items tienen solicitud aprobada
+            $todosAprobados = true;
+            foreach ($itemsSeleccionados as $itemIntencion) {
+                if (!$this->solicitudService->tieneAprobacion($userId, $itemIntencion->item->id_item)) {
+                    $todosAprobados = false;
+                    break;
+                }
+            }
+
+            if (!$todosAprobados) {
+                // Crear solicitudes y retornar sin cobrar
+                return $this->solicitudService->crearDesdeCarrito($userId, $carrito);
+            }
+            // Si todos aprobados, continuar al pago normal
+        }
 
         // 4. Validar dirección predeterminada (solo para productos)
         $direccion = null;
@@ -137,6 +157,11 @@ class CheckoutService
             // Verificar que el item siga activo
             if ($item->item->estatus != 1) {
                 return "El artículo \"{$item->item->item}\" ya no está disponible.";
+            }
+
+            // Servicios (categoría 29) no requieren verificación de stock
+            if ((int) ($item->item->id_categoria_item ?? 0) === 29) {
+                continue;
             }
 
             $inventario = $item->item->inventarios;
@@ -242,6 +267,16 @@ class CheckoutService
 
             Log::info('Pago completado', ['user_id' => $userId, 'carrito' => $carrito->id_carrito]);
 
+            // Marcar solicitudes de servicio como pagadas (si aplica)
+            if ($carrito->tipo === 'servicio') {
+                foreach ($itemsSeleccionados as $itemIntencion) {
+                    $solicitud = $this->solicitudService->obtenerAprobada($userId, $itemIntencion->item->id_item);
+                    if ($solicitud) {
+                        $this->solicitudService->marcarPagada($solicitud->id_solicitud);
+                    }
+                }
+            }
+
             return $this->exito('¡Pago procesado correctamente! Tu pedido está en camino.');
 
         } catch (\RuntimeException $e) {
@@ -291,8 +326,11 @@ class CheckoutService
             'imagen_url'      => $imagenUrl,
         ]);
 
-        $inventario->cantidad -= $itemIntencion->cantidad;
-        $inventario->save();
+        // Descontar inventario (solo si existe registro de inventario)
+        if ($inventario) {
+            $inventario->cantidad -= $itemIntencion->cantidad;
+            $inventario->save();
+        }
 
         $itemIntencion->delete();
     }

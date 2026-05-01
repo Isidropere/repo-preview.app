@@ -20,7 +20,9 @@
     <div class="p-3 overflow-y-auto" style="max-height:calc(100vh - 120px);">
 
         @auth
-        <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}">
+        <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary link-adultos"
+           href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(11)) }}"
+           onclick="return confirmarAdultos(event, this)">
             <img src="/imgs/icons/side-bar-icons/age-limit.svg" alt="" class="w-6 h-6 flex-shrink-0 opacity-70 group-hover:opacity-100" loading="lazy" width="24" height="24">
             <span class="text-sm font-medium group-hover:font-bold">Adultos</span>
         </a>

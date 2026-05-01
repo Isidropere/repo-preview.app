@@ -186,8 +186,9 @@
 
                                     @php
                                         $photoPath = Auth::user()->profile_photo_path;
+                                        $fotoAprobada = (Auth::user()->foto_perfil_estado ?? 'pendiente') === 'aprobado';
                                         $defaultAvatar = asset('imgs/defaults/profile_default.svg');
-                                        $photoUrl = $photoPath ? asset($photoPath) : $defaultAvatar;
+                                        $photoUrl = ($photoPath && $fotoAprobada) ? asset($photoPath) : $defaultAvatar;
                                     @endphp
                                     <img src="{{ $photoUrl }}"
                                          alt="Foto de perfil"

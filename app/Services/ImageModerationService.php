@@ -87,7 +87,9 @@ class ImageModerationService
 
     public function aprobarTodasFotosPerfil(): int
     {
-        $pendientes = User::whereNotNull('foto_perfil')
+        $pendientes = User::where(function ($q) {
+                $q->whereNotNull('foto_perfil')->orWhereNotNull('profile_photo_path');
+            })
             ->where('foto_perfil_estado', 'pendiente')
             ->get();
 

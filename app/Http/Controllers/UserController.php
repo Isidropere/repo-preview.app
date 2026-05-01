@@ -77,6 +77,7 @@ class UserController extends Controller
             $file = $request->file('profile_photo');
             $resultado = \App\Helpers\ImageHelper::guardar($file, 'imgs/profiles', 'profile_', $user->id);
             $user->profile_photo_path = $resultado['path'];
+            $user->foto_perfil_estado = 'pendiente';
         }
 
         $fields = array_filter($request->only('nombres', 'apellidos', 'telefono', 'nombre_usuario'));
