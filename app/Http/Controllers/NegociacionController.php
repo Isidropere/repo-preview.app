@@ -242,17 +242,15 @@ class NegociacionController extends Controller
             ->first()
             ?? \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
 
-        $costoEnvioPorNeg = ['_municipio' => ''];
-        if ($direccion && $direccion->municipio) {
-            $deliveryService = app(\App\Services\DeliveryService::class);
-            $municipio = $direccion->municipio->municipio ?? '';
-            $costoEnvioPorNeg['_municipio'] = $municipio;
+        $municipioUsuario = $direccion?->municipio?->municipio ?? '';
+        $costoEnvioPorNeg = ['_municipio' => $municipioUsuario];
 
+        if ($municipioUsuario) {
+            $deliveryService = app(\App\Services\DeliveryService::class);
             $todasNegs = $comoEmisor->merge($comoReceptor);
             foreach ($todasNegs as $neg) {
                 if ($neg->item) {
-                    // Intercambio: valor_articulo = 0 (no se cobra seguro sobre el valor)
-                    $resultado = $deliveryService->calcular($municipio, 'persona', 0);
+                    $resultado = $deliveryService->calcular($municipioUsuario, 'persona', 0);
                     $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
                 } else {
                     $costoEnvioPorNeg[$neg->id_negociacion] = 0;

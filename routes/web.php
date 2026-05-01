@@ -201,6 +201,17 @@ Route::get('/notificaciones/contador', function () {
     return response()->json(['total' => $total]);
 })->middleware('auth');
 
+Route::get('/usuario/municipio', function () {
+    $userId = auth()->id();
+    if (!$userId) return response()->json(['municipio' => '']);
+    $dir = \App\Models\Direcciones::where('id_user', $userId)
+        ->where('es_predeterminada', 1)
+        ->with('municipio')
+        ->first()
+        ?? \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
+    return response()->json(['municipio' => $dir?->municipio?->municipio ?? '']);
+})->middleware('auth')->name('usuario.municipio');
+
 
 // Rutas de páginas estáticas
 Route::get('/sobre-nosotros', function () {

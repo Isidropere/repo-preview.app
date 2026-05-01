@@ -200,24 +200,46 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre, modoEntrega) {
         montoEl.textContent = 'RD$ ' + montoNum.toLocaleString('es-DO', {minimumFractionDigits: 2});
     } else {
         montoEl.textContent = 'Calculando...';
-        var municipio = window._municipioUsuario || '';
-        if (municipio) {
-            fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&tipo_destinatario=persona&valor_articulo=0', {
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                var costo = parseFloat(d.costo_envio_total || 0);
-                montoEl.textContent = d.success && costo > 0
-                    ? 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2})
-                    : 'Gratis / Sin costo';
+        calcularMontoEnvioIntercambio(negId, montoEl);
+    }
+}
+
+function calcularMontoEnvioIntercambio(negId, montoEl) {
+    var municipio = window._municipioUsuario || '';
+
+    function fetchCosto(mun) {
+        fetch('/delivery/calcular?pueblo=' + encodeURIComponent(mun) + '&tipo_destinatario=persona&valor_articulo=0', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var costo = parseFloat(d.costo_envio_total || 0);
+            if (d.success && costo > 0) {
+                montoEl.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
                 var spanMonto = document.getElementById('monto-envio-' + negId);
-                if (spanMonto && costo > 0) spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
-            })
-            .catch(function() { montoEl.textContent = 'No disponible'; });
-        } else {
-            montoEl.textContent = 'Registra una dirección para calcular el envío';
-        }
+                if (spanMonto) spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
+            } else {
+                montoEl.textContent = d.message || 'Municipio sin zona de delivery configurada';
+            }
+        })
+        .catch(function() { montoEl.textContent = 'Error al calcular envío'; });
+    }
+
+    if (municipio) {
+        fetchCosto(municipio);
+    } else {
+        // Obtener municipio del usuario desde el servidor
+        fetch('/usuario/municipio', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.municipio) {
+                window._municipioUsuario = d.municipio;
+                fetchCosto(d.municipio);
+            } else {
+                montoEl.textContent = 'Registra una dirección para calcular el envío';
+            }
+        })
+        .catch(function() { montoEl.textContent = 'Registra una dirección para calcular el envío'; });
     }
 }
 
@@ -543,25 +565,8 @@ function enviarMensajeChat(negId) {
 async function recalcularEnvio(negId) {
     var spanMonto = document.getElementById('monto-envio-' + negId);
     if (!spanMonto) { window.location.reload(); return; }
-    var municipio = window._municipioUsuario || '';
-    if (!municipio) { spanMonto.textContent = 'Sin dirección'; return; }
     spanMonto.textContent = 'Calculando...';
-    try {
-        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&tipo_destinatario=persona&valor_articulo=0', {
-            headers: { 'Accept': 'application/json' }
-        });
-        if (!resp.ok) { spanMonto.textContent = 'Error (' + resp.status + ')'; return; }
-        var data = await resp.json();
-        if (!data.success) { spanMonto.textContent = data.message || 'Sin zona'; return; }
-        var costo = parseFloat(data.costo_envio_total || 0);
-        spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
-        var btnPago = document.getElementById('btn-pago-' + negId);
-        if (btnPago) {
-            btnPago.setAttribute('onclick', 'abrirModalPagoIntercambio(' + negId + ', ' + costo + ', "Intercambio")');
-        }
-    } catch (e) {
-        spanMonto.textContent = 'Error de conexión';
-    }
+    calcularMontoEnvioIntercambio(negId, spanMonto);
 }
 function highlightStars(negId, count) {
     var container = document.getElementById('stars-' + negId);
