@@ -287,14 +287,13 @@
                 <p class="text-sm font-semibold mb-1" style="color:#c2410c;">📦 ¿Cómo entregarás tu producto?</p>
                 <p class="text-xs mb-3" style="color:#9a3412;">Elige si envías el producto o si la otra parte lo retira en persona.</p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="modo" value="envio">
-                        <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();"
-                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                            🚚 Enviar el producto
-                        </button>
-                    </form>
+                    {{-- Enviar: abre modal de pago directamente --}}
+                    <button type="button"
+                            onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}', 'envio')"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                        🚚 Enviar y pagar
+                    </button>
+                    {{-- Retiro: POST directo sin pago --}}
                     <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
                         @csrf
                         <input type="hidden" name="modo" value="retiro">

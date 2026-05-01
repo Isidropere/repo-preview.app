@@ -170,13 +170,28 @@
 <script>
 window._municipioUsuario = @json($costoEnvioPorNeg['_municipio'] ?? '');
 var _pagoNegId = null;
+var _pagoModoEntrega = null; // 'envio' cuando viene del botón "Enviar y pagar"
 
-function abrirModalPagoIntercambio(negId, monto, itemNombre) {
+function abrirModalPagoIntercambio(negId, monto, itemNombre, modoEntrega) {
     _pagoNegId = negId;
+    _pagoModoEntrega = modoEntrega || null;
     var m = document.getElementById('modalPagoIntercambio');
     m.style.display = 'flex';
     document.getElementById('pagoIntercambioError').style.display = 'none';
     document.getElementById('pagoIntercambioItem').textContent = itemNombre || 'Intercambio';
+
+    // Actualizar título del modal si es "enviar y pagar"
+    var tituloModal = document.querySelector('#modalPagoIntercambio h3');
+    var subtituloModal = document.querySelector('#modalPagoIntercambio h3 + p');
+    if (modoEntrega === 'envio') {
+        if (tituloModal) tituloModal.textContent = '🚚 Enviar y pagar';
+        if (subtituloModal) subtituloModal.textContent = 'Paga el envío para que los administradores gestionen la entrega';
+        document.getElementById('btnConfirmarPagoIntercambio').textContent = '💳 Confirmar envío y pagar';
+    } else {
+        if (tituloModal) tituloModal.textContent = '💳 Pago de envío';
+        if (subtituloModal) subtituloModal.textContent = 'Pago para completar el intercambio';
+        document.getElementById('btnConfirmarPagoIntercambio').textContent = 'Pagar y completar';
+    }
 
     var montoNum = parseFloat(monto || 0);
     var montoEl = document.getElementById('pagoIntercambioMonto');
@@ -184,7 +199,6 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre) {
     if (montoNum > 0) {
         montoEl.textContent = 'RD$ ' + montoNum.toLocaleString('es-DO', {minimumFractionDigits: 2});
     } else {
-        // Monto no disponible aún — calcular en tiempo real
         montoEl.textContent = 'Calculando...';
         var municipio = window._municipioUsuario || '';
         if (municipio) {
@@ -197,7 +211,6 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre) {
                 montoEl.textContent = d.success && costo > 0
                     ? 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2})
                     : 'Gratis / Sin costo';
-                // Actualizar también el span en la tarjeta
                 var spanMonto = document.getElementById('monto-envio-' + negId);
                 if (spanMonto && costo > 0) spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
             })
@@ -211,6 +224,7 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre) {
 function cerrarModalPagoIntercambio() {
     document.getElementById('modalPagoIntercambio').style.display = 'none';
     _pagoNegId = null;
+    _pagoModoEntrega = null;
 }
 
 document.getElementById('modalPagoIntercambio')?.addEventListener('click', function(e) {
@@ -233,6 +247,24 @@ async function procesarPagoIntercambio() {
     btn.textContent = 'Procesando...';
 
     try {
+        // Si viene del botón "Enviar y pagar", primero guardar modo_entrega=envio
+        if (_pagoModoEntrega === 'envio') {
+            var modoResp = await fetch('/negociaciones/' + _pagoNegId + '/modo-entrega', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ modo: 'envio' })
+            });
+            var modoData = await modoResp.json();
+            if (!modoData.success) {
+                errDiv.textContent = modoData.message || 'Error al registrar modo de entrega.';
+                errDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = textoOrig;
+                return;
+            }
+        }
+
+        // Procesar el pago
         var resp = await fetch('/negociaciones/' + _pagoNegId + '/pago', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
