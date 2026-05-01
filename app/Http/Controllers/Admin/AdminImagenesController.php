@@ -22,7 +22,9 @@ class AdminImagenesController extends Controller
             ->orderBy('id_imagen', 'asc')
             ->get();
 
-        $fotosUsuarios = User::whereNotNull('foto_perfil')
+        $fotosUsuarios = User::where(function ($q) {
+                $q->whereNotNull('foto_perfil')->orWhereNotNull('profile_photo_path');
+            })
             ->where('foto_perfil_estado', 'pendiente')
             ->orderBy('id', 'asc')
             ->get();

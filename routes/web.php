@@ -365,6 +365,24 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/pago',   [NegociacionController::class, 'procesarPago'])->name('negociaciones.pago.procesar');
 });
 
+// Solicitudes de servicio (aprobación previa al pago de talentos)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mis-ventas-talentos', [\App\Http\Controllers\SolicitudServicioController::class, 'index'])->name('solicitudes.index');
+    Route::post('/solicitudes-servicio/{id}/aprobar', [\App\Http\Controllers\SolicitudServicioController::class, 'aprobar'])->name('solicitudes.aprobar');
+    Route::post('/solicitudes-servicio/{id}/rechazar', [\App\Http\Controllers\SolicitudServicioController::class, 'rechazar'])->name('solicitudes.rechazar');
+    // JSON endpoints para carrito y mis-ventas-talentos
+    Route::post('/solicitudes-servicio/enviar', [\App\Http\Controllers\SolicitudServicioController::class, 'enviarDesdeCarrito'])->name('solicitudes.enviar');
+    Route::get('/solicitudes-servicio/estado/{idItem}', [\App\Http\Controllers\SolicitudServicioController::class, 'estadoItem'])->name('solicitudes.estado');
+    Route::post('/solicitudes-servicio/{id}/aprobar-json', [\App\Http\Controllers\SolicitudServicioController::class, 'aprobarJson'])->name('solicitudes.aprobar_json');
+    Route::post('/solicitudes-servicio/{id}/rechazar-json', [\App\Http\Controllers\SolicitudServicioController::class, 'rechazarJson'])->name('solicitudes.rechazar_json');
+});
+
+// Hoja de vida (perfil profesional para talentos)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mi-hoja-vida', [\App\Http\Controllers\HojaVidaController::class, 'form'])->name('hoja-vida.form');
+    Route::post('/mi-hoja-vida', [\App\Http\Controllers\HojaVidaController::class, 'save'])->name('hoja-vida.save');
+});
+
 // Rating de intercambios
 Route::post('/rating', function (\Illuminate\Http\Request $request) {
     $request->validate(['id_miembro' => 'required|integer|exists:users,id', 'rating' => 'required|integer|min:1|max:5']);
@@ -505,6 +523,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Talentos
     Route::get('/talentos/crear', function () {
+        // Verificar hoja de vida antes de crear talento
+        if (!\App\Models\HojaVida::where('id_user', auth()->id())->exists()) {
+            return redirect()->route('hoja-vida.form')
+                ->with('warning', 'Debes completar tu hoja de vida antes de publicar un talento.');
+        }
+
         $categorias = CategoriaItem::all();
         $tarjetas = \App\Models\TarjetaPago::where('id_user', auth()->id())->where('estatus', 1)->get();
         $montoRegistro = \App\Models\ConfigTarifaCategoria29::vigente()->monto_registro;

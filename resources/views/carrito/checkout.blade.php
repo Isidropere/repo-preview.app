@@ -193,9 +193,70 @@
                             </a>
                         </div>
                         @else
-                        <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
-                            <p class="text-sm text-orange-700 font-medium">⭐ Servicio digital — no requiere envío</p>
+                      <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <p class="text-sm text-orange-700 font-medium text-center mb-3">⭐ Servicio / Talento — no requiere envio</p>
+
+                    @if(!empty($proveedoresInfo))
+                    <div style="border-top:1px solid #fed7aa;padding-top:0.75rem;">
+                        <p style="font-size:0.78rem;font-weight:700;color:#92400e;margin-bottom:0.5rem;">
+                            Informacion del proveedor:
+                        </p>
+
+                        @foreach($proveedoresInfo as $itemId => $prov)
+                        <div style="margin-bottom:0.5rem;">
+
+                            <!-- Nombre + municipio -->
+                            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#78350f;">
+                                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <span>
+                                    <strong>{{ $prov['nombre'] }}</strong> — {{ $prov['municipio'] }}
+                                </span>
+                            </div>
+
+                         <!-- Dirección -->
+                    <div style="font-size:0.75rem;color:#92400e;margin-left:1.2rem;">
+                            @if(!empty($prov['calle']))
+                                Calle: {{ $prov['calle'] }}<br>
+                            @endif
+
+                            @if(!empty($prov['N_casa_edificio']))
+                                Número de casa o edificio: {{ $prov['N_casa_edificio'] }}<br>
+                            @endif
+
+                            @if(!empty($prov['apto']))
+                                Apartamento: {{ $prov['apto'] }}<br>
+                            @endif
+
+                            @if(!empty($prov['geolocalizacion']))
+                                <a href="https://www.google.com/maps?q={{ $prov['geolocalizacion'] }}" 
+                                target="_blank" 
+                                style="display:inline-flex;align-items:center;gap:4px;color:#b45309;text-decoration:underline;">
+                                    
+                                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+
+                                    Ver ubicación en el mapa
+                                </a>
+                            @endif
+
                         </div>
+
+                        </div>
+                        @endforeach
+                    </div>
+                    @endif
+
+                    <p style="font-size:0.75rem;color:#92400e;margin-top:0.5rem;text-align:center;">
+                        Al confirmar, se enviara una solicitud al proveedor para su aprobacion.
+                    </p>
+                </div>
                         @endif
 
                         <button type="submit" id="btnPagar"
@@ -206,7 +267,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
-                            Confirmar y Pagar
+                            {{ ($carrito->tipo ?? '') === 'servicio' ? 'Enviar Solicitud al Proveedor' : 'Confirmar y Pagar' }}
                         </button>
 
                         <div class="flex items-center justify-center gap-1.5 mt-4 text-xs text-gray-400">

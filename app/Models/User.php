@@ -133,4 +133,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(\App\Models\Direcciones::class, 'id_user', 'id');
     }
+
+    public function hojaVida()
+    {
+        return $this->hasOne(\App\Models\HojaVida::class, 'id_user', 'id');
+    }
 }

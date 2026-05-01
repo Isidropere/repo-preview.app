@@ -156,7 +156,7 @@
             @foreach($fotosUsuarios as $user)
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:10px 16px;">
-                    <img src="{{ \App\Helpers\ImageHelper::urlPerfil($user->foto_perfil) }}"
+                    <img src="{{ \App\Helpers\ImageHelper::urlPerfil($user->profile_photo_path ?? $user->foto_perfil) }}"
                          alt="Foto de perfil"
                          style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid #e2e8f0;"
                          loading="lazy" width="56" height="56"

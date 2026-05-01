@@ -18,8 +18,9 @@
                 <div style="position:relative;width:64px;height:64px;flex-shrink:0;">
                     @php
                         $photoPath = Auth::user()->profile_photo_path;
+                        $fotoAprobada = (Auth::user()->foto_perfil_estado ?? 'pendiente') === 'aprobado';
                         $defaultAvatar = asset('imgs/defaults/profile_default.svg');
-                        $photoUrl = $photoPath ? asset($photoPath) : $defaultAvatar;
+                        $photoUrl = ($photoPath && $fotoAprobada) ? asset($photoPath) : $defaultAvatar;
                     @endphp
                     <img id="preview-foto"
                          src="{{ $photoUrl }}"
@@ -68,12 +69,30 @@
                     </div>
                 </a>
 
+                <a href="{{ route('hoja-vida.form') }}"
+                   class="flex gap-x-2 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all duration-300 p-4 shadow-md">
+                    <svg class="w-12 h-12 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                        <h2 class="text-xl font-medium">Mi Hoja de Vida</h2>
+                        <p class="text-sm text-gray-500">{{ auth()->user()->hojaVida ? 'Edita tu perfil profesional' : 'Completa tu perfil profesional' }}</p>
+                    </div>
+                </a>
+
                 <a href="{{ route('items.admintalento') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/talentos.svg" alt="Talentos" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Administrar tus talentos</h2>
                         <p class="text-sm text-gray-500">Gestiona tus talentos</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('solicitudes.index') }}"
+                   class="flex gap-x-2 border border-orange-200 rounded-lg bg-orange-50 hover:bg-orange-100 transition-all duration-300 p-4 shadow-md">
+                    <svg class="w-12 h-12 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <div>
+                        <h2 class="text-xl font-medium">Mis Ventas de Talentos</h2>
+                        <p class="text-sm text-gray-500">Aprueba o rechaza solicitudes de servicio</p>
                     </div>
                 </a>
 

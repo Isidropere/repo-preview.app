@@ -194,33 +194,74 @@
             @if(isset($ventas) && $ventas->count())
                 <div class="space-y-4">
                     @foreach($ventas as $intencion)
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div class="flex items-center gap-4">
-                            @php
-                                $imagen = $intencion->item?->imagenes?->first();
-                                $src = $imagen
-                                    ? \App\Helpers\ImageHelper::urlMedia($imagen->ruta ?? '', $imagen->nombre)
-                                    : asset('imgs/producto_defaul.png');
-                            @endphp
-                            <img src="{{ $src }}" alt="{{ $intencion->item?->item }}"
-                                class="w-14 h-14 rounded-lg object-cover border border-gray-100">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-sm font-medium text-gray-800">{{ $intencion->item?->item ?? 'Articulo eliminado' }}</span>
-                                <span class="text-xs text-gray-400">Cantidad: {{ $intencion->cantidad }}</span>
-                                @if($intencion->item?->valor)
-                                    <span class="text-xs text-primary font-semibold">RD$ {{ number_format($intencion->item->valor, 2) }}</span>
+                    @php
+                        $imagen = $intencion->item?->imagenes?->where('estado','aprobado')->first();
+                        $src = $imagen ? \App\Helpers\ImageHelper::urlMedia($imagen->ruta ?? '', $imagen->nombre) : asset('imgs/defaults/producto_default.svg');
+                        $pagoVenta = $intencion->carrito?->pagosCompra?->first();
+                        $comprador = $intencion->carrito?->usuario;
+                        $trazas = $pagoVenta?->trazabilidad ?? collect();
+                    @endphp
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div class="flex items-center gap-4">
+                                <img src="{{ $src }}" alt="{{ $intencion->item?->item }}"
+                                     class="w-14 h-14 rounded-lg object-cover border border-gray-100 flex-shrink-0" loading="lazy" width="56" height="56">
+                                <div class="flex flex-col gap-1 min-w-0">
+                                    <span class="text-sm font-medium text-gray-800 truncate">{{ $intencion->item?->item ?? 'Articulo eliminado' }}</span>
+                                    <div class="flex items-center gap-3 text-xs text-gray-400">
+                                        <span>Cant: {{ $intencion->cantidad }}</span>
+                                        @if($intencion->item?->valor)
+                                            <span class="text-primary font-semibold">RD$ {{ number_format($intencion->item->valor, 2) }}</span>
+                                        @endif
+                                    </div>
+                                    @if($comprador)
+                                    <span class="text-xs text-gray-400">Comprador: {{ $comprador->nombres }} {{ $comprador->apellidos }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    @if(($pagoVenta?->estatus) === 'aprobado') bg-green-100 text-green-700
+                                    @elseif(($pagoVenta?->estatus) === 'enviado') bg-blue-100 text-blue-700
+                                    @elseif(($pagoVenta?->estatus) === 'entregado') bg-emerald-100 text-emerald-700
+                                    @elseif(($pagoVenta?->estatus) === 'pendiente') bg-yellow-100 text-yellow-700
+                                    @else bg-gray-100 text-gray-500 @endif">
+                                    {{ ucfirst($pagoVenta?->estatus ?? 'sin pago') }}
+                                </span>
+                                @if($trazas->count())
+                                <button onclick="toggleTrazabilidad('traz-venta-{{ $loop->index }}')"
+                                    class="text-xs text-primary hover:text-hoverPrimary font-medium flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    Seguimiento
+                                </button>
                                 @endif
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            @php $pagoVenta = $intencion->carrito?->pagosCompra?->first(); @endphp
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                @if(($pagoVenta?->estatus) === 'aprobado') bg-green-100 text-green-700
-                                @elseif(($pagoVenta?->estatus) === 'pendiente') bg-yellow-100 text-yellow-700
-                                @else bg-gray-100 text-gray-500 @endif">
-                                {{ ucfirst($pagoVenta?->estatus ?? 'sin pago') }}
-                            </span>
+                        @if($trazas->count())
+                        <div id="traz-venta-{{ $loop->index }}" class="hidden border-t border-gray-100 bg-gray-50 px-5 py-4">
+                            <p class="text-xs font-semibold text-gray-500 mb-3">Trazabilidad de la venta</p>
+                            <div class="relative pl-6">
+                                @foreach($trazas as $traza)
+                                <div class="relative pb-4 {{ $loop->last ? '' : 'border-l-2 border-gray-200' }} ml-1">
+                                    <div class="absolute -left-[calc(0.25rem+1px)] top-0.5 w-2.5 h-2.5 rounded-full
+                                        @if($traza->estado_nuevo === 'entregado') bg-emerald-500
+                                        @elseif($traza->estado_nuevo === 'enviado') bg-blue-500
+                                        @elseif($traza->estado_nuevo === 'aprobado') bg-green-500
+                                        @elseif($traza->estado_nuevo === 'rechazado' || $traza->estado_nuevo === 'cancelado') bg-red-500
+                                        @else bg-yellow-500 @endif">
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-xs font-medium text-gray-700">
+                                            {{ ucfirst($traza->estado_anterior ?? '-') }} &rarr; {{ ucfirst($traza->estado_nuevo) }}
+                                        </p>
+                                        <p class="text-xs text-gray-400">{{ $traza->created_at?->format('d/m/Y h:i A') }}</p>
+                                        @if($traza->nota)<p class="text-xs text-gray-500 mt-0.5 italic">{{ $traza->nota }}</p>@endif
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
                         </div>
+                        @endif
                     </div>
                     @endforeach
                 </div>
@@ -241,24 +282,120 @@
             @if(isset($negociaciones) && $negociaciones->count())
                 <div class="space-y-4">
                     @foreach($negociaciones as $neg)
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-xs text-gray-400">Negociacion #{{ $neg->id_negociacion }}</span>
-                            <span class="text-sm font-medium text-gray-700">{{ $neg->mensaje_inicial }}</span>
-                            <span class="text-xs text-gray-400">
-                                {{ $neg->fecha_creacion ? \Carbon\Carbon::parse($neg->fecha_creacion)->format('d/m/Y') : '' }}
-                            </span>
+                    @php
+                        $imgNeg = $neg->item?->imagenes?->where('estado','aprobado')->first();
+                        $imgSrc = $imgNeg ? \App\Helpers\ImageHelper::urlMedia($imgNeg->ruta, $imgNeg->nombre) : asset('imgs/defaults/producto_default.svg');
+                        $esEmisor = $neg->usuario_emisor_id === auth()->id();
+                        $otraParte = $esEmisor ? $neg->usuarioReceptor : $neg->usuario;
+                        $estadoColor = match($neg->estado) {
+                            'aceptada', 'confirmada' => 'bg-green-100 text-green-700',
+                            'Inicial', 'pendiente', 'contraoferta' => 'bg-yellow-100 text-yellow-700',
+                            'rechazada', 'cancelada' => 'bg-red-100 text-red-700',
+                            'completada' => 'bg-emerald-100 text-emerald-700',
+                            default => 'bg-gray-100 text-gray-500',
+                        };
+                        $pagoEmisor = $neg->pago_emisor ?? false;
+                        $pagoReceptor = $neg->pago_receptor ?? false;
+                    @endphp
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div class="flex items-center gap-4">
+                                <img src="{{ $imgSrc }}" alt="{{ $neg->item?->item }}"
+                                     class="w-14 h-14 rounded-lg object-cover border border-gray-100 flex-shrink-0" loading="lazy" width="56" height="56">
+                                <div class="flex flex-col gap-1 min-w-0">
+                                    <span class="text-sm font-medium text-gray-800 truncate">{{ $neg->item?->item ?? 'Articulo' }}</span>
+                                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                                        <span>#{{ $neg->id_negociacion }}</span>
+                                        <span>{{ $neg->fecha_creacion ? \Carbon\Carbon::parse($neg->fecha_creacion)->format('d/m/Y') : '' }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">
+                                        {{ $esEmisor ? 'Enviado a' : 'Recibido de' }}:
+                                        <strong>{{ $otraParte?->nombres ?? 'Usuario' }} {{ $otraParte?->apellidos ?? '' }}</strong>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <div class="flex items-center gap-2">
+                                    @if($neg->monto_oferta)
+                                        <span class="text-sm font-semibold text-primary">RD$ {{ number_format($neg->monto_oferta, 2) }}</span>
+                                    @endif
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $estadoColor }}">
+                                        {{ ucfirst($neg->estado ?? 'desconocido') }}
+                                    </span>
+                                </div>
+                                <button onclick="toggleTrazabilidad('traz-neg-{{ $loop->index }}')"
+                                    class="text-xs text-primary hover:text-hoverPrimary font-medium flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    Ver detalle
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            @if($neg->monto_oferta)
-                                <span class="text-sm font-semibold text-primary">RD$ {{ number_format($neg->monto_oferta, 2) }}</span>
+                        {{-- Detalle expandible --}}
+                        <div id="traz-neg-{{ $loop->index }}" class="hidden border-t border-gray-100 bg-gray-50 px-5 py-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-500 mb-2">Mensaje inicial</p>
+                                    <p class="text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">{{ $neg->mensaje_inicial ?? 'Sin mensaje' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-500 mb-2">Flujo del intercambio</p>
+                                    <div class="relative pl-5">
+                                        {{-- Paso 1: Propuesta --}}
+                                        <div class="relative pb-3 border-l-2 border-gray-200 ml-1">
+                                            <div class="absolute -left-[calc(0.25rem+1px)] top-0.5 w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                                            <div class="ml-4">
+                                                <p class="text-xs font-medium text-gray-700">Propuesta enviada</p>
+                                                <p class="text-xs text-gray-400">{{ $neg->fecha_creacion ? \Carbon\Carbon::parse($neg->fecha_creacion)->format('d/m/Y h:i A') : '' }}</p>
+                                            </div>
+                                        </div>
+                                        {{-- Paso 2: Estado actual --}}
+                                        <div class="relative pb-3 {{ ($neg->estado === 'confirmada' || $neg->estado === 'completada') ? 'border-l-2 border-gray-200' : '' }} ml-1">
+                                            <div class="absolute -left-[calc(0.25rem+1px)] top-0.5 w-2.5 h-2.5 rounded-full
+                                                @if(in_array($neg->estado, ['aceptada','confirmada','completada'])) bg-green-500
+                                                @elseif(in_array($neg->estado, ['rechazada','cancelada'])) bg-red-500
+                                                @else bg-yellow-500 @endif"></div>
+                                            <div class="ml-4">
+                                                <p class="text-xs font-medium text-gray-700">{{ ucfirst($neg->estado) }}</p>
+                                                <p class="text-xs text-gray-400">{{ $neg->updated_at?->format('d/m/Y h:i A') }}</p>
+                                            </div>
+                                        </div>
+                                        {{-- Paso 3: Confirmaciones --}}
+                                        @if(in_array($neg->estado, ['confirmada', 'completada', 'aceptada']))
+                                        <div class="relative pb-3 {{ $neg->estado === 'completada' ? 'border-l-2 border-gray-200' : '' }} ml-1">
+                                            <div class="absolute -left-[calc(0.25rem+1px)] top-0.5 w-2.5 h-2.5 rounded-full {{ ($neg->emisor_confirmado ?? false) && ($neg->receptor_confirmado ?? false) ? 'bg-emerald-500' : 'bg-yellow-500' }}"></div>
+                                            <div class="ml-4">
+                                                <p class="text-xs font-medium text-gray-700">Confirmaciones</p>
+                                                <p class="text-xs text-gray-500">
+                                                    Emisor: <span class="{{ ($neg->emisor_confirmado ?? false) ? 'text-green-600' : 'text-yellow-600' }}">{{ ($neg->emisor_confirmado ?? false) ? 'Confirmado' : 'Pendiente' }}</span>
+                                                    &middot;
+                                                    Receptor: <span class="{{ ($neg->receptor_confirmado ?? false) ? 'text-green-600' : 'text-yellow-600' }}">{{ ($neg->receptor_confirmado ?? false) ? 'Confirmado' : 'Pendiente' }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        {{-- Paso 4: Pagos de envio --}}
+                                        @if($pagoEmisor || $pagoReceptor)
+                                        <div class="relative pb-1 ml-1">
+                                            <div class="absolute -left-[calc(0.25rem+1px)] top-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                                            <div class="ml-4">
+                                                <p class="text-xs font-medium text-gray-700">Pagos de envio</p>
+                                                <p class="text-xs text-gray-500">
+                                                    @if($pagoEmisor) Emisor: pagado @endif
+                                                    @if($pagoEmisor && $pagoReceptor) &middot; @endif
+                                                    @if($pagoReceptor) Receptor: pagado @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @if(in_array($neg->estado, ['aceptada', 'confirmada']) && !($neg->estado === 'completada'))
+                            <a href="{{ route('negociaciones.mis') }}"
+                               style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.8rem;font-size:0.78rem;font-weight:600;color:#fff;background:#f58634;border-radius:0.5rem;text-decoration:none;">
+                                Ir a Mis Intercambios
+                            </a>
                             @endif
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                @if($neg->estado === 'aceptada') bg-green-100 text-green-700
-                                @elseif($neg->estado === 'Inicial' || $neg->estado === 'pendiente') bg-yellow-100 text-yellow-700
-                                @else bg-red-100 text-red-700 @endif">
-                                {{ ucfirst($neg->estado ?? 'desconocido') }}
-                            </span>
                         </div>
                     </div>
                     @endforeach
@@ -322,7 +459,16 @@ function toggleTrazabilidad(id) {
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarProgreso();
-    setTimeout(ocultarProgreso, 300);
+    setTimeout(function() {
+        // Leer tab desde URL (?tab=ventas)
+        var params = new URLSearchParams(window.location.search);
+        var tab = params.get('tab');
+        if (tab && ['compras', 'ventas', 'intercambios'].includes(tab)) {
+            mostrarTab(tab);
+        } else {
+            ocultarProgreso();
+        }
+    }, 300);
 });
 </script>
 @endpush

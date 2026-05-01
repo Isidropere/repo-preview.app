@@ -172,6 +172,7 @@ class RegisterController extends Controller
                     );
                     $resultado = \App\Helpers\ImageHelper::guardar($tmpFile, 'imgs/profiles', 'profile_', $usuario->id);
                     $usuario->profile_photo_path = $resultado['path'];
+                    $usuario->foto_perfil_estado = 'pendiente';
                     $usuario->save();
                 } catch (\Throwable $e) {
                     Log::error('Error al guardar foto de perfil', ['error' => $e->getMessage()]);

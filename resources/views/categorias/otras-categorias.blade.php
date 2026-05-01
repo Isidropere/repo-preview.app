@@ -48,6 +48,7 @@
             @continue
         @endif
         <a href="{{ route('categorias.show', $cat->slug) }}"
+           @if($cat->id_categoria_item == 11) onclick="return confirmarAdultos(event, this)" @endif
            style="background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1.25rem 1rem;text-decoration:none;text-align:center;transition:box-shadow .3s,transform .2s,border-color .2s;display:flex;flex-direction:column;align-items:center;gap:0.5rem;"
            onmouseover="this.style.boxShadow='0 8px 25px rgba(0,0,0,.1)';this.style.transform='translateY(-3px)';this.style.borderColor='#479bd5'"
            onmouseout="this.style.boxShadow='none';this.style.transform='none';this.style.borderColor='#e5e7eb'">
