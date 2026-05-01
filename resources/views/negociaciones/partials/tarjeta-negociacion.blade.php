@@ -198,6 +198,28 @@
         </form>
         @endif
 
+        {{-- EMISOR: aceptar contraoferta del receptor --}}
+        @if($rol === 'emisor' && $neg->estado === 'contraoferta')
+        <div class="w-full p-3 rounded-xl border mb-2" style="background:#eff6ff;border-color:#bfdbfe;">
+            <p class="text-xs font-semibold mb-2" style="color:#1e40af;">
+                💬 El receptor envió una contraoferta
+                @if($neg->monto_contra_oferta)
+                    — Monto propuesto: <strong>RD$ {{ number_format($neg->monto_contra_oferta, 2) }}</strong>
+                @endif
+            </p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <form action="{{ route('negociaciones.aceptar_contraoferta', $neg->id_negociacion) }}" method="POST">
+                    @csrf
+                    <button type="submit" onclick="this.disabled=true;this.textContent='Aceptando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">✓ Aceptar contraoferta</button>
+                </form>
+                <form action="{{ route('negociaciones.rechazar', $neg->id_negociacion) }}" method="POST" onsubmit="return confirm('¿Rechazar esta contraoferta?')">
+                    @csrf
+                    <button type="submit" onclick="this.disabled=true;this.textContent='Rechazando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#ef4444;">✕ Rechazar</button>
+                </form>
+            </div>
+        </div>
+        @endif
+
         {{-- APROBAR: ambos roles pueden aprobar cuando estado es aceptado y aún no han aprobado --}}
         @if($neg->estado === 'aceptado' && !$miConfirmado)
         <div class="w-full p-3 rounded-xl border mb-2" style="background:#eff6ff;border-color:#bfdbfe;">

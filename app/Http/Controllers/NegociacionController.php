@@ -157,28 +157,22 @@ class NegociacionController extends Controller
 
     public function confirmarReceptor($id)
     {
-        $neg = Negociacion::findOrFail($id);
-        $userId = auth()->id();
-
-        if ($userId != $neg->usuario_receptor_id) {
-            $msg = ['success' => false, 'message' => 'No tienes permiso.'];
+        $resultado = $this->negociacionService->confirmarReceptor(auth()->id(), $id);
+        if (($resultado['code'] ?? null) === 403) {
+            $msg = ['success' => false, 'message' => $resultado['message']];
             return request()->wantsJson() ? response()->json($msg, 403) : back()->with('error', $msg['message']);
         }
+        $msg = $resultado;
+        return request()->wantsJson() ? response()->json($msg, $msg['success'] ? 200 : 422) : back()->with($msg['success'] ? 'success' : 'error', $msg['message']);
+    }
 
-        if ($neg->estado !== 'aceptado') {
-            $msg = ['success' => false, 'message' => 'La negociación no está en estado aceptado.'];
-            return request()->wantsJson() ? response()->json($msg, 422) : back()->with('error', $msg['message']);
+    public function aceptarComoEmisor($id)
+    {
+        $resultado = $this->negociacionService->aceptarComoEmisor(auth()->id(), $id);
+        if (request()->wantsJson()) {
+            return response()->json($resultado, $resultado['success'] ? 200 : 422);
         }
-
-        $neg->update(['receptor_confirmado' => true]);
-
-        // Si ambos confirmaron, notificar
-        if ($neg->emisor_confirmado && $neg->receptor_confirmado) {
-            $this->negociacionService->notificarAdminsCompletado($neg);
-        }
-
-        $msg = ['success' => true, 'message' => 'Has aprobado el intercambio.'];
-        return request()->wantsJson() ? response()->json($msg) : back()->with('success', $msg['message']);
+        return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
     public function index($item)
@@ -323,6 +317,14 @@ class NegociacionController extends Controller
         if ($request->input('sin_pago')) {
             $neg->update([$campo => true]);
 
+            \App\Models\PagoEnvioIntercambio::create([
+                'id_negociacion' => $neg->id_negociacion,
+                'id_user'        => $userId,
+                'monto'          => 0,
+                'tipo_pago'      => 'sin_pago',
+                'estado'         => 'pagado',
+            ]);
+
             $negFresh = $neg->fresh();
             if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
                 $neg->update(['estado' => 'completado']);
@@ -378,6 +380,18 @@ class NegociacionController extends Controller
         }
 
         $neg->update([$campo => true]);
+
+        // Registrar en pago_envio_intercambio
+        \App\Models\PagoEnvioIntercambio::create([
+            'id_negociacion' => $neg->id_negociacion,
+            'id_user'        => $userId,
+            'monto'          => $montoACobrar ?? 0,
+            'tipo_pago'      => 'tarjeta',
+            'estado'         => 'pagado',
+            'id_tarjeta'     => $request->id_tarjeta ?? null,
+            'transaction_id' => $resultado['transaction_id'] ?? null,
+            'approval_code'  => $resultado['approval_code'] ?? null,
+        ]);
 
         $negFresh = $neg->fresh();
         if ($negFresh->pago_emisor && $negFresh->pago_receptor) {

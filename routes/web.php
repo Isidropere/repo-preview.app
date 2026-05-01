@@ -355,6 +355,7 @@ Route::middleware(['auth'])->prefix('negociaciones')->group(function () {
     Route::post('/{id}/completar', [NegociacionController::class, 'completar'])->name('negociaciones.completar');
     Route::post('/{id}/confirmar-emisor', [NegociacionController::class, 'confirmarEmisor'])->name('negociaciones.confirmar_emisor');
     Route::post('/{id}/confirmar-receptor', [NegociacionController::class, 'confirmarReceptor'])->name('negociaciones.confirmar_receptor');
+    Route::post('/{id}/aceptar-contraoferta', [NegociacionController::class, 'aceptarComoEmisor'])->name('negociaciones.aceptar_contraoferta');
 
     Route::post('/enviar', [App\Http\Controllers\NegociacionController::class, 'store'])
         ->middleware('throttle.sensitive:10,1')
@@ -526,7 +527,8 @@ Route::middleware(['auth'])->group(function () {
         // Verificar hoja de vida antes de crear talento
         if (!\App\Models\HojaVida::where('id_user', auth()->id())->exists()) {
             return redirect()->route('hoja-vida.form')
-                ->with('warning', 'Debes completar tu hoja de vida antes de publicar un talento.');
+                ->with('warning', 'Debes completar tu hoja de vida antes de publicar un talento.')
+                ->with('redirect_after', 'items.talento_create');
         }
 
         $categorias = CategoriaItem::all();

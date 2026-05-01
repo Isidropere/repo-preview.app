@@ -185,6 +185,55 @@ class NegociacionService
     }
 
     /**
+     * Emisor acepta una contraoferta del receptor.
+     */
+    public function aceptarComoEmisor(int $userId, int $negociacionId): array
+    {
+        $neg = Negociacion::find($negociacionId);
+        if (!$neg) return $this->error('Negociación no encontrada.');
+
+        if ($userId != $neg->usuario_emisor_id) {
+            return $this->error('Solo el emisor puede aceptar la contraoferta.');
+        }
+
+        if ($neg->estado !== 'contraoferta') {
+            return $this->error('No hay contraoferta activa para aceptar.');
+        }
+
+        try {
+            DB::transaction(function () use ($neg) {
+                $neg = Negociacion::where('id_negociacion', $neg->id_negociacion)->lockForUpdate()->first();
+                if ($neg->estado !== 'contraoferta') throw new \RuntimeException('Estado ya cambió.');
+                $neg->update(['estado' => 'aceptado']);
+
+                $item = Item::with('inventarios')->find($neg->receptor_item_id);
+                if ($item && $item->inventarios && $item->inventarios->cantidad > 0) {
+                    $item->inventarios->cantidad -= 1;
+                    $item->inventarios->save();
+                    if ($item->inventarios->cantidad <= 0) {
+                        Negociacion::where('receptor_item_id', $item->id_item)
+                            ->where('id_negociacion', '!=', $neg->id_negociacion)
+                            ->whereIn('estado', ['Inicial', 'contraoferta'])
+                            ->update(['estado' => 'cancelado']);
+                    }
+                }
+            });
+
+            event(new \App\Events\NuevaNotificacion(
+                "El emisor aceptó tu contraoferta en el intercambio #{$neg->id_negociacion}. Confirma para continuar.",
+                $neg->usuario_receptor_id
+            ));
+
+            return $this->ok('Contraoferta aceptada. El intercambio está en estado aceptado.');
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error al aceptar contraoferta', ['id' => $negociacionId, 'error' => $e->getMessage()]);
+            return $this->error('Error al procesar la aceptación.');
+        }
+    }
+
+    /**
      * Receptor rechaza la negociación.
      */
     public function rechazar(int $userId, int $negociacionId): array
@@ -297,10 +346,54 @@ class NegociacionService
 
         $neg->update(['emisor_confirmado' => true]);
 
+        // Notificar al receptor que el emisor aprobó
+        event(new \App\Events\NuevaNotificacion(
+            "El emisor aprobó el intercambio #{$neg->id_negociacion}. Ahora aprueba tú para continuar.",
+            $neg->usuario_receptor_id
+        ));
+
         // Notificar a administradores
         $this->notificarAdmins($neg);
 
         return $this->ok('Confirmación registrada. Los administradores han sido notificados para gestionar el envío.');
+    }
+
+    /**
+     * Receptor confirma el intercambio.
+     */
+    public function confirmarReceptor(int $userId, int $negociacionId): array
+    {
+        $neg = Negociacion::find($negociacionId);
+        if (!$neg) {
+            return $this->error('Negociación no encontrada.');
+        }
+
+        if ($userId != $neg->usuario_receptor_id) {
+            return $this->error('Solo el receptor puede confirmar.');
+        }
+
+        if ($neg->estado !== 'aceptado') {
+            return $this->error('La negociación no está en estado aceptado.');
+        }
+
+        if ($neg->receptor_confirmado) {
+            return $this->error('Ya confirmaste este intercambio.');
+        }
+
+        $neg->update(['receptor_confirmado' => true]);
+
+        // Notificar al emisor que el receptor aprobó
+        event(new \App\Events\NuevaNotificacion(
+            "El receptor aprobó el intercambio #{$neg->id_negociacion}. Ambos han confirmado.",
+            $neg->usuario_emisor_id
+        ));
+
+        // Si ambos confirmaron, notificar admins
+        if ($neg->emisor_confirmado) {
+            $this->notificarAdminsCompletado($neg);
+        }
+
+        return $this->ok('Has aprobado el intercambio.');
     }
 
     /**
