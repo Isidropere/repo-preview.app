@@ -14,12 +14,18 @@
     </button>
 
     <div id="panelNotificaciones"
-        class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] hidden">
-        <div id="listaNotificaciones"
-             class="max-h-64 overflow-y-auto divide-y divide-gray-100 p-2">
+        class="fixed bg-white border border-gray-200 rounded-xl shadow-2xl z-[99999] hidden"
+        style="top:60px;right:1rem;width:320px;max-width:calc(100vw - 2rem);">
+        <div style="padding:0.5rem 0.75rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:0.82rem;font-weight:700;color:#374151;">Notificaciones</span>
+            <button onclick="document.getElementById('panelNotificaciones').classList.add('hidden')"
+                    style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1rem;line-height:1;padding:2px 4px;">&times;</button>
         </div>
-        <div class="border-t border-gray-100 p-2 text-center">
-            <a href="/mis-notificaciones" class="text-xs text-primary hover:underline font-medium">Ver todas las notificaciones</a>
+        <div id="listaNotificaciones"
+             style="max-height:320px;overflow-y:auto;padding:0.25rem 0;">
+        </div>
+        <div style="border-top:1px solid #f3f4f6;padding:0.5rem;text-align:center;">
+            <a href="/mis-notificaciones" style="font-size:0.78rem;color:#f58634;font-weight:600;text-decoration:none;">Ver todas las notificaciones</a>
         </div>
     </div>
 </div>
@@ -45,7 +51,19 @@ const panel      = document.getElementById('panelNotificaciones');
 
 btnCampana?.addEventListener('click', (e) => {
     e.stopPropagation();
+    const isHidden = panel.classList.contains('hidden');
     panel.classList.toggle('hidden');
+    if (isHidden) {
+        // Posicionar relativo al botón
+        const rect = btnCampana.getBoundingClientRect();
+        const panelW = 320;
+        let left = rect.right - panelW;
+        if (left < 8) left = 8;
+        panel.style.top  = (rect.bottom + 6) + 'px';
+        panel.style.left = left + 'px';
+        panel.style.right = 'auto';
+        cargarNotificaciones();
+    }
 });
 
 document.addEventListener('click', (e) => {
