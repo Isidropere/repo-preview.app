@@ -202,7 +202,7 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre, modoEntrega) {
         montoEl.textContent = 'Calculando...';
         var municipio = window._municipioUsuario || '';
         if (municipio) {
-            fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=0', {
+            fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&tipo_destinatario=persona&valor_articulo=0', {
                 headers: { 'Accept': 'application/json' }
             })
             .then(function(r) { return r.json(); })
@@ -216,7 +216,7 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre, modoEntrega) {
             })
             .catch(function() { montoEl.textContent = 'No disponible'; });
         } else {
-            montoEl.textContent = 'Sin dirección registrada';
+            montoEl.textContent = 'Registra una dirección para calcular el envío';
         }
     }
 }
@@ -547,7 +547,7 @@ async function recalcularEnvio(negId) {
     if (!municipio) { spanMonto.textContent = 'Sin dirección'; return; }
     spanMonto.textContent = 'Calculando...';
     try {
-        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=0', {
+        var resp = await fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&tipo_destinatario=persona&valor_articulo=0', {
             headers: { 'Accept': 'application/json' }
         });
         if (!resp.ok) { spanMonto.textContent = 'Error (' + resp.status + ')'; return; }

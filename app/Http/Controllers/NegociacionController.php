@@ -237,8 +237,10 @@ class NegociacionController extends Controller
 
         // Calcular costo de envío para cada negociación que lo requiera
         $direccion = \App\Models\Direcciones::where('id_user', $userId)
+            ->where('es_predeterminada', 1)
             ->with('municipio')
-            ->first();
+            ->first()
+            ?? \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
 
         $costoEnvioPorNeg = ['_municipio' => ''];
         if ($direccion && $direccion->municipio) {
@@ -375,6 +377,7 @@ class NegociacionController extends Controller
             $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
             if ($direccion && $direccion->municipio && $neg->item) {
                 $deliveryService = app(\App\Services\DeliveryService::class);
+                // Intercambio: valor_articulo=0 (sin seguro sobre el valor), tipo=persona
                 $resultado = $deliveryService->calcular($direccion->municipio->municipio ?? '', 'persona', 0);
                 $montoACobrar = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
             }
