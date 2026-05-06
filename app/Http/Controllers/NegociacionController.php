@@ -237,20 +237,20 @@ class NegociacionController extends Controller
 
         // Calcular costo de envío para cada negociación que lo requiera
         $direccion = \App\Models\Direcciones::where('id_user', $userId)
+            ->where('es_predeterminada', 1)
             ->with('municipio')
-            ->first();
+            ->first()
+            ?? \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
 
-        $costoEnvioPorNeg = ['_municipio' => ''];
-        if ($direccion && $direccion->municipio) {
+        $municipioUsuario = $direccion?->municipio?->municipio ?? '';
+        $costoEnvioPorNeg = ['_municipio' => $municipioUsuario];
+
+        if ($municipioUsuario) {
             $deliveryService = app(\App\Services\DeliveryService::class);
-            $municipio = $direccion->municipio->municipio ?? '';
-            $costoEnvioPorNeg['_municipio'] = $municipio;
-
             $todasNegs = $comoEmisor->merge($comoReceptor);
             foreach ($todasNegs as $neg) {
                 if ($neg->item) {
-                    // Intercambio: valor_articulo = 0 (no se cobra seguro sobre el valor)
-                    $resultado = $deliveryService->calcular($municipio, 'persona', 0);
+                    $resultado = $deliveryService->calcular($municipioUsuario, 'persona', 0);
                     $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
                 } else {
                     $costoEnvioPorNeg[$neg->id_negociacion] = 0;
@@ -369,12 +369,13 @@ class NegociacionController extends Controller
             'cvv'        => 'nullable|string|max:4',
         ]);
 
-        if ($neg->monto_oferta > 0 || $request->input('monto_envio')) {
-            // Calcular el monto real de envío
+        if ($neg->monto_oferta > 0 || $request->input('monto_envio') || true) {
+            // Calcular el monto real de envío siempre que haya tarjeta
             $montoACobrar = 0;
             $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
             if ($direccion && $direccion->municipio && $neg->item) {
                 $deliveryService = app(\App\Services\DeliveryService::class);
+                // Intercambio: valor_articulo=0 (sin seguro sobre el valor), tipo=persona
                 $resultado = $deliveryService->calcular($direccion->municipio->municipio ?? '', 'persona', 0);
                 $montoACobrar = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
             }
@@ -384,17 +385,19 @@ class NegociacionController extends Controller
                     ->where('id_user', $userId)->firstOrFail();
 
                 $pagoService = app(\App\Services\PagoService::class);
-                $resultado   = $pagoService->cobrarTarjeta(
+                $resultadoPago = $pagoService->cobrarTarjeta(
                     (float) $montoACobrar, '214',
                     $tarjeta->datosCardnet($request->cvv),
                     ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
                 );
 
-                if (!$resultado['success']) {
-                    $msg = 'Pago rechazado: ' . $resultado['error'];
+                if (!$resultadoPago['success']) {
+                    $msg = 'Pago rechazado: ' . ($resultadoPago['error'] ?? 'Error desconocido');
                     if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
                     return back()->with('error', $msg);
                 }
+
+                $resultado = $resultadoPago; // para usar en PagoEnvioIntercambio
             }
         }
 

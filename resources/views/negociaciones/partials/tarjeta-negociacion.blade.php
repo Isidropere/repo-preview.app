@@ -287,14 +287,13 @@
                 <p class="text-sm font-semibold mb-1" style="color:#c2410c;">📦 ¿Cómo entregarás tu producto?</p>
                 <p class="text-xs mb-3" style="color:#9a3412;">Elige si envías el producto o si la otra parte lo retira en persona.</p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="modo" value="envio">
-                        <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();"
-                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                            🚚 Enviar el producto
-                        </button>
-                    </form>
+                    {{-- Enviar: abre modal de pago directamente --}}
+                    <button type="button"
+                            onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}', 'envio')"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                        🚚 Enviar y pagar
+                    </button>
+                    {{-- Retiro: POST directo sin pago --}}
                     <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
                         @csrf
                         <input type="hidden" name="modo" value="retiro">
@@ -371,18 +370,23 @@
             @endif
         @endif
 
-        {{-- SOY DEL SERVICIO en producto↔servicio: aprobar sin pago --}}
-        @if($ambosConfirmados && $esProductoServicio && !$pagoOpcional && !$requierePago && !$miPago)
-        <div class="w-full p-4 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
-            <p class="text-sm font-semibold mb-2" style="color:#166534;">✅ Tu parte es un servicio — no requiere pago</p>
-            <p class="text-xs mb-3" style="color:#166534;">Confirma para completar tu parte del intercambio.</p>
-            <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
-                @csrf
-                <input type="hidden" name="sin_pago" value="1">
-                <button type="submit" onclick="this.disabled=true;this.textContent='Confirmando...';this.form.submit();" class="px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#16a34a;">
-                    ✅ Confirmar sin pago
-                </button>
-            </form>
+        {{-- SOY DEL SERVICIO en producto↔servicio: solo informar, no requiere acción --}}
+        @if($ambosConfirmados && $esProductoServicio && !$pagoOpcional && !$requierePago)
+        @php
+            $modoYaElegidoServ = !empty($neg->modo_entrega);
+        @endphp
+        <div class="w-full p-3 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <p class="text-sm font-semibold" style="color:#166534;">✅ Tu parte es un servicio — no requiere pago de envío</p>
+            @if(!$modoYaElegidoServ)
+                <p class="text-xs mt-1" style="color:#166534;">Esperando que el dueño del producto elija el modo de entrega.</p>
+            @elseif($neg->modo_entrega === 'envio')
+                <p class="text-xs mt-1" style="color:#166534;">El dueño del producto eligió envío. Los administradores gestionarán la logística.</p>
+            @else
+                <p class="text-xs mt-1" style="color:#166534;">El dueño del producto eligió retiro en persona. Coordinen directamente.</p>
+            @endif
+            @if($neg->entrega_confirmada)
+                <p class="text-xs mt-1 font-semibold" style="color:#166534;">✅ Entrega confirmada. Intercambio completado.</p>
+            @endif
         </div>
         @endif
 
