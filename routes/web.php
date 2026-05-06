@@ -25,6 +25,8 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\HomeController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -165,35 +167,8 @@ Route::get('/migrate-images', function () {
     return "Migración completada: {$count} archivos copiados a public/.";
 });
 
-Route::get('/home', function () {
-    $productosIntercambio = \Illuminate\Support\Facades\Cache::remember('home_intercambio', 600, function () {
-        return \App\Models\Item::with([
-                'imagenes:id_imagen,id_item,nombre,ruta,estado',
-                'direccionPredeterminada.municipio:id_municipio,municipio',
-            ])
-            ->select('id_item', 'item', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha', 'id_categoria_item')
-            ->whereIn('tipo_trans', [2, 3])
-            ->where('estatus', 1)
-            ->latest('fecha')
-            ->limit(8)
-            ->get();
-    });
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-    $productosVenta = \Illuminate\Support\Facades\Cache::remember('home_venta', 600, function () {
-        return \App\Models\Item::with([
-                'imagenes:id_imagen,id_item,nombre,ruta,estado',
-                'direccionPredeterminada.municipio:id_municipio,municipio',
-            ])
-            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'id_user', 'fecha', 'id_categoria_item')
-            ->where('tipo_trans', 1)
-            ->where('estatus', 1)
-            ->latest('fecha')
-            ->limit(8)
-            ->get();
-    });
-
-    return view('home', compact('productosIntercambio', 'productosVenta'));
-})->name('home');
 
 Route::get('/notificaciones/contador', function () {
     $userId = auth()->id();
