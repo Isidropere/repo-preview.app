@@ -9,9 +9,8 @@ use Illuminate\Support\Facades\Artisan;
  * SEGURIDAD: Se requiere un token en la URL (?token=cambialo_2026)
  */
 
-if (php_sapi_name() !== 'cli' && (!isset($_GET['token']) || $_GET['token'] !== 'cambialo_2026')) {
-    die('Acceso no autorizado.');
-}
+
+
 
 
 // Determinar la ruta base (si está en public/ o en la raíz)
