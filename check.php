@@ -13,7 +13,16 @@ use Illuminate\Support\Facades\Artisan;
 
 
 
-// Determinar la ruta base (si está en public/ o en la raíz)
+header('Content-Type: text/html; charset=utf-8');
+echo "<pre style='background: #1a1a1a; color: #00ff00; padding: 20px; border-radius: 8px; font-family: monospace;'>";
+
+// Seguridad: Validar token
+$token_esperado = 'cambialo_2026';
+if (!isset($_GET['token']) || $_GET['token'] !== $token_esperado) {
+    die("❌ Acceso denegado. Token inválido.");
+}
+
+// Determinar la ruta base
 $basePath = file_exists(__DIR__.'/vendor/autoload.php') ? __DIR__ : __DIR__.'/..';
 
 require $basePath.'/vendor/autoload.php';
@@ -25,16 +34,21 @@ echo "--- INICIANDO PROCESO DE MIGRACIÓN Y OPTIMIZACIÓN ---\n\n";
 
 try {
     echo "1. Ejecutando migraciones...\n";
-    Artisan::call('migrate', ['--force' => true]);
+    $status = Artisan::call('migrate', ['--force' => true]);
     echo Artisan::output();
-    echo "✅ Migraciones completadas.\n\n";
+    echo ($status === 0) ? "✅ Migraciones completadas.\n\n" : "⚠️  Aviso: El proceso terminó con código $status\n\n";
 
-    echo "2. Ejecutando optimización (config, routes, views)...\n";
+    echo "2. Limpiando caché y optimizando...\n";
+    Artisan::call('optimize:clear');
+    echo Artisan::output();
     Artisan::call('optimize');
     echo Artisan::output();
     echo "✅ Optimización completada.\n\n";
 
     echo "--- PROCESO FINALIZADO CON ÉXITO ---\n";
 } catch (\Exception $e) {
-    echo "❌ ERROR durante el proceso: " . $e->getMessage() . "\n";
+    echo "\n❌ ERROR durante el proceso:\n";
+    echo "Mensaje: " . $e->getMessage() . "\n";
+    echo "Archivo: " . $e->getFile() . " (Línea " . $e->getLine() . ")\n";
 }
+echo "</pre>";
