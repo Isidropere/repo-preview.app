@@ -14,9 +14,37 @@ class AdminTransporteController extends Controller
     /**
      * Muestra el listado de solicitudes de transporte.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $solicitudes = SolicitudTransporte::orderBy('created_at', 'desc')->paginate(20);
+        $query = SolicitudTransporte::orderBy('created_at', 'desc');
+
+        // Filtro por Estado
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        // Filtro por Rango de Fechas de Servicio
+        if ($request->filled('desde')) {
+            $query->whereDate('fecha_servicio', '>=', $request->desde);
+        }
+        if ($request->filled('hasta')) {
+            $query->whereDate('fecha_servicio', '<=', $request->hasta);
+        }
+
+        // Búsqueda General (Nombre, Correo, Cédula, Teléfono)
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function($q) use ($buscar) {
+                $q->where('nombre', 'LIKE', "%{$buscar}%")
+                  ->orWhere('apellido', 'LIKE', "%{$buscar}%")
+                  ->orWhere('correo', 'LIKE', "%{$buscar}%")
+                  ->orWhere('cedula', 'LIKE', "%{$buscar}%")
+                  ->orWhere('telefono', 'LIKE', "%{$buscar}%")
+                  ->orWhere('id', $buscar);
+            });
+        }
+
+        $solicitudes = $query->paginate(20)->appends($request->all());
         return view('admin.transporte.index', compact('solicitudes'));
     }
 

@@ -27,6 +27,39 @@
             </div>
         @endif
 
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+            <div class="p-4 bg-gray-50 border-b border-gray-100">
+                <form action="{{ route('admin.erp.transporte.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar por nombre, correo, cédula, teléfono o ID..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary">
+                    </div>
+                    <div class="w-full md:w-48">
+                        <select name="estado" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="aprobada" {{ request('estado') == 'aprobada' ? 'selected' : '' }}>Aprobada</option>
+                            <option value="rechazada" {{ request('estado') == 'rechazada' ? 'selected' : '' }}>Rechazada</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="date" name="desde" value="{{ request('desde') }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary" title="Fecha desde">
+                        <span class="text-gray-400 text-xs">a</span>
+                        <input type="date" name="hasta" value="{{ request('hasta') }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary" title="Fecha hasta">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-hoverPrimary">
+                            Filtrar
+                        </button>
+                        @if(request('buscar') || request('estado') || request('desde') || request('hasta'))
+                            <a href="{{ route('admin.erp.transporte.index') }}" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg text-sm font-bold hover:bg-gray-300 text-center">
+                                Limpiar
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
