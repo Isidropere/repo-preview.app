@@ -87,6 +87,8 @@
                 <td class="px-4 py-3 text-xs">
                     @if($neg->estado === 'completado')
                     <span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:9999px;font-weight:600;">✅ Completado</span>
+                    @elseif($neg->estado === 'en_envio')
+                    <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:9999px;font-weight:600;">🚚 En Envío</span>
                     @elseif($neg->pago_emisor && $neg->pago_receptor)
                     <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:9999px;font-weight:600;">💳 Pagado — Pendiente envío</span>
                     @else
@@ -99,16 +101,24 @@
                     {{ $neg->fecha_creacion ? \Carbon\Carbon::parse($neg->fecha_creacion)->format('d/m/Y H:i') : '-' }}
                 </td>
 
-                {{-- Acción: marcar como enviado --}}
+                {{-- Acción: marcar como completado (solo admin, cuando ya está en_envio) --}}
                 <td class="px-4 py-3">
-                    <form action="{{ route('negociaciones.completar', $neg->id_negociacion) }}" method="POST"
-                          onsubmit="return confirm('¿Marcar este intercambio como completado/enviado?')">
+                    @if($neg->estado === 'en_envio')
+                    <form action="{{ route('admin.intercambios.estado', $neg->id_negociacion) }}" method="POST"
+                          onsubmit="return confirm('¿Confirmar que el envío fue gestionado y marcar como completado?')">
                         @csrf
+                        <input type="hidden" name="estado" value="completado">
+                        <input type="hidden" name="nota" value="Envío gestionado por el administrador.">
                         <button type="submit"
                                 class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                            ✅ Marcar enviado
+                            ✅ Marcar completado
                         </button>
                     </form>
+                    @elseif($neg->estado === 'completado')
+                    <span class="text-xs text-emerald-600 font-semibold">✅ Finalizado</span>
+                    @else
+                    <span class="text-xs text-gray-400">Pendiente de pagos</span>
+                    @endif
                 </td>
             </tr>
             @endforeach

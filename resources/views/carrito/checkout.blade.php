@@ -177,6 +177,17 @@
                         @endif
 
                         @if($carrito->tipo !== 'servicio')
+                        @php $direccionesCount = auth()->user()->direcciones()->count(); @endphp
+                        @if($direccionesCount === 0)
+                        <div class="mb-5 bg-red-50 border border-red-200 rounded-xl p-4">
+                            <p class="text-sm text-red-700 font-semibold mb-2">⚠️ No tienes una dirección de envío registrada.</p>
+                            <p class="text-xs text-red-600 mb-3">Es necesaria para calcular el costo de entrega y procesar el envío.</p>
+                            <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}"
+                                class="inline-flex items-center gap-2 text-sm font-bold text-red-800 hover:underline">
+                                Agregar dirección de envío →
+                            </a>
+                        </div>
+                        @endif
                         <div class="mb-5">
                             <a href="{{ route('direcciones.index') }}"
                                 class="flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition group">
@@ -262,7 +273,8 @@
                         <button type="submit" id="btnPagar"
                             class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white
                                    py-5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200
-                                   transition-all flex items-center justify-center gap-2">
+                                   transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            {{ (($carrito->tipo ?? '') !== 'servicio' && auth()->user()->direcciones()->count() === 0) ? 'disabled' : '' }}>
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>

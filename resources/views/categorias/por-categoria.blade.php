@@ -47,7 +47,7 @@
 
     {{-- Grid de productos --}}
     @if($items->count() > 0)
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.25rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem;">
             @foreach($items as $item)
             @php
                 $imagen = $item->imagenes->where('estado', 'aprobado')->first();
@@ -83,7 +83,7 @@
                         {{-- Precio --}}
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
                             @if($item->valor)
-                                <span style="font-size:1.15rem;font-weight:700;color:#2563eb;">RD$ {{ number_format($item->valor, 0) }}</span>
+                                <span style="font-size:1.15rem;font-weight:700;color:#2563eb;">RD$ {{ number_format($item->valor, 2) }}</span>
                             @else
                                 <span style="font-size:0.8rem;font-weight:600;color:#059669;background:#d1fae5;padding:3px 10px;border-radius:999px;">Intercambio</span>
                             @endif
@@ -92,9 +92,13 @@
                         {{-- Acciones --}}
                         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:0.65rem;border-top:1px solid #f3f4f6;">
                             <a href="{{ route('producto.detalle', $item->slug) }}"
-                               style="font-size:0.8rem;font-weight:500;color:#479bd5;text-decoration:none;display:flex;align-items:center;gap:4px;">
-                                Ver detalles
-                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                               style="font-size:0.8rem;font-weight:700;color:#64748b;text-decoration:none;display:flex;align-items:center;gap:6px;background:#f8fafc;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;transition:background .2s;"
+                               onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Ver
                             </a>
                             <div style="display:flex;align-items:center;gap:6px;">
                             @if(in_array($item->tipo_trans, [2, 3]) && ($item->inventarios?->cantidad ?? 0) > 0 && auth()->id() != $item->id_user)

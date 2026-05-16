@@ -16,6 +16,7 @@ class AgregarItemCarritoRequest extends FormRequest
         return [
             'id_item'  => 'required|integer|exists:items,id_item',
             'cantidad' => 'required|integer|min:1|max:999',
+            'id_color' => 'nullable|integer|exists:colors,id_color',
         ];
     }
 

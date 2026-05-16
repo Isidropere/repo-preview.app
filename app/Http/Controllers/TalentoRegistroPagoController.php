@@ -30,7 +30,8 @@ class TalentoRegistroPagoController extends Controller
 
         $monto = ConfigTarifaCategoria29::vigente()->monto_registro;
 
-        return view('talentos.pago-talento', compact('tarjetas', 'monto'));
+        $direccionesCount = \App\Models\Direcciones::where('id_user', auth()->id())->count();
+        return view('talentos.pago-talento', compact('tarjetas', 'monto', 'direccionesCount'));
     }
 
     /**

@@ -247,7 +247,7 @@ class CardnetProvider implements PaymentProviderInterface
         try {
             $response = Http::timeout(60)->retry(2, 1000)->withHeaders([
                 'Accept' => 'text/plain',
-            ])->post("{$this->baseUrl}/idenpotency-keys");
+            ])->post("{$this->baseUrl}/idempotency-keys");
         } catch (\Throwable $e) {
             Log::error('[CardNet] Error obteniendo idempotency-key', [
                 'error'   => $e->getMessage(),

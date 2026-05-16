@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Realizar Compra - Cambialord')
 
@@ -64,7 +64,7 @@
             </svg>
             Productos destacados
         </h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid gap-6 mb-8" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));">
             @foreach($relevantItems as $item)
                 @include('components.tarjeta-producto', ['item' => $item])
             @endforeach
@@ -72,7 +72,7 @@
         @endif
         @else
         <!-- Grid de productos normales -->
-        <div id="itemsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div id="itemsContainer" class="grid gap-6" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));">
             @foreach($items as $item)
                 @include('components.tarjeta-producto', ['item' => $item])
             @endforeach

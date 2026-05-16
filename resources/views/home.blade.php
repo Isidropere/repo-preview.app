@@ -160,7 +160,7 @@
                     "(min-width: 1024px)": {
                         // Desktops
                         slides: {
-                            perView: 2.5,
+                            perView: 2.2,
                             spacing: 32,
                         },
                     },

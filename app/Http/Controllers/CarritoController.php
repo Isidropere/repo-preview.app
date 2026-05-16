@@ -58,7 +58,8 @@ class CarritoController extends Controller
         $resultado = $this->carritoService->agregarItem(
             auth()->id(),
             $request->validated('id_item'),
-            $request->validated('cantidad')
+            $request->validated('cantidad'),
+            $request->validated('id_color')
         );
 
         if ($request->wantsJson()) {

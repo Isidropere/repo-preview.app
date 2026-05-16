@@ -8,6 +8,7 @@ use App\Models\PagoCompra;
 use App\Events\NuevaNotificacion;
 use App\Services\AdminComprasService;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * ============================================================
@@ -189,5 +190,19 @@ class AdminComprasController extends Controller
 
         return redirect()->route('admin.intercambios.show', $id)
             ->with('success', 'Estado del intercambio actualizado.');
+    }
+
+    public function descargarPdf($id)
+    {
+        $compra = PagoCompra::with([
+            'pagoItems.item',
+            'carrito.usuario',
+            'direccion.provincia',
+            'direccion.municipio',
+        ])->findOrFail($id);
+
+        $pdf = Pdf::loadView('admin.compras.pdf', compact('compra'));
+        
+        return $pdf->download("envio-orden-{$id}.pdf");
     }
 }

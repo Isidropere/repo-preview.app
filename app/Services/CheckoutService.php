@@ -10,6 +10,7 @@ use App\Models\PagoItem;
 use App\Models\TarjetaPago;
 use App\Services\PagoService;
 use App\Services\SolicitudServicioService;
+use App\Services\ERPService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -38,6 +39,7 @@ class CheckoutService
     public function __construct(
         private PagoService $pagoService,
         private SolicitudServicioService $solicitudService,
+        private ERPService $erpService,
     ) {}
 
     /**
@@ -263,6 +265,9 @@ class CheckoutService
                 foreach ($itemsSeleccionados as $itemIntencion) {
                     $this->registrarPagoItem($pagoCompra, $itemIntencion);
                 }
+
+                // --- AUTOMATIZACIÓN ERP ---
+                $this->erpService->procesarVentaAprobada($pagoCompra);
             });
 
             Log::info('Pago completado', ['user_id' => $userId, 'carrito' => $carrito->id_carrito]);

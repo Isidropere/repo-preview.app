@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminComprasController;
 use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Admin\ERPController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DireccionesController;
@@ -576,6 +577,7 @@ Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('logout', [LoginController::class, 'logout'])->name('logout.get');
+Route::post('adultos/verificar', [LoginController::class, 'verificarCredenciales'])->middleware('auth')->name('adultos.verificar');
 
 // Social OAuth unificado: Google, Facebook, Instagram
 // Rutas: /auth/{provider}  y  /auth/{provider}/callback
@@ -667,6 +669,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/compras/{id}', [AdminComprasController::class, 'showCompra'])->name('compras.show');
     Route::post('/compras/{id}/estado', [AdminComprasController::class, 'actualizarEstado'])->name('compras.estado');
     Route::post('/compras/{id}/tracking', [AdminComprasController::class, 'enviarTracking'])->name('compras.tracking');
+    Route::get('/compras/{id}/pdf', [AdminComprasController::class, 'descargarPdf'])->name('compras.pdf');
 
     // Ventas
     Route::get('/ventas/{id}', [AdminComprasController::class, 'showVenta'])->name('ventas.show');
@@ -674,6 +677,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Intercambios
     Route::get('/intercambios/{id}', [AdminComprasController::class, 'showIntercambio'])->name('intercambios.show');
     Route::post('/intercambios/{id}/estado', [AdminComprasController::class, 'actualizarEstadoIntercambio'])->name('intercambios.estado');
+
+    // --- GESTIÓN EMPRESARIAL (Super Admin) ---
+    Route::prefix('erp')->name('erp.')->group(function () {
+        Route::get('/contabilidad', [ERPController::class, 'contabilidad'])->name('contabilidad');
+        Route::post('/contabilidad/asiento', [ERPController::class, 'storeAsiento'])->name('contabilidad.asiento');
+        Route::get('/contabilidad/asientos/{id}/detalle', [ERPController::class, 'detalleAsiento'])->name('contabilidad.asiento.detalle');
+        Route::get('/contabilidad/reportes', [ERPController::class, 'reportesFinancieros'])->name('contabilidad.reportes');
+        Route::get('/contabilidad/reportes/{tipo}/pdf', [ERPController::class, 'descargarReportePdf'])->name('contabilidad.reportes.pdf');
+        
+        // Cuentas CRUD
+        Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');
+        Route::put('/contabilidad/cuentas/{id}', [ERPController::class, 'updateCuenta'])->name('contabilidad.cuentas.update');
+        Route::delete('/contabilidad/cuentas/{id}', [ERPController::class, 'destroyCuenta'])->name('contabilidad.cuentas.destroy');
+        Route::get('/contabilidad/cuentas/{id}/mayor', [ERPController::class, 'libroMayor'])->name('contabilidad.cuentas.mayor');
+
+        Route::get('/inventario', [ERPController::class, 'inventario'])->name('inventario');
+        Route::get('/caja', [ERPController::class, 'caja'])->name('caja');
+        Route::post('/caja/abrir', [ERPController::class, 'abrirCaja'])->name('caja.abrir');
+        Route::post('/caja/cerrar', [ERPController::class, 'cerrarCaja'])->name('caja.cerrar');
+    });
 
     // Mensajes predefinidos — solo lectura para admin normal
     Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');

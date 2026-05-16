@@ -3,6 +3,7 @@
         'Inicial'     => 'bg-yellow-100 text-yellow-800',
         'contraoferta'=> 'bg-blue-100 text-blue-800',
         'aceptado'    => 'bg-green-100 text-green-800',
+        'en_envio'    => 'bg-blue-100 text-blue-800',
         'completado'  => 'bg-emerald-100 text-emerald-800',
         'rechazado'   => 'bg-red-100 text-red-800',
         'cancelado'   => 'bg-gray-100 text-gray-500',
@@ -11,34 +12,22 @@
 
     $ambosConfirmados = $neg->emisor_confirmado && ($neg->receptor_confirmado ?? false);
 
-    // Determinar tipo de intercambio
-    $itemSolicitado = $neg->item;
-    $itemsOfrecidos = $neg->items_ofrecidos ? \App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() : collect();
-
-    $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
-    $todosOfrecidosServicio = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
-
-    // servicio ↔ servicio = no requiere pago de envío
-    $esServicioServicio = $solicitadoEsServicio && $todosOfrecidosServicio;
-    // producto ↔ servicio = solo el del producto paga envío
-    $esProductoServicio = ($solicitadoEsServicio && !$todosOfrecidosServicio) || (!$solicitadoEsServicio && $todosOfrecidosServicio);
+    $negService = app(\App\Services\NegociacionService::class);
+    $esServicioServicio = $negService->esServicioServicio($neg);
+    $esProductoServicio = $negService->esProductoServicio($neg);
+    $esProductoProducto = $negService->esProductoProducto($neg);
 
     // ¿Requiere pago este usuario?
-    // Producto ↔ Producto: ambos pagan envío
-    // Producto ↔ Servicio: dueño del producto puede pagar (opcional), dueño del servicio NO paga nunca
-    // Servicio ↔ Servicio: nadie paga
     if ($esServicioServicio) {
         $requierePago = false;
         $pagoOpcional = false;
         $montoEnvio = 0;
     } elseif ($esProductoServicio) {
-        // Determinar si YO soy el del producto o el del servicio
-        $miItemEsServicio = ($rol === 'emisor') ? $todosOfrecidosServicio : $solicitadoEsServicio;
-        $requierePago = false; // nunca obligatorio en producto↔servicio
-        $pagoOpcional = !$miItemEsServicio; // solo el del producto tiene opción de pagar
+        $requierePago = false; 
+        $pagoOpcional = true; 
         $montoEnvio = $costoEnvioPorNeg[$neg->id_negociacion] ?? 0;
     } else {
-        // producto ↔ producto: ambos pagan
+        // Producto ↔ Producto: ambos pagan
         $requierePago = true;
         $pagoOpcional = false;
         $montoEnvio = $costoEnvioPorNeg[$neg->id_negociacion] ?? 0;
@@ -46,6 +35,7 @@
 
     $estadoLabel = match(true) {
         $neg->estado === 'completado'                              => '✅ Completado',
+        $neg->estado === 'en_envio'                               => '🚚 En envío',
         $neg->estado === 'rechazado'                               => 'Rechazado',
         $neg->estado === 'cancelado'                               => 'Cancelado',
         $ambosConfirmados && ($esServicioServicio || $esProductoServicio) => '✅ Confirmado',
@@ -86,7 +76,24 @@
                 <p class="text-xs text-gray-400">{{ $neg->fecha_creacion ? \Carbon\Carbon::parse($neg->fecha_creacion)->diffForHumans() : '' }}</p>
             </div>
         </div>
-        <span class="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 {{ $estadoColor }}">{{ $estadoLabel }}</span>
+        <div class="flex flex-col items-end gap-1">
+            @php
+                $tipoLabel = match(true) {
+                    $esServicioServicio => 'Servicio vs Servicio',
+                    $esProductoServicio => 'Producto vs Servicio',
+                    default             => 'Producto vs Producto',
+                };
+                $tipoBg = match(true) {
+                    $esServicioServicio => 'bg-purple-100 text-purple-700 border-purple-200',
+                    $esProductoServicio => 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                    default             => 'bg-gray-100 text-gray-700 border-gray-200',
+                };
+            @endphp
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border font-bold {{ $tipoBg }}">
+                {{ $tipoLabel }}
+            </span>
+            <span class="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 {{ $estadoColor }}">{{ $estadoLabel }}</span>
+        </div>
     </div>
 
     {{-- Mensaje --}}
@@ -101,7 +108,7 @@
         <div class="flex flex-wrap gap-2">
             @foreach(\App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() as $io)
             <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-lg border border-blue-100">
-                {{ $io->item }} @if($io->valor) · RD$ {{ number_format($io->valor, 0) }} @endif
+                {{ $io->item }} @if($io->valor) · RD$ {{ number_format($io->valor, 2) }} @endif
             </span>
             @endforeach
         </div>
@@ -112,55 +119,14 @@
     <p class="text-xs text-gray-500 mb-4">Monto adicional: <span class="font-bold text-blue-700">RD$ {{ number_format($neg->monto_oferta, 2) }}</span></p>
     @endif
 
-    {{-- CHAT COLAPSABLE: solo para estados activos --}}
+    {{-- CHAT COLAPSABLE: Deshabilitado temporalmente a solicitud --}}
+    {{-- 
     @if(in_array($neg->estado, ['Inicial', 'aceptado', 'contraoferta']))
-    @php $chatId = $neg->id_negociacion; @endphp
-    <div style="margin-bottom:1rem;">
-        <button type="button" id="btn-chat-{{ $chatId }}" onclick="toggleChat({{ $chatId }})"
-                style="display:inline-flex;align-items:center;gap:0.4rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.75rem;font-size:0.78rem;font-weight:600;color:#475569;cursor:pointer;">
-            💬 Mensajes
-        </button>
+    ... (chat code) ...
+    @endif 
+    --}}
 
-        <div id="chat-{{ $chatId }}" style="display:none;margin-top:0.75rem;border:1px solid #e2e8f0;border-radius:0.75rem;overflow:hidden;"
-             data-emisor="{{ $neg->usuario_emisor_id }}" data-receptor="{{ $neg->usuario_receptor_id }}" data-rol="{{ $rol }}" data-item="{{ $neg->receptor_item_id }}"
-        >
-            {{-- Mensajes container --}}
-            <div id="mensajes-{{ $chatId }}" style="max-height:220px;overflow-y:auto;padding:0.75rem;background:#fafafa;">
-                <p style="text-align:center;color:#94a3b8;font-size:0.78rem;">Cargando mensajes...</p>
-            </div>
-
-            {{-- Selector de acción y mensajes predefinidos --}}
-            <div style="padding:0.75rem;border-top:1px solid #e2e8f0;background:#fff;">
-                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
-                    <select id="tipo-accion-{{ $chatId }}" onchange="filtrarMensajesPredefinidos({{ $chatId }})"
-                            style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#fff;">
-                        <option value="">-- Tipo de acción --</option>
-                        @if(isset($accionesPredefinidas))
-                        @foreach($accionesPredefinidas as $tipo)
-                        <option value="{{ $tipo }}">{{ ucfirst($tipo) }}</option>
-                        @endforeach
-                        @endif
-                    </select>
-                    <select id="msg-predefinido-{{ $chatId }}" onchange="previsualizarMensaje({{ $chatId }})"
-                            style="flex:2;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#fff;">
-                        <option value="">-- Mensaje predefinido --</option>
-                    </select>
-                </div>
-                <textarea id="preview-msg-{{ $chatId }}" readonly rows="2"
-                          style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.4rem 0.5rem;font-size:0.78rem;color:#374151;background:#f8fafc;resize:none;box-sizing:border-box;margin-bottom:0.5rem;"
-                          placeholder="Selecciona un mensaje predefinido..."></textarea>
-                <div style="display:flex;justify-content:flex-end;">
-                    <button type="button" id="btn-enviar-{{ $chatId }}" onclick="enviarMensajeChat({{ $chatId }})"
-                            style="background:#f58634;color:#fff;border:none;border-radius:0.5rem;padding:0.4rem 1rem;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                        Enviar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    {{-- Estado de aprobaciones --}}
+    {{-- Estado de aprobaciones (y ubicación para servicio↔servicio) --}}
     @if($neg->estado === 'aceptado')
     <div class="mb-4 p-3 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
         <p class="text-xs font-semibold text-gray-600 mb-2">Estado de aprobaciones:</p>
@@ -180,6 +146,41 @@
                 @endif
             </div>
         </div>
+
+        {{-- Ubicación de la otra parte (solo para servicios o mixto) --}}
+        @if($ambosConfirmados && !$esProductoProducto)
+        @php
+            // Mostrar la ubicación de la OTRA parte (no la mía)
+            if ($rol === 'receptor') {
+                $dirOtro = $neg->usuario?->direcciones?->where('es_predeterminada', 1)->first()
+                         ?? $neg->usuario?->direcciones?->first();
+            } else {
+                $dirOtro = $neg->usuarioReceptor?->direcciones?->where('es_predeterminada', 1)->first()
+                         ?? $neg->usuarioReceptor?->direcciones?->first();
+            }
+            $municipioOtro  = $dirOtro?->municipio?->municipio  ?? null;
+            $provinciaOtro  = $dirOtro?->provincia?->provincia  ?? null;
+            $nombreOtro     = $otroUsuario?->nombres . ' ' . $otroUsuario?->apellidos;
+            
+            // Texto dinámico según el tipo
+            $tituloUbicacion = match(true) {
+                $esServicioServicio => "📍 Ubicación del prestador del servicio",
+                $esProductoServicio => "📍 Ubicación para entrega/retiro",
+                default             => "📍 Ubicación de la otra parte"
+            };
+        @endphp
+        <div class="mt-3 pt-3 border-t border-green-100">
+            <p class="text-xs font-bold mb-1" style="color:#166534;">{{ $tituloUbicacion }} ({{ trim($nombreOtro) ?: 'la otra parte' }})</p>
+            @if($municipioOtro || $provinciaOtro)
+            <p class="text-sm font-semibold text-gray-800">
+                {{ $municipioOtro }}@if($municipioOtro && $provinciaOtro), @endif{{ $provinciaOtro }}
+            </p>
+            <p class="text-xs mt-0.5 text-gray-500">Usa esta información para coordinar el encuentro o el envío.</p>
+            @else
+            <p class="text-xs text-gray-400 italic">La otra parte aún no tiene dirección registrada.</p>
+            @endif
+        </div>
+        @endif
     </div>
     @endif
 
@@ -387,6 +388,14 @@
             @if($neg->entrega_confirmada)
                 <p class="text-xs mt-1 font-semibold" style="color:#166534;">✅ Entrega confirmada. Intercambio completado.</p>
             @endif
+        </div>
+        @endif
+
+        {{-- EN ENVÍO: notificar al usuario que el admin gestiona el envío --}}
+        @if($neg->estado === 'en_envio')
+        <div class="w-full p-4 rounded-xl border" style="background:#eff6ff;border-color:#bfdbfe;">
+            <p class="text-sm font-semibold mb-1" style="color:#1e40af;">🚚 ¡Pagos registrados! En proceso de envío</p>
+            <p class="text-xs" style="color:#3730a3;">Ambos pagos fueron registrados correctamente. El equipo de administración está gestionando el envío de los productos. Recibirás una notificación cuando el proceso esté completado.</p>
         </div>
         @endif
 

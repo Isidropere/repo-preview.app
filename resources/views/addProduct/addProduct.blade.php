@@ -473,7 +473,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ═══ Submit ═══
 document.getElementById('productForm').addEventListener('submit', function(e) {
-    let v = document.getElementById('valor'); v.value = v.value.replace(/,/g, '');
+    // Validar descripción (Paso 3)
+    const presentacion = document.getElementById('presentacion');
+    if (!presentacion.value.trim()) {
+        e.preventDefault();
+        mostrarErrorCampo(presentacion, 'La descripción es obligatoria.');
+        alert('Falta la descripción del producto.');
+        return;
+    } else {
+        limpiarErrorCampo(presentacion);
+    }
+
+    // Validar suma de stocks de colores vs cantidad
+    const cantidadTotal = parseInt(document.getElementById('cantidad').value) || 0;
+    const colorCheckboxes = document.querySelectorAll('.color-checkbox:checked');
+    let totalStockColores = 0;
+    
+    if (colorCheckboxes.length > 0) {
+        colorCheckboxes.forEach(cb => {
+            const row = cb.closest('.flex.items-center.justify-between');
+            const stockInput = row.querySelector('.stock-input');
+            if (stockInput) {
+                totalStockColores += parseInt(stockInput.value) || 0;
+            }
+        });
+        
+        if (totalStockColores > cantidadTotal) {
+            e.preventDefault();
+            alert('El stock total de los colores seleccionados (' + totalStockColores + ') no puede ser mayor que la cantidad total del producto (' + cantidadTotal + ').');
+            document.getElementById('colorDropdownBtn').classList.add('border', 'border-red-500');
+            return;
+        }
+    }
+
+    let v = document.getElementById('valor'); 
+    if(v) v.value = v.value.replace(/,/g, '');
+    
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Publicando...';

@@ -38,6 +38,7 @@ class CarritoService
                 'itemsIntencionCompra.item.categoria',
                 'itemsIntencionCompra.imagenes',
                 'itemsIntencionCompra.inventario',
+                'itemsIntencionCompra.color',
             ])->get();
 
         // Carrito principal: el de productos (o el primero que exista)
@@ -68,7 +69,7 @@ class CarritoService
     /**
      * Agrega o actualiza un item en el carrito.
      */
-    public function agregarItem(int $userId, int $idItem, int $cantidad): array
+    public function agregarItem(int $userId, int $idItem, int $cantidad, ?int $idColor = null): array
     {
         $itemBase = Item::findOrFail($idItem);
 
@@ -85,13 +86,22 @@ class CarritoService
             ['id_user' => $userId, 'tipo' => $tipoCarrito]
         );
 
-        // Validar stock disponible
-        $stockDisponible = $itemBase->inventarios?->cantidad ?? 0;
-        if ($stockDisponible <= 0) {
-            return ['success' => false, 'message' => 'Este artículo está agotado.'];
-        }
-        if ($cantidad > $stockDisponible) {
-            return ['success' => false, 'message' => "Stock insuficiente. Disponible: {$stockDisponible}"];
+        // Validar stock disponible (excepto para servicios que no tienen inventario)
+        if ($tipoCarrito !== 'servicio') {
+            // Si tiene color, validar stock por color
+            if ($idColor) {
+                $colorPivot = $itemBase->colors()->where('colors.id_color', $idColor)->first();
+                $stockDisponible = $colorPivot ? $colorPivot->pivot->stock : 0;
+            } else {
+                $stockDisponible = $itemBase->inventarios?->cantidad ?? 0;
+            }
+
+            if ($stockDisponible <= 0) {
+                return ['success' => false, 'message' => 'Este artículo está agotado' . ($idColor ? ' en el color seleccionado.' : '.')];
+            }
+            if ($cantidad > $stockDisponible) {
+                return ['success' => false, 'message' => "Stock insuficiente. Disponible: {$stockDisponible}"];
+            }
         }
 
         // Calcular descuento por volumen para categoría 29 tipo venta
@@ -106,7 +116,7 @@ class CarritoService
         }
 
         $carrito->itemsIntencionCompra()->updateOrCreate(
-            ['id_item' => $idItem],
+            ['id_item' => $idItem, 'id_color' => $idColor],
             [
                 'cantidad'         => $cantidad,
                 'es_seleccionado'  => 1,
@@ -198,12 +208,16 @@ class CarritoService
         $item = ItemIntencionCompra::findOrFail($itemIntencionId);
         $stockDisponible = $item->item->inventarios?->cantidad ?? 0;
 
+        $isServicio = (int) $item->item->id_categoria_item === 29;
+        
         if ($accion === 'incrementar') {
-            if ($stockDisponible <= 0) {
-                return ['success' => false, 'message' => 'No existencia en inventario'];
-            }
-            if ($item->cantidad >= $stockDisponible) {
-                return ['success' => false, 'message' => 'Stock insuficiente para este producto'];
+            if (!$isServicio) {
+                if ($stockDisponible <= 0) {
+                    return ['success' => false, 'message' => 'No existencia en inventario'];
+                }
+                if ($item->cantidad >= $stockDisponible) {
+                    return ['success' => false, 'message' => 'Stock insuficiente para este producto'];
+                }
             }
             $item->cantidad++;
         } elseif ($accion === 'decrementar' && $item->cantidad > 1) {

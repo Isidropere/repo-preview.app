@@ -37,45 +37,66 @@
         @else
         <div class="space-y-2">
             @foreach($mensajes as $msg)
-            <div class="bg-white rounded-xl shadow-sm border {{ $msg->leido ? 'border-gray-100' : 'border-primary/30 bg-primary/5' }} p-4 transition-all">
-                <div class="flex items-start gap-3">
-                    {{-- Icono según tipo --}}
-                    <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg
-                        {{ $msg->id_emisor ? 'bg-blue-100' : 'bg-orange-100' }}">
-                        @if(!$msg->id_emisor)
-                            📢
-                        @else
-                            💬
+                @php
+                    $msgStr = $msg->mensaje ?? '';
+                    $esServicio = Str::contains($msgStr, ['[Servicio]', 'talento', 'servicio']);
+                    $esIntercambio = Str::contains($msgStr, ['[Intercambio]', 'intercambio', 'negociaci', 'propuesta']);
+                    $esCompra = Str::contains($msgStr, ['[Compra]', 'Tu orden #']);
+                    $esVenta = Str::contains($msgStr, ['[Venta]']) || (Str::contains($msgStr, 'orden #') && !Str::contains($msgStr, '[Compra]'));
+
+                    $destino = '/mis-notificaciones';
+                    if ($esServicio) $destino = route('solicitudes.index');
+                    elseif ($esIntercambio) $destino = route('negociaciones.mis');
+                    elseif ($esCompra) $destino = route('historial', ['tab' => 'compras']);
+                    elseif ($esVenta) $destino = route('historial', ['tab' => 'ventas']);
+                @endphp
+                <div class="bg-white rounded-xl shadow-sm border {{ $msg->leido ? 'border-gray-100' : 'border-primary/30 bg-primary/5' }} p-4 transition-all">
+                    <div class="flex items-start gap-3">
+                        {{-- Icono según tipo --}}
+                        <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg
+                            {{ $msg->id_emisor ? 'bg-blue-100' : 'bg-orange-100' }}">
+                            @if($esServicio) ⭐
+                            @elseif($esIntercambio) 🔄
+                            @elseif($esCompra) 💳
+                            @elseif($esVenta) 🛒
+                            @elseif(!$msg->id_emisor) 📢
+                            @else 💬 @endif
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                @if(!$msg->id_emisor)
+                                    <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">Sistema</span>
+                                @else
+                                    <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                        {{ $msg->sender?->nombres ?? 'Usuario' }}
+                                    </span>
+                                @endif
+                                @if(!$msg->leido)
+                                    <span class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
+                                @endif
+                                <span class="text-xs text-gray-400 ml-auto flex-shrink-0">{{ $msg->created_at->diffForHumans() }}</span>
+                            </div>
+                            <p class="text-sm text-gray-700 break-words mb-2">{{ $msg->mensaje }}</p>
+                            
+                            @if($destino !== '/mis-notificaciones')
+                                <a href="{{ $destino }}" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                    Ver detalle
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            @endif
+                        </div>
+
+                        @if(!$msg->leido)
+                        <form action="{{ route('notificaciones.leido', $msg->id) }}" method="POST" class="flex-shrink-0">
+                            @csrf
+                            <button type="submit" class="text-gray-400 hover:text-primary p-1" title="Marcar como leída">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                        </form>
                         @endif
                     </div>
-
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            @if(!$msg->id_emisor)
-                                <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">Sistema</span>
-                            @else
-                                <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                                    {{ $msg->sender?->nombres ?? 'Usuario' }}
-                                </span>
-                            @endif
-                            @if(!$msg->leido)
-                                <span class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
-                            @endif
-                            <span class="text-xs text-gray-400 ml-auto flex-shrink-0">{{ $msg->created_at->diffForHumans() }}</span>
-                        </div>
-                        <p class="text-sm text-gray-700 break-words">{{ $msg->mensaje }}</p>
-                    </div>
-
-                    @if(!$msg->leido)
-                    <form action="{{ route('notificaciones.leido', $msg->id) }}" method="POST" class="flex-shrink-0">
-                        @csrf
-                        <button type="submit" class="text-gray-400 hover:text-primary p-1" title="Marcar como leída">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-                    </form>
-                    @endif
                 </div>
-            </div>
             @endforeach
         </div>
 

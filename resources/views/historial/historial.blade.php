@@ -8,7 +8,7 @@
 
         {{-- Encabezado --}}
         <div class="mb-6">
-            <h1 class="text-3xl text-primary font-semibold">Historial de compras</h1>
+            <h1 class="text-3xl text-primary font-semibold">Historial de transacciones</h1>
             <p class="text-gray-500 mt-1 text-sm">Revisa todas tus transacciones realizadas</p>
         </div>
 

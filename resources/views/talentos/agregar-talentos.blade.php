@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Cambialord - Agregar talento')
 
@@ -210,6 +210,15 @@
                 <span id="montoTotal" class="text-xl font-bold text-blue-700">RD$ {{ number_format($montoRegistro, 2) }}</span>
             </div>
             <p class="text-xs text-gray-400 -mt-3 mb-4 text-right">RD$ {{ number_format($montoRegistro, 2) }} × <span id="montoCantidad">1</span> servicio(s)</p>
+            @if(($direccionesCount ?? 0) === 0)
+            <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5">
+                <p class="text-sm text-orange-700 font-medium mb-3">⚠️ Se requiere una dirección para proceder.</p>
+                <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}" 
+                   class="inline-flex items-center gap-2 text-sm font-bold text-orange-800 hover:underline">
+                    Crear mi primera dirección →
+                </a>
+            </div>
+            @endif
             <div id="pagoError" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-red-700 text-sm"></div>
             <div class="mb-4">
                 <p class="text-sm font-semibold text-gray-700 mb-2">Selecciona una tarjeta</p>
@@ -246,7 +255,9 @@
         </div>
         <div class="px-6 py-4 border-t border-gray-100 flex gap-3">
             <button type="button" id="cancelarPagoTalento" class="flex-1 border-2 border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl text-sm font-semibold">Cancelar</button>
-            <button type="button" id="confirmarPagoTalento" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-bold shadow-md transition-all">
+            <button type="button" id="confirmarPagoTalento" 
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                {{ ($direccionesCount ?? 0) === 0 ? 'disabled' : '' }}>
                 Pagar y publicar
             </button>
         </div>

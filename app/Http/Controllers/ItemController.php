@@ -22,6 +22,13 @@ use App\Models\Inventario;
 
 class ItemController extends Controller
 {
+    protected $erpService;
+
+    public function __construct(\App\Services\ERPService $erpService)
+    {
+        $this->erpService = $erpService;
+    }
+
     public function AddTalento(Request $request)
     {
         // Evitar que el servidor corte la conexión durante el pago (CardNet puede tardar ~15s)
@@ -184,6 +191,9 @@ class ItemController extends Controller
                     'fecha' => now(),
                 ]);
 
+                // ERP: Registrar entrada en Almacén
+                $this->erpService->registrarEntradaRegistroItem($item, $cantidadServicios);
+
                 // Guardar archivos preservados
                 if (!empty($savedFiles['principal'])) {
                     $sf = $savedFiles['principal'];
@@ -197,7 +207,7 @@ class ItemController extends Controller
                     DB::table('imagenes_item')->insert([
                         'nombre' => $fileName, 'extension' => $sf['extension'],
                         'id_item' => $item->id_item, 'orden_visualizacion' => 1,
-                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
+                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'pendiente',
                     ]);
 
                     if ($isVideo) { $item->update(['tiene_video' => true]); }
@@ -211,7 +221,7 @@ class ItemController extends Controller
                     DB::table('imagenes_item')->insert([
                         'nombre' => $fileName, 'extension' => $sf['extension'],
                         'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
-                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'aprobado',
+                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'pendiente',
                     ]);
                 }
 
@@ -249,6 +259,9 @@ class ItemController extends Controller
                 'cantidad' => $validatedData['cantidad'] ?? 1,
                 'fecha' => now(),
             ]);
+
+            // ERP: Registrar entrada en Almacén
+            $this->erpService->registrarEntradaRegistroItem($item, (int) ($validatedData['cantidad'] ?? 1));
 
             if ($request->hasFile('imagen_principal')) {
                 Log::debug('Procesando imagen/video principal...');
@@ -334,7 +347,7 @@ class ItemController extends Controller
     }
 
 
-    protected function guardarImagenTalento($file, $itemId, $orden, $estado = 'aprobado')
+    protected function guardarImagenTalento($file, $itemId, $orden, $estado = 'pendiente')
     {
         return $this->guardarImagen($file, $itemId, $orden, $estado);
     }
@@ -422,7 +435,18 @@ class ItemController extends Controller
 
             $validatedData = $request->validate($rules, $messages);
 
-            // MANTENIENDO TU LOG DE VALIDACIí“N
+            // Validar que la suma de stock de colores no supere la cantidad total
+            if ($request->has('colors')) {
+                $totalStockColores = 0;
+                foreach ($request->colors as $colorId) {
+                    $totalStockColores += (int) ($request->stock[$colorId] ?? 0);
+                }
+                if ($totalStockColores > (int) $validatedData['cantidad']) {
+                    return back()->withErrors(['cantidad' => 'La suma del stock de los colores seleccionados (' . $totalStockColores . ') no puede superar la cantidad total del producto (' . $validatedData['cantidad'] . ').'])->withInput();
+                }
+            }
+
+            // MANTENIENDO TU LOG DE VALIDACIÓN
             Log::debug('Datos validados correctamente', $validatedData);
 
             // Punto 4: Creación del í­tem (MANTENIENDO TU ESTRUCTURA ORIGINAL)
@@ -459,6 +483,9 @@ class ItemController extends Controller
                 'fecha' => now()
             ]);
 
+            // ERP: Registrar entrada en Almacén
+            $this->erpService->registrarEntradaRegistroItem($item, (int) ($validatedData['cantidad'] ?? 1));
+
 
             if ($request->has('colors')) {
                 $colorsWithStock = [];
@@ -486,7 +513,7 @@ class ItemController extends Controller
                 DB::table('imagenes_item')->insert([
                     'nombre' => $fileName, 'extension' => $sf['extension'],
                     'id_item' => $item->id_item, 'orden_visualizacion' => 1,
-                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'aprobado',
+                    'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'pendiente',
                 ]);
 
                 if ($isVideo) { $item->update(['tiene_video' => true]); }
@@ -501,7 +528,7 @@ class ItemController extends Controller
                 DB::table('imagenes_item')->insert([
                     'nombre' => $fileName, 'extension' => $sf['extension'],
                     'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
-                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'aprobado',
+                    'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'pendiente',
                 ]);
             }
 
@@ -532,7 +559,7 @@ class ItemController extends Controller
         }
     }
 
-    protected function guardarImagen($file, $itemId, $orden, $estado = 'aprobado')
+    protected function guardarImagen($file, $itemId, $orden, $estado = 'pendiente')
     {
         $mime = $file->getClientMimeType();
         $isVideo = str_starts_with($mime, 'video/');
@@ -804,7 +831,7 @@ class ItemController extends Controller
             $item = Item::findOrFail($id);
 
             // Eliminar imágenes asociadas
-            foreach ($item->imagenes as $imagen) {
+            foreach ($item->todasLasImagenes as $imagen) {
                 Storage::delete(str_replace('storage/', 'public/', $imagen->ruta));
                 $imagen->delete();
             }
@@ -1189,7 +1216,8 @@ class ItemController extends Controller
                 throw new \Exception('No hay categorí­as disponibles');
             }
 
-            return view('talentos.agregar-talentos', compact('categorias'));
+            $direccionesCount = \App\Models\Direcciones::where('id_user', auth()->id())->count();
+            return view('talentos.agregar-talentos', compact('categorias', 'direccionesCount'));
 
         } catch (Throwable $e) {
             \Log::error('Error en create talento: ' . $e->getMessage());
@@ -1393,7 +1421,7 @@ class ItemController extends Controller
         try {
             $items = Item::where('id_user', auth()->id())
                 ->where('id_categoria_item', '!=', 29)
-                ->with(['categoria', 'imagenes'])
+                ->with(['categoria', 'todasLasImagenes'])
                 ->withCount('views')
                 ->orderByDesc('fecha')
                 ->paginate(10);
@@ -1413,7 +1441,7 @@ class ItemController extends Controller
         try {
             $items = Item::where('id_user', auth()->id())
                 ->where('id_categoria_item', 29) // â† Filtrar por categorí­a 29
-                ->with(['categoria', 'imagenes'])
+                ->with(['categoria', 'todasLasImagenes'])
                 ->withCount('views')
                 ->orderByDesc('fecha')
                 ->paginate(10);
@@ -1432,7 +1460,7 @@ class ItemController extends Controller
     public function edit($slug)
     {
         $id = \App\Helpers\HashIdHelper::decode($slug);
-        $item = Item::with('imagenes')->findOrFail($id);
+        $item = Item::with('todasLasImagenes')->findOrFail($id);
         $categorias = CategoriaItem::all();
 
         // Obtener la cantidad del inventario
@@ -1467,7 +1495,7 @@ class ItemController extends Controller
     public function talentoedit($slug)
     {
         $id = \App\Helpers\HashIdHelper::decode($slug);
-        $item = Item::with('imagenes')->findOrFail($id);
+        $item = Item::with('todasLasImagenes')->findOrFail($id);
         $categorias = CategoriaItem::all();
         try {
             $item = Item::where('id_user', auth()->id())
@@ -1574,6 +1602,17 @@ class ItemController extends Controller
                 $validated['valor'] = str_replace(',', '', $validated['valor']);
             }
 
+            // Validar que la suma de stock de colores no supere la cantidad total en edición
+            if ($request->has('colors')) {
+                $totalStockColores = 0;
+                foreach ($request->colors as $colorId) {
+                    $totalStockColores += (int) ($request->stock[$colorId] ?? 0);
+                }
+                if ($totalStockColores > (int) $validated['cantidad']) {
+                    return back()->withErrors(['cantidad' => 'La suma del stock de los colores seleccionados (' . $totalStockColores . ') no puede superar la cantidad total del producto (' . $validated['cantidad'] . ').'])->withInput();
+                }
+            }
+
             // Actualizar colores y stock
                 if ($request->has('colors')) {
                     $colorsWithStock = [];
@@ -1607,7 +1646,7 @@ class ItemController extends Controller
             // ── Imagen principal ──
             if ($archivosPrincipal) {
                 // Si cambia la principal, borrar TODAS las imágenes viejas del item
-                foreach ($item->imagenes as $imgVieja) {
+                foreach ($item->todasLasImagenes as $imgVieja) {
                     \App\Helpers\ImageHelper::eliminar($imgVieja->ruta . '/' . $imgVieja->nombre);
                     $imgVieja->delete();
                 }
@@ -1625,7 +1664,7 @@ class ItemController extends Controller
             } else {
                 // No cambió la principal — solo gestionar secundarias
                 $idsConservar = $request->input('imagenes_existentes', []);
-                $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
+                $imagenesActuales = $item->todasLasImagenes()->where('orden_visualizacion', '>', 1)->get();
                 foreach ($imagenesActuales as $imagen) {
                     if (!in_array($imagen->id_imagen, $idsConservar)) {
                         \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
@@ -1634,7 +1673,7 @@ class ItemController extends Controller
                 }
 
                 if (!empty($archivosSecundarios)) {
-                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                    $maxOrden = $item->todasLasImagenes()->max('orden_visualizacion') ?? 1;
                     foreach ($archivosSecundarios as $img) {
                         if (!$img) continue;
                         $maxOrden++;
@@ -1739,7 +1778,7 @@ class ItemController extends Controller
             // ── Imagen principal ──
             if ($archivosPrincipal) {
                 // Si cambia la principal, borrar TODAS las imágenes viejas del item
-                foreach ($item->imagenes as $imgVieja) {
+                foreach ($item->todasLasImagenes as $imgVieja) {
                     \App\Helpers\ImageHelper::eliminar($imgVieja->ruta . '/' . $imgVieja->nombre);
                     $imgVieja->delete();
                 }
@@ -1757,7 +1796,7 @@ class ItemController extends Controller
             } else {
                 // No cambió la principal — solo gestionar secundarias
                 $idsConservar = $request->input('imagenes_existentes', []);
-                $imagenesActuales = $item->imagenes()->where('orden_visualizacion', '>', 1)->get();
+                $imagenesActuales = $item->todasLasImagenes()->where('orden_visualizacion', '>', 1)->get();
                 foreach ($imagenesActuales as $imagen) {
                     if (!in_array($imagen->id_imagen, $idsConservar)) {
                         \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
@@ -1766,7 +1805,7 @@ class ItemController extends Controller
                 }
 
                 if (!empty($archivosSecundarios)) {
-                    $maxOrden = $item->imagenes()->max('orden_visualizacion') ?? 1;
+                    $maxOrden = $item->todasLasImagenes()->max('orden_visualizacion') ?? 1;
                     foreach ($archivosSecundarios as $img) {
                         if (!$img) continue;
                         $maxOrden++;
@@ -1802,7 +1841,7 @@ class ItemController extends Controller
             'Amarillos' => [],
             'Verdes' => [],
             'Azules' => [],
-            'Píºrpuras' => [],
+            'Púrpuras' => [],
             'Rosas' => [],
             'Neutrales' => [],
         ];
@@ -1827,8 +1866,8 @@ class ItemController extends Controller
                 } elseif ($h < 255) {
                     $family = 'Azules';
                 } elseif ($h < 285) {
-                    $family = 'Píºrpuras';
-                } else { // 285"“344
+                    $family = 'Púrpuras';
+                } else { // 285-344
                     $family = 'Rosas';
                 }
             }
@@ -1853,7 +1892,7 @@ class ItemController extends Controller
             'Amarillos' => $families['Amarillos'],
             'Verdes' => $families['Verdes'],
             'Azules' => $families['Azules'],
-            'Píºrpuras' => $families['Píºrpuras'],
+            'Púrpuras' => $families['Púrpuras'],
             'Rosas' => $families['Rosas'],
             'Neutrales' => $families['Neutrales'],
         ];

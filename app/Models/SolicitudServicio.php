@@ -20,12 +20,14 @@ class SolicitudServicio extends Model
         'estado',
         'fecha_creacion',
         'fecha_actualizacion',
+        'fecha_servicio',
     ];
 
     protected $casts = [
         'monto_total'         => 'decimal:2',
         'fecha_creacion'      => 'datetime',
         'fecha_actualizacion' => 'datetime',
+        'fecha_servicio'      => 'datetime',
         'id_proveedor'        => 'integer',
         'id_comprador'        => 'integer',
     ];

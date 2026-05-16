@@ -65,9 +65,9 @@
                     <div class="flex items-center gap-4">
                         {{-- Imagen --}}
                         <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 cursor-pointer border border-gray-200" onclick="abrirImagen(this.querySelector('img')?.src)">
-                            @if($item->imagenes->isNotEmpty())
+                            @if($item->todasLasImagenes->isNotEmpty())
                                 @php
-                                    $image = $item->imagenes->first();
+                                    $image = $item->todasLasImagenes->first();
                                     $imageUrl = (!empty($image->ruta) && !empty($image->nombre))
                                         ? \App\Helpers\ImageHelper::urlMedia(trim(str_replace('\\', '/', $image->ruta), '/'), $image->nombre)
                                         : asset('imgs/defaults/producto_default.svg');

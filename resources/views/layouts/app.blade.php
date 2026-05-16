@@ -558,14 +558,28 @@
                     <li>Queda prohibida la publicacion de contenido ilegal o que viole los derechos de terceros.</li>
                 </ul>
             </div>
-            <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:#374151;">
+            <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:#374151;margin-bottom:1.25rem;">
                 <input type="checkbox" id="checkAdultos" style="margin-top:3px;width:18px;height:18px;accent-color:#dc2626;">
                 <span>He leido y acepto los <strong>Terminos y Condiciones</strong> de la seccion de adultos. Confirmo que soy mayor de 18 años.</span>
             </label>
+
+            <div id="reauthAdultos" style="display:none;border-top:1px solid #eee;padding-top:1.25rem;">
+                <p style="font-size:0.85rem;font-weight:600;color:#374151;margin:0 0 1rem;">Re-confirmación de identidad:</p>
+                <div style="margin-bottom:0.75rem;">
+                    <input type="email" id="adultosEmail" placeholder="Correo electrónico" 
+                           value="{{ auth()->user()->email ?? '' }}" readonly
+                           style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:0.75rem;font-size:0.85rem;background:#f9fafb;color:#6b7280;outline:none;">
+                </div>
+                <div style="margin-bottom:0.5rem;">
+                    <input type="password" id="adultosPass" placeholder="Tu contraseña" 
+                           style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:0.75rem;font-size:0.85rem;outline:none;focus:border-red-500;">
+                </div>
+                <div id="errorAdultos" style="color:#dc2626;font-size:0.75rem;font-weight:500;margin-top:0.25rem;display:none;"></div>
+            </div>
         </div>
-        <div style="padding:0.75rem 1.5rem 1.25rem;display:flex;gap:0.75rem;">
+        <div class="px-6 py-4 border-t border-gray-100 flex gap-3" style="padding:0.75rem 1.5rem 1.25rem;display:flex;gap:0.75rem;">
             <button onclick="cerrarModalAdultos()" style="flex:1;padding:0.6rem;border:1px solid #d1d5db;background:#fff;color:#6b7280;border-radius:0.75rem;font-size:0.85rem;font-weight:600;cursor:pointer;">Cancelar</button>
-            <button id="btnAceptarAdultos" onclick="aceptarAdultos()" disabled style="flex:1;padding:0.6rem;border:none;background:#d1d5db;color:#fff;border-radius:0.75rem;font-size:0.85rem;font-weight:600;cursor:not-allowed;">Aceptar y continuar</button>
+            <button id="btnAceptarAdultos" onclick="aceptarAdultos()" disabled style="flex:1;padding:0.6rem;border:none;background:#d1d5db;color:#fff;border-radius:0.75rem;font-size:0.85rem;font-weight:600;cursor:not-allowed;">Confirmar acceso</button>
         </div>
     </div>
 </div>
@@ -576,6 +590,9 @@ function confirmarAdultos(e, el) {
     e.preventDefault();
     _adultosUrl = el.href;
     document.getElementById('checkAdultos').checked = false;
+    document.getElementById('reauthAdultos').style.display = 'none';
+    document.getElementById('adultosPass').value = '';
+    document.getElementById('errorAdultos').style.display = 'none';
     document.getElementById('btnAceptarAdultos').disabled = true;
     document.getElementById('btnAceptarAdultos').style.background = '#d1d5db';
     document.getElementById('btnAceptarAdultos').style.cursor = 'not-allowed';
@@ -585,17 +602,57 @@ function confirmarAdultos(e, el) {
 function cerrarModalAdultos() {
     document.getElementById('modalAdultos').style.display = 'none';
 }
-function aceptarAdultos() {
-    sessionStorage.setItem('adultos_aceptado', '1');
-    document.getElementById('modalAdultos').style.display = 'none';
-    if (_adultosUrl) window.location.href = _adultosUrl;
+async function aceptarAdultos() {
+    const pass = document.getElementById('adultosPass').value;
+    const email = document.getElementById('adultosEmail').value;
+    const errDiv = document.getElementById('errorAdultos');
+    const btn = document.getElementById('btnAceptarAdultos');
+
+    if (!pass) {
+        errDiv.textContent = 'Por favor ingresa tu contraseña';
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+    errDiv.style.display = 'none';
+
+    try {
+        const res = await fetch('{{ route("adultos.verificar") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ email, password: pass })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            sessionStorage.setItem('adultos_aceptado', '1');
+            document.getElementById('modalAdultos').style.display = 'none';
+            if (_adultosUrl) window.location.href = _adultosUrl;
+        } else {
+            errDiv.textContent = data.message || 'Error de verificación';
+            errDiv.style.display = 'block';
+        }
+    } catch (e) {
+        errDiv.textContent = 'Error de conexión';
+        errDiv.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar acceso';
+    }
 }
 document.addEventListener('change', function(e) {
     if (e.target.id === 'checkAdultos') {
         var btn = document.getElementById('btnAceptarAdultos');
+        var reauth = document.getElementById('reauthAdultos');
         btn.disabled = !e.target.checked;
         btn.style.background = e.target.checked ? '#dc2626' : '#d1d5db';
         btn.style.cursor = e.target.checked ? 'pointer' : 'not-allowed';
+        reauth.style.display = e.target.checked ? 'block' : 'none';
     }
 });
 </script>

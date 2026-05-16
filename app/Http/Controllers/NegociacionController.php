@@ -32,6 +32,7 @@ class NegociacionController extends Controller
     {
         $validated = $request->validate([
             'item_id'         => 'required|exists:items,id_item',
+            'id_color'        => 'nullable|integer|exists:colors,id_color',
             'mensaje'         => 'required|string|max:500',
             'paquete_id'      => 'nullable|integer|exists:paquetes,id_paquete',
             'monto_oferta'    => 'nullable|numeric|min:0',
@@ -202,15 +203,26 @@ class NegociacionController extends Controller
             $hash  = end($parts);
             $id    = \App\Helpers\HashIdHelper::decode($hash);
 
-            $itemModel = \App\Models\Item::with(['imagenes', 'usuario'])
-                ->findOrFail($id);
+            $itemModel = \App\Models\Item::with([
+                'imagenes',
+                'usuario',
+                'direccionPredeterminada.municipio',
+                'direccionPredeterminada.provincia',
+            ])->findOrFail($id);
 
             $userId = auth()->id();
             $mensajesPredefinidos = \App\Models\PredefinedMessage::all();
             $accion = \App\Models\PredefinedMessage::select('tipo')->distinct()->get();
             $todoLosPaquetes = \App\Models\Paquete::where('id_user', $userId)->get();
 
-            return view('negociaciones.index', compact('itemModel', 'mensajesPredefinidos', 'accion', 'todoLosPaquetes'));
+            // Dirección del emisor (usuario autenticado) para mostrar al receptor si aplica
+            $direccionEmisor = \App\Models\Direcciones::where('id_user', $userId)
+                ->where('es_predeterminada', 1)
+                ->with(['municipio', 'provincia'])
+                ->first()
+                ?? \App\Models\Direcciones::where('id_user', $userId)->with(['municipio', 'provincia'])->first();
+
+            return view('negociaciones.index', compact('itemModel', 'mensajesPredefinidos', 'accion', 'todoLosPaquetes', 'direccionEmisor'));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('[NegociacionController::index] ERROR: ' . $e->getMessage());
             abort(500, $e->getMessage());
@@ -223,13 +235,21 @@ class NegociacionController extends Controller
 
         $comoEmisor = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
-            ->with(['item.imagenes', 'item.categoria', 'usuarioReceptor', 'item.inventarios'])
+            ->with([
+                'item.imagenes', 'item.categoria', 'item.inventarios',
+                'usuarioReceptor.direcciones.municipio',
+                'usuarioReceptor.direcciones.provincia',
+            ])
             ->orderByDesc('id_negociacion')
             ->get();
 
         $comoReceptor = \App\Models\Negociacion::where('usuario_receptor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
-            ->with(['item.imagenes', 'item.categoria', 'usuario', 'item.inventarios'])
+            ->with([
+                'item.imagenes', 'item.categoria', 'item.inventarios',
+                'usuario.direcciones.municipio',
+                'usuario.direcciones.provincia',
+            ])
             ->orderByDesc('id_negociacion')
             ->get();
 
@@ -330,6 +350,12 @@ class NegociacionController extends Controller
             return back()->with('error', $msg);
         }
 
+        if ($neg->estado !== 'aceptado') {
+            $msg = 'Este intercambio no está en estado válido para pago.';
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
+            return back()->with('error', $msg);
+        }
+
         $campo = $userId == $neg->usuario_emisor_id ? 'pago_emisor' : 'pago_receptor';
 
         // Sin pago: marcar como pagado sin cobrar (servicio o aprobación sin pago)
@@ -345,9 +371,22 @@ class NegociacionController extends Controller
             ]);
 
             $negFresh = $neg->fresh();
-            if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
-                $neg->update(['estado' => 'completado']);
-                $this->negociacionService->notificarAdminsCompletado($neg);
+            
+            // Lógica de transición de estado tras pago (o sin_pago)
+            $esProductoServicio = $this->negociacionService->esProductoServicio($negFresh);
+            
+            if ($esProductoServicio) {
+                // En Producto vs Servicio, si AL MENOS UNO paga (el que tiene el producto), ya puede ir a envío
+                if ($negFresh->pago_emisor || $negFresh->pago_receptor) {
+                    $neg->update(['estado' => 'en_envio']);
+                    $this->negociacionService->notificarAdminsCompletado($neg);
+                }
+            } else {
+                // Caso Producto vs Producto: ambos deben pagar
+                if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
+                    $neg->update(['estado' => 'en_envio']);
+                    $this->negociacionService->notificarAdminsCompletado($neg);
+                }
             }
 
             $msg = 'Aprobado correctamente.';
@@ -404,7 +443,7 @@ class NegociacionController extends Controller
         $neg->update([$campo => true]);
 
         // Registrar en pago_envio_intercambio
-        \App\Models\PagoEnvioIntercambio::create([
+        $pagoEnvio = \App\Models\PagoEnvioIntercambio::create([
             'id_negociacion' => $neg->id_negociacion,
             'id_user'        => $userId,
             'monto'          => $montoACobrar ?? 0,
@@ -415,10 +454,26 @@ class NegociacionController extends Controller
             'approval_code'  => $resultado['approval_code'] ?? null,
         ]);
 
+        // Generar Contabilidad (Asiento y Caja)
+        app(\App\Services\ERPService::class)->procesarPagoEnvioAprobado($pagoEnvio);
+
         $negFresh = $neg->fresh();
-        if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
-            $neg->update(['estado' => 'completado']);
-            $this->negociacionService->notificarAdminsCompletado($neg);
+        
+        // Lógica de transición de estado tras pago
+        $esProductoServicio = $this->negociacionService->esProductoServicio($negFresh);
+        
+        if ($esProductoServicio) {
+            // En Producto vs Servicio, si AL MENOS UNO paga, ya puede ir a envío
+            if ($negFresh->pago_emisor || $negFresh->pago_receptor) {
+                $neg->update(['estado' => 'en_envio']);
+                $this->negociacionService->notificarAdminsCompletado($negFresh);
+            }
+        } else {
+            // Caso Producto vs Producto: ambos deben pagar
+            if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
+                $neg->update(['estado' => 'en_envio']);
+                $this->negociacionService->notificarAdminsCompletado($negFresh);
+            }
         }
 
         $msg = 'Pago registrado correctamente.';

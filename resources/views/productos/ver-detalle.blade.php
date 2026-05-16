@@ -186,7 +186,7 @@
             @if(auth()->user()->id === $item->user_id && $relatedItems->count() > 0)
                 <div class="mt-12">
                     <h2 class="text-2xl font-bold text-gray-900">Tus productos o servicios relacionados</h2>
-                    <div class="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+                    <div class="mt-6 grid gap-y-10 gap-x-6" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
                       @foreach($relatedItems as $relatedItem)
                         <div class="group relative bg-white shadow rounded-lg overflow-hidden">
                             @php
@@ -234,7 +234,14 @@
                                         @else bg-red-100 text-red-800 @endif">
                                         {{ $relatedItem->condicion_text }}
                                     </span>
-                                    <a href="{{ route('items.VerDetalle', $relatedItem->slug) }}" class="text-xs text-primary hover:text-hoverPrimary">Ver detalles</a>
+                                    <a href="{{ route('items.VerDetalle', $relatedItem->slug) }}" 
+                                       class="text-xs font-bold text-gray-500 hover:text-orange-600 flex items-center gap-1">
+                                        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver
+                                    </a>
                                 </div>
                             </div>
                         </div>

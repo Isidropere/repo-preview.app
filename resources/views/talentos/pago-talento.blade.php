@@ -17,6 +17,16 @@
       <span style="font-size:1.5rem;font-weight:700;color:#0369a1;">RD$ {{ number_format($monto, 2) }}</span>
     </div>
 
+    @if(($direccionesCount ?? 0) === 0)
+      <div style="background:#fff7ed;border:1px solid #ffedd5;border-radius:8px;padding:16px;margin-bottom:24px;">
+        <p style="color:#9a3412;font-size:.9rem;font-weight:600;margin:0 0 10px;">⚠️ Se requiere una dirección para proceder.</p>
+        <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}" 
+           style="color:#c2410c;font-size:.875rem;font-weight:700;text-decoration:underline;">
+          Crear mi primera dirección →
+        </a>
+      </div>
+    @endif
+
     {{-- Mensajes de error/éxito --}}
     @if(session('error'))
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:20px;color:#dc2626;font-size:.875rem;">
@@ -74,8 +84,8 @@
 
       {{-- Botón pagar --}}
       <button type="submit" id="btnPagar"
-              style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:14px;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s;"
-              {{ $tarjetas->isEmpty() ? 'disabled' : '' }}>
+              style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:14px;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s;{{ (($direccionesCount ?? 0) === 0 || $tarjetas->isEmpty()) ? 'opacity:0.5;cursor:not-allowed;' : '' }}"
+              {{ (($direccionesCount ?? 0) === 0 || $tarjetas->isEmpty()) ? 'disabled' : '' }}>
         Pagar RD$ {{ number_format($monto, 2) }} y publicar
       </button>
     </form>

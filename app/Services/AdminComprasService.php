@@ -6,6 +6,7 @@ use App\Models\CompraTrazabilidad;
 use App\Models\ItemIntencionCompra;
 use App\Models\Negociacion;
 use App\Models\PagoCompra;
+use App\Services\ERPService;
 
 /**
  * ============================================================
@@ -27,8 +28,12 @@ use App\Models\PagoCompra;
  */
 class AdminComprasService
 {
+    public function __construct(
+        private ERPService $erpService,
+    ) {}
+
     public const ESTADOS_COMPRA = ['pendiente', 'aprobado', 'rechazado', 'enviado', 'entregado', 'cancelado'];
-    public const ESTADOS_INTERCAMBIO = ['Inicial', 'pendiente', 'aceptado', 'rechazado', 'contraoferta', 'completado', 'cancelado'];
+    public const ESTADOS_INTERCAMBIO = ['Inicial', 'pendiente', 'aceptado', 'rechazado', 'contraoferta', 'en_envio', 'completado', 'cancelado'];
 
     /**
      * Datos del panel principal con todas las pestañas.
@@ -69,6 +74,11 @@ class AdminComprasService
             'nota'            => $nota,
             'id_admin'        => $adminId,
         ]);
+
+        // --- AUTOMATIZACIÓN ERP ---
+        if ($nuevoEstado === 'aprobado' && $estadoAnterior !== 'aprobado') {
+            $this->erpService->procesarVentaAprobada($compra);
+        }
 
         return ['success' => true, 'message' => 'Estado actualizado correctamente.'];
     }
@@ -186,12 +196,14 @@ class AdminComprasService
     {
         $query = Negociacion::with(['item.imagenes', 'item.categoria', 'usuario', 'usuarioReceptor'])
             ->where(function ($q) {
-                // Ambos aprobaron (pendiente de pago) o ya completado
+                // Ambos aprobaron pendiente de pago, pagos completos pendiente envio, o ya completado
                 $q->where(function ($q2) {
                     $q2->where('estado', 'aceptado')
                        ->where('emisor_confirmado', true)
                        ->where('receptor_confirmado', true);
-                })->orWhere('estado', 'completado');
+                })
+                ->orWhere('estado', 'en_envio')
+                ->orWhere('estado', 'completado');
             })
             ->orderByDesc('id_negociacion');
 

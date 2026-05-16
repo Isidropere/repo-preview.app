@@ -132,11 +132,11 @@ Para transacciones con autenticación 3DS y token, se deben enviar los parámetr
 CreateIdempotencyKey
 Método utilizado para obtener el idempotencyKey, este valor deberá solicitarse antes de cada requerimiento de pago, o sea, primero se debe obtener el idempotencyKey y luego agregarlo al mensaje de solicitud de pago (processsale).
 
-Ruta: /api/payment/idenpotency-keys
+Ruta: /api/payment/idempotency-keys
 Método: POST
 Ejemplo de solicitud método CreateIdempotencyKey
 
-curl -X POST https://ecommerce.cardnet.com.do/api/payment/idenpotency-keys
+curl -X POST https://ecommerce.cardnet.com.do/api/payment/idempotency-keys
      -H "Accept: text/plain"
 Ejemplo de respuesta método CreateIdempotencyKey
 
