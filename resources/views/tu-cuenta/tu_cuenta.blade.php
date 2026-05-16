@@ -133,6 +133,7 @@
                 </a>
 
                 <a href="{{ route('historial') }}"
+                   style="grid-column: span 2 / span 2;"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/History.svg" alt="Historial" loading="lazy" width="48" height="48">
                     <div>
@@ -141,14 +142,15 @@
                     </div>
                 </a>
 
-                <a href="{{ route('usuario.tipo.edit') }}"
+                {{-- Opción premium inhabilitada temporalmente por solicitud del usuario --}}
+                {{-- <a href="{{ route('usuario.tipo.edit') }}"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/premium.svg" alt="Premium" loading="lazy" width="48" height="48">
                     <div>
                         <h2 class="text-xl font-medium">Cambiar cuenta a premium</h2>
                         <p class="text-sm text-gray-500">Descubre los beneficios premium</p>
                     </div>
-                </a>
+                </a> --}}
 
             </div>
             @else

@@ -50,7 +50,7 @@
         @if(auth()->user()->isSuperAdminUser())
         <div class="mb-8">
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gestión Empresarial</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <a href="{{ route('admin.erp.contabilidad') }}" 
                    class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
                     <div class="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -79,6 +79,16 @@
                     <div>
                         <p class="font-bold text-gray-800">Cuadre de Caja</p>
                         <p class="text-xs text-gray-400">Apertura y cierre diario</p>
+                    </div>
+                </a>
+                <a href="{{ route('admin.erp.transporte.index') }}" 
+                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
+                    <div class="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">Transporte</p>
+                        <p class="text-xs text-gray-400">Solicitudes de mudanza</p>
                     </div>
                 </a>
             </div>

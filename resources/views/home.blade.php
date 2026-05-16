@@ -28,12 +28,12 @@
                 </div>
             </div>
             <div class="absolute inset-0 z-20 flex flex-col justify-center items-center m-4">
-                <section class="text-center bg-orange-200/65 p-4 sm:p-6 rounded-2xl shadow-lg w-full h-[530px] flex items-center justify-center">
-                    <div>
-                        <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold my-2">
+                <section class="text-center bg-orange-200/65 p-2 sm:p-4 rounded-2xl shadow-lg w-full h-[530px] flex items-center justify-center">
+                    <div class="w-full">
+                        <h1 class="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold my-1">
                             Categorías Populares
                                                 </h1>
-                        <div class="p-0 lg:p-6 rounded-2xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-x-2 lg:gap-x-8 gap-y-1 md:gap-y-4 lg:max-w-[900px] mt-0 lg:mt-4 justify-items-center mx-auto">
+                        <div class="p-0 lg:p-2 rounded-2xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-x-2 lg:gap-x-8 gap-y-1 md:gap-y-2 lg:max-w-[900px] mt-0 lg:mt-2 justify-items-center mx-auto">
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Damas</h2>
                             </a>
@@ -55,7 +55,22 @@
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Talentos</h2>
                             </a>
-                                 <a href="{{ route('categorias.otras') }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/computacion.svg" alt="Tecnología alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
+                                <h2 class="font-medium text-center">Tecnología</h2>
+                            </a>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(6)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> 
+                                <svg class="h-14 lg:h-24 lg:mb-2 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M8 16H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-8v8m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                                <h2 class="font-medium text-center">Vehículos</h2>
+                            </a>
+                            <a href="{{ route('transporte.create') }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> 
+                                <!-- Se usa un ícono genérico SVG o una imagen existente. Usaremos un icono de camión inline si no hay uno -->
+                                <svg class="h-14 lg:h-24 lg:mb-2 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path><path d="M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                <h2 class="font-medium text-center leading-tight">Transporte y<br>Mudanza</h2>
+                            </a>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(2)) }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105 "> <img src="/imgs/icons/electro.svg" alt="Electrodomésticos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
+                                <h2 class="font-medium text-center leading-tight">Electro<wbr>domésticos</h2>
+                            </a>
+                            <a href="{{ route('categorias.otras') }}" class="rounded-3xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
                                 <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Otras categorías</h2>
                             </a>

@@ -597,6 +597,10 @@ Route::post('password/reset', [PasswordResetController::class, 'update'])->name(
 
 // Registration routes
 
+// Transporte y Mudanza
+Route::get('/transporte', [\App\Http\Controllers\TransporteController::class, 'create'])->name('transporte.create');
+Route::post('/transporte', [\App\Http\Controllers\TransporteController::class, 'store'])->name('transporte.store');
+
 Route::controller(RegisterController::class)->group(function () {
     Route::post('/registro', 'registrarUsuario')->name('registro.usuario');
     Route::get('/registro', 'showRegistroForm')->name('registro');
@@ -686,6 +690,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/contabilidad/reportes', [ERPController::class, 'reportesFinancieros'])->name('contabilidad.reportes');
         Route::get('/contabilidad/reportes/{tipo}/pdf', [ERPController::class, 'descargarReportePdf'])->name('contabilidad.reportes.pdf');
         
+        // Transporte
+        Route::get('/transporte', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'index'])->name('transporte.index');
+        Route::post('/transporte/{id}/aprobar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'aprobar'])->name('transporte.aprobar');
+        Route::post('/transporte/{id}/rechazar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'rechazar'])->name('transporte.rechazar');
+        Route::get('/transporte/{id}/pdf', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'generarPdf'])->name('transporte.pdf');
+
         // Cuentas CRUD
         Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');
         Route::put('/contabilidad/cuentas/{id}', [ERPController::class, 'updateCuenta'])->name('contabilidad.cuentas.update');
