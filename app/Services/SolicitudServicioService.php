@@ -46,14 +46,15 @@ class SolicitudServicioService
             $monto = ($item->valor * $itemIntencion->cantidad) - ($itemIntencion->descuento ?? 0);
 
             SolicitudServicio::create([
-                'id_comprador'  => $compradorId,
-                'id_proveedor'  => $item->id_user,
-                'id_item'       => $item->id_item,
-                'id_carrito'    => $carrito->id_carrito,
-                'cantidad'      => $itemIntencion->cantidad,
-                'monto_total'   => round($monto, 2),
-                'estado'        => 'pendiente_aprobacion',
+                'id_comprador'   => $compradorId,
+                'id_proveedor'   => $item->id_user,
+                'id_item'        => $item->id_item,
+                'id_carrito'     => $carrito->id_carrito,
+                'cantidad'       => $itemIntencion->cantidad,
+                'monto_total'    => round($monto, 2),
+                'estado'         => 'pendiente_aprobacion',
                 'fecha_creacion' => now(),
+                'fecha_servicio' => $itemIntencion->fecha_servicio,
             ]);
 
             $creadas++;

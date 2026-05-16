@@ -94,13 +94,16 @@ class TalentoRegistroPagoService
                 $this->moverArchivosTemp($archivosTemp, $item->id_item);
 
                 // Registrar pago
-                PagoRegistroTalento::create([
+                $pagoTalento = PagoRegistroTalento::create([
                     'id_item'        => $item->id_item,
                     'id_user'        => $userId,
                     'transaction_id' => $resultado['transaction_id'],
                     'monto_pagado'   => $monto,
                     'estatus'        => 'aprobado',
                 ]);
+
+                // Generar Contabilidad (Asiento y Caja)
+                app(ERPService::class)->procesarRegistroTalentoAprobado($pagoTalento);
 
                 // Limpiar sesión
                 session()->forget(['talento_pendiente_data', 'talento_pendiente_files', 'talento_pendiente_uuid']);

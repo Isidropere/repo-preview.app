@@ -17,7 +17,7 @@ class Negociacion extends Model
         'receptor_item_id', 'emisor_paquete_id', 'usuario_emisor_id', 'usuario_receptor_id',
         'mensaje_inicial', 'monto_oferta', 'monto_contra_oferta', 'estado', 'fecha_creacion',
         'emisor_confirmado', 'receptor_confirmado', 'items_ofrecidos', 'pago_emisor', 'pago_receptor',
-        'modo_entrega', 'entrega_confirmada',
+        'modo_entrega', 'entrega_confirmada', 'id_color',
     ];
 
     protected $casts = [

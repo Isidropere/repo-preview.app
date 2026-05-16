@@ -27,10 +27,11 @@ class DireccionesController extends Controller
         private DireccionService $direccionService,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $direcciones = $this->direccionService->listar(auth()->id());
-        return view('direcciones.direcciones', compact('direcciones'));
+        $returnUrl = $request->query('return_url');
+        return view('direcciones.direcciones', compact('direcciones', 'returnUrl'));
     }
 
     public function store(Request $request)

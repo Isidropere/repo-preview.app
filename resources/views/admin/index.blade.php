@@ -46,6 +46,55 @@
             </a>
         </div>
 
+        {{-- Accesos Rápidos ERP (Solo Super Admin) --}}
+        @if(auth()->user()->isSuperAdminUser())
+        <div class="mb-8">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gestión Empresarial</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{{ route('admin.erp.contabilidad') }}" 
+                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
+                    <div class="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">Contabilidad</p>
+                        <p class="text-xs text-gray-400">Libro diario y cuentas</p>
+                    </div>
+                </a>
+                <a href="{{ route('admin.erp.inventario') }}" 
+                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
+                    <div class="bg-emerald-50 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">Inventario</p>
+                        <p class="text-xs text-gray-400">Stock y Almacén</p>
+                    </div>
+                </a>
+                <a href="{{ route('admin.erp.caja') }}" 
+                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
+                    <div class="bg-orange-50 p-3 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">Cuadre de Caja</p>
+                        <p class="text-xs text-gray-400">Apertura y cierre diario</p>
+                    </div>
+                </a>
+                <a href="{{ route('admin.erp.transporte.index') }}" 
+                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
+                    <div class="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">Transporte</p>
+                        <p class="text-xs text-gray-400">Solicitudes de mudanza</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        @endif
+
         {{-- Spinner --}}
         <div id="pageLoader" class="flex flex-col items-center justify-center py-16 gap-3">
             <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -67,23 +116,23 @@
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
                 <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                     <p class="text-xs text-gray-500 uppercase tracking-wide">Compras</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $totalCompras }}</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($totalCompras, 0) }}</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                     <p class="text-xs text-blue-600 uppercase tracking-wide">Ventas</p>
-                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ $totalVentas }}</p>
+                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ number_format($totalVentas, 0) }}</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                     <p class="text-xs text-purple-600 uppercase tracking-wide">Intercambios</p>
-                    <p class="text-2xl font-bold text-purple-600 mt-1">{{ $totalIntercambios }}</p>
+                    <p class="text-2xl font-bold text-purple-600 mt-1">{{ number_format($totalIntercambios, 0) }}</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                     <p class="text-xs text-orange-500 uppercase tracking-wide">Int. Compra</p>
-                    <p class="text-2xl font-bold text-orange-500 mt-1">{{ $totalIntencionCompra }}</p>
+                    <p class="text-2xl font-bold text-orange-500 mt-1">{{ number_format($totalIntencionCompra, 0) }}</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                     <p class="text-xs text-pink-500 uppercase tracking-wide">Int. Intercambio</p>
-                    <p class="text-2xl font-bold text-pink-500 mt-1">{{ $totalIntencionIntercambio }}</p>
+                    <p class="text-2xl font-bold text-pink-500 mt-1">{{ number_format($totalIntencionIntercambio, 0) }}</p>
                 </div>
             </div>
 
@@ -245,8 +294,8 @@
                         ${zs.map(z => `
                         <div style="padding:10px 12px;background:#f8fafc;border-radius:8px;border-left:3px solid ${c};">
                             <div style="font-size:.82rem;font-weight:600;color:#1e293b;">${z.zona}</div>
-                            <div style="font-size:.75rem;color:#64748b;margin-top:2px;">Base persona: RD$ ${Number(z.precio_persona||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
-                            <div style="font-size:.75rem;color:#64748b;">Base empresa: RD$ ${Number(z.precio_empresa||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
+                            <div style="font-size:.75rem;color:#64748b;margin-top:2px;">Base persona: RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(z.precio_persona || 0)}</div>
+                            <div style="font-size:.75rem;color:#64748b;">Base empresa: RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(z.precio_empresa || 0)}</div>
                             <div style="font-size:.7rem;color:#94a3b8;margin-top:3px;">${z.dias_entrega||''}</div>
                         </div>`).join('')}
                     </div>

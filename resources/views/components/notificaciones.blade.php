@@ -96,12 +96,20 @@ async function cargarNotificaciones() {
 
         lista.innerHTML = mensajes.map(n => {
             var msg = n.mensaje || '';
-            var esServicio = msg.includes('[Servicio]');
+            var esServicio = msg.includes('[Servicio]') || msg.includes('talento') || msg.includes('servicio');
             var esVenta = msg.includes('[Venta]') || (msg.includes('orden #') && !msg.includes('[Compra]'));
             var esCompra = msg.includes('[Compra]') || msg.includes('Tu orden #');
-            var esIntercambio = msg.includes('[Intercambio]') || msg.includes('intercambio') || msg.includes('negociaci');
-            var destino = esServicio ? '/mis-ventas-talentos' : (esCompra ? '/historial?tab=compras' : (esVenta ? '/historial?tab=ventas' : (esIntercambio ? '/negociaciones' : '/mis-notificaciones')));
-            var titulo = esServicio ? '⭐ Servicio' : (esCompra ? '💳 Compra' : (esVenta ? '🛒 Venta' : (esIntercambio ? '🔄 Intercambio' : (n.id_emisor ? 'Mensaje' : '📢 Notificación'))));
+            var esIntercambio = msg.includes('[Intercambio]') || msg.includes('intercambio') || msg.includes('negociaci') || msg.includes('propuesta');
+
+            var destino = esServicio ? '/mis-ventas-talentos' : 
+                          (esIntercambio ? '/negociaciones' : 
+                          (esCompra ? '/historial?tab=compras' : 
+                          (esVenta ? '/historial?tab=ventas' : '/mis-notificaciones')));
+
+            var titulo = esServicio ? '⭐ Servicio' : 
+                         (esIntercambio ? '🔄 Intercambio' : 
+                         (esCompra ? '💳 Compra' : 
+                         (esVenta ? '🛒 Venta' : (n.id_emisor ? 'Mensaje' : '📢 Notificación'))));
             return `
             <div class="mb-3 px-3">
                 <a href="${destino}"

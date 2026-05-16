@@ -19,7 +19,9 @@ class ItemIntencionCompra extends Model
         'id_item',
         'cantidad',
         'es_seleccionado',
-        'descuento'
+        'descuento',
+        'fecha_servicio',
+        'id_color'
     ];
 
     public function carrito()
@@ -53,6 +55,11 @@ class ItemIntencionCompra extends Model
     {
         // Acceder al inventario a través del item relacionado
         return $this->hasOneThrough(Inventario::class, Item::class, 'id_item', 'id_item', 'id_item', 'id_item');
+    }
+
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'id_color', 'id_color');
     }
 
 }

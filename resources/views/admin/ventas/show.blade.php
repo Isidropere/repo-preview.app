@@ -89,7 +89,7 @@
                             <p class="font-semibold text-gray-800">{{ $item?->item ?? 'Artículo eliminado' }}</p>
                             <p class="text-sm text-gray-500 mt-1">Categoría: {{ $item?->categoria?->categoria ?? 'N/A' }}</p>
                             <p class="text-sm text-gray-500">Condición: {{ ucfirst($item?->condicion ?? 'N/A') }}</p>
-                            <p class="text-lg font-bold text-primary mt-2">${{ number_format($item?->valor ?? 0, 2) }}</p>
+                            <p class="text-lg font-bold text-primary mt-2">RD$ {{ number_format($item?->valor ?? 0, 2) }}</p>
                         </div>
                     </div>
                     <dl class="mt-4 grid grid-cols-2 gap-3 text-sm border-t border-gray-50 pt-4">
@@ -103,7 +103,7 @@
                         </div>
                         <div>
                             <dt class="text-xs text-gray-400 uppercase tracking-wide">Subtotal</dt>
-                            <dd class="mt-1 font-bold text-gray-800">${{ number_format(($item?->valor ?? 0) * $venta->cantidad, 2) }}</dd>
+                            <dd class="mt-1 font-bold text-gray-800">RD$ {{ number_format(($item?->valor ?? 0) * $venta->cantidad, 2) }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -237,18 +237,18 @@
                                 </div>
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <div class="text-xs text-gray-500 mb-1">Flete base</div>
-                                    <div class="font-semibold text-gray-800">RD$ ${Number(d.desglose.costo_flete).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
+                                    <div class="font-semibold text-gray-800">RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(d.desglose.costo_flete)}</div>
                                     <div class="text-xs text-gray-400 mt-1">+${d.desglose.ganancia_negocio_pct}% ganancia</div>
                                 </div>
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <div class="text-xs text-gray-500 mb-1">Plataforma + Manejo</div>
-                                    <div class="font-semibold text-gray-800">RD$ ${Number(d.desglose.costo_plataforma + d.desglose.costo_manejo).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
+                                    <div class="font-semibold text-gray-800">RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(d.desglose.costo_plataforma + d.desglose.costo_manejo)}</div>
                                     <div class="text-xs text-gray-400 mt-1">${d.desglose.plataforma_pct}% + ${d.desglose.manejo_pct}%</div>
                                 </div>
                                 <div class="bg-green-50 rounded-lg p-3 border border-green-200">
                                     <div class="text-xs text-gray-500 mb-1">Total envío</div>
-                                    <div class="font-bold text-green-700 text-lg">RD$ ${Number(d.costo_envio_total).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
-                                    <div class="text-xs text-gray-400 mt-1">Seguro: RD$ ${Number(d.desglose.costo_seguro).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>
+                                    <div class="font-bold text-green-700 text-lg">RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(d.costo_envio_total)}</div>
+                                    <div class="text-xs text-gray-400 mt-1">Seguro: RD$ ${new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2 }).format(d.desglose.costo_seguro)}</div>
                                 </div>
                             </div>`;
                     } else {

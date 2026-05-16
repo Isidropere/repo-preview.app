@@ -325,8 +325,8 @@ const visible    = {};
 Object.keys(TIPOS).forEach(k => { tipoActual[k] = TIPOS[k][0]; visible[k] = true; });
 let datosCache = null;
 let modalChart = null;
-const fmt  = n => Number(n||0).toLocaleString('es-DO');
-const fmtM = n => 'RD$ ' + Number(n||0).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt  = n => new Intl.NumberFormat('es-DO').format(n || 0);
+const fmtM = n => 'RD$ ' + new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
 const labelTipo = t => ({line:'Linea',bar:'Barras',area:'Area',doughnut:'Dona',pie:'Pastel',polarArea:'Polar'}[t]||t);
 
 function renderKPIs(kpis) {

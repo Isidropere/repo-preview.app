@@ -138,4 +138,28 @@ class LoginController extends Controller
             'leido'       => false,
         ]);
     }
+    public function verificarCredenciales(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        // Verificar si las credenciales coinciden con las del usuario autenticado
+        if ($request->email !== auth()->user()->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El correo electrónico no coincide con tu sesión actual.'
+            ], 422);
+        }
+
+        if (Auth::guard('web')->validate($request->only('email', 'password'))) {
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Contraseña incorrecta.'
+        ], 422);
+    }
 }

@@ -70,7 +70,7 @@ CARDNET_ENVIRONMENT=ECommerce     # Tipo de ambiente
 
 ```
 1. Obtener idempotency-key
-   POST {baseUrl}/idenpotency-keys
+   POST {baseUrl}/idempotency-keys
    → Retorna: "ikey:XXXXXXXX"
 
 2. Procesar venta

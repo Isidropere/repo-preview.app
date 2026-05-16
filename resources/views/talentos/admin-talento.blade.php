@@ -60,9 +60,9 @@
                     <div class="flex items-center gap-4">
                         {{-- Imagen --}}
                         <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 cursor-pointer border border-gray-200" onclick="abrirImagen(this.querySelector('img')?.src)">
-                            @if($item->imagenes->isNotEmpty())
+                            @if($item->todasLasImagenes->isNotEmpty())
                                 @php
-                                    $image = $item->imagenes->firstWhere('orden_visualizacion', 1) ?? $item->imagenes->first();
+                                    $image = $item->todasLasImagenes->firstWhere('orden_visualizacion', 1) ?? $item->todasLasImagenes->first();
                                     $imageUrl = (!empty($image->ruta) && !empty($image->nombre))
                                         ? \App\Helpers\ImageHelper::urlMedia(trim(str_replace('\\', '/', $image->ruta), '/'), $image->nombre)
                                         : asset('imgs/defaults/servicio_default.svg');
@@ -85,7 +85,7 @@
                                 </span>
                             </div>
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500">
-                                <span class="font-semibold text-primary text-sm">RD$ {{ number_format($item->valor, 2) }}</span>
+                                <span class="font-semibold text-secondary text-sm">RD$ {{ number_format($item->valor, 2) }}</span>
                                 <span class="flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     {{ $item->views_count ?? 0 }}

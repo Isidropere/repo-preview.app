@@ -111,6 +111,14 @@
                 </a>
             </div>
 
+            @if($item->color)
+            <div class="mt-1 flex items-center gap-2">
+                <span class="text-xs text-gray-500">Color:</span>
+                <span class="w-3 h-3 rounded-full border border-gray-300" style="background-color: {{ $item->color->codigo_hex }}"></span>
+                <span class="text-xs font-medium text-gray-700">{{ $item->color->nombre }}</span>
+            </div>
+            @endif
+
             <p class="text-gray-500 text-sm mb-1">
                 {{ $item->item->presentacion }}
             </p>
@@ -119,9 +127,10 @@
 
                 @if(in_array($item->item->tipo_trans, [2, 3]))
                 <button
-                    class="text-orange-600 hover:underline text-xs open-negociaciones font-semibold" 
+                    class="mt-3 flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md open-negociaciones w-full sm:w-auto transform hover:scale-105" 
+                    style="background-color: #f99955;"
                     data-id="{{ $item->item->id_item }}">
-                      🤝 Negociar con el vendedor
+                      <span>🤝</span> Negociar con el vendedor
                 </button>
                 @endif
 
@@ -251,6 +260,15 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2 mt-3">
+                @if(in_array($item->item->tipo_trans, [2, 3]))
+                <button
+                    class="flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md open-negociaciones w-full sm:w-auto transform hover:scale-105" 
+                    style="background-color: #f99955;"
+                    data-id="{{ $item->item->id_item }}">
+                      <span>🤝</span> Negociar con el vendedor
+                </button>
+                @endif
+
                 <form action="{{ route('carrito.eliminarItem', $item->id_item) }}" method="POST"
                       onsubmit="return confirm('¿Eliminar este servicio del carrito?')">
                     @csrf @method('DELETE')
@@ -720,7 +738,7 @@
                 ${provHtml}
                 <div style="text-align:center;padding:0.5rem 0;">
                     <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
-                    <p style="font-weight:700;color:#92400e;margin-bottom:0.25rem;">Solicitud ya enviada</p>
+                    <p style="font-weight:700;color:#92400e;margin-bottom:0.25rem;">Su Solicitud ya fue enviada</p>
                     <p style="font-size:0.85rem;color:#6b7280;">Estás esperando que el proveedor apruebe tu solicitud. Te notificaremos cuando responda.</p>
                 </div>`;
             acciones.innerHTML = `<button onclick="document.getElementById('modalSolicitudServicio').style.display='none';"
@@ -763,16 +781,25 @@
             return;
         }
 
-        // Sin solicitud previa — mostrar confirmación con ubicación del proveedor
+        // Sin solicitud previa — mostrar confirmación con ubicación del proveedor y selector de fecha
         body.innerHTML = `
             ${provHtml}
             <div style="text-align:center;padding:0.25rem 0;">
                 <div style="font-size:2rem;margin-bottom:0.5rem;">📋</div>
                 <p style="font-weight:700;color:#374151;margin-bottom:0.5rem;">Solicitar aprobación al proveedor</p>
-                <p style="font-size:0.85rem;color:#6b7280;line-height:1.5;">
-                    Para contratar este servicio, el proveedor debe aprobar tu solicitud primero.<br>
-                    <strong>¿Deseas enviar la solicitud ahora?</strong>
+                <p style="font-size:0.85rem;color:#6b7280;line-height:1.5;margin-bottom:1rem;">
+                    Para contratar este servicio, el proveedor debe aprobar tu solicitud primero.
                 </p>
+                
+                <div style="text-align:left;background:#f9fafb;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1rem;margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.75rem;font-weight:700;color:#374151;margin-bottom:0.35rem;">Selecciona la fecha del servicio:</label>
+                    <input type="date" id="fecha_servicio_input" 
+                        min="${new Date().toISOString().split('T')[0]}"
+                        style="width:100%;border:2px solid #ea580c;border-radius:0.5rem;padding:0.5rem;font-size:0.85rem;outline:none;background:#fff;">
+                    <p style="font-size:0.65rem;color:#9ca3af;margin-top:0.3rem;">Indica cuándo deseas recibir el talento/servicio.</p>
+                </div>
+
+                <p style="font-size:0.85rem;font-weight:700;color:#ea580c;">¿Deseas enviar la solicitud ahora?</p>
             </div>`;
         acciones.innerHTML = `
             <button id="cancelarSolicitudBtnDyn"
@@ -792,6 +819,14 @@
 
     async function enviarSolicitud(cb, itemId, intencionId) {
         const btn = document.getElementById('confirmarEnviarSolicitudBtn') || document.getElementById('reenviarSolicitudBtn');
+        const fechaInput = document.getElementById('fecha_servicio_input');
+        const fecha_servicio = fechaInput ? fechaInput.value : null;
+
+        if (!fecha_servicio) {
+            alert('Por favor selecciona una fecha para el servicio.');
+            return;
+        }
+
         if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
 
         try {
@@ -802,7 +837,10 @@
                     'X-CSRF-TOKEN': csrfToken(),
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ id_item: itemId }),
+                body: JSON.stringify({ 
+                    id_item: itemId,
+                    fecha_servicio: fecha_servicio
+                }),
             });
             const data = await res.json();
 
@@ -1106,9 +1144,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await res.json();
             if (data.status === 'ok' && data.totales) {
-                document.querySelector('.total_articulos').textContent = parseFloat(data.totales.total_articulos).toFixed(2);
-                document.querySelector('.total_descuento').textContent = '-' + parseFloat(data.totales.total_descuento).toFixed(2);
-                document.getElementById('total_estimado').textContent = parseFloat(data.totales.total_estimado).toFixed(2);
+                const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.querySelector('.total_articulos').textContent = formatter.format(data.totales.total_articulos);
+                document.querySelector('.total_descuento').textContent = '-' + formatter.format(data.totales.total_descuento);
+                document.getElementById('total_estimado').textContent = formatter.format(data.totales.total_estimado);
                 if (typeof recalcularEnvio === 'function') recalcularEnvio();
                 // Actualizar conteo de botones de pago
                 actualizarConteoBotones();
@@ -1372,6 +1411,7 @@ enviarBtn?.addEventListener("click", async () => {
         }
 
         try {
+            const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const res = await fetch(`/carrito/items-usuario`);
             const items = await res.json();
             listaItemsUsuario.innerHTML = "";
@@ -1389,11 +1429,11 @@ enviarBtn?.addEventListener("click", async () => {
                             <input type="checkbox" class="item-checkbox-usuario" data-id="${it.id_item}" data-valor="${it.valor}" ${checked}>
                             <span>${it.item}</span>
                         </label>
-                        <span class="text-gray-600 text-sm">${parseFloat(it.valor).toFixed(2)} USD</span>
+                        <span class="text-gray-600 text-sm">${formatter.format(it.valor)} RD$</span>
                     </div>`;
             });
 
-            valorTotalPaquete.textContent = window.totalPaquete.toFixed(2);
+            valorTotalPaquete.textContent = formatter.format(window.totalPaquete);
 
             document.querySelectorAll('.item-checkbox-usuario').forEach(cb => {
                 cb.addEventListener('change', function() {
@@ -1410,7 +1450,8 @@ enviarBtn?.addEventListener("click", async () => {
                         window.totalPaquete -= valor;
                     }
 
-                    valorTotalPaquete.textContent = window.totalPaquete.toFixed(2);
+                    const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    valorTotalPaquete.textContent = formatter.format(window.totalPaquete);
                 });
             });
 
@@ -1495,12 +1536,13 @@ window.recalcularEnvio = function() {
     const elDias  = document.getElementById('carrito-envio-dias');
     const totalEstEl = document.getElementById('total_estimado');
     const totalSinEnvio = parseFloat(totalEstEl?.textContent?.replace(/,/g,'') || 0);
+    const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     if (!municipioCarrito || totalSinEnvio <= 0) {
         window.costoEnvioActual = 0;
         if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.style.color = '#16a34a'; }
         if (elDias) elDias.classList.add('hidden');
-        totalEstEl.textContent = totalSinEnvio.toFixed(2);
+        if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
         return;
     }
 
@@ -1514,7 +1556,7 @@ window.recalcularEnvio = function() {
             const costo = parseFloat(d.costo_envio_total ?? 0);
             if (d.success && costo > 0) {
                 window.costoEnvioActual = costo;
-                elCosto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits:2});
+                elCosto.textContent = 'RD$ ' + formatter.format(costo);
                 elCosto.style.color = '#374151';
                 if (elDias && d.dias_habiles) {
                     const fechaEntrega = agregarDiasHabiles(new Date(), d.dias_habiles);
@@ -1528,7 +1570,7 @@ window.recalcularEnvio = function() {
                 if (elDias) elDias.classList.add('hidden');
             }
             // Sumar envío al total estimado
-            totalEstEl.textContent = (totalSinEnvio + window.costoEnvioActual).toFixed(2);
+            if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio + window.costoEnvioActual);
         })
         .catch(() => {
             window.costoEnvioActual = 0;
@@ -1537,7 +1579,7 @@ window.recalcularEnvio = function() {
                 elCosto.style.color = '#ef4444';
             }
             if (elDias) elDias.classList.add('hidden');
-            totalEstEl.textContent = totalSinEnvio.toFixed(2);
+            if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
         });
 };
 

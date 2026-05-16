@@ -289,7 +289,14 @@
       });
       var data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error al guardar');
-      cerrarModal(); window.location.reload();
+      cerrarModal();
+      
+      const returnUrl = '{{ $returnUrl ?? "" }}';
+      if (returnUrl) {
+          window.location.href = returnUrl;
+      } else {
+          window.location.reload();
+      }
     } catch(e) { showErr(e.message); }
     finally { btnGuard.disabled = false; btnGuard.textContent = 'Guardar direcci\u00f3n'; }
   });

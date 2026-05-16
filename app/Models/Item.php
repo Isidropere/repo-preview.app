@@ -81,7 +81,7 @@ class Item extends Model
     {
         return $this->hasOne(Direcciones::class, 'id_user', 'id_user')
             ->where('es_predeterminada', 1)
-            ->with('municipio:id_municipio,municipio');
+            ->with(['municipio:id_municipio,municipio', 'provincia:id_provincia,provincia']);
     }
 
     public function itemsIntencionCompra()
@@ -96,6 +96,11 @@ class Item extends Model
 
     // app/Models/Item.php
     public function imagenes()
+    {
+        return $this->hasMany(ImagenItem::class, 'id_item')->where('estado', 'aprobado');
+    }
+
+    public function todasLasImagenes()
     {
         return $this->hasMany(ImagenItem::class, 'id_item');
     }

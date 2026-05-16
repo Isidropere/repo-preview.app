@@ -22,7 +22,7 @@ class SolicitudServicioController extends Controller
 
         $solicitudes = SolicitudServicio::where('id_proveedor', $userId)
             ->with([
-                'comprador.direcciones' => fn($q) => $q->where('es_predeterminada', 1)->with('municipio'),
+                'comprador.direcciones' => fn($q) => $q->where('es_predeterminada', 1)->with(['municipio', 'provincia']),
                 'item.imagenes',
             ])
             ->orderByDesc('fecha_creacion')
@@ -69,15 +69,24 @@ class SolicitudServicioController extends Controller
      */
     public function enviarDesdeCarrito(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate(['id_item' => 'required|integer|exists:items,id_item']);
+        $request->validate([
+            'id_item' => 'required|integer|exists:items,id_item',
+            'fecha_servicio' => 'required|date|after_or_equal:today',
+        ]);
 
         $userId  = auth()->id();
         $idItem  = $request->id_item;
+        $fecha   = $request->fecha_servicio;
 
         $carrito = \App\Models\Carrito::where('id_user', $userId)->where('tipo', 'servicio')->first();
         if (!$carrito) {
             return response()->json(['success' => false, 'message' => 'No tienes carrito de servicios.'], 422);
         }
+
+        // Actualizar fecha en el item del carrito antes de crear la solicitud
+        \App\Models\ItemIntencionCompra::where('id_carrito', $carrito->id_carrito)
+            ->where('id_item', $idItem)
+            ->update(['fecha_servicio' => $fecha, 'es_seleccionado' => true]);
 
         $resultado = $this->service->crearDesdeCarrito($userId, $carrito);
 

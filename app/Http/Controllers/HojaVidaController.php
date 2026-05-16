@@ -22,7 +22,13 @@ class HojaVidaController extends Controller
 
         $esEdicion = $hojaVida->exists;
 
-        return view('hoja-vida.form', compact('hojaVida', 'esEdicion'));
+        // Preservar redirect_after si viene en la sesión
+        $redirectAfter = session('redirect_after');
+        if ($redirectAfter) {
+            session()->keep(['redirect_after']);
+        }
+
+        return view('hoja-vida.form', compact('hojaVida', 'esEdicion', 'redirectAfter'));
     }
 
     public function save(Request $request)
@@ -49,6 +55,13 @@ class HojaVidaController extends Controller
             ['id_user' => auth()->id()],
             $validated
         );
+
+        $redirectRoute = $request->input('redirect_after') ?? session('redirect_after');
+
+        if ($redirectRoute && \Illuminate\Support\Facades\Route::has($redirectRoute)) {
+            return redirect()->route($redirectRoute)
+                ->with('success', 'Hoja de vida guardada. ¡Ahora puedes publicar tu talento!');
+        }
 
         return redirect()->route('hoja-vida.form')->with('success', 'Hoja de vida guardada exitosamente.');
     }

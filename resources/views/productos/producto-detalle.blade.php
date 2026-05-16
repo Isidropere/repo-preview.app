@@ -170,9 +170,10 @@
                     <div style="display:flex;flex-wrap:wrap;gap:0.45rem;">
                         @foreach($colores as $color)
                         <button onclick="selectColor('{{ $color->nombre }}', this)"
+                                data-color-id="{{ $color->id_color }}"
                                 style="width:2.1rem;height:2.1rem;border-radius:50%;border:2.5px solid {{ $loop->first ? '#3b82f6' : '#e2e8f0' }};background:{{ $color->codigo ?? '#ccc' }};cursor:pointer;transition:transform .15s,border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.1);"
                                 title="{{ $color->nombre }} ({{ $color->pivot->stock ?? 0 }} uds)"
-                                class="color-btn"
+                                class="color-btn {{ $loop->first ? 'selected-color' : '' }}"
                                 onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">
                         </button>
                         @endforeach
@@ -640,8 +641,12 @@ if (qi) qi.addEventListener('input', function() {
 
 function selectColor(name, el) {
     document.getElementById('selectedColorName').textContent = name;
-    document.querySelectorAll('.color-btn').forEach(b => b.style.borderColor = '#e2e8f0');
+    document.querySelectorAll('.color-btn').forEach(b => {
+        b.style.borderColor = '#e2e8f0';
+        b.classList.remove('selected-color');
+    });
     el.style.borderColor = '#3b82f6';
+    el.classList.add('selected-color');
 }
 
 function mostrarModalOferta() {
@@ -746,6 +751,9 @@ document.getElementById('negEnviarBtn')?.addEventListener('click', async functio
     this.disabled = true;
     this.textContent = 'Enviando...';
 
+    const colorBtn = document.querySelector('.color-btn.selected-color');
+    const id_color = colorBtn ? colorBtn.dataset.colorId : null;
+
     try {
         const res = await fetch('{{ route("carrito.save_negociaciones") }}', {
             method: 'POST',
@@ -754,7 +762,7 @@ document.getElementById('negEnviarBtn')?.addEventListener('click', async functio
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ item_id: itemId, mensaje, paquete_id: paquete, monto_oferta: monto })
+            body: JSON.stringify({ item_id: itemId, mensaje, paquete_id: paquete, monto_oferta: monto, id_color })
         });
 
         if (res.status === 401 || res.redirected) { window.location.href = '{{ route("login") }}'; return; }
@@ -904,8 +912,12 @@ window.agregarAlCarrito = async function(id_item) {
     const ld = btn?.querySelector('.loading');
     if (bt) bt.textContent='Agregando...';
     if (ld) ld.style.display='inline-block';
+    
+    const colorBtn = document.querySelector('.color-btn.selected-color');
+    const id_color = colorBtn ? colorBtn.dataset.colorId : null;
+
     try {
-        const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token,'Accept':'application/json'},body:JSON.stringify({id_item,cantidad:qty})});
+        const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token,'Accept':'application/json'},body:JSON.stringify({id_item,cantidad:qty, id_color})});
         if (res.status===401||res.redirected){window.location.href='{{ route("login") }}';return;}
         const data = await res.json();
         if (!res.ok) throw new Error(data.message||'Error');

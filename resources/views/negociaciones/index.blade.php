@@ -48,6 +48,27 @@
                 </div>
             </div>
 
+            {{-- Ubicación del receptor (solo servicios/talentos) para que el emisor decida --}}
+            @if((int)($itemModel->id_categoria_item ?? 0) === 29)
+            @php
+                $dirReceptor = $itemModel->direccionPredeterminada;
+                $provinciaReceptor = $dirReceptor?->provincia?->provincia ?? null;
+                $municipioReceptor = $dirReceptor?->municipio?->municipio ?? null;
+            @endphp
+            <div class="mb-5 p-4 rounded-xl border" style="background:#eff6ff;border-color:#bfdbfe;">
+                <p class="text-xs font-bold mb-2" style="color:#1e40af;">📍 Ubicación del prestador del servicio</p>
+                @if($municipioReceptor || $provinciaReceptor)
+                <p class="text-sm font-semibold text-gray-800">
+                    {{ $municipioReceptor }}@if($municipioReceptor && $provinciaReceptor), @endif{{ $provinciaReceptor }}
+                </p>
+                <p class="text-xs mt-1" style="color:#3730a3;">Verifica si la distancia es conveniente antes de enviar tu propuesta.</p>
+                @else
+                <p class="text-xs text-gray-400 italic">El prestador aún no tiene una dirección registrada.</p>
+                @endif
+            </div>
+            @endif
+
+
             {{-- Formulario de negociación --}}
             <form id="formNegociacion" class="space-y-4">
                 @csrf

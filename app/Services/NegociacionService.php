@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\Negociacion;
 use App\Models\Paquete;
 use App\Models\PredefinedMessage;
+use App\Services\ERPService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -31,6 +32,10 @@ use Illuminate\Support\Facades\Log;
  */
 class NegociacionService
 {
+    public function __construct(
+        private ERPService $erpService,
+    ) {}
+
     // Estados que permiten cada acción
     private const ESTADOS_ACEPTAR     = ['Inicial', 'contraoferta'];
     private const ESTADOS_RECHAZAR    = ['Inicial', 'contraoferta'];
@@ -56,7 +61,7 @@ class NegociacionService
             return $this->error('No puedes negociar contigo mismo.');
         }
 
-        // Validar stock
+        // Validar stock — Reinstaurado para todos los ítems (incluyendo servicios) por lógica de cobro
         $stock = $receptorItem->inventarios?->cantidad ?? 0;
         if ($stock <= 0) {
             return $this->error('Este artículo está agotado y no se puede negociar.');
@@ -86,6 +91,7 @@ class NegociacionService
 
         $negociacion = Negociacion::create([
             'receptor_item_id'    => $receptorItem->id_item,
+            'id_color'            => $datos['id_color'] ?? null,
             'emisor_paquete_id'   => $emisorPaquete?->id_paquete,
             'usuario_emisor_id'   => $emisorId,
             'usuario_receptor_id' => $receptorItem->id_user,
@@ -106,8 +112,8 @@ class NegociacionService
 
         // Notificar al receptor
         $emisor = \App\Models\User::find($emisorId);
-        $textoNotif = "Tienes una nueva propuesta de intercambio por tu producto \"{$receptorItem->item}\" de {$emisor->nombres}.";
-        event(new \App\Events\NuevaNotificacion($textoNotif, $receptorItem->id_user));
+        $textoNotif = "[Intercambio] Tienes una nueva propuesta de intercambio por tu producto \"{$receptorItem->item}\" de {$emisor->nombres}.";
+        $this->notificar($receptorItem->id_user, $textoNotif);
 
         return $this->ok('Negociación enviada correctamente.');
     }
@@ -131,7 +137,7 @@ class NegociacionService
             return $this->error("No se puede aceptar una negociación en estado \"{$neg->estado}\".");
         }
 
-        // Validar que el item siga activo
+        // Al aceptar un intercambio de servicio, notificar al receptor con la ubicación del emisor
         $itemNeg = Item::find($neg->receptor_item_id);
         if (!$itemNeg || $itemNeg->estatus != 1) {
             $neg->update(['estado' => 'cancelado']);
@@ -152,8 +158,9 @@ class NegociacionService
 
                 $neg->update(['estado' => 'aceptado']);
 
-                // Descontar inventario
+                // Descontar inventario (Reinstaurado para todos los ítems por lógica de cobro)
                 $item = Item::with('inventarios')->find($neg->receptor_item_id);
+
                 if ($item && $item->inventarios && $item->inventarios->cantidad > 0) {
                     $item->inventarios->cantidad -= 1;
                     $item->inventarios->save();
@@ -170,10 +177,7 @@ class NegociacionService
 
             // Notificar al emisor que fue aceptado
             $receptor = \App\Models\User::find($userId);
-            event(new \App\Events\NuevaNotificacion(
-                "¡Tu propuesta de intercambio fue aceptada por {$receptor->nombres}! Confirma para continuar.",
-                $neg->usuario_emisor_id
-            ));
+            $this->notificar($neg->usuario_emisor_id, "[Intercambio] ¡Tu propuesta de intercambio fue aceptada por {$receptor->nombres}! Confirma para continuar.");
 
             return $this->ok('Negociación aceptada.');
         } catch (\RuntimeException $e) {
@@ -219,10 +223,7 @@ class NegociacionService
                 }
             });
 
-            event(new \App\Events\NuevaNotificacion(
-                "El emisor aceptó tu contraoferta en el intercambio #{$neg->id_negociacion}. Confirma para continuar.",
-                $neg->usuario_receptor_id
-            ));
+            $this->notificar($neg->usuario_receptor_id, "[Intercambio] El emisor aceptó tu contraoferta en el intercambio #{$neg->id_negociacion}. Confirma para continuar.");
 
             return $this->ok('Contraoferta aceptada. El intercambio está en estado aceptado.');
         } catch (\RuntimeException $e) {
@@ -255,10 +256,7 @@ class NegociacionService
 
         // Notificar al emisor
         $receptor = \App\Models\User::find($userId);
-        event(new \App\Events\NuevaNotificacion(
-            "Tu propuesta de intercambio fue rechazada por {$receptor->nombres}.",
-            $neg->usuario_emisor_id
-        ));
+        $this->notificar($neg->usuario_emisor_id, "[Intercambio] Tu propuesta de intercambio fue rechazada por {$receptor->nombres}.");
 
         return $this->ok('Negociación rechazada.');
     }
@@ -282,6 +280,7 @@ class NegociacionService
         }
 
         $neg->update(['estado' => 'cancelado']);
+        $this->notificar($neg->usuario_receptor_id, "[Intercambio] El intercambio #{$neg->id_negociacion} ha sido cancelado por el emisor.");
         return $this->ok('Negociación cancelada.');
     }
 
@@ -318,6 +317,8 @@ class NegociacionService
             );
         }
 
+        $this->notificar($neg->usuario_emisor_id, "[Intercambio] Tienes una contraoferta en el intercambio #{$neg->id_negociacion}.");
+
         return $this->ok('Contraoferta enviada.');
     }
 
@@ -347,15 +348,15 @@ class NegociacionService
         $neg->update(['emisor_confirmado' => true]);
 
         // Notificar al receptor que el emisor aprobó
-        event(new \App\Events\NuevaNotificacion(
-            "El emisor aprobó el intercambio #{$neg->id_negociacion}. Ahora aprueba tú para continuar.",
-            $neg->usuario_receptor_id
-        ));
+        $this->notificar($neg->usuario_receptor_id, "[Intercambio] El emisor aprobó el intercambio #{$neg->id_negociacion}. Ahora aprueba tú para continuar.");
 
-        // Notificar a administradores
-        $this->notificarAdmins($neg);
+        // Solo notificar admins cuando AMBAS partes hayan confirmado
+        $negFresh = $neg->fresh();
+        if ($negFresh->emisor_confirmado && $negFresh->receptor_confirmado) {
+            $this->notificarConfirmacionMutua($negFresh);
+        }
 
-        return $this->ok('Confirmación registrada. Los administradores han sido notificados para gestionar el envío.');
+        return $this->ok('Confirmación registrada. Esperando aprobación del receptor para continuar.');
     }
 
     /**
@@ -382,18 +383,26 @@ class NegociacionService
 
         $neg->update(['receptor_confirmado' => true]);
 
-        // Notificar al emisor que el receptor aprobó
-        event(new \App\Events\NuevaNotificacion(
-            "El receptor aprobó el intercambio #{$neg->id_negociacion}. Ambos han confirmado.",
-            $neg->usuario_emisor_id
-        ));
+        // Determinar si es servicio vs servicio para personalizar mensaje
+        $itemSolicitado = Item::find($neg->receptor_item_id);
+        $itemsOfrecidos = $neg->items_ofrecidos ? Item::whereIn('id_item', $neg->items_ofrecidos)->get() : collect();
+        $esServicioServicio = ($itemSolicitado && $itemSolicitado->id_categoria_item == 29) && 
+                             ($itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29));
 
-        // Si ambos confirmaron, notificar admins
-        if ($neg->emisor_confirmado) {
-            $this->notificarAdminsCompletado($neg);
+        $msgNotif = $esServicioServicio 
+            ? "El receptor aprobó el intercambio #{$neg->id_negociacion}. ¡Ambos confirmaron! Coordinen la prestación del servicio."
+            : "El receptor aprobó el intercambio #{$neg->id_negociacion}. ¡Ambos confirmaron! Procede al pago de envío.";
+
+        // Notificar al emisor que el receptor aprobó
+        $this->notificar($neg->usuario_emisor_id, "[Intercambio] " . $msgNotif);
+
+        // Si ambos confirmaron, notificar (una única vez)
+        $negFresh = $neg->fresh();
+        if ($negFresh->emisor_confirmado && $negFresh->receptor_confirmado) {
+            $this->notificarConfirmacionMutua($negFresh);
         }
 
-        return $this->ok('Has aprobado el intercambio.');
+        return $this->ok('Has aprobado el intercambio. ¡Ambos han confirmado! Procede al pago del envío.');
     }
 
     /**
@@ -454,7 +463,7 @@ class NegociacionService
             ? "El dueño del producto eligió enviarlo. Se notificará a los administradores para gestionar el envío."
             : "El dueño del producto eligió entrega en persona. Coordinen el retiro directamente.";
 
-        event(new \App\Events\NuevaNotificacion($textoModo, $otroId));
+        $this->notificar($otroId, "[Intercambio] " . $textoModo);
 
         if ($modo === 'envio') {
             $this->notificarAdminsEntrega($neg, 'envio');
@@ -482,7 +491,7 @@ class NegociacionService
             if (!\Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'modo_entrega')) {
                 $neg->update(['entrega_confirmada' => true, 'estado' => 'completado']);
                 $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
-                event(new \App\Events\NuevaNotificacion("✅ Intercambio #{$neg->id_negociacion} completado.", $otroId));
+                $this->notificar($otroId, "[Intercambio] ✅ Intercambio #{$neg->id_negociacion} completado.");
                 return $this->ok('Entrega confirmada. El intercambio está completado.');
             }
             return $this->error('El dueño del producto aún no ha seleccionado el modo de entrega.');
@@ -524,11 +533,11 @@ class NegociacionService
         }
         $neg->update($updateData);
 
+        // ERP: Registrar salidas del almacén por el intercambio completado
+        $this->erpService->registrarSalidaIntercambio($neg);
+
         $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
-        event(new \App\Events\NuevaNotificacion(
-            "✅ El intercambio #{$neg->id_negociacion} fue completado. El receptor confirmó la entrega del producto.",
-            $otroId
-        ));
+        $this->notificar($otroId, "[Intercambio] ✅ El intercambio #{$neg->id_negociacion} fue completado. El receptor confirmó la entrega del producto.");
 
         $this->notificarAdminsEntrega($neg, 'completado');
 
@@ -545,7 +554,7 @@ class NegociacionService
                 default      => "Intercambio #{$neg->id_negociacion} actualizado.",
             };
             foreach ($admins as $admin) {
-                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+                $this->notificar($admin->id, "[Intercambio] " . $texto);
             }
         } catch (\Throwable $e) {
             Log::warning('No se pudo notificar a admins (entrega)', ['error' => $e->getMessage()]);
@@ -553,28 +562,87 @@ class NegociacionService
     }
 
     /**
-     * Notifica a todos los administradores que un intercambio está listo para envío.
+     * Notifica a admins y usuarios cuando ambos han confirmado (antes del pago)
      */
-    private function notificarAdmins(Negociacion $neg): void
+    private function notificarConfirmacionMutua(Negociacion $neg): void
     {
         try {
-            $admins = \App\Models\User::where('isAdmin', true)->get();
-            $texto = "Intercambio #{$neg->id_negociacion} confirmado por ambas partes. Gestiona el envío.";
+            $esServicio = $this->esServicioServicio($neg);
+            $esMixto    = $this->esProductoServicio($neg);
+            $admins     = \App\Models\User::where('isAdmin', true)->get();
+
+            if ($esServicio) {
+                $texto = "🤝 Intercambio de SERVICIOS #{$neg->id_negociacion}: ambos usuarios confirmaron. Coordinarán directamente.";
+            } elseif ($esMixto) {
+                $texto = "🤝 Intercambio MIXTO #{$neg->id_negociacion}: ambos confirmaron. Esperando pago de envío del producto físico.";
+            } else {
+                $texto = "🤝 Intercambio de PRODUCTOS #{$neg->id_negociacion}: ambos confirmaron. Esperando pagos de envío.";
+            }
+
             foreach ($admins as $admin) {
-                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+                $this->notificar($admin->id, "[Intercambio] " . $texto);
             }
         } catch (\Throwable $e) {
-            Log::warning('No se pudo notificar a admins', ['error' => $e->getMessage()]);
+            Log::warning('Error en notificarConfirmacionMutua', ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Verifica si una negociación es Producto vs Servicio (mixto)
+     */
+    public function esProductoServicio(Negociacion $neg): bool
+    {
+        $itemSolicitado = Item::find($neg->receptor_item_id);
+        $itemsOfrecidos = $neg->items_ofrecidos ? Item::whereIn('id_item', $neg->items_ofrecidos)->get() : collect();
+
+        $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
+        $ofrecidosServicio    = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
+
+        // Mixto: uno servicio y el otro no
+        return ($solicitadoEsServicio && !$ofrecidosServicio) || (!$solicitadoEsServicio && $ofrecidosServicio);
+    }
+
+    /**
+     * Verifica si una negociación es Servicio vs Servicio
+     */
+    public function esServicioServicio(Negociacion $neg): bool
+    {
+        $itemSolicitado = Item::find($neg->receptor_item_id);
+        $itemsOfrecidos = $neg->items_ofrecidos ? Item::whereIn('id_item', $neg->items_ofrecidos)->get() : collect();
+
+        $solicitadoEsServicio = $itemSolicitado && $itemSolicitado->id_categoria_item == 29;
+        $ofrecidosServicio    = $itemsOfrecidos->isNotEmpty() && $itemsOfrecidos->every(fn($i) => $i->id_categoria_item == 29);
+        
+        // Fallback para paquetes de servicio
+        if (!$ofrecidosServicio && $itemsOfrecidos->isEmpty() && $solicitadoEsServicio) {
+            $ofrecidosServicio = true;
+        }
+
+        return $solicitadoEsServicio && $ofrecidosServicio;
+    }
+
+    /**
+     * Verifica si una negociación es Producto vs Producto
+     */
+    public function esProductoProducto(Negociacion $neg): bool
+    {
+        return !$this->esServicioServicio($neg) && !$this->esProductoServicio($neg);
     }
 
     public function notificarAdminsCompletado(Negociacion $neg): void
     {
         try {
             $admins = \App\Models\User::where('isAdmin', true)->get();
-            $texto  = "✅ Intercambio #{$neg->id_negociacion} completado. Ambos usuarios pagaron. Procede con el envío.";
+            $esMixto = $this->esProductoServicio($neg);
+            
+            if ($esMixto) {
+                $texto = "📦 Intercambio MIXTO (Prod↔Serv) #{$neg->id_negociacion}: pago realizado. Gestiona el envío del producto físico.";
+            } else {
+                $texto = "📦 Intercambio #{$neg->id_negociacion}: ambos usuarios pagaron el envío. Procede a gestionar y despachar los productos. (Panel Admin → Intercambios Confirmados)";
+            }
+
             foreach ($admins as $admin) {
-                event(new \App\Events\NuevaNotificacion($texto, $admin->id));
+                $this->notificar($admin->id, "[Intercambio] " . $texto);
             }
         } catch (\Throwable $e) {
             Log::warning('No se pudo notificar a admins (completado)', ['error' => $e->getMessage()]);
@@ -601,6 +669,13 @@ class NegociacionService
         }
 
         $neg->update(['estado' => 'completado']);
+
+        // ERP: Registrar salidas del almacén por el intercambio completado
+        $this->erpService->registrarSalidaIntercambio($neg);
+
+        $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
+        $this->notificar($otroId, "[Intercambio] El intercambio #{$neg->id_negociacion} ha sido marcado como completado.");
+
         return $this->ok('Intercambio marcado como completado.');
     }
 
@@ -699,5 +774,20 @@ class NegociacionService
     private function error(string $message): array
     {
         return ['success' => false, 'message' => $message];
+    }
+
+    private function notificar(int $userId, string $mensaje): void
+    {
+        try {
+            Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $userId,
+                'mensaje'     => $mensaje,
+                'leido'       => false,
+            ]);
+            event(new \App\Events\NuevaNotificacion($mensaje, $userId));
+        } catch (\Throwable $e) {
+            Log::warning('Error al notificar en NegociacionService', ['user_id' => $userId, 'error' => $e->getMessage()]);
+        }
     }
 }
