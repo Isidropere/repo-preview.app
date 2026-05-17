@@ -5,10 +5,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     #map-container { height: 350px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #e5e7eb; }
-    .form-input { w-full; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; box-sizing: border-box; width: 100%; }
+    .form-input { padding: 11px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s ease-in-out; box-sizing: border-box; width: 100%; background-color: #fff; }
     .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
     .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
-    .btn-gps { background: #0ea5e9; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-gps { background: #0ea5e9; color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 11px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; height: auto; box-sizing: border-box; }
     .btn-gps:hover { background: #0284c7; }
     .btn-gps:disabled { background: #94a3b8; cursor: not-allowed; }
 </style>
@@ -46,7 +46,7 @@
         <form action="{{ route('transporte.store') }}" method="POST" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             @csrf
             <div class="p-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Información Personal</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Información del Solicitante</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
                         <label class="form-label">Nombre <span class="text-red-500">*</span></label>
@@ -64,23 +64,23 @@
                         <label class="form-label">Teléfono <span class="text-red-500">*</span></label>
                         <input type="text" name="telefono" value="{{ old('telefono', Auth::check() ? Auth::user()->telefono : '') }}" required class="form-input">
                     </div>
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="form-label">Correo Electrónico <span class="text-red-500">*</span></label>
                         <input type="email" name="correo" value="{{ old('correo', Auth::check() ? Auth::user()->email : '') }}" required class="form-input">
                     </div>
-                </div>
-
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Detalles del Servicio</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
                         <label class="form-label">Fecha del Servicio <span class="text-red-500">*</span></label>
                         <input type="date" name="fecha_servicio" value="{{ old('fecha_servicio') }}" required min="{{ date('Y-m-d') }}" class="form-input">
                     </div>
-                    <div class="md:col-span-2">
+                </div>
+
+                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Detalles del Servicio</h2>
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <div>
                         <label class="form-label">Dirección Exacta (Origen o Destino principal) <span class="text-red-500">*</span></label>
                         <input type="text" name="direccion" value="{{ old('direccion') }}" required class="form-input" placeholder="Ej: Av. Winston Churchill esq. Gustavo Mejía Ricart, Piantini">
                     </div>
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="form-label">Dimensiones y Detalles de la Carga <span class="text-red-500">*</span></label>
                         <textarea name="dimensiones_carga" required class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
                     </div>
@@ -90,8 +90,8 @@
                 <div class="mb-8">
                     <p class="text-sm text-gray-500 mb-4">Ayúdanos a localizar el punto exacto marcándolo en el mapa o utilizando tu GPS.</p>
                     
-                    <div class="flex gap-4 mb-4">
-                        <input type="text" id="coordenadas" name="ubicacion_geologica" value="{{ old('ubicacion_geologica') }}" readonly class="form-input bg-gray-50" placeholder="Haz clic en el mapa para capturar las coordenadas">
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4 items-stretch">
+                        <input type="text" id="coordenadas" name="ubicacion_geologica" value="{{ old('ubicacion_geologica') }}" readonly class="flex-1 form-input bg-gray-50 cursor-pointer" placeholder="Haz clic en el mapa para capturar las coordenadas">
                         <button type="button" id="btn-gps" class="btn-gps">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             Usar mi GPS
