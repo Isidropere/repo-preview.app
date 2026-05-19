@@ -90,6 +90,69 @@ class AuthApiController extends Controller
         return response()->json($this->formatUser($request->user()));
     }
 
+    /** POST /api/auth/cambiar-contrasena */
+    public function cambiarContrasena(Request $request)
+    {
+        $request->validate([
+            'password_actual'       => 'required|string',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password_actual, $user->password)) {
+            return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        // Revocar todos los tokens para forzar re-login (seguridad)
+        $user->tokens()->delete();
+        $newToken = $user->createToken('mobile-app')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente.',
+            'token'   => $newToken,
+        ]);
+    }
+
+    /** POST /api/auth/profile */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'nombres'           => 'sometimes|string|max:100',
+            'apellidos'         => 'sometimes|string|max:100',
+            'telefono'          => 'nullable|string|max:20',
+            'nombre_usuario'    => 'nullable|string|max:50|unique:users,nombre_usuario,' . $user->id,
+            'profile_photo'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'profile_photo_url' => 'nullable|url',
+        ]);
+
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $resultado = \App\Helpers\ImageHelper::guardar($file, 'imgs/profiles', 'profile_', $user->id);
+            $user->profile_photo_path = $resultado['path'];
+            $user->foto_perfil_estado = 'pendiente';
+        } elseif ($request->filled('profile_photo_url')) {
+            $user->profile_photo_path = $request->profile_photo_url;
+            $user->foto_perfil_estado = 'aprobado';
+        }
+
+        $fields = array_filter($request->only('nombres', 'apellidos', 'telefono', 'nombre_usuario'));
+        if (!empty($fields)) {
+            $user->update($fields);
+        } else {
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente.',
+            'user'    => $this->formatUser($user),
+        ]);
+    }
+
     private function formatUser(User $user): array
     {
         $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($user->nombres . ' ' . $user->apellidos) . '&background=f58634&color=fff&size=128';
@@ -102,7 +165,7 @@ class AuthApiController extends Controller
             'nombre_usuario'    => $user->nombre_usuario,
             'id_tipo_usuario'   => $user->id_tipo_usuario,
             'profile_photo_url' => $user->profile_photo_path
-                ? url($user->profile_photo_path)
+                ? (filter_var($user->profile_photo_path, FILTER_VALIDATE_URL) ? $user->profile_photo_path : url($user->profile_photo_path))
                 : $avatarUrl,
         ];
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SolicitudTransporte;
+use App\Models\TransporteArticulo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Events\NuevaNotificacion;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class AdminTransporteController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SolicitudTransporte::orderBy('created_at', 'desc');
+        $query = SolicitudTransporte::with('articulos')->orderBy('created_at', 'desc');
 
         // Filtro por Estado
         if ($request->filled('estado')) {
@@ -45,7 +46,11 @@ class AdminTransporteController extends Controller
         }
 
         $solicitudes = $query->paginate(20)->appends($request->all());
-        return view('admin.transporte.index', compact('solicitudes'));
+        
+        // Obtener el catálogo completo de artículos para la pestaña de gestión del admin
+        $articulos = TransporteArticulo::orderBy('nombre', 'asc')->get();
+
+        return view('admin.transporte.index', compact('solicitudes', 'articulos'));
     }
 
     /**
@@ -107,9 +112,61 @@ class AdminTransporteController extends Controller
      */
     public function generarPdf($id)
     {
-        $solicitud = SolicitudTransporte::findOrFail($id);
+        $solicitud = SolicitudTransporte::with('articulos')->findOrFail($id);
         $pdf = Pdf::loadView('admin.transporte.pdf', compact('solicitud'));
         
         return $pdf->download('solicitud_transporte_' . $solicitud->id . '.pdf');
     }
+
+    /**
+     * Guarda un nuevo artículo en el catálogo.
+     */
+    public function storeArticulo(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'categoria' => 'required|in:transporte,mudanza,ambos',
+        ]);
+
+        TransporteArticulo::create([
+            'nombre' => $request->nombre,
+            'categoria' => $request->categoria,
+            'estatus' => true,
+        ]);
+
+        return back()->with('success', '¡Artículo agregado con éxito al catálogo de transporte!');
+    }
+
+    /**
+     * Actualiza un artículo del catálogo.
+     */
+    public function updateArticulo(Request $request, $id)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'categoria' => 'required|in:transporte,mudanza,ambos',
+            'estatus' => 'required|boolean',
+        ]);
+
+        $articulo = TransporteArticulo::findOrFail($id);
+        $articulo->update([
+            'nombre' => $request->nombre,
+            'categoria' => $request->categoria,
+            'estatus' => $request->estatus,
+        ]);
+
+        return back()->with('success', '¡Artículo actualizado con éxito!');
+    }
+
+    /**
+     * Elimina un artículo del catálogo.
+     */
+    public function destroyArticulo($id)
+    {
+        $articulo = TransporteArticulo::findOrFail($id);
+        $articulo->delete();
+
+        return back()->with('success', '¡Artículo eliminado con éxito del catálogo!');
+    }
 }
+

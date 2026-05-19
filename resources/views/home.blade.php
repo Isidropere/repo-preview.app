@@ -113,23 +113,37 @@
                         <div id="my-keen-slider" class="keen-slider">
                             @forelse($productosIntercambio as $prod)
                             <div class="keen-slider__slide">
-                                <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
-                                    <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                        @php $imgProd = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida = $imgProd && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd->nombre); @endphp
-                                        @if($imgValida)
-                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy" width="400" height="224">
-                                        @else
-                                            <div class="h-56 w-full bg-gray-200 flex items-center justify-center text-gray-400">Sin imagen</div>
-                                        @endif
+                                <article class="flex flex-col h-[380px] sm:h-[400px] overflow-hidden rounded-xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:shadow-md">
+                                    <a href="{{ route('producto.detalle', $prod->slug) }}" class="block overflow-hidden relative h-52 sm:h-56">
+                                        @php 
+                                            $imgProd = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
+                                            $imgNombre = $imgProd?->nombre;
+                                            $imgSrc = $imgNombre
+                                                ? \App\Helpers\ImageHelper::urlMedia($imgProd->ruta ?? 'imgs/articulos/items', $imgNombre)
+                                                : asset('imgs/defaults/producto_default.svg');
+                                        @endphp
+                                        <img alt="{{ $prod->item }}" 
+                                             src="{{ $imgSrc }}" 
+                                             class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
+                                             loading="lazy" 
+                                             width="400" 
+                                             height="224"
+                                             onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
                                     </a>
-                                    <div class="bg-white p-4 sm:p-6">
-                                        <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                            <h3 class="mt-0.5 text-lg text-gray-900">{{ $prod->item }}</h3>
-                                        </a>
-                                        <div class="flex justify-between">
-                                            <h3 class="mt-2 line-clamp-3 text-md text-gray-500">
-                                                {{ $prod->direccionPredeterminada->municipio->municipio ?? 'República Dominicana' }} | {{ match($prod->condicion) { 1 => 'Nuevo', 2 => 'Como nuevo', default => 'Usado' } }}
-                                            </h3>
+                                    <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                                        <div>
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
+                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 line-clamp-2 leading-snug">{{ $prod->item }}</h3>
+                                            </a>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                                            <span class="inline-flex items-center gap-1 text-xs sm:text-sm text-gray-500">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                {{ $prod->direccionPredeterminada->municipio->municipio ?? 'República Dominicana' }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-800">
+                                                {{ match($prod->condicion) { 1 => 'Nuevo', 2 => 'Como nuevo', default => 'Usado' } }}
+                                            </span>
                                         </div>
                                     </div>
                                 </article>
@@ -233,25 +247,35 @@
                         <div id="keen-slider" class="keen-slider">
                             @forelse($productosVenta as $prod)
                             <div class="keen-slider__slide">
-                                <article class="overflow-hidden rounded-lg shadow transition hover:shadow-lg">
-                                    <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                        @php $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first(); $imgValida2 = $imgProd2 && preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $imgProd2->nombre); @endphp
-                                        @if($imgValida2)
-                                            <img alt="{{ $prod->item }}" src="{{ \App\Helpers\ImageHelper::urlItem($imgProd2, $prod->id_categoria_item ?? 0) }}" class="h-56 w-full object-cover" loading="lazy" width="400" height="224">
-                                        @else
-                                            <div class="h-56 w-full bg-gray-200 flex items-center justify-center text-gray-400">Sin imagen</div>
-                                        @endif
+                                <article class="flex flex-col h-[380px] sm:h-[400px] overflow-hidden rounded-xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:shadow-md">
+                                    <a href="{{ route('producto.detalle', $prod->slug) }}" class="block overflow-hidden relative h-52 sm:h-56">
+                                        @php 
+                                            $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
+                                            $imgNombre2 = $imgProd2?->nombre;
+                                            $imgSrc2 = $imgNombre2
+                                                ? \App\Helpers\ImageHelper::urlMedia($imgProd2->ruta ?? 'imgs/articulos/items', $imgNombre2)
+                                                : asset('imgs/defaults/producto_default.svg');
+                                        @endphp
+                                        <img alt="{{ $prod->item }}" 
+                                             src="{{ $imgSrc2 }}" 
+                                             class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
+                                             loading="lazy" 
+                                             width="400" 
+                                             height="224"
+                                             onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
                                     </a>
-                                    <div class="bg-white p-4 sm:p-6">
-                                        <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                            <h3 class="mt-0.5 text-lg text-gray-900">{{ $prod->item }}</h3>
-                                        </a>
-                                        <div class="flex justify-between">
-                                            <h3 class="mt-2 line-clamp-3 text-md text-gray-500">
+                                    <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                                        <div>
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
+                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 line-clamp-2 leading-snug">{{ $prod->item }}</h3>
+                                            </a>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                                            <span class="text-base sm:text-lg font-black text-gray-900">
                                                 RD$ {{ number_format($prod->valor, 2) }}
-                                            </h3>
-                                            <a href="{{ route('producto.detalle', $prod->slug) }}">
-                                                <svg class="h-8 w-8 fill-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="10.5" cy="19.5" r="1.5"></circle><circle cx="17.5" cy="19.5" r="1.5"></circle><path d="M13 13h2v-2.99h2.99v-2H15V5.03h-2v2.98h-2.99v2H13V13z"></path><path d="M10 17h8a1 1 0 0 0 .93-.64L21.76 9h-2.14l-2.31 6h-6.64L6.18 4.23A2 2 0 0 0 4.33 3H2v2h2.33l4.75 11.38A1 1 0 0 0 10 17z"></path></svg>
+                                            </span>
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+                                                <svg class="h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="10.5" cy="19.5" r="1.5"></circle><circle cx="17.5" cy="19.5" r="1.5"></circle><path d="M13 13h2v-2.99h2.99v-2H15V5.03h-2v2.98h-2.99v2H13V13z"></path><path d="M10 17h8a1 1 0 0 0 .93-.64L21.76 9h-2.14l-2.31 6h-6.64L6.18 4.23A2 2 0 0 0 4.33 3H2v2h2.33l4.75 11.38A1 1 0 0 0 10 17z"></path></svg>
                                             </a>
                                         </div>
                                     </div>

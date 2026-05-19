@@ -13,6 +13,7 @@ class SolicitudTransporte extends Model
 
     protected $fillable = [
         'id_usuario',
+        'tipo_servicio',
         'nombre',
         'apellido',
         'cedula',
@@ -30,10 +31,21 @@ class SolicitudTransporte extends Model
     ];
 
     /**
+     * Relación con los artículos seleccionados en esta solicitud
+     */
+    public function articulos()
+    {
+        return $this->belongsToMany(TransporteArticulo::class, 'solicitud_transporte_articulo', 'solicitud_transporte_id', 'articulo_id')
+                    ->withPivot('cantidad')
+                    ->withTimestamps();
+    }
+
+    /**
      * Relación opcional con el usuario
      */
     public function usuario()
     {
         return $this->belongsTo(User::class, 'id_usuario');
     }
+
 }

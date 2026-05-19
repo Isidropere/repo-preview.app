@@ -7,6 +7,8 @@ import '../core/theme.dart';
 import 'login_screen.dart';
 import 'item_detail_screen.dart';
 import 'items_list_screen.dart';
+import 'carrito_screen.dart';
+import 'publicar_articulo_screen.dart';
 
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
@@ -196,7 +198,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kSecondary,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
@@ -227,13 +230,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
                             style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
                             child: const Text('Vender', style: TextStyle(color: Colors.white)),
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
                             style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
                             child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
                           ),
@@ -261,7 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
-          onPressed: () {},
+          onPressed: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const CarritoScreen())),
         ),
         if (_user != null)
           Padding(

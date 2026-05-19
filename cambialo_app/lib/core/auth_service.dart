@@ -45,4 +45,13 @@ class AuthService {
     final token = await ApiClient.getToken();
     return token != null;
   }
+
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    final res = await ApiClient.post('/auth/profile', data, auth: true);
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return {'success': true, 'user': body['user']};
+    }
+    return {'success': false, 'message': body['message'] ?? 'Error al actualizar el perfil.'};
+  }
 }

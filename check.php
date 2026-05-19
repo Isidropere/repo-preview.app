@@ -38,7 +38,12 @@ try {
     echo Artisan::output();
     echo ($status === 0) ? "✅ Migraciones completadas.\n\n" : "⚠️  Aviso: El proceso terminó con código $status\n\n";
 
-    echo "2. Limpiando caché y optimizando...\n";
+    echo "2. Poblando datos del sistema (Cuentas, Configuración)...\n";
+    Artisan::call('db:seed', ['--class' => 'SystemDataSeeder', '--force' => true]);
+    echo Artisan::output();
+    echo "✅ Datos poblados.\n\n";
+
+    echo "3. Limpiando caché y optimizando...\n";
     Artisan::call('optimize:clear');
     echo Artisan::output();
     Artisan::call('optimize');

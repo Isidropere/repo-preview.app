@@ -45,10 +45,9 @@
                                 class="text-gray-500 text-center">Imagen paso 3</span> </div>
                     </div>
                     <div class="flex-grow">
-                        <h2 class="font-semibold text-primary text-2xl mb-2">3. Gestiona ofertas</h2>
+                        <h2 class="font-semibold text-primary text-2xl mb-2">3. Vende de forma directa</h2>
                         <p>
-                            Los compradores interesados te contactarán a través de la plataforma. Responde a sus
-                            preguntas y acepta la mejor oferta.
+                            Los compradores añadirán tu artículo a su carrito y realizarán el pago de forma segura a través de la plataforma sin complicaciones.
                         </p>
                     </div>
                 </div> <!-- Paso 4 -->

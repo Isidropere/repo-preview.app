@@ -52,6 +52,26 @@
                     </select>
                 </div>
                 <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Categoría</label>
+                    <select name="categoria" class="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white w-48">
+                        <option value="">— Todas —</option>
+                        @foreach($categorias as $cat)
+                            <option value="{{ $cat->id_categoria_item }}" {{ request('categoria') == $cat->id_categoria_item ? 'selected' : '' }}>
+                                {{ $cat->categoria }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Disponibilidad</label>
+                    <select name="stock_filtro" class="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white">
+                        <option value="">— Todos —</option>
+                        <option value="disponible" {{ request('stock_filtro') === 'disponible' ? 'selected' : '' }}>Con Stock (>0)</option>
+                        <option value="bajo" {{ request('stock_filtro') === 'bajo' ? 'selected' : '' }}>Bajo Stock (1-3)</option>
+                        <option value="agotado" {{ request('stock_filtro') === 'agotado' ? 'selected' : '' }}>Agotado (0)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
                     <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Estatus</label>
                     <select name="estatus" class="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white">
                         <option value="">— Todos —</option>
@@ -66,7 +86,7 @@
                         </svg>
                         Buscar
                     </button>
-                    @if(request('buscar') || request('tipo') || request('estatus') !== null && request('estatus') !== '')
+                    @if(request('buscar') || request('tipo') || request('categoria') || request('stock_filtro') || request('estatus') !== null && request('estatus') !== '')
                         <a href="{{ route('admin.erp.inventario', array_filter(['kardex_desde' => request('kardex_desde'), 'kardex_hasta' => request('kardex_hasta'), 'kardex_tipo' => request('kardex_tipo'), 'kardex_ref' => request('kardex_ref')])) }}"
                             class="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-bold rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +98,7 @@
                 </div>
             </form>
 
-            @if(request('buscar') || request('tipo') || (request('estatus') !== null && request('estatus') !== ''))
+            @if(request('buscar') || request('tipo') || request('categoria') || request('stock_filtro') || (request('estatus') !== null && request('estatus') !== ''))
                 <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 flex-wrap">
                     <span class="text-xs text-gray-400 font-semibold">Filtros activos:</span>
                     @if(request('buscar'))
@@ -86,6 +106,14 @@
                     @endif
                     @if(request('tipo'))
                         <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium capitalize">Tipo: {{ request('tipo') }}</span>
+                    @endif
+                    @if(request('categoria'))
+                        @php $catFiltro = $categorias->firstWhere('id_categoria_item', request('categoria')); @endphp
+                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">Categoría: "{{ $catFiltro->categoria ?? request('categoria') }}"</span>
+                    @endif
+                    @if(request('stock_filtro'))
+                        @php $stockLabels = ['disponible' => 'Con Stock (>0)', 'bajo' => 'Bajo Stock (1-3)', 'agotado' => 'Agotado (0)']; @endphp
+                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">Stock: {{ $stockLabels[request('stock_filtro')] ?? request('stock_filtro') }}</span>
                     @endif
                     @if(request('estatus') !== null && request('estatus') !== '')
                         <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">Estatus: {{ request('estatus') == '1' ? 'Activo' : 'Inactivo' }}</span>
@@ -169,7 +197,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
             <form method="GET" action="{{ route('admin.erp.inventario') }}" class="flex flex-wrap items-end gap-4">
                 {{-- Mantener filtros del stock al filtrar kardex --}}
-                @foreach(['buscar','tipo','estatus'] as $sf)
+                @foreach(['buscar','tipo','categoria','stock_filtro','estatus'] as $sf)
                     @if(request($sf) !== null && request($sf) !== '')
                         <input type="hidden" name="{{ $sf }}" value="{{ request($sf) }}">
                     @endif
@@ -210,7 +238,7 @@
                         Filtrar
                     </button>
                     @if(request('kardex_desde') || request('kardex_hasta') || request('kardex_tipo') || request('kardex_ref'))
-                        <a href="{{ route('admin.erp.inventario', array_filter(['buscar' => request('buscar'), 'tipo' => request('tipo'), 'estatus' => request('estatus')])) }}"
+                        <a href="{{ route('admin.erp.inventario', array_filter(['buscar' => request('buscar'), 'tipo' => request('tipo'), 'categoria' => request('categoria'), 'stock_filtro' => request('stock_filtro'), 'estatus' => request('estatus')])) }}"
                             class="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-bold rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

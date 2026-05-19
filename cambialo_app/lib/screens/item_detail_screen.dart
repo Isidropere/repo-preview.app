@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
+import 'propuesta_intercambio_screen.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -193,7 +194,23 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final loggedIn = await AuthService.isLoggedIn();
+                      if (!loggedIn) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Inicia sesión para proponer un intercambio'),
+                          backgroundColor: Colors.red,
+                        ));
+                        return;
+                      }
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => PropuestaIntercambioScreen(
+                          receptorItemId:  _item!['id_item'],
+                          nombreArticulo:  _item!['item'] ?? '',
+                          idCategoriaItem: _item!['id_categoria_item'],
+                        ),
+                      ));
+                    },
                     icon: const Icon(Icons.swap_horiz, color: kPrimary),
                     label: const Text('Proponer intercambio',
                         style: TextStyle(color: kPrimary, fontSize: 15)),

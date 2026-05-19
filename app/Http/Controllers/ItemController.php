@@ -1075,8 +1075,8 @@ class ItemController extends Controller
      */
     public function otrasCategorias()
     {
-        // IDs de categorías que ya aparecen en el home
-        $idsHome = [26, 27, 20, 19, 16, 4, 29];
+        // IDs de categorías que ya aparecen en el home o que se desean excluir (ej. Monetario = 10)
+        $idsHome = [26, 27, 20, 19, 16, 4, 29, 10];
 
         $categorias = CategoriaItem::whereNotIn('id_categoria_item', $idsHome)
             ->orderBy('categoria', 'asc')

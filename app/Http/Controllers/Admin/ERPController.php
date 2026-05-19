@@ -194,9 +194,11 @@ class ERPController extends Controller
     public function inventario()
     {
         // --- Filtros para el Stock Actual ---
-        $stockTipo    = request('tipo');    // 'producto' | 'servicio'
-        $stockEstatus = request('estatus'); // '1' | '0'
-        $stockBuscar  = request('buscar');  // nombre del artículo
+        $stockTipo      = request('tipo');      // 'producto' | 'servicio'
+        $stockEstatus   = request('estatus');   // '1' | '0'
+        $stockBuscar    = request('buscar');    // nombre del artículo
+        $stockCategoria = request('categoria'); // ID de categoría
+        $stockFiltro    = request('stock_filtro'); // 'agotado' | 'bajo' | 'disponible'
 
         $itemsQuery = \App\Models\Item::with(['inventarios', 'usuario', 'categoria'])
             ->orderByDesc('id_item');
@@ -215,7 +217,32 @@ class ERPController extends Controller
             $itemsQuery->where('item', 'like', '%' . $stockBuscar . '%');
         }
 
+        if ($stockCategoria) {
+            $itemsQuery->where('id_categoria_item', $stockCategoria);
+        }
+
+        if ($stockFiltro) {
+            if ($stockFiltro === 'agotado') {
+                $itemsQuery->where(function($q) {
+                    $q->whereHas('inventarios', function($sq) {
+                        $sq->where('cantidad', '<=', 0);
+                    })->orWhereDoesntHave('inventarios');
+                });
+            } elseif ($stockFiltro === 'bajo') {
+                $itemsQuery->whereHas('inventarios', function($q) {
+                    $q->whereBetween('cantidad', [1, 3]);
+                });
+            } elseif ($stockFiltro === 'disponible') {
+                $itemsQuery->whereHas('inventarios', function($q) {
+                    $q->where('cantidad', '>', 0);
+                });
+            }
+        }
+
         $items = $itemsQuery->get();
+
+        // Categorías para el filtro
+        $categorias = \App\Models\CategoriaItem::orderBy('categoria')->get();
 
         // --- Filtros para el Kardex ---
         $kardexDesde = request('kardex_desde');
@@ -242,7 +269,7 @@ class ERPController extends Controller
         $movimientos = $movimientosQuery->paginate(20)->withQueryString();
         $almacen = \App\Models\Almacen::first();
 
-        return view('admin.erp.inventario', compact('movimientos', 'almacen', 'items'));
+        return view('admin.erp.inventario', compact('movimientos', 'almacen', 'items', 'categorias'));
     }
 
     // --- CAJA ---

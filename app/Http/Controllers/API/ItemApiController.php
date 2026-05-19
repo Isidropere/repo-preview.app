@@ -87,6 +87,63 @@ class ItemApiController extends Controller
         return response()->json($items);
     }
 
+    /** GET /api/mis-items — artículos del usuario autenticado */
+    public function userItems(Request $request)
+    {
+        $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+            ->where('id_user', $request->user()->id)
+            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item')
+            ->latest('fecha')
+            ->get()
+            ->map(fn($item) => $this->appendImageUrl($item));
+
+        return response()->json($items);
+    }
+
+    /** POST /api/items — publicar artículo */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'item'              => 'required|string|max:150',
+            'presentacion'      => 'nullable|string',
+            'valor'             => 'required|numeric|min:0',
+            'condicion'         => 'required|integer|in:1,2,3',
+            'tipo_trans'        => 'required|integer|in:1,2,3',
+            'id_categoria_item' => 'required|integer|exists:categorias_item,id_categoria_item',
+            'image_url'         => 'nullable|string|url',  // URL de ImgBB ya subida
+        ]);
+
+        $data['id_user']      = $request->user()->id;
+        $data['estatus']      = 0; // pendiente de aprobación
+        $data['fecha']        = now();
+        $data['id_tipo_item'] = 1; // Producto
+
+        $item = Item::create($data);
+
+        // Si se envió una imagen ya hosteada en ImgBB, guardarla
+        if (!empty($data['image_url'])) {
+            $item->imagenes()->create([
+                'nombre' => basename(parse_url($data['image_url'], PHP_URL_PATH)),
+                'ruta'   => $data['image_url'],
+                'estado' => 'pendiente',
+            ]);
+        }
+
+        return response()->json(['message' => 'Artículo publicado. Pendiente de aprobación.', 'item' => $item], 201);
+    }
+
+    /** DELETE /api/items/{id} — eliminar artículo propio */
+    public function destroy(Request $request, int $id)
+    {
+        $item = Item::where('id_item', $id)
+            ->where('id_user', $request->user()->id)
+            ->firstOrFail();
+
+        $item->delete();
+
+        return response()->json(['message' => 'Artículo eliminado.']);
+    }
+
     /**
      * Agrega image_url resuelta al item.
      * Intenta storage/public primero, luego htdocs de Apache.
