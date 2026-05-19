@@ -222,6 +222,14 @@ Route::get('/realizar-compra', function () {
     return view('realizar-compra.realizar-compra');
 })->name('realizar-compra');
 
+Route::get('/como-publicar-articulo', function () {
+    return view('como-publicar.articulo');
+})->name('como-publicar-articulo');
+
+Route::get('/como-publicar-talento', function () {
+    return view('como-publicar.talento');
+})->name('como-publicar-talento');
+
 
 
 
@@ -695,6 +703,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/transporte/{id}/aprobar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'aprobar'])->name('transporte.aprobar');
         Route::post('/transporte/{id}/rechazar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'rechazar'])->name('transporte.rechazar');
         Route::get('/transporte/{id}/pdf', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'generarPdf'])->name('transporte.pdf');
+        Route::post('/transporte/articulos', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'storeArticulo'])->name('transporte.articulos.store');
+        Route::put('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateArticulo'])->name('transporte.articulos.update');
+        Route::delete('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyArticulo'])->name('transporte.articulos.destroy');
+
 
         // Cuentas CRUD
         Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');

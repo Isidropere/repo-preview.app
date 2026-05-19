@@ -33,6 +33,8 @@
                     <p><a class="inline-flex gap-x-2 text-gray-400 hover:text-primary" href="{{ route('realizar-intercambio') }}">¿Cómo realizar un intercambio?</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-400 hover:text-primary" href="{{ route('como-vender') }}">¿Cómo vender?</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-400 hover:text-primary" href="{{ route('realizar-compra') }}">¿Cómo realizar una compra?</a></p>
+                    <p><a class="inline-flex gap-x-2 text-gray-400 hover:text-primary" href="{{ route('como-publicar-articulo') }}">¿Cómo publicar un artículo?</a></p>
+                    <p><a class="inline-flex gap-x-2 text-gray-400 hover:text-primary" href="{{ route('como-publicar-talento') }}">¿Cómo publicar un talento?</a></p>
                 </div>
             </div>
 
@@ -63,8 +65,8 @@
                 <a class="size-8 inline-flex justify-center items-center text-sm font-semibold rounded-lg border border-transparent text-primary hover:bg-white/10" href="https://www.facebook.com/cambialord" target="_blank" rel="noopener noreferrer" title="Facebook">
                     <svg class="h-5 w-5 fill-primary hover:fill-hoverPrimary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.001 2.002c-5.522 0-9.999 4.477-9.999 9.999 0 4.99 3.656 9.126 8.437 9.879v-6.988h-2.54v-2.891h2.54V9.798c0-2.508 1.493-3.891 3.776-3.891 1.094 0 2.24.195 2.24.195v2.459h-1.264c-1.24 0-1.628.772-1.628 1.563v1.875h2.771l-.443 2.891h-2.328v6.988C18.344 21.129 22 16.992 22 12.001c0-5.522-4.477-9.999-9.999-9.999z"/></svg>
                 </a>
-                <a class="size-8 inline-flex justify-center items-center text-sm font-semibold rounded-lg border border-transparent text-primary hover:bg-white/10" href="https://wa.me/18091234567" target="_blank" rel="noopener noreferrer" title="WhatsApp">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-primary hover:fill-hoverPrimary" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.633A8.919 8.919 0 0 0 12.053 3c-4.948 0-8.976 4.027-8.978 8.977 0 1.582.413 3.126 1.198 4.488L3 21.116l4.759-1.249a8.981 8.981 0 0 0 4.29 1.093h.004c4.947 0 8.975-4.027 8.977-8.977a8.926 8.926 0 0 0-2.627-6.35m-6.35 13.812h-.003a7.446 7.446 0 0 1-3.798-1.041l-.272-.162-2.824.741.753-2.753-.177-.282a7.448 7.448 0 0 1-1.141-3.971c.002-4.114 3.349-7.461 7.465-7.461a7.413 7.413 0 0 1 5.275 2.188 7.42 7.42 0 0 1 2.183 5.279c-.002 4.114-3.349 7.462-7.461 7.462m4.093-5.589c-.225-.113-1.327-.655-1.533-.73-.205-.075-.354-.112-.504.112s-.58.729-.711.879-.262.168-.486.056-.947-.349-1.804-1.113c-.667-.595-1.117-1.329-1.248-1.554s-.014-.346.099-.458c.101-.1.224-.262.336-.393.112-.131.149-.224.224-.374s.038-.281-.019-.393c-.056-.113-.505-1.217-.692-1.666-.181-.435-.366-.377-.504-.383a9.65 9.65 0 0 0-.429-.008.826.826 0 0 0-.599.28c-.206.225-.785.767-.785 1.871s.804 2.171.916 2.321c.112.15 1.582 2.415 3.832 3.387.536.231.954.369 1.279.473.537.171 1.026.146 1.413.089.431-.064 1.327-.542 1.514-1.066.187-.524.187-.973.131-1.067-.056-.094-.207-.151-.43-.263"/></svg>
+                <a class="size-8 inline-flex justify-center items-center text-sm font-semibold rounded-lg border border-transparent text-primary hover:bg-white/10" href="mailto:cambialord.com@gmail.com?subject=Contacto%20a%20Cambialo%20RD" title="Correo">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-primary hover:fill-hoverPrimary" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                 </a>
             </div>
         </div>

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import 'negociacion_detalle_screen.dart';
 
 /// Historial de compras, ventas e intercambios
 /// Fiel al diseño web con tabs
@@ -194,29 +195,41 @@ class _IntercambiosTab extends StatelessWidget {
       itemCount: intercambios.length,
       itemBuilder: (_, i) {
         final neg = intercambios[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200),
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NegociacionDetalleScreen(
+                  negociacionId: neg['id_negociacion'],
+                ),
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Negociación #${neg['id_negociacion']}',
+                    style: TextStyle(fontSize: 11, color: kTextGray)),
+                const SizedBox(height: 4),
+                Text(neg['mensaje_inicial'] ?? '',
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: kTextDark)),
+                if (neg['monto_oferta'] != null)
+                  Text('RD\$ ${neg['monto_oferta']}',
+                      style: const TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.bold)),
+              ])),
+              const SizedBox(width: 12),
+              _EstatusBadge(estatus: neg['estado'] ?? 'Inicial'),
+            ]),
           ),
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Negociación #${neg['id_negociacion']}',
-                  style: TextStyle(fontSize: 11, color: kTextGray)),
-              const SizedBox(height: 4),
-              Text(neg['mensaje_inicial'] ?? '',
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: kTextDark)),
-              if (neg['monto_oferta'] != null)
-                Text('RD\$ ${neg['monto_oferta']}',
-                    style: const TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.bold)),
-            ])),
-            const SizedBox(width: 12),
-            _EstatusBadge(estatus: neg['estado'] ?? 'Inicial'),
-          ]),
         );
       },
     );

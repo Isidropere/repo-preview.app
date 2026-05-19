@@ -4,6 +4,11 @@ import '../core/auth_service.dart';
 import '../core/theme.dart';
 import 'login_screen.dart';
 import 'historial_screen.dart';
+import 'mis_articulos_screen.dart';
+import 'publicar_articulo_screen.dart';
+import 'direcciones_screen.dart';
+import 'cambiar_contrasena_screen.dart';
+import 'editar_perfil_screen.dart';
 
 /// Pantalla "Tu cuenta" — fiel al diseño web de Cambialord
 class CuentaScreen extends StatefulWidget {
@@ -39,15 +44,57 @@ class _CuentaScreenState extends State<CuentaScreen> {
 
   // Opciones del grid — igual que la web
   List<Map<String, dynamic>> get _opciones => [
-    {'icon': Icons.add_circle_outline,    'title': 'Agregar un nuevo talento',   'sub': 'Publica tus talentos',                  'onTap': () {}},
-    {'icon': Icons.star_outline,          'title': 'Administrar tus talentos',   'sub': 'Gestiona tus talentos',                 'onTap': () {}},
-    {'icon': Icons.add_box_outlined,      'title': 'Agregar productos',          'sub': 'Publica tus artículos',                 'onTap': () {}},
-    {'icon': Icons.edit_outlined,         'title': 'Gestionar productos',        'sub': 'Elimina tus artículos',                 'onTap': () {}},
-    {'icon': Icons.location_on_outlined,  'title': 'Dirección',                  'sub': 'Actualiza tu dirección preferida',      'onTap': () {}},
-    {'icon': Icons.shield_outlined,       'title': 'Modificar contraseña',       'sub': 'Cambia tu contraseña de manera segura', 'onTap': () {}},
-    {'icon': Icons.history,               'title': 'Historial general',          'sub': 'Revisa tus intercambios o compras',
-      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistorialScreen()))},
-    {'icon': Icons.workspace_premium_outlined, 'title': 'Cambiar cuenta a premium', 'sub': 'Descubre los beneficios premium',   'onTap': () {}},
+    {
+      'icon': Icons.add_circle_outline,
+      'title': 'Agregar un nuevo talento',
+      'sub': 'Publica tus talentos',
+      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Módulo de talentos próximamente'), backgroundColor: kPrimary)),
+    },
+    {
+      'icon': Icons.star_outline,
+      'title': 'Administrar tus talentos',
+      'sub': 'Gestiona tus talentos',
+      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Módulo de talentos próximamente'), backgroundColor: kPrimary)),
+    },
+    {
+      'icon': Icons.add_box_outlined,
+      'title': 'Agregar productos',
+      'sub': 'Publica tus artículos',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+    },
+    {
+      'icon': Icons.edit_outlined,
+      'title': 'Gestionar productos',
+      'sub': 'Elimina tus artículos',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisArticulosScreen())),
+    },
+    {
+      'icon': Icons.location_on_outlined,
+      'title': 'Dirección',
+      'sub': 'Actualiza tu dirección preferida',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DireccionesScreen())),
+    },
+    {
+      'icon': Icons.shield_outlined,
+      'title': 'Modificar contraseña',
+      'sub': 'Cambia tu contraseña de manera segura',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CambiarContrasenaScreen())),
+    },
+    {
+      'icon': Icons.history,
+      'title': 'Historial general',
+      'sub': 'Revisa tus intercambios o compras',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistorialScreen())),
+    },
+    {
+      'icon': Icons.workspace_premium_outlined,
+      'title': 'Cambiar cuenta a premium',
+      'sub': 'Descubre los beneficios premium',
+      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Función premium próximamente'), backgroundColor: kPrimary)),
+    },
   ];
 
   @override
@@ -100,40 +147,52 @@ class _CuentaScreenState extends State<CuentaScreen> {
             const SizedBox(height: 16),
 
             // Card de perfil con foto — igual que la web
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
-              ),
-              child: Row(children: [
-                // Foto con botón de cámara encima
-                Stack(children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: kPrimary,
-                    backgroundImage: CachedNetworkImageProvider(_user!['profile_photo_url']),
-                  ),
-                  Positioned(
-                    bottom: 0, right: 0,
-                    child: Container(
-                      width: 22, height: 22,
-                      decoration: const BoxDecoration(color: kPrimary, shape: BoxShape.circle),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 13),
+            GestureDetector(
+              onTap: () async {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => EditarPerfilScreen(user: _user!)),
+                );
+                if (updated == true) {
+                  _load();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+                ),
+                child: Row(children: [
+                  // Foto con botón de cámara encima
+                  Stack(children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: kPrimary,
+                      backgroundImage: CachedNetworkImageProvider(_user!['profile_photo_url']),
                     ),
-                  ),
+                    Positioned(
+                      bottom: 0, right: 0,
+                      child: Container(
+                        width: 22, height: 22,
+                        decoration: const BoxDecoration(color: kPrimary, shape: BoxShape.circle),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 13),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(width: 16),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${_user!['nombres']} ${_user!['apellidos']}',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: kTextDark)),
+                    const SizedBox(height: 2),
+                    Text(_user!['email'],
+                        style: TextStyle(fontSize: 12, color: kTextGray)),
+                  ])),
+                  const Icon(Icons.chevron_right, color: kTextGray),
                 ]),
-                const SizedBox(width: 16),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('${_user!['nombres']} ${_user!['apellidos']}',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: kTextDark)),
-                  const SizedBox(height: 2),
-                  Text(_user!['email'],
-                      style: TextStyle(fontSize: 12, color: kTextGray)),
-                ])),
-              ]),
+              ),
             ),
             const SizedBox(height: 20),
 

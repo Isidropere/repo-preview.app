@@ -252,7 +252,6 @@
                             <label for="id_tipo_item" class="block text-xs font-medium text-gray-700 mb-0.5">Tipo de artículo</label>
                             <select id="id_tipo_item" name="id_tipo_item" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
                                 <option value="1" {{ old('id_tipo_item', $item->id_tipo_item) == 1 ? 'selected' : '' }}>Producto</option>
-                                <option value="2" {{ old('id_tipo_item', $item->id_tipo_item) == 2 ? 'selected' : '' }}>Servicio</option>
                             </select>
                         </div>
                     </div>

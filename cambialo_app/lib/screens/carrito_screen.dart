@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
+import 'checkout_screen.dart';
 import 'login_screen.dart';
 
 class CarritoScreen extends StatefulWidget {
@@ -14,8 +14,9 @@ class CarritoScreen extends StatefulWidget {
 
 class _CarritoScreenState extends State<CarritoScreen> {
   Map?  _carrito;
-  bool  _loading  = true;
-  bool  _loggedIn = false;
+  bool  _loading   = true;
+  bool  _loggedIn  = false;
+  bool  _vaciando  = false;
 
   @override
   void initState() {
@@ -26,8 +27,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
   Future<void> _load() async {
     _loggedIn = await AuthService.isLoggedIn();
     if (!_loggedIn) { setState(() => _loading = false); return; }
-
-    final res = await ApiClient.get('/carrito', auth: true);
+    final res = await ApiClient.get('/carrito', auth: true, useCache: false);
     if (res.statusCode == 200) {
       setState(() { _carrito = jsonDecode(res.body); _loading = false; });
     } else {
@@ -37,7 +37,36 @@ class _CarritoScreenState extends State<CarritoScreen> {
 
   Future<void> _eliminar(int idItem) async {
     await ApiClient.delete('/carrito/$idItem', auth: true);
+    ApiClient.clearCache('/carrito');
     _load();
+  }
+
+  Future<void> _vaciar() async {
+    final ok = await _confirmar('¿Vaciar carrito?', '¿Seguro que deseas eliminar todos los artículos?');
+    if (!ok) return;
+    setState(() => _vaciando = true);
+    await ApiClient.delete('/carrito/vaciar', auth: true);
+    ApiClient.clearCache('/carrito');
+    await _load();
+    setState(() => _vaciando = false);
+  }
+
+  Future<bool> _confirmar(String titulo, String msg) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(titulo),
+        content: Text(msg),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 
   @override
@@ -47,10 +76,12 @@ class _CarritoScreenState extends State<CarritoScreen> {
         title: const Text('Carrito'),
         actions: [
           if (_carrito != null && (_carrito!['items'] as List).isNotEmpty)
-            TextButton(
-              onPressed: () {},
-              child: const Text('Vaciar', style: TextStyle(color: Colors.red)),
-            ),
+            _vaciando
+                ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red)))
+                : TextButton(
+                    onPressed: _vaciar,
+                    child: const Text('Vaciar', style: TextStyle(color: Colors.red)),
+                  ),
         ],
       ),
       body: _loading
@@ -65,11 +96,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
       const SizedBox(height: 16),
-      const Text('Inicia sesión para ver tu carrito',
-          style: TextStyle(color: kTextGray, fontSize: 15)),
+      const Text('Inicia sesión para ver tu carrito', style: TextStyle(color: kTextGray, fontSize: 15)),
       const SizedBox(height: 16),
       ElevatedButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+        onPressed: () => Navigator.pushNamed(context, '/login'),
         child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white)),
       ),
     ]),
@@ -105,8 +135,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
           ),
         ),
       ),
-
-      // Resumen total — igual que la web
+      // Resumen de pago
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -123,7 +152,9 @@ class _CarritoScreenState extends State<CarritoScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => CheckoutScreen(carrito: _carrito!),
+              )),
               style: ElevatedButton.styleFrom(
                 backgroundColor: kSecondary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -137,6 +168,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
   }
 }
 
+// Componente item del carrito
 class _CarritoItem extends StatelessWidget {
   final Map item;
   final VoidCallback onEliminar;
@@ -145,7 +177,7 @@ class _CarritoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itemData = item['item'] as Map? ?? {};
-    final imgUrl = itemData['image_url'] as String?;
+    final imgUrl   = itemData['image_url'] as String?;
     final subtotal = ((itemData['valor'] ?? 0) * (item['cantidad'] ?? 1)) - (item['descuento'] ?? 0);
 
     return Container(
@@ -155,16 +187,14 @@ class _CarritoItem extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)],
       ),
       child: Row(children: [
-        // Imagen
         ClipRRect(
           borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
           child: imgUrl != null
-              ? CachedNetworkImage(imageUrl: imgUrl, width: 90, height: 90, fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => Container(width: 90, height: 90, color: Colors.grey.shade100))
+              ? Image.network(imgUrl, width: 90, height: 90, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(width: 90, height: 90, color: Colors.grey.shade100))
               : Container(width: 90, height: 90, color: Colors.grey.shade100,
                   child: const Icon(Icons.image_not_supported, color: Colors.grey)),
         ),
-        // Info
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(10),
@@ -179,7 +209,6 @@ class _CarritoItem extends StatelessWidget {
             ]),
           ),
         ),
-        // Eliminar
         IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.red),
           onPressed: onEliminar,
@@ -188,3 +217,4 @@ class _CarritoItem extends StatelessWidget {
     );
   }
 }
+

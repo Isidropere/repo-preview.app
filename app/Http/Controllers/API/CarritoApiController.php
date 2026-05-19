@@ -69,6 +69,14 @@ class CarritoApiController extends Controller
         return response()->json(['message' => 'Item eliminado del carrito.']);
     }
 
+    /** DELETE /api/carrito/vaciar */
+    public function vaciar(Request $request)
+    {
+        $carrito = $this->obtenerOCrearCarrito($request->user()->id);
+        ItemIntencionCompra::where('id_carrito', $carrito->id_carrito)->delete();
+        return response()->json(['message' => 'Carrito vaciado.']);
+    }
+
     private function obtenerOCrearCarrito(int $userId): Carrito
     {
         return Carrito::firstOrCreate(['id_user' => $userId]);

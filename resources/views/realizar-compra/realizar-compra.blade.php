@@ -8,7 +8,7 @@
         <section class="max-w-6xl mx-auto px-4 mb-4">
             @include('components.btn-volver', ['backUrl' => route('home')])
             <header class="mb-8">
-                <h1 class="font-semibold text-primary text-4xl">¿Cómo realizar un intercambio?</h1>
+                <h1 class="font-semibold text-primary text-4xl">¿Cómo realizar una compra?</h1>
                 <p class="text-lg mt-4">
                     Comprar en Cámbialo RD es seguro y sencillo. Sigue estos pasos:
                 </p>
