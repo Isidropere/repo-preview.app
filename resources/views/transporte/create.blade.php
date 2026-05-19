@@ -92,14 +92,14 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto p-4 border border-gray-200 rounded-xl bg-gray-50" id="checklist-articulos-list">
                             @foreach($articulos as $art)
-                                <div class="articulo-item flex items-center justify-between gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
+                                <div class="articulo-item flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
                                      data-category="{{ $art->categoria }}" 
                                      style="display: none;">
-                                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 min-w-0">
                                         <input type="checkbox" name="articulos[{{ $art->id }}]" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer flex-shrink-0" onchange="toggleCantidad({{ $art->id }})">
-                                        <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer truncate" title="{{ $art->nombre }}">{{ $art->nombre }}</label>
+                                        <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer leading-snug" title="{{ $art->nombre }}">{{ $art->nombre }}</label>
                                     </div>
-                                    <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 flex-shrink-0">
+                                    <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-fit">
                                         <span class="text-[10px] text-gray-500 font-bold">Cant:</span>
                                         <input type="number" name="cantidades[{{ $art->id }}]" id="cant-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs font-bold focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100">
                                     </div>
