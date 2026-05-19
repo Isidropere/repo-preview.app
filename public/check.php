@@ -99,6 +99,128 @@ try {
     echo "❌ Error: " . $e->getMessage() . "\n";
 }
 
+// Verificar y crear tabla solicitudes_transporte
+echo "\n=== Verificar tabla solicitudes_transporte ===\n";
+try {
+    if (!Illuminate\Support\Facades\Schema::hasTable('solicitudes_transporte')) {
+        DB::statement("CREATE TABLE solicitudes_transporte (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            id_usuario BIGINT UNSIGNED NULL,
+            tipo_servicio ENUM('transporte', 'mudanza') NOT NULL DEFAULT 'transporte',
+            nombre VARCHAR(255) NOT NULL,
+            apellido VARCHAR(255) NOT NULL,
+            cedula VARCHAR(20) NOT NULL,
+            direccion VARCHAR(500) NOT NULL,
+            telefono VARCHAR(20) NOT NULL,
+            correo VARCHAR(255) NOT NULL,
+            fecha_servicio DATE NOT NULL,
+            ubicacion_geologica VARCHAR(255) NULL,
+            dimensiones_carga TEXT NOT NULL,
+            estado ENUM('pendiente', 'aprobada', 'rechazada') NOT NULL DEFAULT 'pendiente',
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "✅ Tabla solicitudes_transporte creada\n";
+    } else {
+        echo "✅ solicitudes_transporte ya existe\n";
+        // Verificar si tiene tipo_servicio
+        $cols = Illuminate\Support\Facades\Schema::getColumnListing('solicitudes_transporte');
+        if (!in_array('tipo_servicio', $cols)) {
+            DB::statement("ALTER TABLE solicitudes_transporte ADD tipo_servicio ENUM('transporte', 'mudanza') NOT NULL DEFAULT 'transporte' AFTER id_usuario");
+            echo "✅ Columna tipo_servicio agregada a solicitudes_transporte\n";
+        }
+    }
+} catch (Throwable $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+}
+
+// Verificar y crear tabla transporte_articulos y poblar catálogo
+echo "\n=== Verificar tabla transporte_articulos ===\n";
+try {
+    if (!Illuminate\Support\Facades\Schema::hasTable('transporte_articulos')) {
+        DB::statement("CREATE TABLE transporte_articulos (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(255) NOT NULL,
+            categoria ENUM('transporte', 'mudanza', 'ambos') NOT NULL DEFAULT 'ambos',
+            estatus TINYINT(1) NOT NULL DEFAULT 1,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "✅ Tabla transporte_articulos creada\n";
+    } else {
+        echo "✅ transporte_articulos ya existe\n";
+    }
+
+    // Poblar catálogo de artículos si está vacío
+    $count = DB::table('transporte_articulos')->count();
+    if ($count === 0) {
+        $articulos = [
+            ['nombre' => 'Sofá de 3 plazas', 'categoria' => 'mudanza'],
+            ['nombre' => 'Sofá de 2 plazas', 'categoria' => 'mudanza'],
+            ['nombre' => 'Sillón individual', 'categoria' => 'mudanza'],
+            ['nombre' => 'Cama Matrimonial (Colchón + Box)', 'categoria' => 'mudanza'],
+            ['nombre' => 'Cama Individual (Colchón + Box)', 'categoria' => 'mudanza'],
+            ['nombre' => 'Mesa de comedor', 'categoria' => 'mudanza'],
+            ['nombre' => 'Silla de comedor', 'categoria' => 'mudanza'],
+            ['nombre' => 'Cajonera / Cómoda', 'categoria' => 'mudanza'],
+            ['nombre' => 'Armario / Ropero grande', 'categoria' => 'mudanza'],
+            ['nombre' => 'Escritorio de oficina', 'categoria' => 'mudanza'],
+            ['nombre' => 'Caja de mudanza grande', 'categoria' => 'mudanza'],
+            ['nombre' => 'Caja de mudanza mediana', 'categoria' => 'mudanza'],
+            ['nombre' => 'Caja de mudanza pequeña', 'categoria' => 'mudanza'],
+            ['nombre' => 'Espejo grande / Cuadro', 'categoria' => 'mudanza'],
+            ['nombre' => 'Pallet de mercancía estándar', 'categoria' => 'transporte'],
+            ['nombre' => 'Caja de herramientas industrial', 'categoria' => 'transporte'],
+            ['nombre' => 'Sacos de cemento / arena', 'categoria' => 'transporte'],
+            ['nombre' => 'Varillas / Tubos de metal (lote)', 'categoria' => 'transporte'],
+            ['nombre' => 'Equipaje / Maletas de carga pesada', 'categoria' => 'transporte'],
+            ['nombre' => 'Caja de carga general industrial', 'categoria' => 'transporte'],
+            ['nombre' => 'Nevera / Refrigerador', 'categoria' => 'ambos'],
+            ['nombre' => 'Estufa de cocina', 'categoria' => 'ambos'],
+            ['nombre' => 'Lavadora / Secadora', 'categoria' => 'ambos'],
+            ['nombre' => 'Microondas / Hornito', 'categoria' => 'ambos'],
+            ['nombre' => 'Televisor (Smart TV)', 'categoria' => 'ambos'],
+            ['nombre' => 'Bicicleta', 'categoria' => 'ambos'],
+            ['nombre' => 'Caja de cartón / Artículos varios', 'categoria' => 'ambos'],
+            ['nombre' => 'Planta eléctrica portátil', 'categoria' => 'ambos'],
+        ];
+        foreach ($articulos as $art) {
+            DB::table('transporte_articulos')->insert([
+                'nombre' => $art['nombre'],
+                'categoria' => $art['categoria'],
+                'estatus' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        echo "✅ Catálogo de transporte_articulos poblado con éxito\n";
+    }
+} catch (Throwable $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+}
+
+// Verificar y crear tabla pivot solicitud_transporte_articulo
+echo "\n=== Verificar tabla solicitud_transporte_articulo ===\n";
+try {
+    if (!Illuminate\Support\Facades\Schema::hasTable('solicitud_transporte_articulo')) {
+        DB::statement("CREATE TABLE solicitud_transporte_articulo (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            solicitud_transporte_id BIGINT UNSIGNED NOT NULL,
+            articulo_id BIGINT UNSIGNED NOT NULL,
+            cantidad INT NOT NULL DEFAULT 1,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL,
+            FOREIGN KEY (solicitud_transporte_id) REFERENCES solicitudes_transporte(id) ON DELETE CASCADE,
+            FOREIGN KEY (articulo_id) REFERENCES transporte_articulos(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "✅ Tabla solicitud_transporte_articulo creada\n";
+    } else {
+        echo "✅ solicitud_transporte_articulo ya existe\n";
+    }
+} catch (Throwable $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+}
+
 // Limpiar caches
 $cmds = ['view:clear', 'config:clear', 'route:clear', 'cache:clear'];
 foreach ($cmds as $cmd) {
