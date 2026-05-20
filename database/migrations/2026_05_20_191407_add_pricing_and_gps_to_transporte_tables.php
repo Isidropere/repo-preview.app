@@ -11,23 +11,47 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transporte_articulos', function (Blueprint $table) {
-            $table->decimal('precio_base', 10, 2)->default(0)->after('categoria');
-        });
+        if (Schema::hasTable('transporte_articulos')) {
+            Schema::table('transporte_articulos', function (Blueprint $table) {
+                if (!Schema::hasColumn('transporte_articulos', 'precio_base')) {
+                    $table->decimal('precio_base', 10, 2)->default(0)->after('categoria');
+                }
+            });
+        }
 
-        Schema::table('solicitudes_transporte', function (Blueprint $table) {
-            $table->string('punto_recogida')->nullable()->after('ubicacion_geologica');
-            $table->string('punto_entrega')->nullable()->after('punto_recogida');
-            $table->decimal('distancia_km', 8, 2)->nullable()->after('punto_entrega');
-            $table->decimal('precio_estimado_total', 10, 2)->nullable()->after('distancia_km');
-        });
+        if (Schema::hasTable('solicitudes_transporte')) {
+            Schema::table('solicitudes_transporte', function (Blueprint $table) {
+                if (!Schema::hasColumn('solicitudes_transporte', 'punto_recogida')) {
+                    $table->string('punto_recogida')->nullable()->after('ubicacion_geologica');
+                }
+                if (!Schema::hasColumn('solicitudes_transporte', 'punto_entrega')) {
+                    $table->string('punto_entrega')->nullable()->after('punto_recogida');
+                }
+                if (!Schema::hasColumn('solicitudes_transporte', 'distancia_km')) {
+                    $table->decimal('distancia_km', 8, 2)->nullable()->after('punto_entrega');
+                }
+                if (!Schema::hasColumn('solicitudes_transporte', 'precio_estimado_total')) {
+                    $table->decimal('precio_estimado_total', 10, 2)->nullable()->after('distancia_km');
+                }
+            });
+        }
 
-        Schema::table('solicitud_transporte_articulo', function (Blueprint $table) {
-            $table->string('dimensiones')->nullable()->after('cantidad');
-            $table->decimal('peso', 8, 2)->nullable()->after('dimensiones');
-            $table->decimal('precio_unitario', 10, 2)->nullable()->after('peso');
-            $table->decimal('subtotal', 10, 2)->nullable()->after('precio_unitario');
-        });
+        if (Schema::hasTable('solicitud_transporte_articulo')) {
+            Schema::table('solicitud_transporte_articulo', function (Blueprint $table) {
+                if (!Schema::hasColumn('solicitud_transporte_articulo', 'dimensiones')) {
+                    $table->string('dimensiones')->nullable()->after('cantidad');
+                }
+                if (!Schema::hasColumn('solicitud_transporte_articulo', 'peso')) {
+                    $table->decimal('peso', 8, 2)->nullable()->after('dimensiones');
+                }
+                if (!Schema::hasColumn('solicitud_transporte_articulo', 'precio_unitario')) {
+                    $table->decimal('precio_unitario', 10, 2)->nullable()->after('peso');
+                }
+                if (!Schema::hasColumn('solicitud_transporte_articulo', 'subtotal')) {
+                    $table->decimal('subtotal', 10, 2)->nullable()->after('precio_unitario');
+                }
+            });
+        }
     }
 
     /**
