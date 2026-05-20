@@ -15,7 +15,14 @@ class TransporteController extends Controller
     public function create()
     {
         $articulos = TransporteArticulo::where('estatus', true)->orderBy('nombre', 'asc')->get();
-        return view('transporte.create', compact('articulos'));
+        
+        $config = [
+            'precio_km_transporte' => \App\Models\TransporteConfiguracion::get('precio_km_transporte', 50),
+            'precio_km_mudanza' => \App\Models\TransporteConfiguracion::get('precio_km_mudanza', 100),
+            'limite_articulos_mudanza' => \App\Models\TransporteConfiguracion::get('limite_articulos_mudanza', 5),
+        ];
+
+        return view('transporte.create', compact('articulos', 'config'));
     }
 
     /**
@@ -32,7 +39,12 @@ class TransporteController extends Controller
             'telefono' => 'required|string|max:20',
             'correo' => 'required|email|max:255',
             'fecha_servicio' => 'required|date',
-            'ubicacion_geologica' => 'nullable|string|max:255',
+            'punto_recogida' => 'nullable|string|max:255',
+            'piso_origen' => 'nullable|string|max:50',
+            'punto_entrega' => 'nullable|string|max:255',
+            'piso_destino' => 'nullable|string|max:50',
+            'distancia_km' => 'nullable|numeric',
+            'precio_estimado_total' => 'nullable|numeric',
             'dimensiones_carga' => 'required|string|max:1000',
         ]);
 
@@ -47,13 +59,59 @@ class TransporteController extends Controller
         // Procesar y asociar artículos del checklist
         if ($request->has('articulos') && is_array($request->articulos)) {
             $syncData = [];
+            $countArticulosTotal = 0;
+            
+            // Obtener precios base de los artículos para guardarlos en el histórico del pivot
+            $articulosCatalogo = TransporteArticulo::whereIn('id', array_keys($request->articulos))->get()->keyBy('id');
+
             foreach ($request->articulos as $articuloId => $value) {
                 // Si el checkbox está marcado
                 if ($value == '1' || $value === 'on' || $value === true) {
-                    $cantidad = $request->input("cantidades.{$articuloId}", 1);
-                    $syncData[$articuloId] = ['cantidad' => max(1, intval($cantidad))];
+                    $articulo = $articulosCatalogo->get($articuloId);
+                    $cantidad = intval($request->input("cantidades.{$articuloId}", 1));
+                    
+                    // Concatenar las 4 dimensiones solicitadas
+                    $d1 = $request->input("dim1.{$articuloId}", 0);
+                    $d2 = $request->input("dim2.{$articuloId}", 0);
+                    $d3 = $request->input("dim3.{$articuloId}", 0);
+                    $d4 = $request->input("dim4.{$articuloId}", 0);
+                    $dimensiones = "{$d1}x{$d2}x{$d3}x{$d4}";
+
+                    $peso = $request->input("pesos.{$articuloId}");
+                    $precioUnitario = $articulo ? $articulo->precio_base : 0;
+                    $countArticulosTotal += $cantidad;
+                    
+                    $syncData[$articuloId] = [
+                        'cantidad' => max(1, $cantidad),
+                        'dimensiones' => $dimensiones,
+                        'peso' => is_numeric($peso) ? $peso : null,
+                        'precio_unitario' => $precioUnitario,
+                        'subtotal' => $precioUnitario * $cantidad
+                    ];
                 }
             }
+
+            // Recalcular el total estimado en el backend para seguridad
+            $precioKmTrans = \App\Models\TransporteConfiguracion::get('precio_km_transporte', 50);
+            $precioKmMudz = \App\Models\TransporteConfiguracion::get('precio_km_mudanza', 100);
+            $limiteMudz = \App\Models\TransporteConfiguracion::get('limite_articulos_mudanza', 5);
+
+            $tipoServicioFinal = $request->tipo_servicio;
+            if ($countArticulosTotal > $limiteMudz) {
+                $tipoServicioFinal = 'mudanza';
+            }
+
+            $precioKmAplicar = ($tipoServicioFinal === 'mudanza') ? $precioKmMudz : $precioKmTrans;
+            $distancia = floatval($request->input('distancia_km', 0));
+            
+            $totalArticulos = collect($syncData)->sum('subtotal');
+            $precioEstimadoFinal = $totalArticulos + ($distancia * $precioKmAplicar);
+
+            $solicitud->update([
+                'tipo_servicio' => $tipoServicioFinal,
+                'precio_estimado_total' => $precioEstimadoFinal
+            ]);
+
             if (!empty($syncData)) {
                 $solicitud->articulos()->attach($syncData);
             }

@@ -99,6 +99,16 @@ try {
     echo "❌ Error: " . $e->getMessage() . "\n";
 }
 
+// Ejecutar migraciones pendientes
+echo "\n=== Ejecutando Migraciones ===\n";
+try {
+    Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    echo nl2br(Illuminate\Support\Facades\Artisan::output());
+    echo "✅ Migraciones completadas\n";
+} catch (Throwable $e) {
+    echo "❌ Error en migraciones: " . $e->getMessage() . "\n";
+}
+
 // Limpiar caches
 $cmds = ['view:clear', 'config:clear', 'route:clear', 'cache:clear'];
 foreach ($cmds as $cmd) {

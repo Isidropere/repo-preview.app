@@ -170,7 +170,8 @@
         }
 
         header[data-astro-cid-pwmmw5ba] {
-            position: relative
+            position: relative;
+            overflow: visible
         }
 
         .relative[data-astro-cid-pwmmw5ba][data-tooltip] {
@@ -192,11 +193,11 @@
                 background-color: #f58634;
                 color: #fff;
                 font-size: 12px;
-                padding: 4px;
+                padding: 4px 8px;
                 border-radius: .25rem;
-                bottom: -32px;
+                top: calc(100% + 8px);
                 left: 50%;
-                transform: translate(-50%) translateY(-.5rem);
+                transform: translate(-50%) translateY(.5rem);
                 white-space: nowrap;
                 overflow: visible
             }
@@ -205,10 +206,10 @@
                 content: "";
                 border-width: .5rem;
                 border-style: solid;
-                border-color: #f58634 transparent transparent transparent;
-                bottom: calc(100% - .25rem);
+                border-color: transparent transparent #f58634 transparent;
+                top: calc(100% - 2px);
                 left: 50%;
-                transform: translate(-50%)
+                transform: translate(-50%) translateY(.5rem)
             }
 
             .relative[data-astro-cid-pwmmw5ba][data-tooltip]:hover:before,
@@ -248,6 +249,14 @@
                 transform: scaleX(1);
                 transform-origin: bottom left
             }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        input, button, select, textarea {
+            max-width: 100%;
+        }
 
         html {
             scroll-behavior: smooth;

@@ -1102,6 +1102,11 @@ class ItemController extends Controller
 
             $categoria = CategoriaItem::findOrFail($id);
 
+            // Redirigir categorías "Clases/Lecciones" (9) y "Monetario" (10) a la página de próximamente
+            if (in_array($id, [9, 10])) {
+                return view('proximamente');
+            }
+
             // Si llegó con ID numérico, redirigir al slug correcto (SEO)
             if (ctype_digit($slug)) {
                 return redirect()->route('categorias.show', $categoria->slug, 301);

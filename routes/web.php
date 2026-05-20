@@ -531,7 +531,8 @@ Route::middleware(['auth'])->group(function () {
         $categorias = CategoriaItem::all();
         $tarjetas = \App\Models\TarjetaPago::where('id_user', auth()->id())->where('estatus', 1)->get();
         $montoRegistro = \App\Models\ConfigTarifaCategoria29::vigente()->monto_registro;
-        return view('talentos.agregar-talentos', compact('categorias', 'tarjetas', 'montoRegistro'));
+        $direccionesCount = \App\Models\Direcciones::where('id_user', auth()->id())->count();
+        return view('talentos.agregar-talentos', compact('categorias', 'tarjetas', 'montoRegistro', 'direccionesCount'));
     })->name('items.talento_create');
     Route::post('/talento/agregar', [ItemController::class, 'AddTalento'])->name('items.AddTalento');
     Route::get('/talentos', [ItemController::class, 'userItemstalento'])->name('items.admintalento');
@@ -706,6 +707,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/transporte/articulos', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'storeArticulo'])->name('transporte.articulos.store');
         Route::put('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateArticulo'])->name('transporte.articulos.update');
         Route::delete('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyArticulo'])->name('transporte.articulos.destroy');
+        Route::put('/transporte/config', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateConfig'])->name('transporte.config.update');
 
 
         // Cuentas CRUD

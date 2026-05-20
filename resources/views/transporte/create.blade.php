@@ -11,6 +11,7 @@
     .btn-gps { background: #0ea5e9; color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 11px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; height: auto; box-sizing: border-box; }
     .btn-gps:hover { background: #0284c7; }
     .btn-gps:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-active-map { ring: 2px solid #0ea5e9; background: #0284c7; }
 </style>
 @endpush
 
@@ -90,18 +91,47 @@
                         <label class="form-label text-gray-800 mb-2">Selecciona los artículos que deseas transportar / mudar <span class="text-red-500">*</span></label>
                         <p class="text-xs text-gray-500 mb-4 font-medium">Marca las casillas correspondientes y ajusta la cantidad de cada artículo.</p>
                         
+                        <!-- Buscador de Artículos -->
+                        <div class="mb-4">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </span>
+                                <input type="text" id="search-articulos" placeholder="Buscar artículo (ej: Nevera, Cama, Caja...)" class="form-input pl-10 bg-white" autocomplete="off">
+                            </div>
+                        </div>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto p-4 border border-gray-200 rounded-xl bg-gray-50" id="checklist-articulos-list">
                             @foreach($articulos as $art)
-                                <div class="articulo-item flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
+                                <div class="articulo-item flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
                                      data-category="{{ $art->categoria }}" 
+                                     data-precio="{{ $art->precio_base ?? 0 }}"
                                      style="display: none;">
-                                    <div class="flex items-center gap-3">
-                                        <input type="checkbox" name="articulos[{{ $art->id }}]" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer" onchange="toggleCantidad({{ $art->id }})">
-                                        <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer">{{ $art->nombre }}</label>
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <input type="checkbox" name="articulos[{{ $art->id }}]" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer flex-shrink-0" onchange="toggleCantidad({{ $art->id }})">
+                                        <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer leading-snug" title="{{ $art->nombre }}">{{ $art->nombre }}</label>
+                                        @if($art->precio_base > 0)
+                                            <span class="text-[10px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_base, 2) }}</span>
+                                        @endif
                                     </div>
-                                    <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
-                                        <span class="text-[10px] text-gray-500 font-bold">Cant:</span>
-                                        <input type="number" name="cantidades[{{ $art->id }}]" id="cant-{{ $art->id }}" value="1" min="1" disabled class="w-10 px-1 py-0.5 border border-gray-300 rounded text-center text-xs font-bold focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100">
+                                    <div class="flex flex-col gap-2 mt-2">
+                                        <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full">
+                                            <span class="text-[10px] text-gray-500 font-bold w-12">Cant:</span>
+                                            <input type="number" name="cantidades[{{ $art->id }}]" id="cant-{{ $art->id }}" value="1" min="1" disabled class="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
+                                        </div>
+                                        <div class="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full overflow-hidden">
+                                            <span class="text-[9px] text-gray-500 font-bold w-8 flex-shrink-0">Dim:</span>
+                                            <div class="grid grid-cols-4 gap-1 w-full">
+                                                <input type="number" name="dim1[{{ $art->id }}]" id="dim1-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Largo">
+                                                <input type="number" name="dim2[{{ $art->id }}]" id="dim2-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Ancho">
+                                                <input type="number" name="dim3[{{ $art->id }}]" id="dim3-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Alto">
+                                                <input type="number" name="dim4[{{ $art->id }}]" id="dim4-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Profundidad/Otro">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full">
+                                            <span class="text-[10px] text-gray-500 font-bold w-12">Peso:</span>
+                                            <input type="text" name="pesos[{{ $art->id }}]" id="peso-{{ $art->id }}" placeholder="Ej: 5kg" disabled class="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100">
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -118,18 +148,49 @@
                     </div>
                 </div>
 
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Ubicación Geográfica</h2>
-                <div class="mb-8">
-                    <p class="text-sm text-gray-500 mb-4">Ayúdanos a localizar el punto exacto marcándolo en el mapa o utilizando tu GPS.</p>
+                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Ruta del Servicio</h2>
+                <div class="mb-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-sm text-gray-500 mb-4">Selecciona en el mapa el punto de recogida local y el punto de entrega para estimar el costo de distancia.</p>
                     
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4 items-stretch">
-                        <input type="text" id="coordenadas" name="ubicacion_geologica" value="{{ old('ubicacion_geologica') }}" readonly class="flex-1 form-input bg-gray-50 cursor-pointer" placeholder="Haz clic en el mapa para capturar las coordenadas">
-                        <button type="button" id="btn-gps" class="btn-gps">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Usar mi GPS
-                        </button>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="flex-1">
+                            <label class="form-label text-blue-600">Punto A (Recogida) <span class="text-red-500">*</span></label>
+                            <input type="text" id="punto_recogida" name="punto_recogida" value="{{ old('punto_recogida') }}" readonly required class="form-input bg-white cursor-pointer border-blue-300" placeholder="Haz clic en el mapa">
+                            
+                            <div class="mt-2">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿En qué piso están los artículos? <span class="text-red-500">*</span></label>
+                                <input type="text" name="piso_origen" value="{{ old('piso_origen', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 2, Sótano, PH...">
+                            </div>
+
+                            <button type="button" id="btn-set-a" class="mt-2 w-full py-2 bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-200">Definir Punto A en Mapa</button>
+                        </div>
+                        <div class="flex-1">
+                            <label class="form-label text-red-600">Punto B (Entrega) <span class="text-red-500">*</span></label>
+                            <input type="text" id="punto_entrega" name="punto_entrega" value="{{ old('punto_entrega') }}" readonly required class="form-input bg-white cursor-pointer border-red-300" placeholder="Haz clic en el mapa">
+                            
+                            <div class="mt-2">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿A qué piso se llevarán? <span class="text-red-500">*</span></label>
+                                <input type="text" name="piso_destino" value="{{ old('piso_destino', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 3, PH, etc.">
+                            </div>
+
+                            <button type="button" id="btn-set-b" class="mt-2 w-full py-2 bg-red-100 text-red-700 font-bold rounded-lg border border-red-200 hover:bg-red-200">Definir Punto B en Mapa</button>
+                        </div>
                     </div>
-                    <div id="map-container"></div>
+                    <div id="map-container" class="mb-4"></div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-center mt-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                        <div>
+                            <span class="block text-xs font-bold text-gray-500 uppercase">Distancia Estimada</span>
+                            <span id="distancia-display" class="text-xl font-black text-gray-900">0 km</span>
+                            <input type="hidden" name="distancia_km" id="distancia_km" value="0">
+                        </div>
+                        <div>
+                            <span class="block text-xs font-bold text-gray-500 uppercase">Precio Estimado (Ruta + Artículos)</span>
+                            <span id="precio-display" class="text-xl font-black text-green-600">RD$ 0.00</span>
+                            <input type="hidden" name="precio_estimado_total" id="precio_estimado_total" value="0">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2 text-center text-balance">* El cálculo es una aproximación generada en línea recta entre ambos puntos y suma al costo de logística de los artículos de mudanza. Nos comunicaremos contigo para detalles adiciones.</p>
                 </div>
 
                 <div class="mt-10 flex justify-end">
@@ -148,82 +209,160 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let map = L.map('map-container').setView([18.7357, -70.1627], 8); // Centro RD
-    let marker = null;
+    
+    let markerA = null;
+    let markerB = null;
+    let settingPoint = 'A'; // 'A' or 'B'
+    
+    // Configuraciones dinámicas desde el backend
+    const CONFIG = {
+        precio_km_transporte: {{ $config['precio_km_transporte'] ?? 50 }},
+        precio_km_mudanza: {{ $config['precio_km_mudanza'] ?? 100 }},
+        limite_mudanza: {{ $config['limite_articulos_mudanza'] ?? 5 }}
+    };
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    const inputCoords = document.getElementById('coordenadas');
+    const inputA = document.getElementById('punto_recogida');
+    const inputB = document.getElementById('punto_entrega');
+    const btnA = document.getElementById('btn-set-a');
+    const btnB = document.getElementById('btn-set-b');
     
-    // Si ya hay coordenadas, poner el marcador
-    if (inputCoords.value) {
-        let parts = inputCoords.value.split(',');
-        if (parts.length === 2) {
-            let lat = parseFloat(parts[0]);
-            let lng = parseFloat(parts[1]);
-            marker = L.marker([lat, lng]).addTo(map);
-            map.setView([lat, lng], 15);
+    const iconA = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        iconSize: [25, 41], iconAnchor: [12, 41]
+    });
+    const iconB = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41], iconAnchor: [12, 41]
+    });
+
+    btnA.addEventListener('click', () => { 
+        settingPoint = 'A'; 
+        btnA.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
+        btnB.classList.remove('ring-2', 'ring-offset-2', 'ring-red-500');
+    });
+    
+    btnB.addEventListener('click', () => { 
+        settingPoint = 'B'; 
+        btnB.classList.add('ring-2', 'ring-offset-2', 'ring-red-500');
+        btnA.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500');
+    });
+
+    // Haversine formula
+    function calcCrow(lat1, lon1, lat2, lon2) {
+      var R = 6371; // km
+      var dLat = toRad(lat2-lat1);
+      var dLon = toRad(lon2-lon1);
+      var lat1 = toRad(lat1);
+      var lat2 = toRad(lat2);
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+      var d = R * c;
+      return d;
+    }
+    function toRad(Value) { return Value * Math.PI / 180; }
+
+    function updateCalculations() {
+        // Distancia
+        let dist = 0;
+        if(markerA && markerB) {
+            let llA = markerA.getLatLng();
+            let llB = markerB.getLatLng();
+            dist = calcCrow(llA.lat, llA.lng, llB.lat, llB.lng);
+            
+            // Dibujar linea si no existe
+            if(window.routeLine) map.removeLayer(window.routeLine);
+            window.routeLine = L.polyline([llA, llB], {color: 'purple', weight: 4, dashArray: '10, 10'}).addTo(map);
+            map.fitBounds(window.routeLine.getBounds(), {padding: [50, 50]});
         }
+        document.getElementById('distancia_km').value = dist.toFixed(2);
+        document.getElementById('distancia-display').innerText = dist.toFixed(2) + ' km';
+
+        window.calcularTotal(dist);
     }
 
-    // Evento al hacer clic en el mapa
+    // Exponer calcularTotal para que sea llamado cuando cambian cantidades
+    window.calcularTotal = function(distancia = null) {
+        if(distancia === null) {
+            distancia = parseFloat(document.getElementById('distancia_km').value) || 0;
+        }
+        
+        let totalArticulos = 0;
+        let countArticulos = 0;
+        document.querySelectorAll('.articulo-checkbox:checked').forEach(cb => {
+            let parent = cb.closest('.articulo-item');
+            let cant = parseInt(parent.querySelector('input[type="number"]').value) || 1;
+            let precio = parent.getAttribute('data-precio') || 0;
+            totalArticulos += (parseFloat(precio) * cant);
+            countArticulos += cant;
+        });
+
+        // Auto-detección de Mudanza por cantidad de artículos
+        const selectTipo = document.querySelector('select[name="tipo_servicio"]');
+        let precioKM = CONFIG.precio_km_transporte;
+
+        if (countArticulos > CONFIG.limite_mudanza) {
+            if (selectTipo.value !== 'mudanza') {
+                selectTipo.value = 'mudanza';
+                // Trigger change if needed, but here we just want the value for calculation
+            }
+            precioKM = CONFIG.precio_km_mudanza;
+        } else {
+            // Si es manual mudanza, usar precio mudanza, si es transporte usar transporte
+            precioKM = (selectTipo.value === 'mudanza') ? CONFIG.precio_km_mudanza : CONFIG.precio_km_transporte;
+        }
+
+        let totalFinal = totalArticulos + (distancia * precioKM);
+        
+        document.getElementById('precio_estimado_total').value = totalFinal.toFixed(2);
+        document.getElementById('precio-display').innerText = 'RD$ ' + totalFinal.toLocaleString('es-DO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Actualizar etiqueta de precio si es necesario para feedback
+        document.getElementById('precio-display').title = `Tarifa: RD$ ${precioKM}/km`;
+    };
+
     map.on('click', function(e) {
         let lat = e.latlng.lat.toFixed(6);
         let lng = e.latlng.lng.toFixed(6);
-        inputCoords.value = lat + ', ' + lng;
         
-        if (marker) map.removeLayer(marker);
-        marker = L.marker([lat, lng]).addTo(map);
-    });
-
-    // Botón GPS
-    document.getElementById('btn-gps').addEventListener('click', function() {
-        const btn = this;
-        if (!navigator.geolocation) {
-            alert('Geolocalización no soportada en este navegador.');
-            return;
+        if (settingPoint === 'A') {
+            inputA.value = lat + ', ' + lng;
+            if (markerA) map.removeLayer(markerA);
+            markerA = L.marker([lat, lng], {icon: iconA}).addTo(map);
+            settingPoint = 'B'; // Auto-cambiar al punto B
+            btnB.click();
+        } else {
+            inputB.value = lat + ', ' + lng;
+            if (markerB) map.removeLayer(markerB);
+            markerB = L.marker([lat, lng], {icon: iconB}).addTo(map);
+            btnB.classList.remove('ring-2', 'ring-offset-2', 'ring-red-500'); // Desactivar
         }
-        
-        btn.disabled = true;
-        btn.innerHTML = 'Buscando...';
-        
-        navigator.geolocation.getCurrentPosition(function(pos) {
-            let lat = pos.coords.latitude.toFixed(6);
-            let lng = pos.coords.longitude.toFixed(6);
-            inputCoords.value = lat + ', ' + lng;
-            
-            if (marker) map.removeLayer(marker);
-            marker = L.marker([lat, lng]).addTo(map);
-            map.setView([lat, lng], 16);
-            
-            btn.disabled = false;
-            btn.innerHTML = '<svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Usar mi GPS';
-        }, function(err) {
-            alert('Error obteniendo ubicación. Verifica los permisos.');
-            btn.disabled = false;
-            btn.innerHTML = '<svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Usar mi GPS';
-        });
+        updateCalculations();
     });
 
     // Lógica de Filtrado y Reactividad para Transporte y Mudanzas
     const selectServicio = document.getElementById('tipo_servicio');
+    const searchInput = document.getElementById('search-articulos');
     const container = document.getElementById('checklist-articulos-container');
     const items = document.querySelectorAll('.articulo-item');
 
     function filterArticles() {
         const selectedValue = selectServicio.value;
+        const searchTerm = searchInput.value.trim().toLowerCase();
         
         if (!selectedValue) {
             container.classList.add('hidden');
             items.forEach(item => {
                 const checkbox = item.querySelector('.articulo-checkbox');
-                const quantity = item.querySelector('input[type="number"]');
                 checkbox.checked = false;
-                quantity.setAttribute('disabled', 'disabled');
-                quantity.value = '1';
+                window.toggleCantidad(checkbox.id.split('-')[1]);
                 item.style.display = 'none';
             });
+            window.calcularTotal();
             return;
         }
 
@@ -231,41 +370,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
         items.forEach(item => {
             const cat = item.getAttribute('data-category');
+            const nombre = item.querySelector('label').innerText.toLowerCase();
             const checkbox = item.querySelector('.articulo-checkbox');
-            const quantity = item.querySelector('input[type="number"]');
             
-            // Mostrar si coincide con la categoría seleccionada o si es 'ambos'
-            if (cat === selectedValue || cat === 'ambos') {
+            const matchesCategory = (cat === selectedValue || cat === 'ambos');
+            const matchesSearch = nombre.includes(searchTerm);
+
+            if (matchesCategory && matchesSearch) {
                 item.style.display = 'flex';
             } else {
-                // Si se oculta, desmarcar para no enviar datos residuales
-                checkbox.checked = false;
-                quantity.setAttribute('disabled', 'disabled');
-                quantity.value = '1';
+                // Solo desmarcar si NO coincide con la categoría (regla de integridad del servicio)
+                // Si solo no coincide con la búsqueda, lo ocultamos pero mantenemos el estado
+                if (!matchesCategory) {
+                    checkbox.checked = false;
+                    window.toggleCantidad(checkbox.id.split('-')[1]);
+                }
                 item.style.display = 'none';
             }
         });
+        window.calcularTotal();
     }
 
     selectServicio.addEventListener('change', filterArticles);
-    
-    // Ejecutar inmediatamente al cargar por si hay datos previos guardados en old()
-    if (selectServicio.value) {
-        filterArticles();
-    }
+    searchInput.addEventListener('input', filterArticles);
+    if (selectServicio.value) filterArticles();
 });
 
 // Función global accesible desde los checkboxes inline
-function toggleCantidad(id) {
+window.toggleCantidad = function(id) {
     const checkbox = document.getElementById('art-' + id);
     const quantityInput = document.getElementById('cant-' + id);
+    const d1 = document.getElementById('dim1-' + id);
+    const d2 = document.getElementById('dim2-' + id);
+    const d3 = document.getElementById('dim3-' + id);
+    const d4 = document.getElementById('dim4-' + id);
+    const pesoInput = document.getElementById('peso-' + id);
+    
     if (checkbox.checked) {
         quantityInput.removeAttribute('disabled');
+        d1.removeAttribute('disabled');
+        d2.removeAttribute('disabled');
+        d3.removeAttribute('disabled');
+        d4.removeAttribute('disabled');
+        pesoInput.removeAttribute('disabled');
         quantityInput.focus();
     } else {
         quantityInput.setAttribute('disabled', 'disabled');
+        d1.setAttribute('disabled', 'disabled');
+        d2.setAttribute('disabled', 'disabled');
+        d3.setAttribute('disabled', 'disabled');
+        d4.setAttribute('disabled', 'disabled');
+        pesoInput.setAttribute('disabled', 'disabled');
         quantityInput.value = '1';
+        d1.value = '0';
+        d2.value = '0';
+        d3.value = '0';
+        d4.value = '0';
+        pesoInput.value = '';
     }
-}
+    window.calcularTotal();
+};
 </script>
 @endpush

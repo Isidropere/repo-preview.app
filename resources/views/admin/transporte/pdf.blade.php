@@ -108,10 +108,16 @@
                     <th>Nombre del Artículo</th>
                     <th style="width: 150px;">Categoría de Servicio</th>
                     <th style="width: 80px; text-align: center;">Cantidad</th>
+                    <th style="width: 100px;">Dimensiones</th>
+                    <th style="width: 70px;">Peso</th>
+                    <th style="width: 100px; text-align: right;">Precio/u</th>
+                    <th style="width: 100px; text-align: right;">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
+                @php $totalBase = 0; @endphp
                 @foreach($solicitud->articulos as $art)
+                    @php $totalBase += $art->pivot->subtotal; @endphp
                     <tr>
                         <td>{{ $art->nombre }}</td>
                         <td style="text-transform: capitalize; color: #666;">
@@ -120,6 +126,10 @@
                         <td style="text-align: center; font-weight: bold; color: #004085;">
                             {{ $art->pivot->cantidad }}
                         </td>
+                        <td>{{ $art->pivot->dimensiones ?: 'N/A' }}</td>
+                        <td>{{ $art->pivot->peso ? $art->pivot->peso . 'kg' : 'N/A' }}</td>
+                        <td style="text-align: right;">RD$ {{ number_format($art->pivot->precio_unitario, 2) }}</td>
+                        <td style="text-align: right; font-weight: bold;">RD$ {{ number_format($art->pivot->subtotal, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -128,7 +138,29 @@
     @endif
 
     <div class="info-box">
-        <div class="info-title">Detalles de Carga y Ubicación</div>
+        <div class="info-title">Detalles de Ruta y Estimación</div>
+        <table>
+            <tr>
+                <td class="label">Punto de Recogida (A):</td>
+                <td class="value">{{ $solicitud->punto_recogida ?: 'No especificado' }} (Piso: {{ $solicitud->piso_origen ?: '0' }})</td>
+            </tr>
+            <tr>
+                <td class="label">Punto de Entrega (B):</td>
+                <td class="value">{{ $solicitud->punto_entrega ?: 'No especificado' }} (Piso: {{ $solicitud->piso_destino ?: '0' }})</td>
+            </tr>
+            <tr>
+                <td class="label">Distancia Estimada:</td>
+                <td class="value">{{ $solicitud->distancia_km ?: '0' }} km</td>
+            </tr>
+            <tr>
+                <td class="label" style="font-size: 16px; color: #28a745;">Precio Estimado Total:</td>
+                <td class="value" style="font-size: 16px; font-weight: bold; color: #28a745;">RD$ {{ number_format($solicitud->precio_estimado_total, 2) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Detalles Adicionales de Carga</div>
         <table>
             <tr>
                 <td class="label">Dirección Principal:</td>
