@@ -48,6 +48,10 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     Catálogo de Artículos
                 </button>
+                <button type="button" onclick="switchTab('configuracion')" id="tab-configuracion" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Configuraciones Globales
+                </button>
             </nav>
         </div>
 
@@ -187,12 +191,23 @@
                                             @if(count($sol->articulos) > 0)
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                                                     @foreach($sol->articulos as $art)
-                                                        <div class="flex justify-between items-center px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
-                                                            <div class="flex flex-col">
+                                                        <div class="flex flex-col p-3 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
+                                                            <div class="flex justify-between items-center mb-2">
                                                                 <span class="text-xs font-semibold text-gray-800">{{ $art->nombre }}</span>
-                                                                <span class="text-[9px] text-gray-400 capitalize">{{ $art->categoria == 'ambos' ? 'Ambos servicios' : $art->categoria }}</span>
+                                                                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">x{{ $art->pivot->cantidad }}</span>
                                                             </div>
-                                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">x{{ $art->pivot->cantidad }}</span>
+                                                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-gray-500">
+                                                                @if($art->pivot->dimensiones)
+                                                                    <p><strong>Dim:</strong> {{ $art->pivot->dimensiones }}</p>
+                                                                @endif
+                                                                @if($art->pivot->peso)
+                                                                    <p><strong>Peso:</strong> {{ $art->pivot->peso }} kg</p>
+                                                                @endif
+                                                                @if($art->pivot->precio_unitario > 0)
+                                                                    <p><strong>Unit:</strong> RD$ {{ number_format($art->pivot->precio_unitario, 2) }}</p>
+                                                                    <p class="text-blue-600 font-bold"><strong>Sub:</strong> RD$ {{ number_format($art->pivot->subtotal, 2) }}</p>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     @endforeach
                                                 </div>
@@ -203,10 +218,22 @@
                                                 </div>
                                             @endif
 
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100">
                                                 <div>
                                                     <p class="mb-1"><strong>Dirección:</strong> {{ $sol->direccion }}</p>
-                                                    <p><strong>GPS Coordenadas:</strong> {{ $sol->ubicacion_geologica ?? 'Sin GPS' }}</p>
+                                                    <div class="flex gap-4 mb-1">
+                                                        <p><strong>Recogida (GPS):</strong> {{ $sol->punto_recogida ?? 'N/A' }}</p>
+                                                        <p class="text-blue-600"><strong>Piso:</strong> {{ $sol->piso_origen ?? '0' }}</p>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <p><strong>Entrega (GPS):</strong> {{ $sol->punto_entrega ?? 'N/A' }}</p>
+                                                        <p class="text-red-600"><strong>Piso:</strong> {{ $sol->piso_destino ?? '0' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="border-l border-r border-gray-200 px-4">
+                                                    <p class="mb-1"><strong>Distancia:</strong> {{ $sol->distancia_km ?? '0' }} km</p>
+                                                    <p class="text-lg font-black text-green-700 mt-2">RD$ {{ number_format($sol->precio_estimado_total ?? 0, 2) }}</p>
+                                                    <p class="text-[10px] text-gray-400">Total Estimado</p>
                                                 </div>
                                                 <div>
                                                     <p><strong>Descripción de Carga Libre:</strong></p>
@@ -257,6 +284,10 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio Base (RD$)</label>
+                        <input type="number" name="precio_base" step="0.01" min="0" placeholder="Ej: 500.00" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
                         <button type="submit" class="w-full bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Agregar Artículo
@@ -277,6 +308,7 @@
                             <tr>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">ID</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Artículo</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Precio (RD$)</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Categoría</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Estatus</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b text-center w-36">Acciones</th>
@@ -290,7 +322,10 @@
                                         <form id="edit-form-{{ $art->id }}" action="{{ route('admin.erp.transporte.articulos.update', $art->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PUT')
-                                            <input type="text" name="nombre" value="{{ $art->nombre }}" required class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-sm">
+                                            <input type="text" name="nombre" value="{{ $art->nombre }}" required class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-xs">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                            <input type="number" name="precio_base" step="0.01" min="0" value="{{ $art->precio_base }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[100px]">
                                     </td>
                                     <td class="px-6 py-4">
                                             <select name="categoria" class="px-2 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-xs font-semibold text-gray-700 bg-transparent focus:bg-white transition-all">
@@ -336,6 +371,56 @@
                 </div>
             </div>
         </div>
+
+        <!-- SECCIÓN 3: CONFIGURACIONES GLOBALES -->
+        <div id="section-configuracion" class="hidden transition-all">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl mx-auto">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Ajustes de Precios y Lógicas
+                </h3>
+                
+                <form action="{{ route('admin.erp.transporte.config.update') }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio por KM (Transporte) <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_km_transporte" step="0.01" value="{{ $config['precio_km_transporte'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <p class="mt-1 text-[10px] text-gray-400 italic">Tarifa base para servicios de carga ligera.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio por KM (Mudanza) <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_km_mudanza" step="0.01" value="{{ $config['precio_km_mudanza'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <p class="mt-1 text-[10px] text-gray-400 italic">Tarifa para servicios que requieren manejo de mudanza.</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Límite de Artículos para Auto-Mudanza <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-4">
+                            <input type="number" name="limite_articulos_mudanza" value="{{ $config['limite_articulos_mudanza'] }}" required class="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <span class="text-xs text-gray-500">Si el cliente marca más de este número de artículos, se cobrará automáticamente como <strong>Mudanza</strong>.</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                            Guardar Configuraciones
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -346,27 +431,34 @@
     function switchTab(tab) {
         const tabSol = document.getElementById('tab-solicitudes');
         const tabCat = document.getElementById('tab-catalogo');
+        const tabConf = document.getElementById('tab-configuracion');
+        
         const secSol = document.getElementById('section-solicitudes');
         const secCat = document.getElementById('section-catalogo');
+        const secConf = document.getElementById('section-configuracion');
+ 
+        // Reset all
+        [tabSol, tabCat, tabConf].forEach(t => {
+            if (t) {
+                t.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
+                t.classList.add('border-transparent', 'text-gray-500', 'font-semibold');
+            }
+        });
+        [secSol, secCat, secConf].forEach(s => { if (s) s.classList.add('hidden'); });
 
+        // Activate selected
         if (tab === 'solicitudes') {
             tabSol.classList.add('border-blue-600', 'text-blue-600', 'font-bold');
             tabSol.classList.remove('border-transparent', 'text-gray-500', 'font-semibold');
-            
-            tabCat.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
-            tabCat.classList.add('border-transparent', 'text-gray-500', 'font-semibold');
-            
             secSol.classList.remove('hidden');
-            secCat.classList.add('hidden');
-        } else {
+        } else if (tab === 'catalogo') {
             tabCat.classList.add('border-blue-600', 'text-blue-600', 'font-bold');
             tabCat.classList.remove('border-transparent', 'text-gray-500', 'font-semibold');
-            
-            tabSol.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
-            tabSol.classList.add('border-transparent', 'text-gray-500', 'font-semibold');
-            
             secCat.classList.remove('hidden');
-            secSol.classList.add('hidden');
+        } else if (tab === 'configuracion') {
+            tabConf.classList.add('border-blue-600', 'text-blue-600', 'font-bold');
+            tabConf.classList.remove('border-transparent', 'text-gray-500', 'font-semibold');
+            secConf.classList.remove('hidden');
         }
     }
 

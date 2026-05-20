@@ -22,6 +22,12 @@ class SolicitudTransporte extends Model
         'correo',
         'fecha_servicio',
         'ubicacion_geologica',
+        'punto_recogida',
+        'piso_origen',
+        'punto_entrega',
+        'piso_destino',
+        'distancia_km',
+        'precio_estimado_total',
         'dimensiones_carga',
         'estado',
     ];
@@ -36,7 +42,7 @@ class SolicitudTransporte extends Model
     public function articulos()
     {
         return $this->belongsToMany(TransporteArticulo::class, 'solicitud_transporte_articulo', 'solicitud_transporte_id', 'articulo_id')
-                    ->withPivot('cantidad')
+                    ->withPivot('cantidad', 'dimensiones', 'peso', 'precio_unitario', 'subtotal')
                     ->withTimestamps();
     }
 

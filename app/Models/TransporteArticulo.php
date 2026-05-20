@@ -14,6 +14,7 @@ class TransporteArticulo extends Model
     protected $fillable = [
         'nombre',
         'categoria',
+        'precio_base',
         'estatus',
     ];
 

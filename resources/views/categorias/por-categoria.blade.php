@@ -22,23 +22,23 @@
     {{-- Barra de búsqueda y filtros --}}
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.05);">
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:stretch;">
-            <form action="{{ route('categorias.show', $categoria->slug) }}" method="GET" style="flex:1;min-width:200px;display:flex;">
+            <form action="{{ route('categorias.show', $categoria->slug) }}" method="GET" style="flex:1 1 0;min-width:0;display:flex;">
                 <input type="text" name="search" placeholder="Buscar en {{ $categoria->categoria }}..."
                        value="{{ request('search') }}"
-                       style="flex:1;padding:0.6rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem 0 0 0.5rem;font-size:0.875rem;outline:none;">
+                       style="flex:1 1 0;min-width:0;padding:0.6rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem 0 0 0.5rem;font-size:0.875rem;outline:none;">
                 <button type="submit" style="padding:0.6rem 1rem;background:#479bd5;color:#fff;border:none;border-radius:0 0.5rem 0.5rem 0;font-size:0.875rem;cursor:pointer;">
                     <i class="fas fa-search"></i>
                 </button>
             </form>
-            <div style="display:flex;gap:0;">
-                <select name="sort" id="sort" style="padding:0.6rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem 0 0 0.5rem;font-size:0.875rem;background:#fff;cursor:pointer;outline:none;">
+            <div style="display:flex;flex:1 1 auto;min-width:0;gap:0;flex-wrap:wrap;">
+                <select name="sort" id="sort" style="flex:1 1 140px;min-width:0;padding:0.6rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem 0 0 0.5rem;font-size:0.875rem;background:#fff;cursor:pointer;outline:none;">
                     <option value="">Ordenar por...</option>
                     <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Precio: Menor a Mayor</option>
                     <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Precio: Mayor a Menor</option>
                     <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Más recientes</option>
                     <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Más antiguos</option>
                 </select>
-                <button id="applyFilters" style="padding:0.6rem 1rem;background:#f58634;color:#fff;border:none;border-radius:0 0.5rem 0.5rem 0;font-size:0.875rem;cursor:pointer;">
+                <button id="applyFilters" style="flex:0 0 auto;padding:0.6rem 1rem;background:#f58634;color:#fff;border:none;border-radius:0 0.5rem 0.5rem 0;font-size:0.875rem;cursor:pointer;">
                     <i class="fas fa-filter"></i>
                 </button>
             </div>
@@ -47,7 +47,7 @@
 
     {{-- Grid de productos --}}
     @if($items->count() > 0)
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;">
             @foreach($items as $item)
             @php
                 $imagen = $item->imagenes->where('estado', 'aprobado')->first();
@@ -90,9 +90,9 @@
                         </div>
 
                         {{-- Acciones --}}
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:0.65rem;border-top:1px solid #f3f4f6;">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;padding-top:0.65rem;border-top:1px solid #f3f4f6;gap:0.5rem;">
                             <a href="{{ route('producto.detalle', $item->slug) }}"
-                               style="font-size:0.8rem;font-weight:700;color:#64748b;text-decoration:none;display:flex;align-items:center;gap:6px;background:#f8fafc;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;transition:background .2s;"
+                               style="font-size:0.8rem;font-weight:700;color:#64748b;text-decoration:none;display:flex;align-items:center;gap:6px;background:#f8fafc;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;transition:background .2s;flex:1 1 auto;min-width:0;"
                                onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
                                 <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

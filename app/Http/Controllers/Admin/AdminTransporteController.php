@@ -50,7 +50,32 @@ class AdminTransporteController extends Controller
         // Obtener el catálogo completo de artículos para la pestaña de gestión del admin
         $articulos = TransporteArticulo::orderBy('nombre', 'asc')->get();
 
-        return view('admin.transporte.index', compact('solicitudes', 'articulos'));
+        // Obtener configuraciones globales
+        $config = [
+            'precio_km_transporte' => \App\Models\TransporteConfiguracion::get('precio_km_transporte', 50),
+            'precio_km_mudanza' => \App\Models\TransporteConfiguracion::get('precio_km_mudanza', 100),
+            'limite_articulos_mudanza' => \App\Models\TransporteConfiguracion::get('limite_articulos_mudanza', 5),
+        ];
+
+        return view('admin.transporte.index', compact('solicitudes', 'articulos', 'config'));
+    }
+
+    /**
+     * Actualiza las configuraciones globales de transporte.
+     */
+    public function updateConfig(Request $request)
+    {
+        $request->validate([
+            'precio_km_transporte' => 'required|numeric|min:0',
+            'precio_km_mudanza' => 'required|numeric|min:0',
+            'limite_articulos_mudanza' => 'required|integer|min:0',
+        ]);
+
+        \App\Models\TransporteConfiguracion::set('precio_km_transporte', $request->precio_km_transporte);
+        \App\Models\TransporteConfiguracion::set('precio_km_mudanza', $request->precio_km_mudanza);
+        \App\Models\TransporteConfiguracion::set('limite_articulos_mudanza', $request->limite_articulos_mudanza);
+
+        return back()->with('success', '¡Configuraciones globales actualizadas con éxito!');
     }
 
     /**
@@ -126,11 +151,13 @@ class AdminTransporteController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'categoria' => 'required|in:transporte,mudanza,ambos',
+            'precio_base' => 'nullable|numeric|min:0',
         ]);
 
         TransporteArticulo::create([
             'nombre' => $request->nombre,
             'categoria' => $request->categoria,
+            'precio_base' => $request->precio_base ?? 0,
             'estatus' => true,
         ]);
 
@@ -145,6 +172,7 @@ class AdminTransporteController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'categoria' => 'required|in:transporte,mudanza,ambos',
+            'precio_base' => 'nullable|numeric|min:0',
             'estatus' => 'required|boolean',
         ]);
 
@@ -152,6 +180,7 @@ class AdminTransporteController extends Controller
         $articulo->update([
             'nombre' => $request->nombre,
             'categoria' => $request->categoria,
+            'precio_base' => $request->precio_base ?? 0,
             'estatus' => $request->estatus,
         ]);
 

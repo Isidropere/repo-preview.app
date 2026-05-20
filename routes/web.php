@@ -707,6 +707,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/transporte/articulos', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'storeArticulo'])->name('transporte.articulos.store');
         Route::put('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateArticulo'])->name('transporte.articulos.update');
         Route::delete('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyArticulo'])->name('transporte.articulos.destroy');
+        Route::put('/transporte/config', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateConfig'])->name('transporte.config.update');
 
 
         // Cuentas CRUD

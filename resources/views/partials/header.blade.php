@@ -19,7 +19,7 @@
 </section>
 
 <!-- Header principal -->
-<header class="w-full bg-[#FAFAFA] text-xl py-1.5 md:py-2 shadow-lg sticky top-0 z-50" style="max-width:100vw; box-sizing:border-box;">
+<header class="w-full bg-[#FAFAFA] text-xl py-1.5 md:py-2 shadow-lg sticky top-0 z-50" style="max-width:100vw; box-sizing:border-box; overflow:visible;">
 
     <div class="max-w-[1400px] mx-auto px-4 md:px-4 lg:px-6" style="box-sizing:border-box; max-width:100%;">
         <!-- Contenedor principal del nav -->
@@ -36,7 +36,7 @@
                          alt="Brand Logo" width="120" height="40">
                 </a>
                 <!-- Buscador móvil con input + botón pegado -->
-                <form method="GET" action="{{ route('items.search_header') }}" class="lg:hidden flex min-w-0" style="flex:0 1 140px; min-width:0;">
+                <form method="GET" action="{{ route('items.search_header') }}" class="lg:hidden flex min-w-0" style="flex:1 1 auto; min-width:0;">
                     <label for="mobile-search" class="sr-only">Buscar</label>
                     <input type="search" id="mobile-search"
                            name="q"
@@ -72,7 +72,7 @@
             </div>
 
             <!-- Contenido colapsable (menú completo) -->
-            <div id="navbar-collapse-with-animation" class="hidden lg:block overflow-hidden transition-all duration-300 basis-full">
+            <div id="navbar-collapse-with-animation" class="hidden lg:block overflow-hidden lg:overflow-visible transition-all duration-300 basis-full">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pt-4 lg:pt-0">
 
                     <!-- Buscador escritorio (visible solo en desktop) -->
@@ -103,15 +103,43 @@
 
                     <!-- Menú principal -->
                     <div class="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-5">
-                            {{-- Links de navegación con iconos --}}
-                            <a class="inline-flex items-center gap-1.5 text-gray-700 hover:text-primary transition-colors text-sm font-medium" href="{{ route('intercambio') }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                                Intercambiar
-                            </a>
-                            <a class="inline-flex items-center gap-1.5 text-gray-700 hover:text-primary transition-colors text-sm font-medium" href="{{ route('compra') }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                Comprar
-                            </a>
+                              {{-- Intercambiar --}}
+                <a class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-hoverPrimary text-black text-xs font-bold rounded-lg transition-colors border border-gray-300 whitespace-nowrap shadow-sm"
+                   href="{{ route('intercambio') }}">
+
+                    <svg class="w-4 h-4"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+
+                    Intercambiar
+                </a>
+
+                {{-- Comprar --}}
+                <a class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 bg-white hover:bg-hoverSecondary text-black text-xs font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                   href="{{ route('compra') }}">
+
+                    <svg class="w-4 h-4"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+
+                    Comprar
+                </a>
+
+
 
                             @auth
                             {{-- Botones de creación --}}
@@ -164,8 +192,8 @@
                             @auth
                             {{-- Mis intercambios --}}
                             <a href="{{ route('negociaciones.mis') }}"
-                               class="relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary"
-                               title="Mis intercambios">
+                               class="relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary no-tooltip"
+                               data-tooltip="Intercambios" title="Mis intercambios" data-astro-cid-pwmmw5ba>
                                 <span id="badgeIntercambios" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
                                     0
                                 </span>
@@ -198,10 +226,10 @@
                                     <span class="whitespace-nowrap hidden sm:inline">Hola, {{ Auth::user()->nombres }}</span>
                                 </button>
 
-                                    <div class="hs-dropdown-menu transition-opacity duration-150 hs-dropdown-open:opacity-100 opacity-0 md:w-auto px-4 hidden z-50 bg-white border border-gray-200 md:shadow-2xl rounded-xl before:absolute top-full before:-top-5 before:start-0 before:w-full before:h-5"
+                                    <div class="hs-dropdown-menu transition-opacity duration-150 hs-dropdown-open:opacity-100 opacity-0 md:w-auto px-4 hidden z-50 bg-white border border-gray-200 md:shadow-2xl rounded-xl before:absolute top-full before:-top-2 before:start-0 before:w-full before:h-2"
                                         role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-floating-dark" data-astro-cid-pwmmw5ba>
 
-                                    <div class="my-4 md:px-1 space-y-1 text-sm text-center text-primary flex flex-col gap-y-2 items-center" data-astro-cid-pwmmw5ba>
+                                    <div class="my-2 md:px-1 space-y-1 text-sm text-center text-primary flex flex-col gap-y-2 items-center" data-astro-cid-pwmmw5ba>
 
                                         {{-- Foto + nombre en el dropdown --}}
                                         <div class="flex flex-col items-center gap-2 pb-1">
@@ -238,30 +266,14 @@
                                     </div>
                              </div>
                          @else
-                            <button  data-tooltip="Login" data-astro-cid-pwmmw5ba id="hs-dropdown-floating-dark" type="button"
-                                    class="relative text-primary hover:text-hoverPrimary py-1 md:px-1 no-tooltip" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">                    
-                                <svg class="h-8 w-8" data-astro-cid-pwmmw5ba xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> 
-                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2">
-                                    </path> 
-                                    <circle cx="12" cy="7" r="4">
-                                    </circle> 
+                            <a href="{{ route('login') }}" 
+                               class="relative flex items-center justify-center text-primary hover:text-hoverPrimary p-2 no-tooltip" 
+                               data-tooltip="Login" title="Iniciar sesión" data-astro-cid-pwmmw5ba>
+                                <svg class="h-6 w-6" data-astro-cid-pwmmw5ba xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> 
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path> 
+                                    <circle cx="12" cy="7" r="4"></circle> 
                                 </svg>
-                               <!-- <span>Login</span>-->
-
-                            </button>
-
-                        <div class="hs-dropdown-menu transition-opacity duration-150 hs-dropdown-open:opacity-100 opacity-0 md:w-auto px-4 hidden z-50 bg-white border border-gray-200 md:shadow-2xl rounded-xl before:absolute top-full before:-top-5 before:start-0 before:w-full before:h-5"
-                            role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-floating-dark">
-                            <div class="my-4 md:px-1 space-y-1 text-sm text-center text-primary flex flex-col gap-y-2 items-center">
-                                <a class="flex items-center gap-x-3.5 py-2 md:px-3 w-full justify-left rounded-lg hover:bg-gray-100 focus:outline-none hover:underline transition-all" href="{{ route('login') }}">
-                                    <svg class="h-8 w-8 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    Login
-                                </a>
-                            </div>
-        </div>         
+                            </a>
         @endauth
          
         
