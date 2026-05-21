@@ -147,10 +147,6 @@
                     </div>
 
                     <div>
-                        <label class="form-label">Dirección Exacta (Origen o Destino principal) <span class="text-red-500">*</span></label>
-                        <input type="text" name="direccion" value="{{ old('direccion') }}" required class="form-input" placeholder="Ej: Av. Winston Churchill esq. Gustavo Mejía Ricart, Piantini">
-                    </div>
-                    <div>
                         <label class="form-label">Dimensiones y Detalles de la Carga <span class="text-red-500">*</span></label>
                         <textarea name="dimensiones_carga" required class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
                     </div>
