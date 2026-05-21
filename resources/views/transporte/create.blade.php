@@ -7,7 +7,7 @@
     #map-container { height: 350px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #e5e7eb; }
     .form-input { padding: 11px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s ease-in-out; box-sizing: border-box; width: 100%; background-color: #fff; }
     .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-    .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .form-label { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
     .btn-gps { background: #0ea5e9; color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 11px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; height: auto; box-sizing: border-box; }
     .btn-gps:hover { background: #0284c7; }
     .btn-gps:disabled { background: #94a3b8; cursor: not-allowed; }
