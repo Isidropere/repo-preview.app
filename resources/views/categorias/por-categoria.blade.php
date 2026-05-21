@@ -224,6 +224,14 @@ window._urlNegStore = "{{ route('negociaciones.store') }}";
     };
 
     document.addEventListener('DOMContentLoaded', function() {
+        @if(isset($categoria) && $categoria->id_categoria_item == 11)
+            if (sessionStorage.getItem('adultos_aceptado') !== '1') {
+                if (typeof confirmarAdultos === 'function') {
+                    confirmarAdultos({ preventDefault: () => {} }, { href: window.location.href });
+                }
+            }
+        @endif
+
         document.getElementById('applyFilters')?.addEventListener('click', function(e) {
             e.preventDefault();
             const sort = document.getElementById('sort').value;

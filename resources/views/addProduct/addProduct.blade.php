@@ -316,6 +316,13 @@
 <script>
 // ═══ Stepper ═══
 let currentStep = 1;
+
+document.getElementById('id_categoria_item')?.addEventListener('change', function() {
+    if (this.value == '11') {
+        alert('Has seleccionado la categoría Adultos. Recuerda que el contenido debe ser exclusivo para mayores de 18 años.');
+    }
+});
+
 function goToStep(step) {
     document.getElementById('step-' + currentStep).classList.add('hidden');
     document.getElementById('step-' + step).classList.remove('hidden');

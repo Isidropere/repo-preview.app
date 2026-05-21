@@ -12,44 +12,36 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Crear tabla de catálogo de artículos
-        if (!Schema::hasTable('transporte_articulos')) {
-            Schema::create('transporte_articulos', function (Blueprint $table) {
-                $table->id();
-                $table->string('nombre');
-                $table->enum('categoria', ['transporte', 'mudanza', 'ambos'])->default('ambos');
-                $table->boolean('estatus')->default(true);
-                $table->timestamps();
-            });
-        }
+        Schema::create('transporte_articulos', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre');
+            $table->enum('categoria', ['transporte', 'mudanza', 'ambos'])->default('ambos');
+            $table->boolean('estatus')->default(true);
+            $table->timestamps();
+        });
 
         // 2. Modificar solicitudes_transporte para añadir tipo_servicio
-        if (Schema::hasTable('solicitudes_transporte')) {
-            Schema::table('solicitudes_transporte', function (Blueprint $table) {
-                if (!Schema::hasColumn('solicitudes_transporte', 'tipo_servicio')) {
-                    $table->enum('tipo_servicio', ['transporte', 'mudanza'])->default('transporte')->after('id_usuario');
-                }
-            });
-        }
+        Schema::table('solicitudes_transporte', function (Blueprint $table) {
+            $table->enum('tipo_servicio', ['transporte', 'mudanza'])->default('transporte')->after('id_usuario');
+        });
 
         // 3. Crear tabla pivot solicitud_transporte_articulo
-        if (!Schema::hasTable('solicitud_transporte_articulo')) {
-            Schema::create('solicitud_transporte_articulo', function (Blueprint $table) {
-                $table->id();
-                $table->unsignedBigInteger('solicitud_transporte_id');
-                $table->unsignedBigInteger('articulo_id');
-                $table->integer('cantidad')->default(1);
-                $table->timestamps();
+        Schema::create('solicitud_transporte_articulo', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('solicitud_transporte_id');
+            $table->unsignedBigInteger('articulo_id');
+            $table->integer('cantidad')->default(1);
+            $table->timestamps();
 
-                // Claves foráneas con eliminación en cascada
-                $table->foreign('solicitud_transporte_id', 'fk_sol_trans_art_sol')
-                      ->references('id')->on('solicitudes_transporte')
-                      ->onDelete('cascade');
-                
-                $table->foreign('articulo_id', 'fk_sol_trans_art_art')
-                      ->references('id')->on('transporte_articulos')
-                      ->onDelete('cascade');
-            });
-        }
+            // Claves foráneas con eliminación en cascada
+            $table->foreign('solicitud_transporte_id', 'fk_sol_trans_art_sol')
+                  ->references('id')->on('solicitudes_transporte')
+                  ->onDelete('cascade');
+            
+            $table->foreign('articulo_id', 'fk_sol_trans_art_art')
+                  ->references('id')->on('transporte_articulos')
+                  ->onDelete('cascade');
+        });
     }
 
     /**
