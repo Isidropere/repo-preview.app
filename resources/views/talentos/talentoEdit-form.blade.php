@@ -66,7 +66,7 @@
                 <div class="space-y-2.5">
                     {{-- Nombre --}}
                     <div>
-                        <label for="item" class="block text-xs font-medium text-gray-700 mb-0.5">Nombre del talento <span class="text-red-500">*</span></label>
+                        <label for="item" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Nombre del talento <span class="text-red-500">*</span></label>
                         <input type="text" id="item" name="item" required value="{{ old('item', $item->item) }}" placeholder="Ej: Clases de guitarra, Diseño gráfico"
                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                         @error('item')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
@@ -75,7 +75,7 @@
                     {{-- Precio y Modalidad --}}
                     <div class="grid grid-cols-2 gap-3" style="align-items:end">
                         <div>
-                            <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
+                            <label for="valor" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
                                 <input type="text" id="valor" name="valor" required value="{{ old('valor', number_format($item->valor, 2)) }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
@@ -84,7 +84,7 @@
                             @error('valor')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                         </div>
                         <div>
-                            <label for="tipo_trans" class="block text-xs font-medium text-gray-700 mb-0.5">Modalidad <span class="text-red-500">*</span></label>
+                            <label for="tipo_trans" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Modalidad <span class="text-red-500">*</span></label>
                             <select id="tipo_trans" name="tipo_trans" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
                                 <option value="3" {{ old('tipo_trans', $item->tipo_trans) == 3 ? 'selected' : '' }}>Venta o Intercambio</option>
                                 <option value="2" {{ old('tipo_trans', $item->tipo_trans) == 2 ? 'selected' : '' }}>Intercambio</option>
@@ -96,7 +96,7 @@
 
                     {{-- Descuento --}}
                     <div>
-                        <label for="descuento" class="block text-xs font-medium text-gray-700 mb-0.5">Descuento <span class="text-gray-400">(opcional)</span></label>
+                        <label for="descuento" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Descuento <span class="text-gray-400">(opcional)</span></label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">%</span>
                             <input type="number" id="descuento" name="descuento" value="{{ old('descuento', $item->descuento ?? 0) }}" min="0" max="100" placeholder="0"
@@ -106,7 +106,7 @@
 
                     {{-- Descripción --}}
                     <div>
-                        <label for="presentacion" class="block text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
+                        <label for="presentacion" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
                         <textarea id="presentacion" name="presentacion" rows="2" required maxlength="250" placeholder="Describe tu talento o servicio: experiencia, qué incluye, horarios disponibles, etc."
                                   oninput="contarCaracteres(this,'contadorTalento')"
                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none">{{ old('presentacion', $item->presentacion) }}</textarea>
