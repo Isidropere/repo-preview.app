@@ -147,8 +147,8 @@
                     </div>
 
                     <div>
-                        <label class="form-label">Dimensiones y Detalles de la Carga <span class="text-red-500">*</span></label>
-                        <textarea name="dimensiones_carga" required class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
+                        <label class="form-label">Dimensiones y Detalles de la Carga (Opcional)</label>
+                        <textarea name="dimensiones_carga" class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
                     </div>
                 </div>
 

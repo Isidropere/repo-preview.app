@@ -46,7 +46,7 @@ class TransporteController extends Controller
             'piso_destino' => 'nullable|string|max:50',
             'distancia_km' => 'nullable|numeric',
             'precio_estimado_total' => 'nullable|numeric',
-            'dimensiones_carga' => 'required|string|max:1000',
+            'dimensiones_carga' => 'nullable|string|max:1000',
         ]);
 
         if (Auth::check()) {
@@ -55,6 +55,9 @@ class TransporteController extends Controller
 
         // Asignamos la dirección de origen al campo heredado "direccion" para evitar errores en BD
         $validated['direccion'] = $validated['punto_recogida_address'] ?? 'No especificada';
+
+        // Dimensiones carga fallback
+        $validated['dimensiones_carga'] = $validated['dimensiones_carga'] ?? 'No especificadas';
 
         $validated['estado'] = 'pendiente';
 
