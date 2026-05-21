@@ -685,8 +685,6 @@
   
 
 
-
-</body>
 <script>
     function abrirNegociacionesModal() {
         var m = document.getElementById('negociacionesNotificacionesModal');
@@ -728,4 +726,6 @@
 </script>
 
 @stack('scripts')
+
+</body>
 </html>
