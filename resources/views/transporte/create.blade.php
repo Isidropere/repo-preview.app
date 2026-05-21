@@ -150,6 +150,16 @@
                         <label class="form-label">Dimensiones y Detalles de la Carga (Opcional)</label>
                         <textarea name="dimensiones_carga" class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                        <div>
+                            <label class="form-label text-gray-700">¿En qué piso están los artículos? (Origen) <span class="text-red-500">*</span></label>
+                            <input type="text" name="piso_origen" value="{{ old('piso_origen', '0') }}" required class="form-input" placeholder="Ej: 1, 2, Sótano, PH...">
+                        </div>
+                        <div>
+                            <label class="form-label text-gray-700">¿A qué piso se llevarán? (Destino) <span class="text-red-500">*</span></label>
+                            <input type="text" name="piso_destino" value="{{ old('piso_destino', '0') }}" required class="form-input" placeholder="Ej: 1, 3, PH, etc.">
+                        </div>
+                    </div>
                 </div>
 
                 <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Ruta del Servicio</h2>
@@ -165,11 +175,6 @@
                                 <input type="hidden" name="punto_recogida_address" id="punto_recogida_address" value="{{ old('punto_recogida_address', '') }}">
                                 <div class="geo-suggestions" id="suggestions-a"></div>
                             </div>
-                            
-                            <div class="mt-2">
-                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿En qué piso están los artículos? <span class="text-red-500">*</span></label>
-                                <input type="text" name="piso_origen" value="{{ old('piso_origen', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 2, Sótano, PH...">
-                            </div>
 
                             <button type="button" id="btn-set-a" class="mt-2 w-full py-2 bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-200 text-sm">📍 Seleccionar Punto A en Mapa</button>
                         </div>
@@ -180,11 +185,6 @@
                                 <input type="hidden" id="punto_entrega" name="punto_entrega" value="{{ old('punto_entrega') }}" required>
                                 <input type="hidden" name="punto_entrega_address" id="punto_entrega_address" value="{{ old('punto_entrega_address', '') }}">
                                 <div class="geo-suggestions" id="suggestions-b"></div>
-                            </div>
-                            
-                            <div class="mt-2">
-                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿A qué piso se llevarán? <span class="text-red-500">*</span></label>
-                                <input type="text" name="piso_destino" value="{{ old('piso_destino', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 3, PH, etc.">
                             </div>
 
                             <button type="button" id="btn-set-b" class="mt-2 w-full py-2 bg-red-100 text-red-700 font-bold rounded-lg border border-red-200 hover:bg-red-200 text-sm">📍 Seleccionar Punto B en Mapa</button>
