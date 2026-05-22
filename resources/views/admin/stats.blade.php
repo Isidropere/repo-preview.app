@@ -1,4 +1,4 @@
-?@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'Estadisticas - Admin')
 @section('content')
 <div style="padding:24px;max-width:1400px;margin:0 auto;font-family:sans-serif;">
@@ -256,7 +256,11 @@
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:28px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
       <h3 style="margin:0;font-size:.95rem;font-weight:600;color:#1e293b;">Analisis de costos de envio</h3>
-      <button onclick="abrirModalDelivery()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.8rem;cursor:pointer;font-weight:600;">Configurar porcentajes</button>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+        <button type="button" onclick="recalcularDeliveryEnvio()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:.8rem;cursor:pointer;font-weight:600;">Recalcular</button>
+        <button type="button" onclick="abrirModalDelivery()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:.8rem;cursor:pointer;font-weight:600;">Configurar porcentajes</button>
+        <span id="delivery-recalc-msg" style="font-size:.78rem;font-weight:600;min-width:140px;"></span>
+      </div>
     </div>
     <div id="bloque-delivery"></div>
   </div>
@@ -266,12 +270,11 @@
   <!-- SECCIÓN: Configuración -->
   <div id="seccion-config" style="display:none;">
 
-
 <div id="delivery-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
     <button onclick="cerrarModalDelivery()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
     <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:6px;">Configurar porcentajes de envio</div>
-    <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Estos porcentajes se aplican sobre el valor del articulo para calcular el costo de envio.</div>
+    <div style="font-size:.82rem;color:#64748b;margin-bottom:18px;">Todos los porcentajes se aplican sobre la base proveedor de cada zona. Rutas: cortas, largas, especiales y bultos chequeados.</div>
     <div id="delivery-form-fields"></div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button onclick="guardarConfigDelivery()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:.85rem;cursor:pointer;font-weight:600;">Guardar</button>
@@ -608,17 +611,117 @@ function renderProvincias(rows) {
   });
 }
 
-function renderDelivery(zonas, config) {
+function claveConfigPorTipo(tipo) {
+  return {corta:'cortas', larga:'largas', especial:'especiales', chequeado:'chequeados'}[tipo] || tipo;
+}
+
+function porcentajesDesdeConfig(tipo, config) {
+  const clave = claveConfigPorTipo(tipo);
+  const row = (config || []).find(c => c.clave === clave);
+  if (!row) return {};
+  return {
+    pct_ganancia: parseFloat(row.porcentaje) || 0,
+    pct_plataforma: parseFloat(row.porcentaje_plataforma) || 0,
+    pct_seguro: parseFloat(row.porcentaje_seguro) || 0,
+    pct_manejo: parseFloat(row.porcentaje_manejo) || 0,
+  };
+}
+
+function calcularCostoEnvioZona(z) {
+  const base = Number(z.precio_base) || 0;
+  const pctG = Number(z.pct_ganancia) || 0;
+  const pctP = Number(z.pct_plataforma) || 0;
+  const pctM = Number(z.pct_manejo) || 0;
+  const pctS = Number(z.pct_seguro) || 0;
+  const flete = Math.round(base * (1 + pctG / 100) * 100) / 100;
+  const plataforma = Math.round(base * (pctP / 100) * 100) / 100;
+  const seguro = Math.round(base * (pctS / 100) * 100) / 100;
+  const manejo = Math.round(base * (pctM / 100) * 100) / 100;
+  const total = Math.round((flete + plataforma + seguro + manejo) * 100) / 100;
+  return { costo_estimado: total, costo_seguro: seguro, costo_flete: flete, costo_plataforma: plataforma, costo_manejo: manejo };
+}
+
+function mostrarMsgDeliveryRecalc(ok, texto) {
+  const textoFinal = texto || (ok ? 'Recalculado' : 'No recalculado');
+  const color = ok ? '#059669' : '#dc2626';
+  ['delivery-recalc-msg', 'delivery-recalc-msg-config'].forEach(function(id) {
+    const msg = document.getElementById(id);
+    if (!msg) return;
+    msg.textContent = textoFinal;
+    msg.style.color = color;
+  });
+  clearTimeout(mostrarMsgDeliveryRecalc._t);
+  mostrarMsgDeliveryRecalc._t = setTimeout(function() {
+    ['delivery-recalc-msg', 'delivery-recalc-msg-config'].forEach(function(id) {
+      const msg = document.getElementById(id);
+      if (msg) msg.textContent = '';
+    });
+  }, 4000);
+}
+
+function recalcularDeliveryEnvio() {
+  if (!datosCache) {
+    mostrarMsgDeliveryRecalc(false, 'No recalculado: cargue los datos primero (Actualizar).');
+    return;
+  }
+  const zonasOrig = datosCache.delivery_zonas;
+  if (!zonasOrig || !zonasOrig.length) {
+    mostrarMsgDeliveryRecalc(false, 'No recalculado: no hay zonas de envio activas.');
+    return;
+  }
+  try {
+    const config = datosCache.delivery_config || [];
+    const zonas = zonasOrig.map(z => {
+      const merged = Object.assign({}, z, porcentajesDesdeConfig(z.tipo, config));
+      return Object.assign(merged, calcularCostoEnvioZona(merged));
+    });
+    datosCache.delivery_zonas = zonas;
+    renderDelivery(zonas);
+    if (typeof window.refrescarTablaZonasDelivery === 'function') {
+      window.refrescarTablaZonasDelivery(zonas);
+    }
+    mostrarMsgDeliveryRecalc(true, 'Recalculado (' + zonas.length + ' zona' + (zonas.length === 1 ? '' : 's') + ').');
+  } catch (e) {
+    console.error('Error recalculando delivery:', e);
+    mostrarMsgDeliveryRecalc(false, 'No recalculado: error al calcular.');
+  }
+}
+
+function enriquecerZonaConCostos(z) {
+  const base = Number(z.precio_persona ?? z.precio_base) || 0;
+  const config = (datosCache && datosCache.delivery_config) ? datosCache.delivery_config : [];
+  const merged = Object.assign({}, z, { precio_base: base }, porcentajesDesdeConfig(z.tipo, config));
+  return Object.assign(merged, calcularCostoEnvioZona(merged));
+}
+
+function renderResumenRutasDelivery(config) {
+  const el = document.getElementById('zonas-config-rutas');
+  if (!el) return;
+  const claveLabel = { cortas: 'Rutas cortas', largas: 'Rutas largas', especiales: 'Rutas especiales', chequeados: 'Bultos chequeados' };
+  const colores = { cortas: '#10b981', largas: '#3b82f6', especiales: '#f59e0b', chequeados: '#8b5cf6' };
+  if (!config.length) { el.innerHTML = ''; return; }
+  el.innerHTML = config.map(row => {
+    const c = colores[row.clave] || '#64748b';
+    const titulo = claveLabel[row.clave] || row.clave;
+    return '<span style="font-size:.72rem;padding:6px 10px;background:' + c + '11;border:1px solid ' + c + '33;border-radius:8px;color:#475569;">'
+      + '<strong style="color:' + c + ';">' + titulo + '</strong>: Ganancia ' + (row.porcentaje || 0) + '% · Plataforma '
+      + (row.porcentaje_plataforma || 0) + '% · Manejo ' + (row.porcentaje_manejo || 0) + '% · Seguro ' + (row.porcentaje_seguro || 0) + '%</span>';
+  }).join('');
+}
+
+function renderDelivery(zonas) {
   const el = document.getElementById('bloque-delivery');
   if (!el) return;
   if (!zonas || !zonas.length) { el.innerHTML = '<p style="color:#94a3b8;font-size:.85rem;">Sin datos de zonas.</p>'; return; }
-  const colores = {corta:'#10b981', larga:'#3b82f6', especial:'#f59e0b'};
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">' +
+  const colores = {corta:'#10b981', larga:'#3b82f6', especial:'#f59e0b', chequeado:'#8b5cf6'};
+  const notaRef = '<p style="font-size:.72rem;color:#64748b;margin:0 0 12px;">Cada zona usa su base proveedor (persona) y los porcentajes de su ruta (cortas, largas, especiales o bultos chequeados).</p>';
+  el.innerHTML = notaRef + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">' +
     zonas.map(z => {
       const c = colores[z.tipo] || '#64748b';
       const nombre = z.zona || z.nombre || z.tipo;
       const base   = z.precio_base || z.costo_base || 0;
-      const costo  = z.costo_estimado || base;
+      const costo  = z.costo_estimado ?? base;
+      const seguro = Number(z.costo_seguro || 0);
       return '<div style="padding:14px;background:#f8fafc;border-radius:8px;border-left:3px solid '+c+';">' +
         '<div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">'+z.tipo+'</div>' +
         '<div style="font-size:.9rem;font-weight:700;color:#1e293b;margin:4px 0;">'+nombre+'</div>' +
@@ -633,11 +736,14 @@ function renderDelivery(zonas, config) {
           '</div>' +
         '</div>' +
         '<div style="font-size:.7rem;color:#94a3b8;margin-top:4px;">' +
-          'Ganancia '+(z.pct_ganancia||0)+'% &middot; Plataforma '+(z.pct_plataforma||0)+'% &middot; Manejo '+(z.pct_manejo||0)+'% &middot; Seguro '+(z.pct_seguro||0)+'%' +
+          'Ganancia '+(z.pct_ganancia||0)+'% &middot; Plataforma '+(z.pct_plataforma||0)+'% &middot; Manejo '+(z.pct_manejo||0)+'% &middot; Seguro '+(z.pct_seguro||0)+'% (sobre base)' +
+          (seguro > 0 ? ' &middot; RD$ '+seguro.toLocaleString('es-DO',{minimumFractionDigits:2})+' seguro' : '') +
         '</div>' +
         '<div style="font-size:.7rem;color:#94a3b8;margin-top:2px;">'+(z.dias_entrega||'')+'</div></div>';
     }).join('') + '</div>';
-}let deliveryConfigCache = [];
+}
+
+let deliveryConfigCache = [];
 
 function abrirModalDelivery() {
   var m = document.getElementById('delivery-modal');
@@ -657,7 +763,7 @@ function abrirModalDelivery() {
     porcentaje_manejo:'Manejo (%)'
   };
  
-  const claveLabel = {cortas:'Rutas cortas', largas:'Rutas largas', especiales:'Rutas especiales'};
+  const claveLabel = {cortas:'Rutas cortas', largas:'Rutas largas', especiales:'Rutas especiales', chequeados:'Bultos chequeados'};
   fields.innerHTML = cfg.map(row => {
     const titulo = claveLabel[row.clave] || row.clave;
     const inputs = Object.entries(fieldLabels).map(([f,l]) =>
@@ -670,7 +776,6 @@ function abrirModalDelivery() {
       '<div style="font-size:.85rem;font-weight:700;color:#1e293b;margin-bottom:10px;">'+titulo+'</div>' +
       inputs + '</div>';
   }).join('');
-    console.log("llega completa");
 }
 
 function cerrarModalDelivery() { document.getElementById('delivery-modal').style.display = 'none'; }
@@ -725,7 +830,11 @@ async function cargarDatos() {
     renderItemsSinMovimiento(datos.items_sin_movimiento || []);
     renderIngresos(datos.ingresos_semanal||[], datos.ingresos_mensual||[]);
     renderProvincias(datos.actividad_provincia || []);
-    renderDelivery(datos.delivery_zonas || [], datos.delivery_config || []);
+    renderDelivery(datos.delivery_zonas || []);
+    renderResumenRutasDelivery(datos.delivery_config || []);
+    if (typeof window.refrescarTablaZonasDelivery === 'function') {
+      window.refrescarTablaZonasDelivery();
+    }
     Object.keys(TIPOS).forEach(k => renderGrafica(k, datos));
     const el = document.getElementById('actualizado');
     if (el) el.textContent = 'Actualizado: ' + (datos.actualizado_en || '');
@@ -746,19 +855,27 @@ document.addEventListener('DOMContentLoaded', () => {
        Zonas de Delivery (mantenimiento)
   --}}
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px;">
       <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0;">🚚 Zonas de Delivery</h2>
-      <button onclick="abrirModalZona(null)" style="background:#f58634;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:.85rem;cursor:pointer;font-weight:600;">+ Nueva zona</button>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+        <button type="button" onclick="recalcularDeliveryEnvio()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:.8rem;cursor:pointer;font-weight:600;">Recalcular costos</button>
+        <button type="button" onclick="abrirModalDelivery()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:.8rem;cursor:pointer;font-weight:600;">Configurar porcentajes</button>
+        <button onclick="abrirModalZona(null)" style="background:#f58634;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:.85rem;cursor:pointer;font-weight:600;">+ Nueva zona</button>
+        <span id="delivery-recalc-msg-config" style="font-size:.78rem;font-weight:600;min-width:140px;"></span>
+      </div>
     </div>
+    <p id="zonas-delivery-nota" style="font-size:.72rem;color:#64748b;margin:0 0 12px;">Mismos calculos que en Operacion: base proveedor (persona) + porcentajes por ruta (cortas, largas, especiales o bultos chequeados).</p>
+    <div id="zonas-config-rutas" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
         <thead>
           <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Zona</th>
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Tipo</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Base proveedor</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Costo estimado</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Porcentajes (ruta)</th>
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Pueblos</th>
-            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Empresa</th>
-            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Persona</th>
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Días</th>
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Estado</th>
             <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Acciones</th>
@@ -787,18 +904,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </div>
         <div>
-          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Pueblos (separados por coma)</label>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Pueblos (separados por coma, opcional)</label>
           <textarea id="zonaPueblos" rows="3" placeholder="Bonao, La Vega, Santiago" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Precio empresa (RD$)</label>
-            <input id="zonaPrecioEmpresa" type="number" step="0.01" min="0" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
-          </div>
-          <div>
-            <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Precio persona (RD$)</label>
-            <input id="zonaPrecioPersona" type="number" step="0.01" min="0" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
-          </div>
+        <div>
+          <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Precio base proveedor (RD$)</label>
+          <input id="zonaPrecioPersona" type="number" step="0.01" min="0" oninput="syncZonaPrecioEmpresa()" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%;box-sizing:border-box;">
+          <input type="hidden" id="zonaPrecioEmpresa">
+          <p style="font-size:.7rem;color:#94a3b8;margin:4px 0 0;">El precio empresa se guarda igual al precio base.</p>
         </div>
         <div>
           <label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">Días de entrega</label>
@@ -1063,36 +1176,72 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Zonas de Delivery CRUD ──────────────────────────────
 (function() {
   var csrf = document.querySelector('meta[name="csrf-token"]').content;
+  var coloresTipo = { corta: '#10b981', larga: '#3b82f6', especial: '#f59e0b', chequeado: '#8b5cf6' };
 
   function cargarZonas() {
     fetch('/admin/delivery-zonas', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
       .then(function(r) { return r.json(); })
-      .then(function(zonas) { renderZonas(zonas); })
+      .then(function(zonas) { renderZonas(zonas.map(enriquecerZonaConCostos)); })
       .catch(function(e) { console.error('Error cargando zonas', e); });
   }
+
+  window.refrescarTablaZonasDelivery = function(zonasActivas) {
+    fetch('/admin/delivery-zonas', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
+      .then(function(r) { return r.json(); })
+      .then(function(zonas) {
+        var mapActivas = {};
+        if (zonasActivas && zonasActivas.length) {
+          zonasActivas.forEach(function(z) { mapActivas[z.zona] = z; });
+        }
+        renderZonas(zonas.map(function(z) {
+          var enriched = enriquecerZonaConCostos(z);
+          if (mapActivas[z.zona]) {
+            enriched.costo_estimado = mapActivas[z.zona].costo_estimado;
+            enriched.costo_seguro = mapActivas[z.zona].costo_seguro;
+            enriched.pct_ganancia = mapActivas[z.zona].pct_ganancia;
+            enriched.pct_plataforma = mapActivas[z.zona].pct_plataforma;
+            enriched.pct_manejo = mapActivas[z.zona].pct_manejo;
+            enriched.pct_seguro = mapActivas[z.zona].pct_seguro;
+          }
+          return enriched;
+        }));
+      })
+      .catch(function(e) { console.error('Error refrescando zonas', e); });
+  };
 
   function renderZonas(zonas) {
     var tbody = document.getElementById('tbodyZonas');
     if (!tbody) return;
-    if (!zonas.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:16px;">Sin zonas registradas</td></tr>'; return; }
+    if (!zonas.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:16px;">Sin zonas registradas</td></tr>'; return; }
     tbody.innerHTML = zonas.map(function(z) {
       var pueblos = (z.pueblos || []).join(', ');
       var corto = pueblos.length > 60 ? pueblos.substring(0, 60) + '...' : pueblos;
-      return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+      var c = coloresTipo[z.tipo] || '#64748b';
+      var base = Number(z.precio_base ?? z.precio_persona) || 0;
+      var costo = z.costo_estimado != null ? Number(z.costo_estimado) : base;
+      var opacidad = z.activo ? '1' : '.55';
+      var pctTxt = 'Ganancia ' + (z.pct_ganancia || 0) + '% · Plataforma ' + (z.pct_plataforma || 0) + '% · Manejo ' + (z.pct_manejo || 0) + '% · Seguro ' + (z.pct_seguro || 0) + '%';
+      return '<tr style="border-bottom:1px solid #f1f5f9;opacity:' + opacidad + ';">' +
         '<td style="padding:10px 12px;font-weight:600;">' + z.zona + '</td>' +
-        '<td style="padding:10px 12px;"><span style="background:#f1f5f9;padding:2px 8px;border-radius:10px;font-size:.75rem;">' + z.tipo + '</span></td>' +
-        '<td style="padding:10px 12px;font-size:.78rem;max-width:200px;" title="' + pueblos.replace(/"/g, '') + '">' + corto + '</td>' +
-        '<td style="padding:10px 12px;">RD$ ' + Number(z.precio_empresa || 0).toFixed(2) + '</td>' +
-        '<td style="padding:10px 12px;">RD$ ' + Number(z.precio_persona || 0).toFixed(2) + '</td>' +
+        '<td style="padding:10px 12px;"><span style="background:' + c + '22;color:' + c + ';padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600;">' + z.tipo + '</span></td>' +
+        '<td style="padding:10px 12px;font-weight:600;">RD$ ' + base.toLocaleString('es-DO', {minimumFractionDigits: 2}) + '</td>' +
+        '<td style="padding:10px 12px;font-weight:700;color:' + c + ';">RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2}) + '</td>' +
+        '<td style="padding:10px 12px;font-size:.72rem;color:#64748b;max-width:180px;">' + pctTxt + '</td>' +
+        '<td style="padding:10px 12px;font-size:.78rem;max-width:160px;" title="' + pueblos.replace(/"/g, '') + '">' + corto + '</td>' +
         '<td style="padding:10px 12px;">' + (z.dias_entrega || '-') + '</td>' +
         '<td style="padding:10px 12px;"><span style="padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600;background:' + (z.activo ? '#d1fae5' : '#fee2e2') + ';color:' + (z.activo ? '#065f46' : '#991b1b') + ';">' + (z.activo ? 'Activa' : 'Inactiva') + '</span></td>' +
-        '<td style="padding:10px 12px;"><div style="display:flex;gap:6px;">' +
+        '<td style="padding:10px 12px;"><div style="display:flex;gap:6px;flex-wrap:wrap;">' +
           '<button onclick="editarZona(' + JSON.stringify(z).replace(/"/g, '&quot;') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;">Editar</button>' +
           '<button onclick="toggleZona(' + z.id + ',' + (z.activo ? 'false' : 'true') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">' + (z.activo ? 'Desactivar' : 'Activar') + '</button>' +
           '<button onclick="eliminarZona(' + z.id + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #ef4444;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer;">Eliminar</button>' +
         '</div></td></tr>';
     }).join('');
   }
+
+  window.syncZonaPrecioEmpresa = function() {
+    var base = document.getElementById('zonaPrecioPersona').value;
+    document.getElementById('zonaPrecioEmpresa').value = base;
+  };
 
   window.abrirModalZona = function(zona) {
     var m = document.getElementById('modalZona');
@@ -1104,45 +1253,91 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('zonaName').value = zona ? zona.zona : '';
     document.getElementById('zonaTipo').value = zona ? zona.tipo : 'corta';
     document.getElementById('zonaPueblos').value = zona ? (zona.pueblos || []).join(', ') : '';
-    document.getElementById('zonaPrecioEmpresa').value = zona ? zona.precio_empresa : '';
-    document.getElementById('zonaPrecioPersona').value = zona ? zona.precio_persona : '';
+    document.getElementById('zonaPrecioPersona').value = zona ? (zona.precio_persona ?? zona.precio_base) : '';
+    syncZonaPrecioEmpresa();
     document.getElementById('zonaDias').value = zona ? (zona.dias_entrega || '') : 'Lunes a Viernes';
   };
 
   window.editarZona = function(z) { abrirModalZona(z); };
   window.cerrarModalZona = function() { document.getElementById('modalZona').style.display = 'none'; };
 
+  function mensajeErrorZona(d) {
+    if (!d) return 'Error al guardar';
+    if (d.errors) {
+      return Object.values(d.errors).flat().join(' ');
+    }
+    return d.message || 'Error al guardar';
+  }
+
   window.guardarZona = function() {
+    var msgEl = document.getElementById('zonaSaveMsg');
+    var nombre = (document.getElementById('zonaName').value || '').trim();
+    var precioBase = parseFloat(document.getElementById('zonaPrecioPersona').value);
+    if (!nombre) {
+      msgEl.textContent = 'Indique el nombre de la zona.';
+      msgEl.style.color = '#ef4444';
+      return;
+    }
+    if (!precioBase || precioBase < 0) {
+      msgEl.textContent = 'Indique un precio base proveedor válido (RD$).';
+      msgEl.style.color = '#ef4444';
+      return;
+    }
     var id = document.getElementById('zonaId').value;
     var url = id ? '/admin/delivery-zonas/' + id : '/admin/delivery-zonas';
     var method = id ? 'PUT' : 'POST';
+    syncZonaPrecioEmpresa();
     var body = {
-      zona: document.getElementById('zonaName').value,
+      zona: nombre,
       tipo: document.getElementById('zonaTipo').value,
       pueblos: document.getElementById('zonaPueblos').value,
-      precio_empresa: document.getElementById('zonaPrecioEmpresa').value,
-      precio_persona: document.getElementById('zonaPrecioPersona').value,
+      precio_persona: precioBase,
+      precio_empresa: precioBase,
       dias_entrega: document.getElementById('zonaDias').value
     };
-    fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(body) })
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.success) { cerrarModalZona(); cargarZonas(); }
-        else { document.getElementById('zonaSaveMsg').textContent = 'Error al guardar'; document.getElementById('zonaSaveMsg').style.color = '#ef4444'; }
-      }).catch(function() { document.getElementById('zonaSaveMsg').textContent = 'Error de conexión'; document.getElementById('zonaSaveMsg').style.color = '#ef4444'; });
+    msgEl.textContent = 'Guardando...';
+    msgEl.style.color = '#64748b';
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify(body)
+    })
+      .then(function(r) {
+        return r.json().then(function(d) { return { ok: r.ok, data: d }; });
+      })
+      .then(function(res) {
+        if (res.ok && res.data.success) {
+          msgEl.textContent = '';
+          cerrarModalZona();
+          cargarZonas();
+          if (typeof cargarDatos === 'function') cargarDatos();
+          return;
+        }
+        msgEl.textContent = mensajeErrorZona(res.data);
+        msgEl.style.color = '#ef4444';
+      })
+      .catch(function() {
+        msgEl.textContent = 'Error de conexión';
+        msgEl.style.color = '#ef4444';
+      });
   };
 
   window.toggleZona = function(id, activo) {
     fetch('/admin/delivery-zonas/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify({ activo: activo }) })
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.success) cargarZonas(); });
+      .then(function(d) { if (d.success) { cargarZonas(); if (typeof cargarDatos === 'function') cargarDatos(); } });
   };
 
   window.eliminarZona = function(id) {
     if (!confirm('¿Eliminar esta zona?')) return;
     fetch('/admin/delivery-zonas/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } })
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.success) cargarZonas(); });
+      .then(function(d) { if (d.success) { cargarZonas(); if (typeof cargarDatos === 'function') cargarDatos(); } });
   };
 
   cargarZonas();

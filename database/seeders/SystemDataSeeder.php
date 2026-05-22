@@ -50,6 +50,10 @@ class SystemDataSeeder extends Seeder
                 'id' => 3, 'clave' => 'especiales', 'porcentaje' => 10.00, 'porcentaje_plataforma' => 2.00, 
                 'porcentaje_seguro' => 2.00, 'porcentaje_manejo' => 5.00, 'descripcion' => 'Zonas especiales - porcentaje de utilidad'
             ],
+            [
+                'id' => 4, 'clave' => 'chequeados', 'porcentaje' => 10.00, 'porcentaje_plataforma' => 10.00,
+                'porcentaje_seguro' => 10.00, 'porcentaje_manejo' => 6.00, 'descripcion' => 'Bultos chequeados - porcentaje de utilidad'
+            ],
         ];
 
         foreach ($deliveryConfigs as $config) {

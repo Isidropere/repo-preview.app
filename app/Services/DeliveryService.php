@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  * - Municipio de origen y destino
  * - Peso y dimensiones del artículo
  * - Tipo de zona (corta, larga, especial)
- * - Porcentajes configurables (ganancia, plataforma, manejo, seguro)
+ * - Porcentajes por ruta (cortas/largas/especiales) sobre precio base proveedor
  *
  * Los servicios (talentos, categoría 29) están excluidos del
  * cálculo de delivery — solo aplica a artículos físicos.
@@ -54,11 +54,22 @@ class DeliveryService
             return ['success' => false, 'message' => "No se encontró zona de delivery para: {$pueblo}"];
         }
 
-        $precioBase = $tipoDestinatario === 'empresa'
-            ? (float) $zonaEncontrada->precio_empresa
-            : (float) $zonaEncontrada->precio_persona;
+        return array_merge(
+            ['success' => true, 'pueblo_buscado' => $pueblo],
+            $this->calcularPorZona($zonaEncontrada, $tipoDestinatario, $valorArticulo)
+        );
+    }
 
-        $config = $this->obtenerConfigZona($zonaEncontrada->tipo);
+    /**
+     * Calcula costo de envío para una zona concreta (misma lógica que calcular()).
+     */
+    public function calcularPorZona(DeliveryZona $zona, string $tipoDestinatario = 'persona', float $valorArticulo = 0): array
+    {
+        $precioBase = $tipoDestinatario === 'empresa'
+            ? (float) $zona->precio_empresa
+            : (float) $zona->precio_persona;
+
+        $config = $this->obtenerConfigZona($zona->tipo);
 
         $pctGanancia   = $config ? (float) $config->porcentaje            : 0;
         $pctPlataforma = $config ? (float) $config->porcentaje_plataforma : 0;
@@ -67,19 +78,18 @@ class DeliveryService
 
         $costoFlete      = round($precioBase * (1 + $pctGanancia / 100), 2);
         $costoPlataforma = round($precioBase * ($pctPlataforma / 100), 2);
-        $costoSeguro     = round($valorArticulo * ($pctSeguro / 100), 2);
+        $costoSeguro     = round($precioBase * ($pctSeguro / 100), 2);
         $costoManejo     = round($precioBase * ($pctManejo / 100), 2);
         $costoTotal      = round($costoFlete + $costoPlataforma + $costoSeguro + $costoManejo, 2);
 
-        $diasHabiles = match($zonaEncontrada->tipo) {
+        $diasHabiles = match ($zona->tipo) {
             'corta' => 5, 'larga' => 7, 'especial' => 10, default => 7,
         };
 
         return [
-            'success'           => true,
-            'zona'              => $zonaEncontrada->zona,
-            'tipo'              => $zonaEncontrada->tipo,
-            'dias_entrega'      => $zonaEncontrada->dias_entrega,
+            'zona'              => $zona->zona,
+            'tipo'              => $zona->tipo,
+            'dias_entrega'      => $zona->dias_entrega,
             'dias_habiles'      => $diasHabiles,
             'tipo_destinatario' => $tipoDestinatario,
             'valor_articulo'    => $valorArticulo,
@@ -112,7 +122,7 @@ class DeliveryService
      */
     public function actualizarConfig(string $clave, array $datos): array
     {
-        $allowed = ['cortas', 'largas', 'especiales'];
+        $allowed = ['cortas', 'largas', 'especiales', 'chequeados'];
         if (!in_array($clave, $allowed)) {
             return ['success' => false, 'message' => 'Clave inválida.'];
         }
@@ -143,11 +153,12 @@ class DeliveryService
 
     private function obtenerConfigZona(string $tipo): ?object
     {
-        $clave = match($tipo) {
-            'corta'    => 'cortas',
-            'larga'    => 'largas',
-            'especial' => 'especiales',
-            default    => $tipo,
+        $clave = match ($tipo) {
+            'corta'     => 'cortas',
+            'larga'     => 'largas',
+            'especial'  => 'especiales',
+            'chequeado' => 'chequeados',
+            default     => $tipo,
         };
 
         return DB::table('delivery_config')->where('clave', $clave)->first();
