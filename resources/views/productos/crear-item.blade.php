@@ -14,12 +14,12 @@
                     <div class="col-md-6">
                         <!-- Información básica -->
                         <div class="mb-3">
-                            <label for="item" class="form-label">Nombre del Item *</label>
+                            <label for="item" class="form-label d-flex align-items-center gap-1">Nombre del Item<span class="text-danger ms-1">*</span></label>
                             <input type="text" class="form-control" id="item" name="item" required>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="id_categoria_item" class="form-label">Categoría *</label>
+                            <label for="id_categoria_item" class="form-label d-flex align-items-center gap-1">Categoría<span class="text-danger ms-1">*</span></label>
                             <select class="form-select" id="id_categoria_item" name="id_categoria_item" required>
                                 <option value="">Seleccione una categoría</option>
                                 @foreach($categorias as $categoria)
@@ -29,7 +29,7 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="tipo" class="form-label">Tipo *</label>
+                            <label for="tipo" class="form-label d-flex align-items-center gap-1">Tipo<span class="text-danger ms-1">*</span></label>
                             <select class="form-select" id="tipo" name="tipo" required>
                                 <option value="">Seleccione un tipo</option>
                                 <option value="nuevo">Nuevo</option>
@@ -39,7 +39,7 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="valor" class="form-label">Valor *</label>
+                            <label for="valor" class="form-label d-flex align-items-center gap-1">Valor<span class="text-danger ms-1">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" class="form-control" id="valor" name="valor" step="0.01" min="0" required>
@@ -50,12 +50,12 @@
                     <div class="col-md-6">
                         <!-- Detalles adicionales -->
                         <div class="mb-3">
-                            <label for="presentacion" class="form-label">Presentación</label>
+                            <label for="presentacion" class="form-label d-flex align-items-center gap-1">Presentación</label>
                             <textarea class="form-control" id="presentacion" name="presentacion" rows="3"></textarea>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="condicion" class="form-label">Condición</label>
+                            <label for="condicion" class="form-label d-flex align-items-center gap-1">Condición</label>
                             <input type="text" class="form-control" id="condicion" name="condicion">
                         </div>
                         

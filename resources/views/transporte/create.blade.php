@@ -7,11 +7,19 @@
     #map-container { height: 350px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #e5e7eb; }
     .form-input { padding: 11px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s ease-in-out; box-sizing: border-box; width: 100%; background-color: #fff; }
     .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-    .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .form-label { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
     .btn-gps { background: #0ea5e9; color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 11px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; height: auto; box-sizing: border-box; }
     .btn-gps:hover { background: #0284c7; }
     .btn-gps:disabled { background: #94a3b8; cursor: not-allowed; }
     .btn-active-map { ring: 2px solid #0ea5e9; background: #0284c7; }
+    .geo-wrapper { position: relative; }
+    .geo-suggestions { position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: #fff; border: 1px solid #d1d5db; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 25px rgba(0,0,0,.12); display: none; }
+    .geo-suggestions.active { display: block; }
+    .geo-suggestion-item { padding: 10px 14px; font-size: 0.85rem; color: #374151; cursor: pointer; border-bottom: 1px solid #f3f4f6; display: flex; align-items: flex-start; gap: 8px; }
+    .geo-suggestion-item:last-child { border-bottom: none; }
+    .geo-suggestion-item:hover { background: #eff6ff; color: #1d4ed8; }
+    .geo-suggestion-item svg { flex-shrink: 0; margin-top: 2px; }
+    .geo-loading { padding: 12px 14px; font-size: 0.8rem; color: #9ca3af; text-align: center; }
 </style>
 @endpush
 
@@ -139,12 +147,18 @@
                     </div>
 
                     <div>
-                        <label class="form-label">Dirección Exacta (Origen o Destino principal) <span class="text-red-500">*</span></label>
-                        <input type="text" name="direccion" value="{{ old('direccion') }}" required class="form-input" placeholder="Ej: Av. Winston Churchill esq. Gustavo Mejía Ricart, Piantini">
+                        <label class="form-label">Dimensiones y Detalles de la Carga (Opcional)</label>
+                        <textarea name="dimensiones_carga" class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
                     </div>
-                    <div>
-                        <label class="form-label">Dimensiones y Detalles de la Carga <span class="text-red-500">*</span></label>
-                        <textarea name="dimensiones_carga" required class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                        <div>
+                            <label class="form-label text-gray-700">¿En qué piso están los artículos? (Origen) <span class="text-red-500">*</span></label>
+                            <input type="text" name="piso_origen" value="{{ old('piso_origen', '0') }}" required class="form-input" placeholder="Ej: 1, 2, Sótano, PH...">
+                        </div>
+                        <div>
+                            <label class="form-label text-gray-700">¿A qué piso se llevarán? (Destino) <span class="text-red-500">*</span></label>
+                            <input type="text" name="piso_destino" value="{{ old('piso_destino', '0') }}" required class="form-input" placeholder="Ej: 1, 3, PH, etc.">
+                        </div>
                     </div>
                 </div>
 
@@ -155,25 +169,25 @@
                     <div class="flex flex-col md:flex-row gap-4 mb-4">
                         <div class="flex-1">
                             <label class="form-label text-blue-600">Punto A (Recogida) <span class="text-red-500">*</span></label>
-                            <input type="text" id="punto_recogida" name="punto_recogida" value="{{ old('punto_recogida') }}" readonly required class="form-input bg-white cursor-pointer border-blue-300" placeholder="Haz clic en el mapa">
-                            
-                            <div class="mt-2">
-                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿En qué piso están los artículos? <span class="text-red-500">*</span></label>
-                                <input type="text" name="piso_origen" value="{{ old('piso_origen', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 2, Sótano, PH...">
+                            <div class="geo-wrapper">
+                                <input type="text" id="punto_recogida_search" autocomplete="off" class="form-input border-blue-300" placeholder="Escribe una dirección o haz clic en el mapa" value="{{ old('punto_recogida_address', '') }}">
+                                <input type="hidden" id="punto_recogida" name="punto_recogida" value="{{ old('punto_recogida') }}" required>
+                                <input type="hidden" name="punto_recogida_address" id="punto_recogida_address" value="{{ old('punto_recogida_address', '') }}">
+                                <div class="geo-suggestions" id="suggestions-a"></div>
                             </div>
 
-                            <button type="button" id="btn-set-a" class="mt-2 w-full py-2 bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-200">Definir Punto A en Mapa</button>
+                            <button type="button" id="btn-set-a" class="mt-2 w-full py-2 bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-200 text-sm">📍 Seleccionar Punto A en Mapa</button>
                         </div>
                         <div class="flex-1">
                             <label class="form-label text-red-600">Punto B (Entrega) <span class="text-red-500">*</span></label>
-                            <input type="text" id="punto_entrega" name="punto_entrega" value="{{ old('punto_entrega') }}" readonly required class="form-input bg-white cursor-pointer border-red-300" placeholder="Haz clic en el mapa">
-                            
-                            <div class="mt-2">
-                                <label class="text-[10px] font-bold text-gray-500 uppercase">¿A qué piso se llevarán? <span class="text-red-500">*</span></label>
-                                <input type="text" name="piso_destino" value="{{ old('piso_destino', '0') }}" required class="form-input text-sm" placeholder="Ej: 1, 3, PH, etc.">
+                            <div class="geo-wrapper">
+                                <input type="text" id="punto_entrega_search" autocomplete="off" class="form-input border-red-300" placeholder="Escribe una dirección o haz clic en el mapa" value="{{ old('punto_entrega_address', '') }}">
+                                <input type="hidden" id="punto_entrega" name="punto_entrega" value="{{ old('punto_entrega') }}" required>
+                                <input type="hidden" name="punto_entrega_address" id="punto_entrega_address" value="{{ old('punto_entrega_address', '') }}">
+                                <div class="geo-suggestions" id="suggestions-b"></div>
                             </div>
 
-                            <button type="button" id="btn-set-b" class="mt-2 w-full py-2 bg-red-100 text-red-700 font-bold rounded-lg border border-red-200 hover:bg-red-200">Definir Punto B en Mapa</button>
+                            <button type="button" id="btn-set-b" class="mt-2 w-full py-2 bg-red-100 text-red-700 font-bold rounded-lg border border-red-200 hover:bg-red-200 text-sm">📍 Seleccionar Punto B en Mapa</button>
                         </div>
                     </div>
                     <div id="map-container" class="mb-4"></div>
@@ -227,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const inputA = document.getElementById('punto_recogida');
     const inputB = document.getElementById('punto_entrega');
+    const searchA = document.getElementById('punto_recogida_search');
+    const searchB = document.getElementById('punto_entrega_search');
+    const addressA = document.getElementById('punto_recogida_address');
+    const addressB = document.getElementById('punto_entrega_address');
+    const suggestionsA = document.getElementById('suggestions-a');
+    const suggestionsB = document.getElementById('suggestions-b');
     const btnA = document.getElementById('btn-set-a');
     const btnB = document.getElementById('btn-set-b');
     
@@ -249,6 +269,103 @@ document.addEventListener('DOMContentLoaded', function() {
         settingPoint = 'B'; 
         btnB.classList.add('ring-2', 'ring-offset-2', 'ring-red-500');
         btnA.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500');
+    });
+
+    // ===== Geocoding con Nominatim =====
+    let searchTimerA = null;
+    let searchTimerB = null;
+
+    function geocodeSearch(query, suggestionsEl, point) {
+        if (query.length < 3) {
+            suggestionsEl.classList.remove('active');
+            suggestionsEl.innerHTML = '';
+            return;
+        }
+        suggestionsEl.innerHTML = '<div class="geo-loading">Buscando...</div>';
+        suggestionsEl.classList.add('active');
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=do&addressdetails=1`, {
+            headers: { 'Accept-Language': 'es' }
+        })
+        .then(res => res.json())
+        .then(results => {
+            if (results.length === 0) {
+                suggestionsEl.innerHTML = '<div class="geo-loading">No se encontraron resultados</div>';
+                return;
+            }
+            suggestionsEl.innerHTML = '';
+            results.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'geo-suggestion-item';
+                item.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>${r.display_name}</span>`;
+                item.addEventListener('click', () => {
+                    selectGeoResult(r, point);
+                    suggestionsEl.classList.remove('active');
+                });
+                suggestionsEl.appendChild(item);
+            });
+        })
+        .catch(() => {
+            suggestionsEl.innerHTML = '<div class="geo-loading">Error de conexión</div>';
+        });
+    }
+
+    function selectGeoResult(result, point) {
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        const address = result.display_name;
+
+        if (point === 'A') {
+            inputA.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+            searchA.value = address;
+            addressA.value = address;
+            if (markerA) map.removeLayer(markerA);
+            markerA = L.marker([lat, lng], {icon: iconA}).addTo(map).bindPopup('<b>Punto A</b><br>' + address).openPopup();
+            map.setView([lat, lng], 15);
+            settingPoint = 'B';
+            btnB.click();
+        } else {
+            inputB.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+            searchB.value = address;
+            addressB.value = address;
+            if (markerB) map.removeLayer(markerB);
+            markerB = L.marker([lat, lng], {icon: iconB}).addTo(map).bindPopup('<b>Punto B</b><br>' + address).openPopup();
+            map.setView([lat, lng], 15);
+            btnB.classList.remove('ring-2', 'ring-offset-2', 'ring-red-500');
+        }
+        updateCalculations();
+    }
+
+    function reverseGeocode(lat, lng, callback) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+            headers: { 'Accept-Language': 'es' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            callback(data.display_name || (lat + ', ' + lng));
+        })
+        .catch(() => {
+            callback(lat + ', ' + lng);
+        });
+    }
+
+    // Eventos de búsqueda con debounce
+    searchA.addEventListener('input', function() {
+        clearTimeout(searchTimerA);
+        searchTimerA = setTimeout(() => geocodeSearch(this.value.trim(), suggestionsA, 'A'), 400);
+    });
+
+    searchB.addEventListener('input', function() {
+        clearTimeout(searchTimerB);
+        searchTimerB = setTimeout(() => geocodeSearch(this.value.trim(), suggestionsB, 'B'), 400);
+    });
+
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.geo-wrapper')) {
+            suggestionsA.classList.remove('active');
+            suggestionsB.classList.remove('active');
+        }
     });
 
     // Haversine formula
@@ -308,11 +425,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (countArticulos > CONFIG.limite_mudanza) {
             if (selectTipo.value !== 'mudanza') {
                 selectTipo.value = 'mudanza';
-                // Trigger change if needed, but here we just want the value for calculation
             }
             precioKM = CONFIG.precio_km_mudanza;
         } else {
-            // Si es manual mudanza, usar precio mudanza, si es transporte usar transporte
             precioKM = (selectTipo.value === 'mudanza') ? CONFIG.precio_km_mudanza : CONFIG.precio_km_transporte;
         }
 
@@ -321,10 +436,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('precio_estimado_total').value = totalFinal.toFixed(2);
         document.getElementById('precio-display').innerText = 'RD$ ' + totalFinal.toLocaleString('es-DO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
-        // Actualizar etiqueta de precio si es necesario para feedback
         document.getElementById('precio-display').title = `Tarifa: RD$ ${precioKM}/km`;
     };
 
+    // Clic en el mapa: poner marcador + reverse geocode para mostrar dirección
     map.on('click', function(e) {
         let lat = e.latlng.lat.toFixed(6);
         let lng = e.latlng.lng.toFixed(6);
@@ -333,13 +448,24 @@ document.addEventListener('DOMContentLoaded', function() {
             inputA.value = lat + ', ' + lng;
             if (markerA) map.removeLayer(markerA);
             markerA = L.marker([lat, lng], {icon: iconA}).addTo(map);
-            settingPoint = 'B'; // Auto-cambiar al punto B
+            // Reverse geocode para mostrar la dirección
+            reverseGeocode(lat, lng, function(address) {
+                searchA.value = address;
+                addressA.value = address;
+                markerA.bindPopup('<b>Punto A</b><br>' + address).openPopup();
+            });
+            settingPoint = 'B';
             btnB.click();
         } else {
             inputB.value = lat + ', ' + lng;
             if (markerB) map.removeLayer(markerB);
             markerB = L.marker([lat, lng], {icon: iconB}).addTo(map);
-            btnB.classList.remove('ring-2', 'ring-offset-2', 'ring-red-500'); // Desactivar
+            reverseGeocode(lat, lng, function(address) {
+                searchB.value = address;
+                addressB.value = address;
+                markerB.bindPopup('<b>Punto B</b><br>' + address).openPopup();
+            });
+            btnB.classList.remove('ring-2', 'ring-offset-2', 'ring-red-500');
         }
         updateCalculations();
     });

@@ -56,14 +56,14 @@
                 </h2>
                 <div class="space-y-2.5">
                     <div>
-                        <label for="item" class="block text-xs font-medium text-gray-700 mb-0.5">Nombre del talento <span class="text-red-500">*</span></label>
+                        <label for="item" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Nombre del talento <span class="text-red-500">*</span></label>
                         <input type="text" id="item" name="item" required value="{{ old('item') }}" placeholder="Ej: Clases de guitarra, Diseño gráfico"
                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
                         @error('item')<span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>@enderror
                     </div>
                     <div class="grid grid-cols-2 gap-3" style="align-items:end">
                         <div>
-                            <label for="valor" class="block text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
+                            <label for="valor" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
                                 <input type="text" id="valor" name="valor" required value="{{ old('valor') }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
@@ -72,7 +72,7 @@
                             @error('valor')<span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>@enderror
                         </div>
                         <div>
-                            <label for="tipo_trans" class="block text-xs font-medium text-gray-700 mb-0.5">Modalidad <span class="text-red-500">*</span></label>
+                            <label for="tipo_trans" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Modalidad <span class="text-red-500">*</span></label>
                             <select id="tipo_trans" name="tipo_trans" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white">
                                 <option value="3" {{ old('tipo_trans') == 3 ? 'selected' : '' }}>Venta o Intercambio</option>
                                 <option value="2" {{ old('tipo_trans') == 2 ? 'selected' : '' }}>Intercambio</option>
@@ -82,7 +82,7 @@
                         </div>
                     </div>
                     <div>
-                        <label for="descuento" class="block text-xs font-medium text-gray-700 mb-0.5">Descuento <span class="text-gray-400">(opcional)</span></label>
+                        <label for="descuento" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Descuento <span class="text-gray-400">(opcional)</span></label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">%</span>
                             <input type="number" id="descuento" name="descuento" value="{{ old('descuento', 0) }}" min="0" max="100" placeholder="0"
@@ -90,14 +90,14 @@
                         </div>
                     </div>
                     <div>
-                        <label for="cantidad" class="block text-xs font-medium text-gray-700 mb-0.5">Cantidad de servicios <span class="text-red-500">*</span></label>
+                        <label for="cantidad" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Cantidad de servicios <span class="text-red-500">*</span></label>
                         <input type="number" id="cantidad" name="cantidad" value="{{ old('cantidad', 1) }}" min="1" max="999" required
                                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
                         <p class="text-[11px] text-gray-400 mt-0.5">Cuántas veces se puede contratar este servicio. El costo de publicación es <span class="font-semibold text-primary">RD$ {{ number_format($montoRegistro, 2) }}</span> × cantidad.</p>
                         @error('cantidad')<span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>@enderror
                     </div>
                     <div>
-                        <label for="presentacion" class="block text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
+                        <label for="presentacion" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Descripción del talento <span class="text-red-500">*</span></label>
                         <textarea id="presentacion" name="presentacion" rows="2" maxlength="250" required placeholder="Describe tu talento o servicio..."
                                   oninput="contarCaracteres(this,'contadorTalento')"
                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm resize-none">{{ old('presentacion') }}</textarea>

@@ -35,22 +35,29 @@ class TransporteController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'cedula' => 'required|string|max:20',
-            'direccion' => 'required|string|max:500',
             'telefono' => 'required|string|max:20',
             'correo' => 'required|email|max:255',
             'fecha_servicio' => 'required|date',
             'punto_recogida' => 'nullable|string|max:255',
+            'punto_recogida_address' => 'nullable|string|max:500',
             'piso_origen' => 'nullable|string|max:50',
             'punto_entrega' => 'nullable|string|max:255',
+            'punto_entrega_address' => 'nullable|string|max:500',
             'piso_destino' => 'nullable|string|max:50',
             'distancia_km' => 'nullable|numeric',
             'precio_estimado_total' => 'nullable|numeric',
-            'dimensiones_carga' => 'required|string|max:1000',
+            'dimensiones_carga' => 'nullable|string|max:1000',
         ]);
 
         if (Auth::check()) {
             $validated['id_usuario'] = Auth::id();
         }
+
+        // Asignamos la dirección de origen al campo heredado "direccion" para evitar errores en BD
+        $validated['direccion'] = $validated['punto_recogida_address'] ?? 'No especificada';
+
+        // Dimensiones carga fallback
+        $validated['dimensiones_carga'] = $validated['dimensiones_carga'] ?? 'No especificadas';
 
         $validated['estado'] = 'pendiente';
 
