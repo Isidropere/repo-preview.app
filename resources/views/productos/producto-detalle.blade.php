@@ -216,6 +216,12 @@
                         Intercambio sin Negociación
                     </button>
                     @endif
+                    <button type="button" onclick="compartirItem('{{ addslashes($item->item) }}', '{{ route('producto.detalle', $item->slug) }}')"
+                            style="display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"
+                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Compartir
+                    </button>
                 </div>
 
                 {{-- Botón ver perfil del proveedor (solo servicios/talentos) --}}

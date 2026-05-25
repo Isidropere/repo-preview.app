@@ -680,6 +680,24 @@
         setTimeout(window.syncCartIndicators, 500);
     });
 
+    // Función global para compartir items
+    window.compartirItem = function(titulo, url) {
+        if (navigator.share) {
+            navigator.share({
+                title: titulo,
+                text: 'Mira este artículo en Cambialord: ' + titulo,
+                url: url
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(url).then(function() {
+                alert('¡Enlace copiado al portapapeles!');
+            }).catch(function(err) {
+                console.error('Error al copiar el enlace: ', err);
+                alert('No se pudo copiar el enlace. URL: ' + url);
+            });
+        }
+    };
+
 </script>
 
   

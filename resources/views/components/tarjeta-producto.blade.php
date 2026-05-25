@@ -10,12 +10,18 @@
 @endphp
 <div class="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col">
 
-    <a href="{{ route('producto.detalle', $item->slug) }}" class="block overflow-hidden">
-        <img src="{{ $imgSrc }}"
-             class="w-full h-48 object-cover hover:scale-105 transition-transform duration-200"
-             alt="{{ $item->item }}" loading="lazy" width="300" height="192"
-             onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
-    </a>
+    <div class="relative overflow-hidden block">
+        <a href="{{ route('producto.detalle', $item->slug) }}" class="block">
+            <img src="{{ $imgSrc }}"
+                 class="w-full h-48 object-cover hover:scale-105 transition-transform duration-200"
+                 alt="{{ $item->item }}" loading="lazy" width="300" height="192"
+                 onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
+        </a>
+        <button type="button" onclick="compartirItem('{{ addslashes($item->item) }}', '{{ route('producto.detalle', $item->slug) }}')"
+                class="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-blue-600 shadow-sm transition-all z-10" title="Compartir enlace">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+        </button>
+    </div>
 
     <div class="p-4 flex flex-col flex-1">
         <a href="{{ route('producto.detalle', $item->slug) }}" class="hover:text-blue-600 transition-colors">
@@ -67,6 +73,7 @@
                 Intercambio
             </button>
             @endif
+
 
             {{-- Ver detalle --}}
             <a href="{{ route('producto.detalle', $item->slug) }}"

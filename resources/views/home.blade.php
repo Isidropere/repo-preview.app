@@ -114,22 +114,27 @@
                             @forelse($productosIntercambio as $prod)
                             <div class="keen-slider__slide">
                                 <article class="flex flex-col h-[380px] sm:h-[400px] overflow-hidden rounded-xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:shadow-md">
-                                    <a href="{{ route('producto.detalle', $prod->slug) }}" class="block overflow-hidden relative h-52 sm:h-56">
-                                        @php 
-                                            $imgProd = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
-                                            $imgNombre = $imgProd?->nombre;
-                                            $imgSrc = $imgNombre
-                                                ? \App\Helpers\ImageHelper::urlMedia($imgProd->ruta ?? 'imgs/articulos/items', $imgNombre)
-                                                : asset('imgs/defaults/producto_default.svg');
-                                        @endphp
-                                        <img alt="{{ $prod->item }}" 
-                                             src="{{ $imgSrc }}" 
-                                             class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
-                                             loading="lazy" 
-                                             width="400" 
-                                             height="224"
-                                             onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
-                                    </a>
+                                    <div class="relative overflow-hidden h-52 sm:h-56 block">
+                                        <a href="{{ route('producto.detalle', $prod->slug) }}" class="block h-full w-full">
+                                            @php 
+                                                $imgProd = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
+                                                $imgNombre = $imgProd?->nombre;
+                                                $imgSrc = $imgNombre
+                                                    ? \App\Helpers\ImageHelper::urlMedia($imgProd->ruta ?? 'imgs/articulos/items', $imgNombre)
+                                                    : asset('imgs/defaults/producto_default.svg');
+                                            @endphp
+                                            <img alt="{{ $prod->item }}" 
+                                                 src="{{ $imgSrc }}" 
+                                                 class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
+                                                 loading="lazy" 
+                                                 width="400" 
+                                                 height="224"
+                                                 onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
+                                        </a>
+                                        <button type="button" onclick="compartirItem('{{ addslashes($prod->item) }}', '{{ route('producto.detalle', $prod->slug) }}')" class="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-blue-600 shadow-sm transition-all z-10" title="Compartir enlace">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                        </button>
+                                    </div>
                                     <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
                                         <div>
                                             <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
@@ -248,22 +253,27 @@
                             @forelse($productosVenta as $prod)
                             <div class="keen-slider__slide">
                                 <article class="flex flex-col h-[380px] sm:h-[400px] overflow-hidden rounded-xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:shadow-md">
-                                    <a href="{{ route('producto.detalle', $prod->slug) }}" class="block overflow-hidden relative h-52 sm:h-56">
-                                        @php 
-                                            $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
-                                            $imgNombre2 = $imgProd2?->nombre;
-                                            $imgSrc2 = $imgNombre2
-                                                ? \App\Helpers\ImageHelper::urlMedia($imgProd2->ruta ?? 'imgs/articulos/items', $imgNombre2)
-                                                : asset('imgs/defaults/producto_default.svg');
-                                        @endphp
-                                        <img alt="{{ $prod->item }}" 
-                                             src="{{ $imgSrc2 }}" 
-                                             class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
-                                             loading="lazy" 
-                                             width="400" 
-                                             height="224"
-                                             onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
-                                    </a>
+                                    <div class="relative overflow-hidden h-52 sm:h-56 block">
+                                        <a href="{{ route('producto.detalle', $prod->slug) }}" class="block h-full w-full">
+                                            @php 
+                                                $imgProd2 = $prod->imagenes->where('estado', 'aprobado')->first() ?? $prod->imagenes->first();
+                                                $imgNombre2 = $imgProd2?->nombre;
+                                                $imgSrc2 = $imgNombre2
+                                                    ? \App\Helpers\ImageHelper::urlMedia($imgProd2->ruta ?? 'imgs/articulos/items', $imgNombre2)
+                                                    : asset('imgs/defaults/producto_default.svg');
+                                            @endphp
+                                            <img alt="{{ $prod->item }}" 
+                                                 src="{{ $imgSrc2 }}" 
+                                                 class="h-full w-full object-cover transition-transform duration-500 hover:scale-105" 
+                                                 loading="lazy" 
+                                                 width="400" 
+                                                 height="224"
+                                                 onerror="this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
+                                        </a>
+                                        <button type="button" onclick="compartirItem('{{ addslashes($prod->item) }}', '{{ route('producto.detalle', $prod->slug) }}')" class="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-blue-600 shadow-sm transition-all z-10" title="Compartir enlace">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                        </button>
+                                    </div>
                                     <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
                                         <div>
                                             <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
