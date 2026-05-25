@@ -265,7 +265,7 @@
         ]).then(([zonas, config]) => {
             const el = document.getElementById('envio-zonas');
             if (!el) return;
-            const colores = {corta:'#10b981', larga:'#3b82f6', especial:'#f59e0b'};
+            const colores = {corta:'#10b981', larga:'#3b82f6', especial:'#f59e0b', chequeado:'#8b5cf6'};
             const cfgMap = {};
             if (config.success && config.data) {
                 config.data.forEach(c => { cfgMap[c.clave] = c; });
@@ -279,12 +279,12 @@
                 if (!grupos[z.tipo]) grupos[z.tipo] = [];
                 grupos[z.tipo].push(z);
             });
-            const claveLabel = {corta:'Rutas cortas', larga:'Rutas largas', especial:'Rutas especiales'};
+            const claveLabel = {corta:'Rutas cortas', larga:'Rutas largas', especial:'Rutas especiales', chequeado:'Bultos chequeados'};
 
             let html = '';
             Object.entries(grupos).forEach(([tipo, zs]) => {
                 const c = colores[tipo] || '#64748b';
-                const cfg = cfgMap[tipo + 's'] || cfgMap[tipo] || null;
+                const cfg = cfgMap[tipo + 's'] || (tipo === 'chequeado' ? cfgMap['chequeados'] : null) || cfgMap[tipo] || null;
                 html += `<div style="margin-bottom:20px;">
                     <div style="font-size:.8rem;font-weight:700;color:${c};text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid ${c}22;">
                         ${claveLabel[tipo] || tipo}

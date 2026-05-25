@@ -66,7 +66,34 @@ try {
     echo "❌ Error crítico en migraciones: " . $e->getMessage() . "\n";
 }
 
-// 3. Limpiar Caches
+// 3. Verificar y sincronizar delivery_config
+echo "\n=== Verificando Configuración de Delivery ===\n";
+try {
+    if (Schema::hasTable('delivery_config')) {
+        $chequeados = DB::table('delivery_config')->where('clave', 'chequeados')->first();
+        if (!$chequeados) {
+            DB::table('delivery_config')->insertOrIgnore([
+                'clave'                 => 'chequeados',
+                'porcentaje'            => 10.00,
+                'porcentaje_plataforma' => 10.00,
+                'porcentaje_seguro'     => 10.00,
+                'porcentaje_manejo'     => 6.00,
+                'descripcion'           => 'Bultos chequeados - porcentajes sobre base proveedor',
+                'created_at'            => now(),
+                'updated_at'            => now(),
+            ]);
+            echo "✅ Configuración 'chequeados' insertada en delivery_config\n";
+        } else {
+            echo "✅ Configuración 'chequeados' ya existe en delivery_config\n";
+        }
+    } else {
+        echo "⚠️ Tabla delivery_config no encontrada\n";
+    }
+} catch (Throwable $e) {
+    echo "❌ Error en configuración delivery: " . $e->getMessage() . "\n";
+}
+
+// 4. Limpiar Caches
 echo "\n=== Limpiando Caches de Aplicación ===\n";
 $commands = [
     'cache:clear'  => 'Cache de datos',

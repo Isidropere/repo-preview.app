@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryZona;
 use App\Models\PagoCompra;
+use App\Services\DeliveryService;
 use App\Models\ItemIntencionCompra;
 use App\Models\Negociacion;
 use App\Models\CompraTrazabilidad;
@@ -36,6 +38,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AdminStatsController extends Controller
 {
+    public function __construct(
+        private DeliveryService $deliveryService,
+    ) {}
+
     public function index()
     {
         $cuentasBanco = \App\Models\CuentaBancoEmpresa::orderBy('id', 'desc')->get();
@@ -256,29 +262,24 @@ class AdminStatsController extends Controller
             ->orderByDesc('usuarios')->get();
 
         // ── 18. DELIVERY STATS ────────────────────────────────────────
-        // Costo promedio de envío estimado por zona (basado en config actual)
         $deliveryConfig = DB::table('delivery_config')->get()->keyBy('clave');
-        $deliveryZonas  = \App\Models\DeliveryZona::where('activo', true)->get();
+        $deliveryZonas  = DeliveryZona::where('activo', true)->get();
 
-        $deliveryStats = $deliveryZonas->map(function ($zona) use ($deliveryConfig) {
-            $clave  = match($zona->tipo) { 'corta' => 'cortas', 'larga' => 'largas', 'especial' => 'especiales', default => $zona->tipo };
-            $cfg    = $deliveryConfig->get($clave);
-            $base   = (float) $zona->precio_persona;
-            $pctG   = $cfg ? (float) $cfg->porcentaje            : 0;
-            $pctP   = $cfg ? (float) $cfg->porcentaje_plataforma : 0;
-            $pctM   = $cfg ? (float) $cfg->porcentaje_manejo     : 0;
-            $pctS   = $cfg ? (float) $cfg->porcentaje_seguro     : 0;
-            $costo  = round($base * (1 + $pctG/100) + $base * ($pctP/100) + $base * ($pctM/100), 2);
+        $deliveryStats = $deliveryZonas->map(function ($zona) {
+            $r = $this->deliveryService->calcularPorZona($zona, 'persona');
+            $d = $r['desglose'] ?? [];
+
             return [
-                'zona'              => $zona->zona,
-                'tipo'              => $zona->tipo,
-                'precio_base'       => $base,
-                'costo_estimado'    => $costo,
-                'pct_ganancia'      => $pctG,
-                'pct_plataforma'    => $pctP,
-                'pct_manejo'        => $pctM,
-                'pct_seguro'        => $pctS,
-                'dias_entrega'      => $zona->dias_entrega,
+                'zona'               => $zona->zona,
+                'tipo'               => $zona->tipo,
+                'precio_base'        => $d['precio_base_proveedor'] ?? (float) $zona->precio_persona,
+                'costo_estimado'     => $r['costo_envio_total'] ?? 0,
+                'pct_ganancia'       => $d['ganancia_negocio_pct'] ?? 0,
+                'pct_plataforma'     => $d['plataforma_pct'] ?? 0,
+                'pct_manejo'         => $d['manejo_pct'] ?? 0,
+                'pct_seguro'         => $d['seguro_pct'] ?? 0,
+                'costo_seguro'       => $d['costo_seguro'] ?? 0,
+                'dias_entrega'       => $zona->dias_entrega,
             ];
         });
 

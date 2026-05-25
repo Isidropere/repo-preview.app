@@ -754,18 +754,65 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
         return response()->json(\App\Models\DeliveryZona::orderBy('tipo')->orderBy('zona')->get());
     })->name('delivery-zonas.index');
     Route::post('/delivery-zonas', function (\Illuminate\Http\Request $request) {
-        $data = $request->validate(['zona'=>'required|string','tipo'=>'required|in:corta,larga,especial,chequeado','pueblos'=>'required|string','precio_empresa'=>'required|numeric','precio_persona'=>'required|numeric','dias_entrega'=>'nullable|string']);
-        $data['pueblos'] = array_map('trim', explode(',', $data['pueblos']));
-        $data['activo'] = true;
-        $zona = \App\Models\DeliveryZona::create($data);
-        return response()->json(['success'=>true,'data'=>$zona]);
+        try {
+            $data = $request->validate([
+                'zona'            => 'required|string|max:255',
+                'tipo'            => 'required|in:corta,larga,especial,chequeado',
+                'pueblos'         => 'nullable|string',
+                'precio_persona'  => 'required|numeric|min:0',
+                'precio_empresa'  => 'nullable|numeric|min:0',
+                'dias_entrega'    => 'nullable|string|max:255',
+            ]);
+            $pueblos = trim($data['pueblos'] ?? '');
+            $data['pueblos'] = $pueblos === ''
+                ? []
+                : array_values(array_filter(array_map('trim', explode(',', $pueblos))));
+            $data['precio_empresa'] = $data['precio_empresa'] ?? $data['precio_persona'];
+            $data['activo'] = true;
+            $zona = \App\Models\DeliveryZona::create($data);
+            return response()->json(['success' => true, 'data' => $zona]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     })->name('delivery-zonas.store');
     Route::put('/delivery-zonas/{id}', function (\Illuminate\Http\Request $request, $id) {
-        $zona = \App\Models\DeliveryZona::findOrFail($id);
-        $data = $request->validate(['zona'=>'sometimes|string','tipo'=>'sometimes|in:corta,larga,especial,chequeado','pueblos'=>'sometimes|string','precio_empresa'=>'sometimes|numeric','precio_persona'=>'sometimes|numeric','dias_entrega'=>'nullable|string','activo'=>'sometimes|boolean']);
-        if (isset($data['pueblos'])) $data['pueblos'] = array_map('trim', explode(',', $data['pueblos']));
-        $zona->update($data);
-        return response()->json(['success'=>true,'data'=>$zona->fresh()]);
+        try {
+            $zona = \App\Models\DeliveryZona::findOrFail($id);
+            $data = $request->validate([
+                'zona'            => 'sometimes|string|max:255',
+                'tipo'            => 'sometimes|in:corta,larga,especial,chequeado',
+                'pueblos'         => 'nullable|string',
+                'precio_persona'  => 'sometimes|numeric|min:0',
+                'precio_empresa'  => 'nullable|numeric|min:0',
+                'dias_entrega'    => 'nullable|string|max:255',
+                'activo'          => 'sometimes|boolean',
+            ]);
+            if (array_key_exists('pueblos', $data)) {
+                $pueblos = trim($data['pueblos'] ?? '');
+                $data['pueblos'] = $pueblos === ''
+                    ? []
+                    : array_values(array_filter(array_map('trim', explode(',', $pueblos))));
+            }
+            if (isset($data['precio_persona']) && ! isset($data['precio_empresa'])) {
+                $data['precio_empresa'] = $data['precio_persona'];
+            }
+            $zona->update($data);
+            return response()->json(['success' => true, 'data' => $zona->fresh()]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     })->name('delivery-zonas.update');
     Route::delete('/delivery-zonas/{id}', function ($id) {
         \App\Models\DeliveryZona::findOrFail($id)->delete();
