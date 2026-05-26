@@ -8,12 +8,15 @@
     "require": {
         "php": "^8.2 || ^8.4",
         "barryvdh/laravel-dompdf": "^3.1",
+        "intervention/image": "^4.1",
         "laravel/framework": "^11.31",
         "laravel/reverb": "^1.8",
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.21",
         "laravel/tinker": "^2.9",
         "predis/predis": "^3.4",
+        "spatie/laravel-image-optimizer": "^1.8",
+        "spatie/laravel-medialibrary": "^11.22",
         "stripe/stripe-php": "^17.6",
         "tymon/jwt-auth": "^2.2",
         "vinkla/hashids": "^12.0"
