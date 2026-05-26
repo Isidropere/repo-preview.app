@@ -39,10 +39,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ── Productos (públicos) ───────────────────────────────────────────────
-Route::get('/items',         [ItemApiController::class, 'index']);
-Route::get('/items/buscar',  [ItemApiController::class, 'buscar']);
-Route::get('/items/{id}',    [ItemApiController::class, 'show'])->where('id', '[0-9]+');
-Route::get('/categorias',    [ItemApiController::class, 'categorias']);
+Route::post('/images', [\App\Http\Controllers\ImageController::class, 'store'])->middleware('auth:sanctum');
 
 // ── Ubicación (públicos) ───────────────────────────────────────────────
 Route::get('/ubicacion/provincias',              [DireccionApiController::class, 'provincias']);
