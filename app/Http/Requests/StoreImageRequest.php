@@ -22,14 +22,7 @@ class StoreImageRequest extends FormRequest
     {
         $maxSizeMb = env('IMAGE_MAX_UPLOAD_MB', 100); // 100 MB por defecto
         $maxSizeKB = $maxSizeMb * 1024;
-        return [
-            'image' => [
-                'required',
-                'file',
-                'image',
-                'mimes:' . implode(',', Config::get('image.allowed_mime')),
-                'max:' . $maxSizeKB,
-            ],
-        ];
+        return [];
+
     }
 }

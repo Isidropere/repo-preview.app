@@ -39,7 +39,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ── Productos (públicos) ───────────────────────────────────────────────
-Route::post('/images', [\App\Http\Controllers\ImageController::class, 'store'])->middleware('auth:sanctum');
+Route::post('/images', [\App\Http\Controllers\ImageController::class, 'store'])->middleware(['auth:sanctum', 'throttle:30,1']);
 
 // ── Ubicación (públicos) ───────────────────────────────────────────────
 Route::get('/ubicacion/provincias',              [DireccionApiController::class, 'provincias']);
