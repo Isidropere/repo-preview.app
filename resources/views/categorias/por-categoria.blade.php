@@ -6,7 +6,7 @@
     <div style="max-width:1200px;margin:0 auto;padding:1.5rem 1rem;">
 
         {{-- Breadcrumbs + Título --}}
-        <div style="margin-bottom:1.5rem;">
+        <div style="margin-bottom:1.5rem; position:relative;">
             <nav style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:#6b7280;margin-bottom:0.75rem;">
                 <a href="{{ route('home') }}"
                     style="color:#6b7280;text-decoration:none;display:flex;align-items:center;gap:0.25rem;">
@@ -19,9 +19,24 @@
                 <span>/</span>
                 <span style="color:#111827;font-weight:500;">{{ $categoria->categoria }}</span>
             </nav>
-            <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold my-2">{{ $categoria->categoria }}</h1>
-            <p style="color:#6b7280;margin-top:0.25rem;font-size:0.9rem;">{{ $items->total() }}
-                producto{{ $items->total() != 1 ? 's' : '' }}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                <div>
+                    <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold my-2" style="margin:0;">{{ $categoria->categoria }}</h1>
+                    <p style="color:#6b7280;margin:0.25rem 0 0 0;font-size:0.9rem;">{{ $items->total() }}
+                        producto{{ $items->total() != 1 ? 's' : '' }}</p>
+                </div>
+                <button type="button" 
+                        onclick="compartirItem('{{ addslashes($categoria->categoria) }}', '{{ route('categorias.show', $categoria->slug) }}')" 
+                        style="display:inline-flex;align-items:center;gap:6px;background:#f58634;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.2s;" 
+                        onmouseover="this.style.background='#e27526'" 
+                        onmouseout="this.style.background='#f58634'" 
+                        title="Compartir Categoría">
+                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 10.742l4.828-2.414m0 0a3 3 0 10-3.62-3.62l-4.83 2.4m8.45 1.224l-4.829 2.415m-1.425-2.94a3 3 0 11-3.62 3.62 3 3 0 013.62-3.62z"/>
+                    </svg>
+                    <span>Compartir</span>
+                </button>
+            </div>
         </div>
 
         {{-- Barra de búsqueda y filtros --}}
@@ -70,21 +85,29 @@
                         onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.transform='none'">
 
                         {{-- Imagen --}}
-                        <a href="{{ route('producto.detalle', $item->slug) }}"
-                            style="display:block;position:relative;height:220px;overflow:hidden;background:#f3f4f6;">
-                            <img src="{{ $rutaImagen }}" alt="{{ $item->item }}"
-                                style="width:100%;height:100%;object-fit:cover;transition:transform .4s;" loading="lazy" width="300"
-                                height="220" onmouseover="this.style.transform='scale(1.08)'"
-                                onmouseout="this.style.transform='scale(1)'">
+                        <div style="position:relative;height:220px;overflow:hidden;background:#f3f4f6;">
+                            <a href="{{ route('producto.detalle', $item->slug) }}" style="display:block;width:100%;height:100%;">
+                                <img src="{{ $rutaImagen }}" alt="{{ $item->item }}"
+                                    style="width:100%;height:100%;object-fit:cover;transition:transform .4s;" loading="lazy" width="300"
+                                    height="220" onmouseover="this.style.transform='scale(1.08)'"
+                                    onmouseout="this.style.transform='scale(1)'">
+                            </a>
                             @if($item->estatus != 1)
                                 <span
-                                    style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;">Agotado</span>
+                                    style="position:absolute;bottom:8px;left:8px;background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;z-index:20;">Agotado</span>
                             @endif
                             @if($item->descuento && $item->descuento > 0)
                                 <span
-                                    style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;">-{{ $item->descuento }}%</span>
+                                    style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:4px;z-index:20;">-{{ $item->descuento }}%</span>
                             @endif
-                        </a>
+                            <button type="button" onclick="event.preventDefault(); event.stopPropagation(); compartirItem('{{ addslashes($item->item) }}', '{{ route('producto.detalle', $item->slug) }}')"
+                                    style="position:absolute;top:8px;right:8px;display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:#f58634;border:none;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.15);cursor:pointer;color:#ffffff;transition:background 0.2s, transform 0.15s;z-index:30;"
+                                    onmouseover="this.style.background='#e27526'; this.style.transform='scale(1.08)'" 
+                                    onmouseout="this.style.background='#f58634'; this.style.transform='none'"
+                                    title="Compartir enlace">
+                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                            </button>
+                        </div>
 
                         {{-- Info --}}
                         <div style="padding:0.875rem;flex:1;display:flex;flex-direction:column;">
