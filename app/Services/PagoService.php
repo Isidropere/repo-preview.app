@@ -3,8 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\PaymentProviderInterface;
-use App\Services\Payments\CardnetProvider;
-use App\Services\Payments\StripeProvider;
+use App\Services\Payments\AzulProvider;
 use Illuminate\Support\Facades\Log;
 
 class PagoService
@@ -12,14 +11,12 @@ class PagoService
     private PaymentProviderInterface $driver;
 
     private array $drivers = [
-        'cardnet' => CardnetProvider::class,
-        'stripe'  => StripeProvider::class,
+        'azul' => AzulProvider::class,
     ];
 
     public function __construct()
     {
-        $driverName   = config('services.payment.driver', 'cardnet');
-        $this->driver = $this->resolverDriver($driverName);
+        $this->driver = app(AzulProvider::class);
     }
 
     public function cobrarTarjeta(float $monto, string $currency, array $datosTarjeta, array $opciones = []): array

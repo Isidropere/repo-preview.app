@@ -33,6 +33,17 @@ use Illuminate\Support\Str;
 class Item extends Model
 {
     use HasFactory;
+
+    protected static function booted()
+    {
+        static::saved(function ($item) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+
+        static::deleted(function ($item) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+    }
  
     protected $table = 'items';
     protected $primaryKey = 'id_item';

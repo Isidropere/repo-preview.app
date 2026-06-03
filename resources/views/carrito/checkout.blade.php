@@ -156,7 +156,6 @@
                         @csrf
                         <input type="hidden" name="id_tarjeta" id="hiddenIdTarjeta" value="">
 
-                        @if(config('services.payment.driver') === 'cardnet')
                         <div class="mb-5">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                 Código de seguridad (CVV)
@@ -174,7 +173,6 @@
                                 </p>
                             </div>
                         </div>
-                        @endif
 
                         @if($carrito->tipo !== 'servicio')
                         @php $direccionesCount = auth()->user()->direcciones()->count(); @endphp
@@ -287,7 +285,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
-                            Pago cifrado con TLS 1.2 &middot; Procesado por CardNet
+                            Pago cifrado con TLS 1.2 &middot; Procesado por Azul
                         </div>
                     </form>
                 </div>
@@ -433,7 +431,6 @@
                               focus:outline-none focus:border-blue-500 transition placeholder-gray-300">
             </div>
 
-            @if(config('services.payment.driver') === 'cardnet')
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Número de tarjeta</label>
                 <input type="text" name="no_tarjeta" id="inputNoTarjeta"
@@ -459,16 +456,6 @@
                                   focus:outline-none focus:border-blue-500 transition placeholder-gray-300">
                 </div>
             </div>
-            @else
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Datos de tarjeta</label>
-                <div id="card-element" class="border-2 border-gray-200 rounded-xl px-4 py-3 bg-white focus-within:border-blue-500 transition"></div>
-                <p id="card-errors" class="text-red-500 text-xs mt-1.5"></p>
-            </div>
-            <input type="hidden" name="payment_method_id" id="payment_method_id">
-            <input type="hidden" name="last4" id="last4">
-            <input type="hidden" name="tipo_tarjeta" id="tipo_tarjeta">
-            @endif
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Banco <span class="font-normal text-gray-400">(opcional)</span></label>
@@ -493,13 +480,8 @@
     </div>
 </div>
 
-@if(config('services.payment.driver') === 'stripe')
-<script src="https://js.stripe.com/v3/"></script>
-@endif
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const driver    = @json(config('services.payment.driver'));
     const hiddenId  = document.getElementById('hiddenIdTarjeta');
     const modal     = document.getElementById('modalTarjeta');
     const formAgregar = document.getElementById('formAgregarTarjeta');
@@ -570,7 +552,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (hiddenId) hiddenId.value = idTarjeta;
 
-        @if(config('services.payment.driver') === 'cardnet')
         const cvv = document.getElementById('inputCvv')?.value.trim();
         if (!cvv || cvv.length < 3) {
             e.preventDefault();
@@ -578,7 +559,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('inputCvv')?.focus();
             return;
         }
-        @endif
 
         const btn = document.getElementById('btnPagar');
         btn.disabled = true;
@@ -613,8 +593,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Guardar tarjeta CardNet ────────────────────────────
-    if (driver === 'cardnet' && formAgregar) {
+    // ── Guardar tarjeta (Azul) ─────────────────────────────
+    if (formAgregar) {
         formAgregar.addEventListener('submit', async function (e) {
             e.preventDefault();
             const btn = document.getElementById('btnGuardarTarjeta');
@@ -651,52 +631,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.textContent = 'Guardar tarjeta';
             }
         });
-    }
-
-    // ── Guardar tarjeta Stripe ─────────────────────────────
-    if (driver === 'stripe') {
-        const pk = @json(config('services.stripe.key'));
-        if (pk && formAgregar) {
-            const stripe = Stripe(pk);
-            const cardEl = stripe.elements().create('card', {
-                style: { base: { fontSize: '15px', color: '#374151', '::placeholder': { color: '#9ca3af' } } },
-                hidePostalCode: true
-            });
-            cardEl.mount('#card-element');
-            cardEl.on('change', ev => {
-                document.getElementById('card-errors').textContent = ev.error?.message ?? '';
-            });
-
-            formAgregar.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const btn = document.getElementById('btnGuardarTarjeta');
-                btn.disabled = true;
-
-                const { paymentMethod, error } = await stripe.createPaymentMethod({
-                    type: 'card', card: cardEl,
-                    billing_details: { name: formAgregar.nombre_titular.value.trim() }
-                });
-
-                if (error) {
-                    document.getElementById('card-errors').textContent = error.message;
-                    btn.disabled = false;
-                    return;
-                }
-
-                document.getElementById('payment_method_id').value = paymentMethod.id;
-                document.getElementById('last4').value = paymentMethod.card.last4 ?? '';
-                document.getElementById('tipo_tarjeta').value = paymentMethod.card.brand ?? '';
-
-                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
-                    method: 'POST',
-                    body: new FormData(formAgregar),
-                    headers: { 'Accept': 'application/json' }
-                });
-                const result = await resp.json();
-                if (result.success) { location.reload(); }
-                else { alert(result.message || 'Error al guardar.'); btn.disabled = false; }
-            });
-        }
     }
     // ── Cálculo de envío ──────────────────────────────────
     (function () {

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme.dart';
 import 'core/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const CambialoApp());
 }
 
@@ -36,12 +39,12 @@ class _SplashRouterState extends State<_SplashRouter> {
   }
 
   Future<void> _check() async {
-    // Sin delay — ir directo
-    final loggedIn = await AuthService.isLoggedIn();
+    // Añadimos un pequeño retraso para que el Splash se dibuje y no colapse con el build inicial
+    await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => loggedIn ? const MainScreen() : const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const MainScreen()),
     );
   }
 

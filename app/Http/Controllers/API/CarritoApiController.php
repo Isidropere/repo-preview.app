@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Carrito;
 use App\Models\ItemIntencionCompra;
+use App\Services\CarritoService;
 use Illuminate\Http\Request;
 
 /**
@@ -12,20 +13,27 @@ use Illuminate\Http\Request;
  */
 class CarritoApiController extends Controller
 {
+    private CarritoService $carritoService;
+
+    public function __construct(CarritoService $carritoService)
+    {
+        $this->carritoService = $carritoService;
+    }
+
     /** GET /api/carrito */
     public function index(Request $request)
     {
-        $carrito = $this->obtenerOCrearCarrito($request->user()->id);
+        $resultado = $this->carritoService->obtenerCarritoConTotales($request->user()->id);
 
-        $carrito->load(['itemsIntencionCompra.item.imagenes:id_imagen,id_item,nombre,ruta']);
+        if (!$resultado['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $resultado['message']
+            ], 404);
+        }
 
-        return response()->json([
-            'id_carrito' => $carrito->id_carrito,
-            'items'      => $carrito->itemsIntencionCompra,
-            'total'      => $carrito->itemsIntencionCompra
-                ->where('es_seleccionado', 1)
-                ->sum(fn($i) => ($i->item->valor ?? 0) * $i->cantidad - ($i->descuento ?? 0)),
-        ]);
+        // Return the full structured data for the mobile app
+        return response()->json($resultado['data']);
     }
 
     /** POST /api/carrito/agregar */
@@ -36,49 +44,63 @@ class CarritoApiController extends Controller
             'cantidad' => 'required|integer|min:1|max:99',
         ]);
 
-        $carrito = $this->obtenerOCrearCarrito($request->user()->id);
+        $resultado = $this->carritoService->agregarItem(
+            $request->user()->id,
+            $data['id_item'],
+            $data['cantidad'],
+            null // idColor, not currently sent by mobile
+        );
 
-        $existente = ItemIntencionCompra::where('id_carrito', $carrito->id_carrito)
-            ->where('id_item', $data['id_item'])
-            ->first();
-
-        if ($existente) {
-            $existente->increment('cantidad', $data['cantidad']);
-        } else {
-            ItemIntencionCompra::create([
-                'id_carrito'    => $carrito->id_carrito,
-                'id_item'       => $data['id_item'],
-                'cantidad'      => $data['cantidad'],
-                'es_seleccionado' => 1,
-                'descuento'     => 0,
-            ]);
+        if (!$resultado['success']) {
+            return response()->json(['message' => $resultado['message']], 400);
         }
 
-        return response()->json(['message' => 'Item agregado al carrito.']);
+        return response()->json(['message' => $resultado['message'], 'cart_count' => $resultado['cart_count']]);
     }
 
     /** DELETE /api/carrito/{id_item} */
     public function eliminar(Request $request, int $idItem)
     {
-        $carrito = $this->obtenerOCrearCarrito($request->user()->id);
-
-        ItemIntencionCompra::where('id_carrito', $carrito->id_carrito)
-            ->where('id_item', $idItem)
-            ->delete();
-
-        return response()->json(['message' => 'Item eliminado del carrito.']);
+        $resultado = $this->carritoService->eliminarItem($request->user()->id, $idItem);
+        return response()->json(['message' => $resultado['message']]);
     }
 
     /** DELETE /api/carrito/vaciar */
     public function vaciar(Request $request)
     {
-        $carrito = $this->obtenerOCrearCarrito($request->user()->id);
-        ItemIntencionCompra::where('id_carrito', $carrito->id_carrito)->delete();
-        return response()->json(['message' => 'Carrito vaciado.']);
+        $resultado = $this->carritoService->vaciar($request->user()->id);
+        return response()->json(['message' => $resultado['message']]);
     }
 
-    private function obtenerOCrearCarrito(int $userId): Carrito
+    /** PUT /api/carrito/{itemIntencionId}/cantidad */
+    public function actualizarCantidad(Request $request, int $itemIntencionId)
     {
-        return Carrito::firstOrCreate(['id_user' => $userId]);
+        $data = $request->validate([
+            'accion' => 'required|string|in:incrementar,decrementar',
+        ]);
+
+        $resultado = $this->carritoService->actualizarCantidad($itemIntencionId, $data['accion']);
+
+        if (!$resultado['success']) {
+            return response()->json(['message' => $resultado['message']], 400);
+        }
+
+        return response()->json(['message' => $resultado['message']]);
+    }
+
+    /** PUT /api/carrito/{itemIntencionId}/seleccion */
+    public function marcarSeleccionado(Request $request, int $itemIntencionId)
+    {
+        $data = $request->validate([
+            'estado' => 'required|boolean',
+        ]);
+
+        $resultado = $this->carritoService->marcarSeleccionado($request->user()->id, $itemIntencionId, $data['estado']);
+
+        if (!$resultado['success']) {
+            return response()->json(['message' => $resultado['message']], 400);
+        }
+
+        return response()->json(['message' => 'Selección actualizada', 'totales' => $resultado['data']['totales']]);
     }
 }

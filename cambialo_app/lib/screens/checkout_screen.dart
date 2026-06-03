@@ -86,7 +86,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   double get _subtotal {
     final total = widget.carrito['total'];
-    return (total is num) ? total.toDouble() : 0.0;
+    if (total == null) return 0.0;
+    if (total is num) return total.toDouble();
+    return double.tryParse(total.toString()) ?? 0.0;
   }
 
   double get _envio => 200.0; // En Cambialord es dinámico, fijado por defecto básico aquí.
@@ -298,7 +300,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     onChanged: (v) => setState(() => _idTarjeta = v),
                     activeColor: kPrimary,
                     title: Text('**** **** **** ${t['last4']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: Text('${t['nombre_titular']} | Vence ${t['mes_expiracion']}/${t['anio_expiracion']}', style: TextStyle(fontSize: 12, color: kTextGray)),
+                    subtitle: Builder(
+                      builder: (_) {
+                        final rawYear = t['año_expiracion'] ?? t['anio_expiracion'] ?? '';
+                        final mesVal = t['mes_expiracion'].toString().padLeft(2, '0');
+                        return Text(
+                          '${t['nombre_titular']} | Vence $mesVal/$rawYear',
+                          style: TextStyle(fontSize: 12, color: kTextGray),
+                        );
+                      },
+                    ),
                   )),
                   const SizedBox(height: 12),
                   // Ingresar CVV
@@ -323,13 +334,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(height: 8),
                 ...((widget.carrito['items'] as List? ?? []).map((i) {
                   final item = i['item'] as Map? ?? {};
+                  final double valor = double.tryParse((item['valor'] ?? 0).toString()) ?? 0.0;
+                  final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
+                  final subtotalItem = valor * cantidad;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(children: [
                       Expanded(child: Text(item['item'] ?? '', style: const TextStyle(fontSize: 13, color: kTextDark))),
-                      Text('x${i['cantidad']}', style: TextStyle(color: kTextGray, fontSize: 12)),
+                      Text('x$cantidad', style: TextStyle(color: kTextGray, fontSize: 12)),
                       const SizedBox(width: 8),
-                      Text('RD\$ ${(item['valor'] ?? 0) * (i['cantidad'] ?? 1)}', style: const TextStyle(fontSize: 13, color: kPrimary, fontWeight: FontWeight.bold)),
+                      Text('RD\$ ${subtotalItem.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13, color: kPrimary, fontWeight: FontWeight.bold)),
                     ]),
                   );
                 })),

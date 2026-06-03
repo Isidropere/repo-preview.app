@@ -94,7 +94,7 @@ class TarjetaPago extends Model
     // Helpers para proveedores
     // ---------------------------------------------------------------
 
-    public function datosCardnet(?string $cvv = null): array
+    public function datosAzul(?string $cvv = null): array
     {
         $anio = $this->getAttribute(self::COL_ANIO);
         $mes = (int) $this->mes_expiracion;
@@ -102,6 +102,9 @@ class TarjetaPago extends Model
 
         // Validar que la tarjeta no esté expirada
         if ($anioNum > 0 && $mes > 0) {
+            if ($anioNum < 100) {
+                $anioNum += 2000;
+            }
             $expTimestamp = mktime(0, 0, 0, $mes + 1, 1, $anioNum);
             if ($expTimestamp < time()) {
                 throw new \RuntimeException('La tarjeta está expirada. Actualiza o usa otra tarjeta.');
@@ -110,15 +113,13 @@ class TarjetaPago extends Model
 
         return [
             'card_number'     => $this->getNumeroDesencriptado(),
-            'expiration_date' => sprintf('%02d/%s', $mes, substr((string) $anio, -2)),
+            'expiration_date' => sprintf('%04d%02d', $anioNum, $mes),
             'cvv'             => $cvv,
         ];
     }
 
-    public function datosStripe(): array
+    public function datosDriver(?string $cvv = null): array
     {
-        return [
-            'payment_method_id' => $this->payment_method_id,
-        ];
+        return $this->datosAzul($cvv);
     }
 }

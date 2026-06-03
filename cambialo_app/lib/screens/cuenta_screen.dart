@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
 import 'login_screen.dart';
@@ -9,6 +11,12 @@ import 'publicar_articulo_screen.dart';
 import 'direcciones_screen.dart';
 import 'cambiar_contrasena_screen.dart';
 import 'editar_perfil_screen.dart';
+import 'tarjetas_screen.dart';
+import 'hoja_vida_screen.dart';
+import 'publicar_talento_screen.dart';
+import 'mis_talentos_screen.dart';
+import 'mis_intercambios_screen.dart';
+import 'notificaciones_screen.dart';
 
 /// Pantalla "Tu cuenta" — fiel al diseño web de Cambialord
 class CuentaScreen extends StatefulWidget {
@@ -20,6 +28,7 @@ class CuentaScreen extends StatefulWidget {
 class _CuentaScreenState extends State<CuentaScreen> {
   Map<String, dynamic>? _user;
   bool _loading = true;
+  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -29,7 +38,46 @@ class _CuentaScreenState extends State<CuentaScreen> {
 
   Future<void> _load() async {
     final u = await AuthService.me();
+    if (!mounted) return;
     setState(() { _user = u; _loading = false; });
+    if (u == null) {
+      final loggedIn = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      if (loggedIn == true) {
+        _load();
+      } else {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      }
+    } else {
+      _refreshBackground();
+      _loadNotificationsCount();
+    }
+  }
+
+  Future<void> _loadNotificationsCount() async {
+    try {
+      final res = await ApiClient.get('/notificaciones/todas', auth: true, useCache: false);
+      if (res.statusCode == 200 && mounted) {
+        final data = jsonDecode(res.body);
+        final list = data['mensajes'] ?? [];
+        final count = list.where((n) => n['leido'] == 0).length;
+        setState(() {
+          _unreadCount = count;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _refreshBackground() async {
+    final freshUser = await AuthService.me(forceRefresh: true);
+    if (freshUser != null && mounted) {
+      setState(() { _user = freshUser; });
+    }
+    _loadNotificationsCount();
   }
 
   Future<void> _logout() async {
@@ -46,17 +94,21 @@ class _CuentaScreenState extends State<CuentaScreen> {
   List<Map<String, dynamic>> get _opciones => [
     {
       'icon': Icons.add_circle_outline,
-      'title': 'Agregar un nuevo talento',
+      'title': 'Agregar talento',
       'sub': 'Publica tus talentos',
-      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Módulo de talentos próximamente'), backgroundColor: kPrimary)),
+      'onTap': () => _checkHojaVidaYAgregarTalento(),
     },
     {
       'icon': Icons.star_outline,
-      'title': 'Administrar tus talentos',
-      'sub': 'Gestiona tus talentos',
-      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Módulo de talentos próximamente'), backgroundColor: kPrimary)),
+      'title': 'Gestionar talentos',
+      'sub': 'Administra tus talentos',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisTalentosScreen())),
+    },
+    {
+      'icon': Icons.description_outlined,
+      'title': 'Hoja de Vida',
+      'sub': 'Tu perfil profesional',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HojaVidaScreen())),
     },
     {
       'icon': Icons.add_box_outlined,
@@ -77,6 +129,12 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DireccionesScreen())),
     },
     {
+      'icon': Icons.credit_card_outlined,
+      'title': 'Métodos de pago',
+      'sub': 'Gestiona tus tarjetas guardadas',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TarjetasScreen())),
+    },
+    {
       'icon': Icons.shield_outlined,
       'title': 'Modificar contraseña',
       'sub': 'Cambia tu contraseña de manera segura',
@@ -89,11 +147,10 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistorialScreen())),
     },
     {
-      'icon': Icons.workspace_premium_outlined,
-      'title': 'Cambiar cuenta a premium',
-      'sub': 'Descubre los beneficios premium',
-      'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Función premium próximamente'), backgroundColor: kPrimary)),
+      'icon': Icons.swap_horiz_outlined,
+      'title': 'Mis intercambios',
+      'sub': 'Gestiona tus propuestas activas',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
     },
   ];
 
@@ -111,7 +168,10 @@ class _CuentaScreenState extends State<CuentaScreen> {
                 style: TextStyle(color: kTextGray, fontSize: 15)),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                _load();
+              },
               child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white)),
             ),
           ]),
@@ -171,7 +231,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: kPrimary,
-                      backgroundImage: CachedNetworkImageProvider(_user!['profile_photo_url']),
+                      backgroundImage: NetworkImage(ApiClient.fixImageUrl(_user!['profile_photo_url'])),
                     ),
                     Positioned(
                       bottom: 0, right: 0,
@@ -194,6 +254,103 @@ class _CuentaScreenState extends State<CuentaScreen> {
                 ]),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Card de Notificaciones — Cubre ancho completo abajo del nombre de usuario
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificacionesScreen()),
+                );
+                _loadNotificationsCount();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.shade500, Colors.orange.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.white24,
+                          child: Icon(Icons.notifications_active_outlined, color: Colors.white, size: 22),
+                        ),
+                        if (_unreadCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                '$_unreadCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Notificaciones',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _unreadCount > 0
+                                ? 'Tienes $_unreadCount alertas sin leer'
+                                : 'No tienes alertas pendientes',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 20),
 
             // Grid de opciones — igual que la web (2 columnas)
@@ -211,6 +368,57 @@ class _CuentaScreenState extends State<CuentaScreen> {
             ),
           ]),
         ),
+      ),
+    );
+  }
+
+  Future<void> _checkHojaVidaYAgregarTalento() async {
+    setState(() => _loading = true);
+    try {
+      final res = await ApiClient.get('/hoja-vida', auth: true, useCache: false);
+      setState(() => _loading = false);
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        final tieneHoja = body['tiene_hoja_vida'] == true;
+        if (!mounted) return;
+        if (tieneHoja) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarTalentoScreen()));
+        } else {
+          _mostrarDialogoRequerirHojaVida();
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al verificar tu perfil profesional.'), backgroundColor: Colors.red)
+        );
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error de conexión con el servidor.'), backgroundColor: Colors.red)
+      );
+    }
+  }
+
+  void _mostrarDialogoRequerirHojaVida() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Perfil Profesional Requerido'),
+        content: const Text('Para publicar tus talentos y servicios, primero debes completar tu Hoja de Vida (perfil profesional).'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const HojaVidaScreen()));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+            child: const Text('Completar ahora', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

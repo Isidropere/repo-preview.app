@@ -31,8 +31,9 @@ class DireccionApiController extends Controller
             'N_casa_edificio'    => 'nullable|string|max:50',
             'apto'               => 'nullable|string|max:50',
             'sector'             => 'nullable|string|max:100',
-            'id_provincia'       => 'required|integer|exists:provincias,id_provincia',
-            'id_municipio'       => 'required|integer|exists:municipios,id_municipio',
+            'id_provincia'       => 'required|exists:provincias,id_provincia',
+            'id_municipio'       => 'required|exists:municipios,id_municipio',
+            'geolocalizacion'    => 'nullable|string|max:100',
             'telefono_contacto'  => 'nullable|string|max:20',
             'es_predeterminada'  => 'boolean',
         ]);
@@ -66,8 +67,9 @@ class DireccionApiController extends Controller
             'N_casa_edificio'   => 'nullable|string|max:50',
             'apto'              => 'nullable|string|max:50',
             'sector'            => 'nullable|string|max:100',
-            'id_provincia'      => 'sometimes|integer|exists:provincias,id_provincia',
-            'id_municipio'      => 'sometimes|integer|exists:municipios,id_municipio',
+            'id_provincia'      => 'sometimes|exists:provincias,id_provincia',
+            'id_municipio'      => 'sometimes|exists:municipios,id_municipio',
+            'geolocalizacion'   => 'nullable|string|max:100',
             'telefono_contacto' => 'nullable|string|max:20',
             'es_predeterminada' => 'boolean',
         ]);

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'map_picker_screen.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 
@@ -127,8 +129,9 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
 
   List _provincias  = [];
   List _municipios  = [];
-  int? _idProvincia;
-  int? _idMunicipio;
+  String? _idProvincia;
+  String? _idMunicipio;
+  String? _geolocalizacion;
   bool _esPred      = false;
   bool _saving      = false;
   String _error     = '';
@@ -155,7 +158,7 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
     }
   }
 
-  Future<void> _loadMunicipios(int idProvincia) async {
+  Future<void> _loadMunicipios(String idProvincia) async {
     final res = await ApiClient.get('/ubicacion/municipios/$idProvincia');
     if (res.statusCode == 200) {
       setState(() { _municipios = jsonDecode(res.body); _idMunicipio = null; });
@@ -177,6 +180,7 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
       'telefono_contacto': _telCtrl.text.trim(),
       'id_provincia':      _idProvincia,
       'id_municipio':      _idMunicipio,
+      'geolocalizacion':   _geolocalizacion,
       'es_predeterminada': _esPred,
     }, auth: true);
 
@@ -210,25 +214,75 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
             const SizedBox(height: 16),
 
             // Provincia
-            DropdownButtonFormField<int>(
+            DropdownButtonFormField<String>(
               value: _idProvincia,
               decoration: const InputDecoration(labelText: 'Provincia *', border: OutlineInputBorder()),
-              items: _provincias.map<DropdownMenuItem<int>>((p) =>
-                DropdownMenuItem(value: p['id_provincia'], child: Text(p['provincia']))).toList(),
+              items: _provincias.map<DropdownMenuItem<String>>((p) =>
+                DropdownMenuItem(value: p['id_provincia'].toString(), child: Text(p['provincia']))).toList(),
               onChanged: (v) {
-                setState(() { _idProvincia = v; _municipios = []; });
+                setState(() { 
+                  _idProvincia = v; 
+                  _idMunicipio = null; 
+                  _municipios = []; 
+                });
                 if (v != null) _loadMunicipios(v);
               },
             ),
             const SizedBox(height: 12),
 
             // Municipio
-            DropdownButtonFormField<int>(
+            DropdownButtonFormField<String>(
               value: _idMunicipio,
               decoration: const InputDecoration(labelText: 'Municipio *', border: OutlineInputBorder()),
-              items: _municipios.map<DropdownMenuItem<int>>((m) =>
-                DropdownMenuItem(value: m['id_municipio'], child: Text(m['municipio']))).toList(),
+              items: _municipios.map<DropdownMenuItem<String>>((m) =>
+                DropdownMenuItem(value: m['id_municipio'].toString(), child: Text(m['municipio']))).toList(),
               onChanged: (v) => setState(() => _idMunicipio = v),
+            ),
+            const SizedBox(height: 16),
+
+            Text('Ubicación en el mapa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey.shade700)),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                 LatLng? initial;
+                 String? query;
+                 if (_geolocalizacion != null && _geolocalizacion!.contains(',')) {
+                    final parts = _geolocalizacion!.split(',');
+                    final lat = double.tryParse(parts[0].trim());
+                    final lng = double.tryParse(parts[1].trim());
+                    if (lat != null && lng != null) initial = LatLng(lat, lng);
+                 } else {
+                    String q = '';
+                    if (_idMunicipio != null) {
+                       final mList = _municipios.where((m) => m['id_municipio'].toString() == _idMunicipio).toList();
+                       if (mList.isNotEmpty) q += '${mList.first['municipio']}, ';
+                    }
+                    if (_idProvincia != null) {
+                       final pList = _provincias.where((p) => p['id_provincia'].toString() == _idProvincia).toList();
+                       if (pList.isNotEmpty) q += '${pList.first['provincia']}, ';
+                    }
+                    if (q.isNotEmpty) query = '$q Dominican Republic';
+                 }
+                 
+                 final selected = await Navigator.push(context, MaterialPageRoute(builder: (_) => MapPickerScreen(initialLocation: initial, searchQuery: query)));
+                 if (selected != null && selected is LatLng) {
+                    setState(() => _geolocalizacion = '${selected.latitude}, ${selected.longitude}');
+                 }
+              },
+              child: Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(4)),
+                 child: Row(
+                    children: [
+                       const Icon(Icons.map, color: kPrimary),
+                       const SizedBox(width: 10),
+                       Expanded(
+                          child: Text(_geolocalizacion != null ? 'Ubicación seleccionada: $_geolocalizacion' : 'Toca para ubicar en el mapa (opcional)', 
+                             style: TextStyle(color: _geolocalizacion != null ? Colors.black : Colors.grey.shade600, fontSize: 13))
+                       )
+                    ]
+                 )
+              )
             ),
             const SizedBox(height: 12),
 

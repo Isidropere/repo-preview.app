@@ -200,10 +200,7 @@ class CheckoutService
 
     private function prepararDatosTarjeta(TarjetaPago $tarjeta, ?string $cvv): array
     {
-        $driver = config('services.payment.driver', 'cardnet');
-        return $driver === 'stripe'
-            ? $tarjeta->datosStripe()
-            : $tarjeta->datosCardnet($cvv);
+        return $tarjeta->datosDriver($cvv);
     }
 
     private function prepararOpciones(Carrito $carrito, string $clientIp): array

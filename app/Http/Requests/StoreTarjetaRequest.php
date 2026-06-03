@@ -29,19 +29,6 @@ class StoreTarjetaRequest extends FormRequest
 
     public function rules(): array
     {
-        $driver = config('services.payment.driver', 'cardnet');
-
-        if ($driver === 'stripe') {
-            return [
-                'payment_method_id' => 'required|string|max:255',
-                'last4'             => 'required|string|size:4',
-                'tipo_tarjeta'      => 'nullable|string|max:50',
-                'banco_tarjeta'     => 'nullable|string|max:100',
-                'mes_expiracion'    => 'nullable|string|max:2',
-                'nombre_titular'    => 'required|string|max:255',
-            ];
-        }
-
         return [
             'no_tarjeta'       => ['required', 'string', 'min:13', 'max:19', new LuhnCheck],
             'mes_expiracion'   => 'required|numeric|min:1|max:12',

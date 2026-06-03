@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 /**
  * AuthApiController — Autenticación para la app móvil
@@ -36,9 +37,75 @@ class AuthApiController extends Controller
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
+        // Verificar inventario para enviar notificaciones (igual que en web)
+        $this->verificarInventarioUsuario($user);
+
         return response()->json([
             'token' => $token,
             'user'  => $this->formatUser($user),
+        ]);
+    }
+
+    /**
+     * Verifica inventario de items del usuario y envía notificaciones si hay stock bajo o agotado.
+     */
+    private function verificarInventarioUsuario(User $user): void
+    {
+        try {
+            $items = \App\Models\Item::where('id_user', $user->id)
+                ->where('estatus', 1)
+                ->with('inventarios')
+                ->get();
+
+            if ($items->isEmpty()) return;
+
+            $agotados = [];
+            $stockBajo = [];
+
+            foreach ($items as $item) {
+                $cantidad = $item->inventarios?->cantidad ?? 0;
+                $tipo = (int) $item->id_categoria_item === 29 ? 'servicio' : 'producto';
+
+                if ($cantidad <= 0) {
+                    $agotados[] = $item->item . " ({$tipo})";
+                } elseif ($cantidad === 1) {
+                    $stockBajo[] = $item->item . " ({$tipo}, queda 1)";
+                }
+            }
+
+            // Notificar stock agotado
+            if (!empty($agotados)) {
+                $msg = '[Producto] Stock agotado: ' . implode(', ', array_slice($agotados, 0, 5));
+                if (count($agotados) > 5) $msg .= ' y ' . (count($agotados) - 5) . ' mas';
+                $this->enviarNotificacionInventario($user->id, $msg);
+            }
+
+            // Notificar stock bajo
+            if (!empty($stockBajo)) {
+                $msg = '[Producto] Stock bajo: ' . implode(', ', array_slice($stockBajo, 0, 5));
+                if (count($stockBajo) > 5) $msg .= ' y ' . (count($stockBajo) - 5) . ' mas';
+                $this->enviarNotificacionInventario($user->id, $msg);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Error verificando inventario al login API', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function enviarNotificacionInventario(int $userId, string $mensaje): void
+    {
+        $existe = \App\Models\Message::whereNull('id_emisor')
+            ->where('id_receptor', $userId)
+            ->where('mensaje', $mensaje)
+            ->where('created_at', '>=', now()->subHours(24))
+            ->exists();
+
+        if ($existe) return;
+
+        \App\Models\Message::create([
+            'id_emisor'   => null,
+            'id_receptor' => $userId,
+            'mensaje'     => $mensaje,
+            'leido'       => false,
         ]);
     }
 
@@ -71,6 +138,14 @@ class AuthApiController extends Controller
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
+        // Enviar notificación de bienvenida
+        \App\Models\Message::create([
+            'id_emisor'   => null,
+            'id_receptor' => $user->id,
+            'mensaje'     => '¡Bienvenido a Cambialo! Explora productos, servicios y talentos para intercambiar o comprar.',
+            'leido'       => false,
+        ]);
+
         return response()->json([
             'token' => $token,
             'user'  => $this->formatUser($user),
@@ -96,6 +171,11 @@ class AuthApiController extends Controller
         $request->validate([
             'password_actual'       => 'required|string',
             'password'              => 'required|string|min:8|confirmed',
+        ], [
+            'password_actual.required' => 'La contraseña actual es obligatoria.',
+            'password.required'        => 'La nueva contraseña es obligatoria.',
+            'password.min'             => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed'       => 'Las contraseñas no coinciden.',
         ]);
 
         $user = $request->user();
@@ -153,6 +233,77 @@ class AuthApiController extends Controller
         ]);
     }
 
+    /** POST /api/auth/google */
+    public function loginGoogle(Request $request)
+    {
+        $request->validate([
+            'google_id' => 'required|string',
+            'email'     => 'required|email',
+            'nombres'   => 'required|string',
+            'apellidos' => 'sometimes|string',
+            'profile_photo_url' => 'nullable|string',
+        ]);
+
+        $isNewUser = false;
+        // Buscar usuario existente por google_id o por email
+        $user = User::where('google_id', $request->google_id)->first()
+            ?? User::where('email', $request->email)->first();
+
+        if ($user) {
+            // Vincular el google_id si aún no lo tiene
+            if (!$user->google_id) {
+                $user->google_id = $request->google_id;
+            }
+            if ($request->profile_photo_url && !$user->profile_photo_path) {
+                $user->profile_photo_path = $request->profile_photo_url;
+            }
+            $user->save();
+        } else {
+            $isNewUser = true;
+            // Crear nuevo usuario
+            $baseUsername = strtolower(preg_replace('/\s+/', '', $request->nombres));
+            $username = User::where('nombre_usuario', $baseUsername)->exists() 
+                ? $baseUsername . '_' . Str::random(4) 
+                : $baseUsername;
+
+            $user = User::create([
+                'nombres'           => $request->nombres,
+                'apellidos'         => $request->apellidos ?? '',
+                'email'             => $request->email,
+                'telefono'          => '',
+                'google_id'         => $request->google_id,
+                'nombre_usuario'    => $username,
+                'password'          => Hash::make(Str::random(24)),
+                'estatus'           => 1,
+                'id_tipo_usuario'   => 1,
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        if (!$user->estatus) {
+            return response()->json(['message' => 'Cuenta desactivada.'], 403);
+        }
+
+        $token = $user->createToken('mobile-app')->plainTextToken;
+
+        // Verificar inventario para enviar notificaciones (igual que en web)
+        $this->verificarInventarioUsuario($user);
+
+        if ($isNewUser) {
+            \App\Models\Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $user->id,
+                'mensaje'     => '¡Bienvenido a Cambialo! Explora productos, servicios y talentos para intercambiar o comprar.',
+                'leido'       => false,
+            ]);
+        }
+
+        return response()->json([
+            'token' => $token,
+            'user'  => $this->formatUser($user),
+        ]);
+    }
+
     private function formatUser(User $user): array
     {
         $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($user->nombres . ' ' . $user->apellidos) . '&background=f58634&color=fff&size=128';
@@ -168,5 +319,47 @@ class AuthApiController extends Controller
                 ? (filter_var($user->profile_photo_path, FILTER_VALIDATE_URL) ? $user->profile_photo_path : url($user->profile_photo_path))
                 : $avatarUrl,
         ];
+    }
+
+    /** GET /api/auth/badges */
+    public function getBadges(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['cart' => 0, 'intercambios' => 0, 'notificaciones' => 0]);
+        }
+
+        // Notificaciones (no leídas)
+        $notificacionesCount = \App\Models\Message::where('id_receptor', $user->id)
+            ->where('leido', 0)
+            ->count();
+
+        // Carrito
+        $cartCount = 0;
+        $carritos = \App\Models\Carrito::with('itemsIntencionCompra')
+            ->where('id_user', $user->id)
+            ->get();
+        if ($carritos->isNotEmpty()) {
+            foreach ($carritos as $carrito) {
+                if ($carrito->itemsIntencionCompra) {
+                    $cartCount += $carrito->itemsIntencionCompra->where('es_seleccionado', 1)->count();
+                }
+            }
+        }
+
+        // Intercambios pendientes
+        $intercambiosCount = \App\Models\Negociacion::where('estado', 'En negociacion')
+            ->where(function ($q) use ($user) {
+                $q->where('id_oferente', $user->id)
+                  ->orWhereHas('item', function ($iq) use ($user) {
+                      $iq->where('id_user', $user->id);
+                  });
+            })->count();
+
+        return response()->json([
+            'cart' => $cartCount,
+            'intercambios' => $intercambiosCount,
+            'notificaciones' => $notificacionesCount,
+        ]);
     }
 }

@@ -122,7 +122,6 @@ if ($data['carrito']->tipo === 'servicio') {
         return view('carrito.checkout', [
             'carrito'          => $data['carrito'],
             'total'            => $data['total'],
-            'stripeKey'        => config('services.stripe.key'),
             'proveedoresInfo'  => $proveedoresInfo,
             'municipioDefault' => auth()->user()
                 ->direcciones()

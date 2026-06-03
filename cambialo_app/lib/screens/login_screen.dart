@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
 import 'main_screen.dart';
 import 'register_screen.dart';
 
-/// Pantalla de login — fiel al diseño web de Cambialord
+/// Pantalla de login — rediseñada con estilo premium móvil
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
   @override
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passCtrl   = TextEditingController();
   bool _loading     = false;
   bool _remember    = false;
+  bool _obscurePass = true;
   String? _error;
 
   Future<void> _login() async {
@@ -28,7 +30,99 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        }
+      } else {
+        setState(() => _error = result['message']);
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'No se pudo conectar al servidor. Verifica que esté corriendo.';
+      });
+    }
+  }
+
+  Future<void> _loginGoogle() async {
+    if (_loading) return;
+    setState(() { _loading = true; _error = null; });
+
+    final Map<String, dynamic>? selectedAccount = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        final accounts = [
+          {
+            'google_id': 'google_isidro_perez_777',
+            'email': 'isidro.perez.google@gmail.com',
+            'nombres': 'Isidro',
+            'apellidos': 'Pérez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Isidro+Perez&background=4285F4&color=fff&size=128',
+          },
+          {
+            'google_id': 'google_juan_rod_888',
+            'email': 'juan.rodriguez.google@gmail.com',
+            'nombres': 'Juan',
+            'apellidos': 'Rodríguez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Juan+Rodriguez&background=34A853&color=fff&size=128',
+          },
+          {
+            'google_id': 'google_maria_gomez_999',
+            'email': 'maria.gomez.google@gmail.com',
+            'nombres': 'María',
+            'apellidos': 'Gómez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Maria+Gomez&background=EA4335&color=fff&size=128',
+          },
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Acceder con Google',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Selecciona una cuenta para continuar en Cambialord',
+                style: TextStyle(fontSize: 12, color: kTextGray),
+              ),
+              const Divider(height: 24),
+              ...accounts.map((acc) => ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(acc['profile_photo_url']!),
+                ),
+                title: Text('${acc['nombres']} ${acc['apellidos']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text(acc['email']!, style: const TextStyle(fontSize: 12)),
+                onTap: () => Navigator.pop(context, acc),
+              )),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedAccount == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    try {
+      final result = await AuthService.loginWithGoogle(selectedAccount);
+      setState(() => _loading = false);
+      if (result['success']) {
+        if (!mounted) return;
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        }
       } else {
         setState(() => _error = result['message']);
       }
@@ -42,175 +136,383 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // bg-gray-50
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-          child: Column(
-            children: [
-              // Logo
-              Image.network(
-                'http://10.0.2.2:8000/imgs/logoTypes/logoFooter.png',
-                height: 80,
-                errorBuilder: (_, __, ___) => const Text(
-                  'Cambialord',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kPrimary),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Background Gradient (Aesthetics)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white,
+                    Colors.orange.shade50.withOpacity(0.2),
+                    Colors.blue.shade50.withOpacity(0.25),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Card blanca — igual que la web
-              Container(
+            ),
+          ),
+          
+          // Back Button in Top Left Corner
+          Positioned(
+            top: 40,
+            left: 16,
+            child: SafeArea(
+              child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4))],
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: kTextDark),
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 48,
+                  ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Título
-                      const Text('Iniciar Sesión',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kTextDark)),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      // Header Section with Logo and app info
+                      Column(
                         children: [
-                          Text('¿Aún no tienes una cuenta? ', style: TextStyle(fontSize: 13, color: kTextGray)),
-                          GestureDetector(
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                            child: const Text('Regístrate aquí',
-                                style: TextStyle(fontSize: 13, color: kPrimary, fontWeight: FontWeight.w600)),
+                          Image.network(
+                            '${kBaseUrl.replaceAll('/api', '')}/imgs/logoTypes/logoFooter.png',
+                            height: 70,
+                            errorBuilder: (_, __, ___) => const Text(
+                              'Cambialord',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: kPrimary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '¡Cámbialo! Lo que tienes por lo que deseas',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: kTextGray,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 40),
 
-                      // Botón Google
-                      OutlinedButton.icon(
-                        onPressed: () {}, // OAuth pendiente de credenciales
-                        icon: _googleIcon(),
-                        label: const Text('Iniciar Sesión con Google',
-                            style: TextStyle(color: kTextDark, fontSize: 13)),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade200),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      // Form Container with premium card decoration
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          border: Border.all(color: Colors.grey.shade100),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Ingresa a tu cuenta',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: kTextDark,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+
+                              if (_error != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          _error!,
+                                          style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w500),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+
+                              // Email Input
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  labelText: 'Correo Electrónico',
+                                  prefixIcon: const Icon(Icons.email_outlined, color: kTextGray),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.grey.shade200),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade50,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                validator: (v) => v!.isEmpty ? 'Por favor ingresa tu correo' : null,
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Password Input with show/hide toggle
+                              TextFormField(
+                                controller: _passCtrl,
+                                obscureText: _obscurePass,
+                                decoration: InputDecoration(
+                                  labelText: 'Contraseña',
+                                  prefixIcon: const Icon(Icons.lock_outlined, color: kTextGray),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                      color: kTextGray,
+                                    ),
+                                    onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.grey.shade200),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade50,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                validator: (v) => v!.isEmpty ? 'Por favor ingresa tu contraseña' : null,
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Olvidaste / Recordarme Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: Checkbox(
+                                          value: _remember,
+                                          onChanged: (v) => setState(() => _remember = v!),
+                                          activeColor: kPrimary,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'Recordarme',
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: kTextDark),
+                                      ),
+                                    ],
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Por favor, ponte en contacto con soporte técnico.'),
+                                          backgroundColor: kPrimary,
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      '¿La olvidaste?',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: kPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Login Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _loading ? null : _login,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kPrimary,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 2,
+                                    shadowColor: kPrimary.withOpacity(0.3),
+                                  ),
+                                  child: _loading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                        )
+                                      : const Text(
+                                          'Iniciar Sesión',
+                                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Divider "O"
+                              Row(
+                                children: [
+                                  Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      'O continúa con',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade400, fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Social Google button
+                              OutlinedButton.icon(
+                                onPressed: _loading ? null : _loginGoogle,
+                                icon: _googleIcon(),
+                                label: const Text(
+                                  'Google',
+                                  style: TextStyle(color: kTextDark, fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.grey.shade200),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  backgroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
 
-                      // Divisor "O"
-                      Row(children: [
-                        Expanded(child: Divider(color: Colors.grey.shade200)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('O', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
-                        ),
-                        Expanded(child: Divider(color: Colors.grey.shade200)),
-                      ]),
-                      const SizedBox(height: 16),
-
-                      // Error
-                      if (_error != null) ...[
-                        Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
-                        const SizedBox(height: 12),
-                      ],
-
-                      // Email — estilo underline igual que la web
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(hintText: 'Correo Electrónico'),
-                        validator: (v) => v!.isEmpty ? 'Ingresa tu correo' : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      TextFormField(
-                        controller: _passCtrl,
-                        obscureText: true,
-                        decoration: const InputDecoration(hintText: 'Contraseña'),
-                        validator: (v) => v!.isEmpty ? 'Ingresa tu contraseña' : null,
-                      ),
-                      const SizedBox(height: 8),
-
-                      // ¿Olvidaste tu contraseña?
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text('¿Has olvidado tu contraseña?',
-                            style: const TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.w500)),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Recordarme
-                      Row(children: [
-                        Checkbox(
-                          value: _remember,
-                          onChanged: (v) => setState(() => _remember = v!),
-                          activeColor: kPrimary,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        const Text('Recordarme', style: TextStyle(fontSize: 13)),
-                      ]),
-                      const SizedBox(height: 16),
-
-                      // Botón Iniciar Sesión — bg-secondary (azul)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _loading ? null : _login,
-                          child: _loading
-                              ? const SizedBox(height: 18, width: 18,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Text('Iniciar Sesión'),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Volver
-                      GestureDetector(
-                        onTap: () {},
-                        child: Row(children: [
-                          const Icon(Icons.chevron_left, color: kPrimary, size: 18),
-                          const Text('Volver', style: TextStyle(color: kPrimary, fontSize: 13)),
-                        ]),
+                      // Sign up navigation footer
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '¿No tienes una cuenta? ',
+                            style: TextStyle(fontSize: 14, color: kTextGray, fontWeight: FontWeight.w500),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            ),
+                            child: const Text(
+                              'Regístrate',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: kPrimary,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _googleIcon() {
-    return SizedBox(
-      width: 18, height: 18,
-      child: CustomPaint(painter: _GoogleIconPainter()),
+    return Image.network(
+      'https://developers.google.com/static/identity/images/g-logo.png',
+      height: 18,
+      width: 18,
+      errorBuilder: (_, __, ___) => SizedBox(
+        width: 18, height: 18,
+        child: CustomPaint(painter: _GoogleIconPainter()),
+      ),
     );
   }
 }
 
-// Pinta el logo de Google igual que el SVG de la web
 class _GoogleIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paths = [
-      (const Color(0xFF4285F4), 'M18 9.7C18 9.1 17.9 8.6 17.8 8.1H9.2V11.3H14.1C13.9 12.4 13.3 13.3 12.4 13.9L15.1 16C16.7 14.5 18 12.3 18 9.7Z'),
-      (const Color(0xFF34A853), 'M9.2 18C11.6 18 13.6 17.2 15.1 16L12.4 13.9C11.6 14.4 10.5 14.8 9.2 14.8C6.9 14.8 4.9 13.2 4.2 11H1.4L1.4 13.2C2.8 16.1 5.8 18 9.2 18Z'),
-      (const Color(0xFFFBBC05), 'M4.2 11C4 10.4 3.9 9.7 3.9 9C3.9 8.3 4 7.6 4.2 7L4.2 4.8L1.4 4.8C0.7 6.2 0.3 7.6 0.3 9C0.3 10.4 0.7 11.8 1.4 13.2L4.2 11Z'),
-      (const Color(0xFFEB4335), 'M9.2 3.2C10.8 3.2 12.2 3.8 13.2 4.7L15.2 2.7C13.6 1.2 11.6 0.3 9.2 0.3C5.8 0.3 2.8 2.2 1.4 5.1L4.2 7.3C4.9 5.1 6.9 3.2 9.2 3.2Z'),
-    ];
-    // Simplified: just draw a colored circle as placeholder
     final paint = Paint()..color = const Color(0xFF4285F4);
     canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2, paint);
   }

@@ -26,7 +26,15 @@ class ItemApiController extends Controller
                 ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
 
             if ($request->filled('tipo')) {
-                $query->where('tipo_trans', $request->tipo);
+                $tipo = (int) $request->tipo;
+                // tipo=2 (intercambio) y tipo=1 (venta): mostrar también tipo=3 (ambos)
+                if ($tipo === 2) {
+                    $query->whereIn('tipo_trans', [2, 3]);
+                } elseif ($tipo === 1) {
+                    $query->whereIn('tipo_trans', [1, 3]);
+                } else {
+                    $query->where('tipo_trans', $tipo);
+                }
             }
             if ($request->filled('categoria')) {
                 $query->where('id_categoria_item', $request->categoria);
@@ -70,6 +78,15 @@ class ItemApiController extends Controller
         );
     }
 
+    /** GET /api/colors */
+    public function colors()
+    {
+        return response()->json(
+            \App\Models\Color::select('id_color', 'nombre', 'codigo_hex')->get()
+        );
+    }
+
+
     /** GET /api/items/buscar?q=... */
     public function buscar(Request $request)
     {
@@ -91,6 +108,7 @@ class ItemApiController extends Controller
     public function userItems(Request $request)
     {
         $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+            ->withCount('views')
             ->where('id_user', $request->user()->id)
             ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item')
             ->latest('fecha')
@@ -105,23 +123,94 @@ class ItemApiController extends Controller
     {
         $data = $request->validate([
             'item'              => 'required|string|max:150',
-            'presentacion'      => 'nullable|string',
-            'valor'             => 'required|numeric|min:0',
-            'condicion'         => 'required|integer|in:1,2,3',
+            'presentacion'      => 'required|string',
+            'valor'             => 'nullable|numeric|min:0',
+            'descuento'         => 'nullable|numeric|min:0|max:100',
+            'condicion'         => 'required|integer|in:1,2,3,4',
             'tipo_trans'        => 'required|integer|in:1,2,3',
             'id_categoria_item' => 'required|integer|exists:categorias_item,id_categoria_item',
-            'image_url'         => 'nullable|string|url',  // URL de ImgBB ya subida
+            'image_url'         => 'nullable|string',
+            'imagen_principal'  => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov|max:20480',
+            'imagenes.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'peso_lbs'          => 'nullable|numeric|min:0',
+            'alto_cm'           => 'nullable|numeric|min:0',
+            'ancho_cm'          => 'nullable|numeric|min:0',
+            'profundo_cm'       => 'nullable|numeric|min:0',
+            'colors'            => 'nullable|array',
+            'colors.*'          => 'exists:colors,id_color',
+            'stock.*'           => 'nullable|integer|min:0',
+            'cantidad'          => 'required|numeric|min:0',
         ]);
 
-        $data['id_user']      = $request->user()->id;
-        $data['estatus']      = 0; // pendiente de aprobación
-        $data['fecha']        = now();
-        $data['id_tipo_item'] = 1; // Producto
+        $itemData = [
+            'item'              => $data['item'],
+            'id_categoria_item' => $data['id_categoria_item'],
+            'valor'             => $data['valor'] ?? null,
+            'descuento'         => $data['descuento'] ?? null,
+            'presentacion'      => $data['presentacion'] ?? null,
+            'condicion'         => $data['condicion'],
+            'tipo_trans'        => $data['tipo_trans'],
+            'id_user'           => $request->user()->id,
+            'estatus'           => 0, // pendiente de aprobación
+            'fecha'             => now(),
+            'peso_lbs'          => $data['peso_lbs'] ?? 0,
+            'alto_cm'           => $data['alto_cm'] ?? 0,
+            'ancho_cm'          => $data['ancho_cm'] ?? 0,
+            'profundo_cm'       => $data['profundo_cm'] ?? 0,
+            'id_tipo_item'      => 1, // Producto
+        ];
 
-        $item = Item::create($data);
+        // Validar que la suma de stock de colores no supere la cantidad total
+        if ($request->has('colors')) {
+            $totalStockColores = 0;
+            foreach ($request->colors as $colorId) {
+                $totalStockColores += (int) ($request->stock[$colorId] ?? 0);
+            }
+            if ($totalStockColores > (int) $data['cantidad']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La suma del stock de los colores seleccionados (' . $totalStockColores . ') no puede superar la cantidad total del producto (' . $data['cantidad'] . ').'
+                ], 422);
+            }
+        }
 
-        // Si se envió una imagen ya hosteada en ImgBB, guardarla
-        if (!empty($data['image_url'])) {
+        $item = Item::create($itemData);
+
+        // Crear registro en el inventario
+        \App\Models\Inventario::create([
+            'id_item'  => $item->id_item,
+            'cantidad' => $data['cantidad'] ?? 1,
+            'fecha'    => now()
+        ]);
+
+        // ERP registrar entrada
+        if (app()->bound(\App\Services\ERPService::class)) {
+            app(\App\Services\ERPService::class)->registrarEntradaRegistroItem($item, (int) ($data['cantidad'] ?? 1));
+        }
+
+        // Registrar colores y stock
+        if ($request->has('colors')) {
+            $colorsWithStock = [];
+            foreach ($request->colors as $colorId) {
+                $stock = $request->stock[$colorId] ?? 0;
+                $colorsWithStock[$colorId] = ['stock' => $stock];
+            }
+            $item->colors()->sync($colorsWithStock);
+        }
+
+        // Procesar imagen principal (archivo local)
+        if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+            try {
+                $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
+                if ($resultado['is_video']) {
+                    $item->update(['tiene_video' => true]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error al guardar imagen_principal en API: ' . $e->getMessage());
+            }
+        } 
+        // Si no hay archivo, pero sí URL ImgBB
+        elseif (!empty($data['image_url'])) {
             $item->imagenes()->create([
                 'nombre' => basename(parse_url($data['image_url'], PHP_URL_PATH)),
                 'ruta'   => $data['image_url'],
@@ -129,7 +218,211 @@ class ItemApiController extends Controller
             ]);
         }
 
+        // Procesar imágenes adicionales (archivos locales)
+        if ($request->hasFile('imagenes')) {
+            $orden = 2;
+            foreach ($request->file('imagenes') as $file) {
+                if ($file && $file->isValid()) {
+                    try {
+                        $this->guardarImagen($file, $item->id_item, $orden++);
+                    } catch (\Exception $e) {
+                        \Log::error('Error al guardar imagen adicional en API: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
         return response()->json(['message' => 'Artículo publicado. Pendiente de aprobación.', 'item' => $item], 201);
+    }
+
+    /** GET /api/mis-items/{id} — detalle de item propio para edición */
+    public function userItemDetail(Request $request, int $id)
+    {
+        $item = Item::where('id_user', $request->user()->id)->findOrFail($id);
+        
+        // Cargar todas las imágenes pero renombrar el atributo para appendImageUrl
+        $item->setRelation('imagenes', $item->todasLasImagenes);
+
+        // Load other relationships
+        $item->load(['categoria:id_categoria_item,categoria', 'inventarios', 'colors']);
+
+        return response()->json($this->appendImageUrl($item));
+    }
+
+    /** POST /api/items/{id}/update — actualizar artículo propio */
+    public function update(Request $request, int $id)
+    {
+        $item = Item::where('id_user', $request->user()->id)->findOrFail($id);
+
+        $data = $request->validate([
+            'item'              => 'required|string|max:150',
+            'presentacion'      => 'required|string',
+            'valor'             => 'nullable|numeric|min:0',
+            'descuento'         => 'nullable|numeric|min:0|max:100',
+            'condicion'         => 'required|integer|in:1,2,3,4',
+            'tipo_trans'        => 'required|integer|in:1,2,3',
+            'id_categoria_item' => 'required|integer|exists:categorias_item,id_categoria_item',
+            'imagen_principal'  => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov|max:20480',
+            'imagenes.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'peso_lbs'          => 'nullable|numeric|min:0',
+            'alto_cm'           => 'nullable|numeric|min:0',
+            'ancho_cm'          => 'nullable|numeric|min:0',
+            'profundo_cm'       => 'nullable|numeric|min:0',
+            'colors'            => 'nullable|array',
+            'colors.*'          => 'exists:colors,id_color',
+            'stock.*'           => 'nullable|integer|min:0',
+            'cantidad'          => 'required|numeric|min:0',
+            'imagenes_existentes'=> 'nullable|array', // IDs de imágenes adicionales existentes que se conservan
+            'imagenes_existentes.*' => 'integer',
+        ]);
+
+        if (isset($data['valor'])) {
+            $data['valor'] = str_replace(',', '', $data['valor']);
+        }
+
+        // Validar que la suma de stock de colores no supere la cantidad total
+        if ($request->has('colors')) {
+            $totalStockColores = 0;
+            foreach ($request->colors as $colorId) {
+                $totalStockColores += (int) ($request->stock[$colorId] ?? 0);
+            }
+            if ($totalStockColores > (int) $data['cantidad']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La suma del stock de los colores seleccionados (' . $totalStockColores . ') no puede superar la cantidad total del producto (' . $data['cantidad'] . ').'
+                ], 422);
+            }
+        }
+
+        \DB::beginTransaction();
+        try {
+            // Actualizar datos del Item
+            $item->update([
+                'item'              => $data['item'],
+                'id_categoria_item' => $data['id_categoria_item'],
+                'valor'             => $data['valor'] ?? null,
+                'descuento'         => $data['descuento'] ?? null,
+                'presentacion'      => $data['presentacion'] ?? null,
+                'condicion'         => $data['condicion'],
+                'tipo_trans'        => $data['tipo_trans'],
+                'peso_lbs'          => $data['peso_lbs'] ?? 0,
+                'alto_cm'           => $data['alto_cm'] ?? 0,
+                'ancho_cm'          => $data['ancho_cm'] ?? 0,
+                'profundo_cm'       => $data['profundo_cm'] ?? 0,
+            ]);
+
+            // Actualizar o crear registro en el inventario
+            $inventario = \App\Models\Inventario::where('id_item', $id)->first();
+            if ($inventario) {
+                $inventario->update([
+                    'cantidad' => $data['cantidad'],
+                    'fecha'    => now()
+                ]);
+            } else {
+                \App\Models\Inventario::create([
+                    'id_item'  => $id,
+                    'cantidad' => $data['cantidad'],
+                    'fecha'    => now()
+                ]);
+            }
+
+            // Sync colores y existencias
+            if ($request->has('colors')) {
+                $colorsWithStock = [];
+                foreach ($request->colors as $colorId) {
+                    $stock = $request->stock[$colorId] ?? 0;
+                    $colorsWithStock[$colorId] = ['stock' => $stock];
+                }
+                $item->colors()->sync($colorsWithStock);
+            } else {
+                $item->colors()->detach();
+            }
+
+            // ── Imagen principal ──
+            if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+                // Borrar todas las imágenes antiguas
+                foreach ($item->todasLasImagenes as $imgVieja) {
+                    \App\Helpers\ImageHelper::eliminar($imgVieja->ruta . '/' . $imgVieja->nombre);
+                    $imgVieja->delete();
+                }
+                
+                $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1, 'pendiente');
+                if ($resultado['is_video']) {
+                    $item->update(['tiene_video' => true]);
+                } else {
+                    $item->update(['tiene_video' => false]);
+                }
+
+                // Guardar nuevas adicionales
+                if ($request->hasFile('imagenes')) {
+                    $orden = 2;
+                    foreach ($request->file('imagenes') as $file) {
+                        if ($file && $file->isValid()) {
+                            $this->guardarImagen($file, $item->id_item, $orden++, 'pendiente');
+                        }
+                    }
+                }
+            } else {
+                // No cambió la principal — solo gestionar secundarias
+                $idsConservar = $request->input('imagenes_existentes', []);
+                $imagenesActuales = $item->todasLasImagenes()->where('orden_visualizacion', '>', 1)->get();
+                foreach ($imagenesActuales as $imagen) {
+                    if (!in_array($imagen->id_imagen, $idsConservar)) {
+                        \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
+                        $imagen->delete();
+                    }
+                }
+
+                // Guardar nuevas imágenes secundarias
+                if ($request->hasFile('imagenes')) {
+                    $maxOrden = $item->todasLasImagenes()->max('orden_visualizacion') ?? 1;
+                    foreach ($request->file('imagenes') as $file) {
+                        if ($file && $file->isValid()) {
+                            $maxOrden++;
+                            $this->guardarImagen($file, $item->id_item, $maxOrden, 'pendiente');
+                        }
+                    }
+                }
+            }
+
+            \DB::commit();
+            return response()->json(['message' => 'Artículo actualizado exitosamente. Pendiente de aprobación.']);
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            \Log::error('Error al actualizar producto en API: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    protected function guardarImagen($file, $itemId, $orden, $estado = 'pendiente')
+    {
+        $mime = $file->getClientMimeType();
+        $isVideo = str_starts_with($mime, 'video/');
+
+        $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
+        if (!in_array($mime, $allowedMimeTypes)) {
+            throw new \Exception('Tipo de archivo no permitido: ' . $mime);
+        }
+
+        $directory = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
+        $prefix = $isVideo ? 'video_' : 'item_';
+
+        $resultado = \App\Helpers\ImageHelper::guardar($file, $directory, $prefix, $itemId);
+
+        \DB::table('imagenes_item')->insert([
+            'nombre'              => $resultado['fileName'],
+            'extension'           => pathinfo($resultado['fileName'], PATHINFO_EXTENSION),
+            'id_item'             => $itemId,
+            'orden_visualizacion' => $orden,
+            'ruta'                => $directory,
+            'tipo'                => $isVideo ? 'video' : 'imagen',
+            'estado'              => $estado,
+        ]);
+
+        return [
+            'path'     => $resultado['path'],
+            'is_video' => $isVideo,
+        ];
     }
 
     /** DELETE /api/items/{id} — eliminar artículo propio */
@@ -144,6 +437,177 @@ class ItemApiController extends Controller
         return response()->json(['message' => 'Artículo eliminado.']);
     }
 
+    /** POST /api/talentos — publicar talento con pago */
+    public function storeTalento(Request $request)
+    {
+        $user = $request->user();
+
+        // 1. Verificar Hoja de Vida
+        $tieneHoja = \App\Models\HojaVida::where('id_user', $user->id)->exists();
+        if (!$tieneHoja) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes completar tu hoja de vida antes de publicar un talento.',
+                'error_code' => 'NO_HOJA_VIDA'
+            ], 422);
+        }
+
+        // 2. Validar datos básicos del talento
+        $rules = [
+            'item'              => 'required|string|max:150',
+            'presentacion'      => 'required|string',
+            'valor'             => 'required|numeric|min:0',
+            'condicion'         => 'required|integer|in:1,2,3,4',
+            'tipo_trans'        => 'required|integer|in:1,2,3',
+            'id_categoria_item' => 'required|integer|exists:categorias_item,id_categoria_item',
+            'image_url'         => 'nullable|string',
+            'imagen_principal'  => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov|max:20480',
+            'imagenes.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'id_tarjeta'        => 'required|string|exists:tarjetas_pagos,id_tarjeta',
+            'cvv'               => 'nullable|string|max:4',
+            'cantidad'          => 'nullable|integer|min:1',
+        ];
+
+        $validated = $request->validate($rules);
+
+        $esCategoria29 = (int) $validated['id_categoria_item'] === 29;
+        if (!$esCategoria29) {
+            return response()->json(['success' => false, 'message' => 'La categoría seleccionada no corresponde al talento.'], 422);
+        }
+
+        // 3. Obtener tarifa
+        $config = \App\Models\ConfigTarifaCategoria29::vigente();
+        $cantidad = (int) ($validated['cantidad'] ?? 1);
+        $monto = (float) $config->monto_registro * $cantidad;
+
+        // 4. Buscar tarjeta
+        $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $validated['id_tarjeta'])
+            ->where('id_user', $user->id)
+            ->where('estatus', 1)
+            ->first();
+
+        if (!$tarjeta) {
+            return response()->json(['success' => false, 'message' => 'Tarjeta no válida.'], 422);
+        }
+
+        \DB::beginTransaction();
+        try {
+            // 5. Cobrar a través de PagoService
+            if ($monto > 0) {
+                $pagoService = app(\App\Services\PagoService::class);
+                $datosTarjeta = $tarjeta->datosDriver($validated['cvv'] ?? null);
+                $opciones = [
+                    'client_ip'        => $request->ip(),
+                    'invoice_number'   => 'TAL' . \Illuminate\Support\Str::random(10),
+                    'reference_number' => 'talento_' . $user->id . '_' . time(),
+                ];
+
+                $resultadoPago = $pagoService->cobrarTarjeta($monto, '214', $datosTarjeta, $opciones);
+
+                if (!$resultadoPago['success']) {
+                    \DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => $resultadoPago['error'] ?? 'Pago rechazado. Intenta con otra tarjeta.',
+                    ], 422);
+                }
+
+                $transactionId = $resultadoPago['transaction_id'];
+            } else {
+                $transactionId = 'GRATIS_' . time() . '_' . \Illuminate\Support\Str::random(4);
+            }
+
+            // 6. Crear el Item de tipo talento (id_tipo_item = 2)
+            $item = Item::create([
+                'item'              => $validated['item'],
+                'id_categoria_item' => $validated['id_categoria_item'],
+                'valor'             => $validated['valor'],
+                'presentacion'      => $validated['presentacion'],
+                'condicion'         => $validated['condicion'],
+                'tipo_trans'        => $validated['tipo_trans'],
+                'id_user'           => $user->id,
+                'estatus'           => 1, // Aprobado por defecto al pagar
+                'fecha'             => now(),
+                'id_tipo_item'      => 2, // Talento
+                'tiene_video'       => false,
+            ]);
+
+            // Crear inventario
+            \App\Models\Inventario::create([
+                'id_item' => $item->id_item,
+                'cantidad' => $cantidad,
+                'fecha' => now(),
+            ]);
+
+            // ERP registrar entrada
+            if (app()->bound(\App\Services\ERPService::class)) {
+                app(\App\Services\ERPService::class)->registrarEntradaRegistroItem($item, $cantidad);
+            }
+
+            // Procesar imagen principal (archivo local)
+            if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
+                try {
+                    $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
+                    if ($resultado['is_video']) {
+                        $item->update(['tiene_video' => true]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error al guardar imagen_principal de talento en API: ' . $e->getMessage());
+                }
+            } 
+            // Si no hay archivo, pero sí URL ImgBB
+            elseif (!empty($validated['image_url'])) {
+                $item->imagenes()->create([
+                    'nombre' => basename(parse_url($validated['image_url'], PHP_URL_PATH)),
+                    'ruta'   => $validated['image_url'],
+                    'estado' => 'pendiente',
+                ]);
+            }
+
+            // Procesar imágenes adicionales (archivos locales)
+            if ($request->hasFile('imagenes')) {
+                $orden = 2;
+                foreach ($request->file('imagenes') as $file) {
+                    if ($file && $file->isValid()) {
+                        try {
+                            $this->guardarImagen($file, $item->id_item, $orden++);
+                        } catch (\Exception $e) {
+                            \Log::error('Error al guardar imagen adicional de talento en API: ' . $e->getMessage());
+                        }
+                    }
+                }
+            }
+
+            // Registrar PagoRegistroTalento
+            \App\Models\PagoRegistroTalento::create([
+                'id_item'        => $item->id_item,
+                'id_user'        => $user->id,
+                'transaction_id' => $transactionId,
+                'monto_pagado'   => $monto,
+                'estatus'        => 'aprobado',
+            ]);
+
+            \DB::commit();
+
+            \Illuminate\Support\Facades\Cache::forget('home_intercambio');
+            \Illuminate\Support\Facades\Cache::forget('home_venta');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Talento publicado exitosamente.',
+                'item'    => $this->appendImageUrl($item),
+            ], 201);
+
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            \Log::error('Error en storeTalento API: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al publicar talento: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Agrega image_url resuelta al item.
      * Intenta storage/public primero, luego htdocs de Apache.
@@ -151,6 +615,10 @@ class ItemApiController extends Controller
     private function appendImageUrl($item): array
     {
         $arr = is_array($item) ? $item : $item->toArray();
+
+        if (isset($arr['item'])) {
+            $arr['item'] = preg_replace('/\s*\(User\s*\d+\)/i', '', $arr['item']);
+        }
 
         $imagenes = $arr['imagenes'] ?? [];
         if (!empty($imagenes)) {

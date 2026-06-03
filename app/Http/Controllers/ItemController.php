@@ -166,7 +166,7 @@ class ItemController extends Controller
 
                 // Cobrar (los archivos ya están en memoria)
                 $pagoService = app(PagoService::class);
-                $datosTarjeta = $tarjeta->datosCardnet($request->input('cvv'));
+                $datosTarjeta = $tarjeta->datosDriver($request->input('cvv'));
                 $opciones = [
                     'client_ip'        => $request->ip(),
                     'invoice_number'   => 'TAL' . Str::random(10),

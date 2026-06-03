@@ -57,6 +57,10 @@ class NegociacionApiController extends Controller
                 ->orWhere('usuario_receptor_id', $userId))
             ->firstOrFail();
 
+        $negociacion->es_servicio_servicio = $this->negociacionService->esServicioServicio($negociacion);
+        $negociacion->es_producto_servicio = $this->negociacionService->esProductoServicio($negociacion);
+        $negociacion->es_producto_producto = $this->negociacionService->esProductoProducto($negociacion);
+
         return response()->json($negociacion);
     }
 
@@ -148,6 +152,13 @@ class NegociacionApiController extends Controller
     public function confirmarEntrega(Request $request, int $id)
     {
         $resultado = $this->negociacionService->confirmarEntrega($request->user()->id, $id);
+        return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
+    }
+
+    /** POST /api/negociaciones/{id}/completar */
+    public function completar(Request $request, int $id)
+    {
+        $resultado = $this->negociacionService->completar($request->user()->id, $id);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 

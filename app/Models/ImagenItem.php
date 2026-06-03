@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class ImagenItem extends Model
 {
+    protected static function booted()
+    {
+        static::saved(function ($imagen) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+
+        static::deleted(function ($imagen) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+    }
+
     protected $table = 'imagenes_item';
     protected $primaryKey = 'id_imagen';
     public $timestamps = false;
