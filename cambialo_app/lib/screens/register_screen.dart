@@ -49,7 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (_) => false,
+      );
     } else {
       setState(() => _error = result['message']);
     }
@@ -127,7 +131,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (_) => false,
+        );
       } else {
         setState(() => _error = result['message']);
       }

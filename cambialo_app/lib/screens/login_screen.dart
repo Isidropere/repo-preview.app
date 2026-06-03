@@ -30,11 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context, true);
-        } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (_) => false,
+        );
       } else {
         setState(() => _error = result['message']);
       }
@@ -118,11 +118,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context, true);
-        } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (_) => false,
+        );
       } else {
         setState(() => _error = result['message']);
       }
