@@ -307,7 +307,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                             items: _tarjetas.map((t) {
                               return DropdownMenuItem<String>(
                                 value: t['id_tarjeta'].toString(),
-                                child: Text('${t['marca'] ?? 'Tarjeta'} **** ${t['ultimos_cuatro'] ?? ''}'),
+                                child: Text('${t['tipo_tarjeta'] ?? t['marca'] ?? 'Tarjeta'} **** ${t['last4'] ?? t['ultimos_cuatro'] ?? ''}'),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -640,7 +640,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                       // EMISOR: Contraoferta
                       if (estado == 'contraoferta' && isEmisor) ...[
                         ElevatedButton(
-                          onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/aceptar-contraoferta'),
+                          onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/aceptar-como-emisor'),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                           child: const Text('✓ Aceptar contraoferta', style: TextStyle(color: Colors.white)),
                         ),

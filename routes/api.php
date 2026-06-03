@@ -84,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/confirmar-emisor', [NegociacionApiController::class, 'confirmarEmisor']);
         Route::post('/{id}/confirmar-receptor', [NegociacionApiController::class, 'confirmarReceptor']);
         Route::post('/{id}/aceptar-como-emisor', [NegociacionApiController::class, 'aceptarComoEmisor']);
+        Route::post('/{id}/aceptar-contraoferta', [NegociacionApiController::class, 'aceptarComoEmisor']);
         Route::post('/{id}/modo-entrega',   [NegociacionApiController::class, 'seleccionarModoEntrega']);
         Route::post('/{id}/confirmar-entrega', [NegociacionApiController::class, 'confirmarEntrega']);
         Route::post('/{id}/completar',      [NegociacionApiController::class, 'completar']);
