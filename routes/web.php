@@ -169,24 +169,26 @@ Route::get('/migrate-images', function () {
 });
 
 Route::get('/debug-paths', function () {
-    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? 'N/A';
-    $paths = [
-        'doc_root_imgs' => $docRoot . '/imgs/articulos/items',
-        'laravel_public_imgs' => public_path('imgs/articulos/items'),
-        'laravel_storage_imgs' => storage_path('app/public/imgs/articulos/items'),
-        'doc_root_storage' => $docRoot . '/storage/imgs/articulos/items',
-    ];
+    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? base_path();
+    $targetFile = 'item_25_20260602141235_EZGf2lH4kJ.jpg';
+    $foundPaths = [];
     
-    $results = [];
-    foreach ($paths as $name => $path) {
-        $results[$name] = [
-            'path' => $path,
-            'exists' => is_dir($path),
-            'files' => is_dir($path) ? array_slice(scandir($path), 2, 5) : []
-        ];
+    try {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docRoot, RecursiveDirectoryIterator::SKIP_DOTS));
+        foreach ($iterator as $file) {
+            if ($file->getFilename() === $targetFile) {
+                $foundPaths[] = $file->getPathname();
+            }
+        }
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'doc_root' => $docRoot]);
     }
     
-    return response()->json($results);
+    return response()->json([
+        'docRoot' => $docRoot,
+        'target' => $targetFile,
+        'found_at' => $foundPaths
+    ]);
 });
 
 Route::get('/sync-public-folders', function () {
