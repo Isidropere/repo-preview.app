@@ -169,18 +169,24 @@ Route::get('/migrate-images', function () {
 });
 
 Route::get('/debug-paths', function () {
-    return response()->json([
-        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
-        'base_path' => base_path(),
-        'public_path' => public_path(),
-        'storage_path' => storage_path('app/public'),
-        'has_public_html' => file_exists(base_path('public_html')),
-        'has_symlink' => file_exists(public_path('storage')),
-        'sample_image_in_public' => file_exists(public_path('imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
-        'sample_image_in_storage' => file_exists(storage_path('app/public/imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
-        'storage_dir_exists' => is_dir(storage_path('app/public/imgs/articulos/items')),
-        'public_dir_exists' => is_dir(public_path('imgs/articulos/items'))
-    ]);
+    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? 'N/A';
+    $paths = [
+        'doc_root_imgs' => $docRoot . '/imgs/articulos/items',
+        'laravel_public_imgs' => public_path('imgs/articulos/items'),
+        'laravel_storage_imgs' => storage_path('app/public/imgs/articulos/items'),
+        'doc_root_storage' => $docRoot . '/storage/imgs/articulos/items',
+    ];
+    
+    $results = [];
+    foreach ($paths as $name => $path) {
+        $results[$name] = [
+            'path' => $path,
+            'exists' => is_dir($path),
+            'files' => is_dir($path) ? array_slice(scandir($path), 2, 5) : []
+        ];
+    }
+    
+    return response()->json($results);
 });
 
 Route::get('/sync-public-folders', function () {
