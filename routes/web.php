@@ -169,17 +169,25 @@ Route::get('/migrate-images', function () {
 });
 
 Route::get('/debug-paths', function () {
+    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? base_path();
+    $targetFile = 'item_25_20260602141235_EZGf2lH4kJ.jpg';
+    $foundPaths = [];
+    
+    try {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docRoot, RecursiveDirectoryIterator::SKIP_DOTS));
+        foreach ($iterator as $file) {
+            if ($file->getFilename() === $targetFile) {
+                $foundPaths[] = $file->getPathname();
+            }
+        }
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'doc_root' => $docRoot]);
+    }
+    
     return response()->json([
-        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
-        'base_path' => base_path(),
-        'public_path' => public_path(),
-        'storage_path' => storage_path('app/public'),
-        'has_public_html' => file_exists(base_path('public_html')),
-        'has_symlink' => file_exists(public_path('storage')),
-        'sample_image_in_public' => file_exists(public_path('imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
-        'sample_image_in_storage' => file_exists(storage_path('app/public/imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
-        'storage_dir_exists' => is_dir(storage_path('app/public/imgs/articulos/items')),
-        'public_dir_exists' => is_dir(public_path('imgs/articulos/items'))
+        'docRoot' => $docRoot,
+        'target' => $targetFile,
+        'found_at' => $foundPaths
     ]);
 });
 
