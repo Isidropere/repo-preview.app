@@ -168,6 +168,45 @@ Route::get('/migrate-images', function () {
     return "Migración completada: {$count} archivos copiados a public/.";
 });
 
+Route::get('/sync-public-folders', function () {
+    $source = base_path('public');
+    $dest   = base_path('public_html');
+
+    if (!is_dir($source)) {
+        return "El directorio de origen public/ no existe.";
+    }
+    if (!is_dir($dest)) {
+        return "El directorio de destino public_html/ no existe.";
+    }
+
+    $count = 0;
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            $subPath = $iterator->getSubPathName();
+            $targetPath = $dest . '/' . $subPath;
+
+            if ($item->isDir()) {
+                if (!is_dir($targetPath)) {
+                    mkdir($targetPath, 0755, true);
+                }
+            } else {
+                if (!file_exists($targetPath)) {
+                    copy($item->getRealPath(), $targetPath);
+                    $count++;
+                }
+            }
+        }
+        return "Sincronización completada: {$count} archivos copiados de public/ a public_html/.";
+    } catch (\Throwable $e) {
+        return "Error durante la sincronización: " . $e->getMessage();
+    }
+});
+
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 

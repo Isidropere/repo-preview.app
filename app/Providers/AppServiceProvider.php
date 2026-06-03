@@ -14,6 +14,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(\App\Services\Interfaces\ImageProcessorInterface::class, \App\Services\Implementations\ImageProcessor::class);
+
+        // Configurar public_path para MochaHost (public_html) si existe
+        if (file_exists($this->app->basePath('public_html'))) {
+            $this->app->usePublicPath($this->app->basePath('public_html'));
+        }
     }
 
     /**
