@@ -16,6 +16,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
   Map<String, dynamic>? _neg;
   List _mensajes = [];
   List _tarjetas = [];
+  List _predefinidos = [];
   bool _loading = true;
   bool _actionLoading = false;
   String? _selectedTarjetaId;
@@ -68,7 +69,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     final res = await ApiClient.get('/auth/me', auth: true);
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
-      _userId = body['id'] as int?;
+      _userId = ApiClient.parseInt(body['id']);
     }
   }
 
@@ -84,6 +85,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
       _mensajes = body['mensajes'] as List? ?? [];
+      _predefinidos = body['mensajesPredefinidos'] as List? ?? [];
     }
   }
 
@@ -120,6 +122,137 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
         );
       }
     });
+  }
+
+  void _showPredefinedMessages() {
+    if (_predefinidos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('No hay mensajes predefinidos disponibles.'),
+        backgroundColor: Colors.orange,
+      ));
+      return;
+    }
+
+    final isEmisor = _userId == _neg?['usuario_emisor_id'];
+    final String userRole = isEmisor ? 'emisor' : 'receptor';
+
+    // Filtrar por rol (emisor, receptor o general)
+    final roleMessages = _predefinidos.where((m) {
+      final String rol = m['rol']?.toString().toLowerCase() ?? 'general';
+      return rol == 'general' || rol == userRole;
+    }).toList();
+
+    if (roleMessages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('No hay mensajes predefinidos para tu rol.'),
+        backgroundColor: Colors.orange,
+      ));
+      return;
+    }
+
+    // Obtener tipos/categorías únicos
+    final List<String> types = roleMessages
+        .map((m) => m['tipo']?.toString() ?? 'General')
+        .toSet()
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        String selectedType = types.first;
+
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            final filtered = roleMessages.where((m) {
+              final String t = m['tipo']?.toString() ?? 'General';
+              return t == selectedType;
+            }).toList();
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Respuestas Rápidas',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Dropdown para seleccionar tipo de acción
+                  Row(
+                    children: [
+                      const Text('Filtrar por tipo:  ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: selectedType,
+                          isExpanded: true,
+                          items: types.map((String val) {
+                            return DropdownMenuItem<String>(
+                              value: val,
+                              child: Text(val, style: const TextStyle(fontSize: 13)),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setStateSheet(() {
+                                selectedType = val;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  // Listado de mensajes
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const Center(child: Text('No hay mensajes en esta categoría.'))
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, idx) {
+                              final msg = filtered[idx];
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  msg['titulo'] ?? '',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kPrimary),
+                                ),
+                                subtitle: Text(
+                                  msg['mensaje'] ?? '',
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12, color: kTextDark),
+                                ),
+                                onTap: () {
+                                  _msgCtrl.text = msg['mensaje'] ?? '';
+                                  Navigator.pop(context);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _enviarMensaje() async {
@@ -872,12 +1005,18 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _msgCtrl,
+                    readOnly: true,
                     decoration: const InputDecoration(
-                      hintText: 'Escribe un mensaje...',
+                      hintText: 'Selecciona un mensaje predefinido...',
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 10),
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.quickreply_outlined, color: Colors.orange),
+                  onPressed: _showPredefinedMessages,
+                  tooltip: 'Respuestas rápidas',
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: kPrimary),

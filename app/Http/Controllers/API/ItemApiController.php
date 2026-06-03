@@ -95,7 +95,7 @@ class ItemApiController extends Controller
         $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
             ->where('estatus', 1)
             ->where('item', 'like', "%{$q}%")
-            ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha')
+            ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
             ->latest('fecha')
             ->limit(20)
             ->get()

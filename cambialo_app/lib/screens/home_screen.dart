@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
@@ -17,6 +19,7 @@ import 'notificaciones_screen.dart';
 import 'cuenta_screen.dart';
 import 'otras_categorias_screen.dart';
 import 'mis_intercambios_screen.dart';
+import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
@@ -279,11 +282,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Sección intercambio
                     _sectionHeader('Productos de intercambio', 'Intercambia lo que tienes por algo que quieres', tipo: 2),
-                    _ProductosSlider(items: _intercambio, loading: _loading),
+                    _ProductosSlider(items: _intercambio, loading: _loading, currentUserId: ApiClient.parseInt(_user?['id'])),
 
                     // Sección venta
                     _sectionHeader('Productos de venta', 'Aquí puedes vender lo que quieras', tipo: 1),
-                    _ProductosSlider(items: _venta, loading: _loading),
+                    _ProductosSlider(items: _venta, loading: _loading, currentUserId: ApiClient.parseInt(_user?['id'])),
 
                     // CTA final — igual que la web (fondo naranja)
                     Container(
@@ -559,7 +562,8 @@ class _CategoriaChip extends StatelessWidget {
 class _ProductosSlider extends StatefulWidget {
   final List items;
   final bool loading;
-  const _ProductosSlider({required this.items, required this.loading});
+  final int? currentUserId;
+  const _ProductosSlider({required this.items, required this.loading, this.currentUserId});
 
   @override
   _ProductosSliderState createState() => _ProductosSliderState();
@@ -573,7 +577,7 @@ class _ProductosSliderState extends State<_ProductosSlider> {
     if (widget.loading) {
       return Container(
         color: kBgGray,
-        height: 240,
+        height: 235,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -607,16 +611,16 @@ class _ProductosSliderState extends State<_ProductosSlider> {
 
     return Container(
       color: kBgGray,
-      height: 250,
+      height: 235,
       child: Stack(
         alignment: Alignment.center,
         children: [
           CarouselSlider.builder(
             carouselController: _controller,
             itemCount: widget.items.length,
-            itemBuilder: (ctx, i, realIndex) => _ProductCard(item: widget.items[i]),
+            itemBuilder: (ctx, i, realIndex) => _ProductCard(item: widget.items[i], currentUserId: widget.currentUserId),
             options: CarouselOptions(
-              height: 240,
+              height: 225,
               viewportFraction: viewportFraction,
               enableInfiniteScroll: false,
               autoPlay: false,
@@ -655,11 +659,74 @@ class _ProductosSliderState extends State<_ProductosSlider> {
 
 class _ProductCard extends StatelessWidget {
   final Map item;
-  const _ProductCard({required this.item});
+  final int? currentUserId;
+  const _ProductCard({required this.item, this.currentUserId});
   @override
   Widget build(BuildContext context) {
-    final imgUrl = ApiClient.fixImageUrl(item['image_url'] as String?);
     final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
+    final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
+    final int itemUserId = int.tryParse(item['id_user']?.toString() ?? '') ?? 0;
+    final bool esVenta = transVal == 1 || transVal == 3;
+    final bool esIntercambio = transVal == 2 || transVal == 3;
+    final bool esMio = currentUserId != null && currentUserId == itemUserId;
+
+    Future<void> handleIntercambio() async {
+      final loggedIn = await AuthService.isLoggedIn();
+      if (!loggedIn) {
+        if (!context.mounted) return;
+        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        if (result != true) return;
+      }
+      if (!context.mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => PropuestaIntercambioScreen(
+          receptorItemId: itemId,
+          nombreArticulo: item['item'] ?? '',
+          idCategoriaItem: int.tryParse(item['id_categoria_item']?.toString() ?? '') ?? 0,
+        ),
+      ));
+    }
+
+    Future<void> handleAddToCart() async {
+      final loggedIn = await AuthService.isLoggedIn();
+      if (!loggedIn) {
+        if (!context.mounted) return;
+        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        if (result != true) return;
+      }
+      if (!context.mounted) return;
+      final res = await ApiClient.post('/carrito/agregar',
+          {'id_item': itemId, 'cantidad': 1}, auth: true);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
+          backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
+        ));
+      }
+    }
+
+    Future<void> handleShare() async {
+      final baseUrl = kBaseUrl.replaceAll('/api', '');
+      final slug = item['slug'] ?? itemId.toString();
+      final itemUrl = '$baseUrl/producto/$slug';
+      final itemTitle = item['item'] ?? 'Artículo';
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            text: 'Mira este artículo en Cambialord: $itemTitle\n$itemUrl',
+            subject: itemTitle,
+          ),
+        );
+      } catch (e) {
+        await Clipboard.setData(ClipboardData(text: itemUrl));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('¡Enlace copiado al portapapeles!'),
+            backgroundColor: Colors.green,
+          ));
+        }
+      }
+    }
 
     return GestureDetector(
       onTap: () => Navigator.push(context,
@@ -673,24 +740,154 @@ class _ProductCard extends StatelessWidget {
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 6)],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            child: ItemImage(
-              item: item,
-              height: 130,
-              width: double.infinity,
-            ),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: ItemImage(
+                  item: item,
+                  height: 110,
+                  width: double.infinity,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: handleShare,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF58634), // Web orange #f58634
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: const Icon(Icons.share, size: 14, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(item['item'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextDark)),
-              const SizedBox(height: 4),
-              if (item['valor'] != null)
-                Text('RD\$ ${item['valor']}',
-                    style: const TextStyle(fontSize: 12, color: kTextGray)),
-            ]),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item['item'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextDark)),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (item['valor'] != null)
+                            Expanded(
+                              child: Text(
+                                'RD\$ ${item['valor']}',
+                                style: const TextStyle(color: kPrimary, fontWeight: FontWeight.bold, fontSize: 11.5),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: transVal == 1 ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              transVal == 1 ? 'Venta' : (transVal == 2 ? 'Intercambio' : 'Ambos'),
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: transVal == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF15803D),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      if (esVenta && !esMio) ...[
+                        Expanded(
+                          child: Container(
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 4),
+                            child: ElevatedButton(
+                              onPressed: handleAddToCart,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (esIntercambio && !esMio) ...[
+                        Expanded(
+                          child: Container(
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 4),
+                            child: OutlinedButton(
+                              onPressed: handleIntercambio,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
+                                backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
+                                foregroundColor: const Color(0xFFC2410C),
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
+                            ),
+                          ),
+                        ),
+                      ],
+                      Expanded(
+                        child: Container(
+                          height: 32,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ItemDetailScreen(itemId: itemId))),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFE2E8F0), width: 1), // Web border-gray-200 #e2e8f0
+                              backgroundColor: const Color(0xFFF8FAFC), // Web #f8fafc
+                              foregroundColor: const Color(0xFF64748B),
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              elevation: 0,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Icon(Icons.visibility, size: 16, color: Color(0xFF64748B)), // Web text-gray-500 #64748b
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ]),
       ),

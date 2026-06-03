@@ -33,6 +33,7 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
   @override
   void initState() {
     super.initState();
+    _mensajeCtrl.text = 'Propongo intercambiar tu producto/servicio: ${widget.nombreArticulo}';
     _loadMisItems();
   }
 
@@ -242,7 +243,7 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                       separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, idx) {
                         final item = _misItems[idx];
-                        final id = item['id_item'] as int;
+                        final id = ApiClient.parseInt(item['id_item']) ?? 0;
                         final isService = item['id_categoria_item'] == 29;
                         final isSelected = _itemsSeleccionados.contains(id);
 
@@ -317,9 +318,12 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                 TextFormField(
                   controller: _mensajeCtrl,
                   maxLines: 4,
+                  readOnly: true,
                   decoration: const InputDecoration(
-                    hintText: 'Ej: Hola, me interesa tu servicio. Ofrezco mi artículo + RD\$500...',
+                    hintText: 'Se llenará automáticamente...',
                     border: OutlineInputBorder(),
+                    fillColor: Color(0xFFF9FAFB),
+                    filled: true,
                   ),
                 ),
 

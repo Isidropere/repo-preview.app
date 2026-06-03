@@ -72,7 +72,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     if (esIntercambio && idOferta != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => NegociacionDetalleScreen(negociacionId: idOferta as int)),
+        MaterialPageRoute(builder: (_) => NegociacionDetalleScreen(negociacionId: ApiClient.parseInt(idOferta) ?? 0)),
       );
     } else if (esServicio) {
       Navigator.pushReplacement(

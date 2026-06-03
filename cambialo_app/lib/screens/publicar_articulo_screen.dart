@@ -506,7 +506,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                       items: _categorias.map<DropdownMenuItem<int>>((c) =>
-                        DropdownMenuItem(value: c['id_categoria_item'] as int, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
+                        DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
                       onChanged: (v) => setState(() => _idCategoria = v),
                       validator: (v) => v == null ? 'Selecciona una categoría' : null,
                     ),
@@ -711,7 +711,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                           // Mostrar existentes
                           ...List.generate(_existingAdditionalImages.length, (index) {
                             final img = _existingAdditionalImages[index];
-                            final String? imgUrl = img['image_url'] as String?;
+                            final String? imgUrl = img['image_url']?.toString();
                             return Container(
                               margin: const EdgeInsets.only(right: 8),
                               width: 80,
@@ -1174,9 +1174,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               itemCount: filteredList.length,
                               itemBuilder: (context, idx) {
                                 final color = filteredList[idx];
-                                final int colorId = color['id_color'] as int;
-                                final String nombre = color['nombre'] as String;
-                                final String hex = color['codigo_hex'] as String;
+                                final int colorId = ApiClient.parseInt(color['id_color']) ?? 0;
+                                final String nombre = color['nombre']?.toString() ?? '';
+                                final String hex = color['codigo_hex']?.toString() ?? '';
                                 final bool isSelected = _selectedColors.containsKey(colorId);
 
                                 // Parse hex color

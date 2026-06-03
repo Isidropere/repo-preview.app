@@ -93,7 +93,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        'Cambialord RD no se hace responsable de los talentos o servicios eliminados por el usuario, y no realiza reembolsos del monto pagado por la publicación de este servicio.',
+                        'Cambialord RD no se hace responsable de los talentos o servicios eliminados. Si se borra el talento y le queda inventario, el mismo no se podrá restablecer ni se hará una devolución del dinero.',
                         style: TextStyle(fontSize: 11, color: Colors.black87),
                       ),
                       SizedBox(height: 5),
@@ -447,7 +447,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                       GestureDetector(
                                         onTap: () {
                                           final rawUrl =
-                                              item['image_url'] as String?;
+                                              item['image_url']?.toString();
                                           if (rawUrl != null &&
                                               rawUrl.isNotEmpty) {
                                             _showLightbox(

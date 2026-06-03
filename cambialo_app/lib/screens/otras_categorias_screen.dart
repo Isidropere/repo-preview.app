@@ -138,7 +138,7 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
       itemCount: _categorias.length,
       itemBuilder: (context, i) {
         final cat = _categorias[i];
-        final idCat = cat['id_categoria_item'] as int;
+        final idCat = ApiClient.parseInt(cat['id_categoria_item']) ?? 0;
         return InkWell(
           onTap: () {
             Navigator.push(
@@ -146,7 +146,7 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
               MaterialPageRoute(
                 builder: (_) => ItemsListScreen(
                   categoriaId: idCat,
-                  title: cat['categoria'] as String,
+                  title: cat['categoria']?.toString() ?? '',
                 ),
               ),
             );

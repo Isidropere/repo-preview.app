@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_client.dart';
+import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
 import 'item_detail_screen.dart';
+import 'login_screen.dart';
+import 'propuesta_intercambio_screen.dart';
 
 /// Listado de productos — Intercambio o Venta
 class ItemsListScreen extends StatefulWidget {
@@ -21,19 +26,36 @@ class ItemsListScreen extends StatefulWidget {
 class _ItemsListScreenState extends State<ItemsListScreen> {
   List _items    = [];
   bool _loading  = true;
+  bool _error    = false;
   int  _page     = 1;
   bool _hasMore  = true;
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await AuthService.me();
+      if (user != null && mounted) {
+        setState(() {
+          _currentUserId = ApiClient.parseInt(user['id']);
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _load({bool reset = false}) async {
     if (reset) { _page = 1; _hasMore = true; _items = []; }
     if (!_hasMore) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
 
     String path;
     if (widget.query != null) {
@@ -58,10 +80,18 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
           _loading = false;
         });
       } else {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
       }
     } catch (e) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
+      }
     }
   }
 
@@ -76,6 +106,11 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double cardWidth = (screenWidth - 34) / 2;
+    final double targetHeight = 215.0;
+    final double computedAspectRatio = cardWidth / targetHeight;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_title),
@@ -86,14 +121,43 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
       ),
       body: _loading && _items.isEmpty
           ? const Center(child: CircularProgressIndicator(color: kPrimary))
-          : RefreshIndicator(
-              color: kPrimary,
-              onRefresh: () => _load(reset: true),
-              child: _items.isEmpty
-                  ? ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+          : _error && _items.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.cloud_off, size: 80, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Error de conexión con el servidor',
+                        style: TextStyle(fontSize: 16, color: kTextDark, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'Verifica que el servidor esté encendido e intenta nuevamente.',
+                          style: TextStyle(fontSize: 13, color: kTextGray),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => _load(reset: true),
+                        style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                        child: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  color: kPrimary,
+                  onRefresh: () => _load(reset: true),
+                  child: _items.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.3),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -116,9 +180,9 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.all(12),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.72,
+                        childAspectRatio: computedAspectRatio,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
@@ -132,7 +196,7 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                           });
                           return const Center(child: CircularProgressIndicator(color: kPrimary));
                         }
-                        return _ItemGridCard(item: _items[i]);
+                        return _ItemGridCard(item: _items[i], currentUserId: _currentUserId);
                       },
                     ),
             ),
@@ -142,12 +206,74 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
 
 class _ItemGridCard extends StatelessWidget {
   final Map item;
-  const _ItemGridCard({required this.item});
+  final int? currentUserId;
+  const _ItemGridCard({required this.item, this.currentUserId});
   @override
   Widget build(BuildContext context) {
-    final imgUrl = ApiClient.fixImageUrl(item['image_url'] as String?);
     final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
     final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
+    final int itemUserId = int.tryParse(item['id_user']?.toString() ?? '') ?? 0;
+    final bool esVenta = transVal == 1 || transVal == 3;
+    final bool esIntercambio = transVal == 2 || transVal == 3;
+    final bool esMio = currentUserId != null && currentUserId == itemUserId;
+
+    Future<void> handleIntercambio() async {
+      final loggedIn = await AuthService.isLoggedIn();
+      if (!loggedIn) {
+        if (!context.mounted) return;
+        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        if (result != true) return;
+      }
+      if (!context.mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => PropuestaIntercambioScreen(
+          receptorItemId: itemId,
+          nombreArticulo: item['item'] ?? '',
+          idCategoriaItem: int.tryParse(item['id_categoria_item']?.toString() ?? '') ?? 0,
+        ),
+      ));
+    }
+
+    Future<void> handleAddToCart() async {
+      final loggedIn = await AuthService.isLoggedIn();
+      if (!loggedIn) {
+        if (!context.mounted) return;
+        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        if (result != true) return;
+      }
+      if (!context.mounted) return;
+      final res = await ApiClient.post('/carrito/agregar',
+          {'id_item': itemId, 'cantidad': 1}, auth: true);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
+          backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
+        ));
+      }
+    }
+
+    Future<void> handleShare() async {
+      final baseUrl = kBaseUrl.replaceAll('/api', '');
+      final slug = item['slug'] ?? itemId.toString();
+      final itemUrl = '$baseUrl/producto/$slug';
+      final itemTitle = item['item'] ?? 'Artículo';
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            text: 'Mira este artículo en Cambialord: $itemTitle\n$itemUrl',
+            subject: itemTitle,
+          ),
+        );
+      } catch (e) {
+        await Clipboard.setData(ClipboardData(text: itemUrl));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('¡Enlace copiado al portapapeles!'),
+            backgroundColor: Colors.green,
+          ));
+        }
+      }
+    }
 
     return GestureDetector(
       onTap: () => Navigator.push(context,
@@ -159,39 +285,154 @@ class _ItemGridCard extends StatelessWidget {
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            child: ItemImage(
-              item: item,
-              height: 140,
-              width: double.infinity,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(item['item'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark)),
-              const SizedBox(height: 4),
-              if (item['valor'] != null)
-                Text('RD\$ ${item['valor']}',
-                    style: const TextStyle(color: kPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: transVal == 1 ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(4),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: ItemImage(
+                  item: item,
+                  height: 115,
+                  width: double.infinity,
                 ),
-                child: Text(
-                  transVal == 1 ? 'Venta' : (transVal == 2 ? 'Intercambio' : 'Ambos'),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: transVal == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF15803D),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: handleShare,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF58634), // Web orange #f58634
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: const Icon(Icons.share, size: 14, color: Colors.white),
                   ),
                 ),
               ),
-            ]),
+            ],
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item['item'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark)),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (item['valor'] != null)
+                            Expanded(
+                              child: Text(
+                                'RD\$ ${item['valor']}',
+                                style: const TextStyle(color: kPrimary, fontWeight: FontWeight.bold, fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: transVal == 1 ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              transVal == 1 ? 'Venta' : (transVal == 2 ? 'Intercambio' : 'Ambos'),
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.bold,
+                                color: transVal == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF15803D),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      if (esVenta && !esMio) ...[
+                        Expanded(
+                          child: Container(
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 4),
+                            child: ElevatedButton(
+                              onPressed: handleAddToCart,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (esIntercambio && !esMio) ...[
+                        Expanded(
+                          child: Container(
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 4),
+                            child: OutlinedButton(
+                              onPressed: handleIntercambio,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
+                                backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
+                                foregroundColor: const Color(0xFFC2410C),
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
+                            ),
+                          ),
+                        ),
+                      ],
+                      Expanded(
+                        child: Container(
+                          height: 32,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ItemDetailScreen(itemId: itemId))),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFE2E8F0), width: 1), // Web border-gray-200 #e2e8f0
+                              backgroundColor: const Color(0xFFF8FAFC), // Web #f8fafc
+                              foregroundColor: const Color(0xFF64748B),
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              elevation: 0,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Icon(Icons.visibility, size: 16, color: Color(0xFF64748B)), // Web text-gray-500 #64748b
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ]),
       ),

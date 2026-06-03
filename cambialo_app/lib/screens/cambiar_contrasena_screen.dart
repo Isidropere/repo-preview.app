@@ -43,12 +43,22 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
   }
 
   Future<void> _loadUser() async {
-    setState(() => _loadingUser = true);
-    final user = await AuthService.me();
-    setState(() {
-      _user = user;
-      _loadingUser = false;
-    });
+    try {
+      setState(() => _loadingUser = true);
+      final user = await AuthService.me();
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _loadingUser = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loadingUser = false;
+        });
+      }
+    }
   }
 
   Future<void> _cambiar() async {

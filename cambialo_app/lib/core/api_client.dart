@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// URL base de la API cargada desde el archivo .env
 final String kBaseUrl = dotenv.env['API_URL']?.trim() ?? (kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api');
@@ -19,6 +20,18 @@ final Map<String, DateTime> _cacheTimes = {};
 class ApiClient {
   static final _storage = const FlutterSecureStorage();
   static final _client  = http.Client();
+
+  static int? parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    final String str = value.toString();
+    final int? parsedInt = int.tryParse(str);
+    if (parsedInt != null) return parsedInt;
+    final double? parsedDouble = double.tryParse(str);
+    if (parsedDouble != null) return parsedDouble.toInt();
+    return null;
+  }
 
   static String fixImageUrl(String? url) {
     if (url == null || url.isEmpty) return 'https://via.placeholder.com/150';
@@ -50,30 +63,79 @@ class ApiClient {
     return fixedUrl;
   }
 
+  static SharedPreferences? _webPrefs;
+
+  static Future<SharedPreferences> get _getPrefs async {
+    _webPrefs ??= await SharedPreferences.getInstance();
+    return _webPrefs!;
+  }
+
   // ── Token (memory-first para evitar SecureStorage en cada llamada) ──────
   static Future<String?> getToken() async {
     if (_memStore.containsKey(_tokenKey)) return _memStore[_tokenKey] as String?;
-    final t = await _storage.read(key: 'auth_token');
+    String? t;
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      t = prefs.getString('auth_token');
+    } else {
+      try {
+        t = await _storage.read(key: 'auth_token');
+      } catch (_) {
+        final prefs = await _getPrefs;
+        t = prefs.getString('auth_token');
+      }
+    }
     if (t != null) _memStore[_tokenKey] = t;
     return t;
   }
 
   static Future<void> saveToken(String t) async {
     _memStore[_tokenKey] = t;
-    await _storage.write(key: 'auth_token', value: t);
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      await prefs.setString('auth_token', t);
+    } else {
+      try {
+        await _storage.write(key: 'auth_token', value: t);
+      } catch (_) {
+        final prefs = await _getPrefs;
+        await prefs.setString('auth_token', t);
+      }
+    }
   }
 
   static Future<void> deleteToken() async {
     _memStore.remove(_tokenKey);
     _cache.clear();
-    await _storage.delete(key: 'auth_token');
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      await prefs.remove('auth_token');
+    } else {
+      try {
+        await _storage.delete(key: 'auth_token');
+      } catch (_) {
+        final prefs = await _getPrefs;
+        await prefs.remove('auth_token');
+      }
+    }
   }
 
   static const String _userKey = '__user';
 
   static Future<Map<String, dynamic>?> getUser() async {
     if (_memStore.containsKey(_userKey)) return _memStore[_userKey] as Map<String, dynamic>?;
-    final uStr = await _storage.read(key: 'auth_user');
+    String? uStr;
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      uStr = prefs.getString('auth_user');
+    } else {
+      try {
+        uStr = await _storage.read(key: 'auth_user');
+      } catch (_) {
+        final prefs = await _getPrefs;
+        uStr = prefs.getString('auth_user');
+      }
+    }
     if (uStr != null) {
       try {
         final u = jsonDecode(uStr) as Map<String, dynamic>;
@@ -86,12 +148,33 @@ class ApiClient {
 
   static Future<void> saveUser(Map<String, dynamic> u) async {
     _memStore[_userKey] = u;
-    await _storage.write(key: 'auth_user', value: jsonEncode(u));
+    final uStr = jsonEncode(u);
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      await prefs.setString('auth_user', uStr);
+    } else {
+      try {
+        await _storage.write(key: 'auth_user', value: uStr);
+      } catch (_) {
+        final prefs = await _getPrefs;
+        await prefs.setString('auth_user', uStr);
+      }
+    }
   }
 
   static Future<void> deleteUser() async {
     _memStore.remove(_userKey);
-    await _storage.delete(key: 'auth_user');
+    if (kIsWeb) {
+      final prefs = await _getPrefs;
+      await prefs.remove('auth_user');
+    } else {
+      try {
+        await _storage.delete(key: 'auth_user');
+      } catch (_) {
+        final prefs = await _getPrefs;
+        await prefs.remove('auth_user');
+      }
+    }
   }
 
   static Future<Map<String, String>> _headers({bool auth = false}) async {

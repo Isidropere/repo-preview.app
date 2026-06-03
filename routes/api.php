@@ -158,6 +158,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Checkout y pagos
     Route::post('/pago/checkout', [PagoApiController::class, 'checkout']);
 
+    // Solicitudes de servicio (aprobación previa al pago de talentos)
+    Route::post('/solicitudes-servicio/enviar', [\App\Http\Controllers\SolicitudServicioController::class, 'enviarDesdeCarrito']);
+    Route::get('/solicitudes-servicio/estado/{idItem}', [\App\Http\Controllers\SolicitudServicioController::class, 'estadoItem']);
+
     // Tarjetas de pago
     Route::prefix('tarjetas')->group(function () {
         Route::get('/',            [TarjetaPagoController::class, 'index']);

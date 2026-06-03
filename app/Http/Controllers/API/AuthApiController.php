@@ -350,10 +350,8 @@ class AuthApiController extends Controller
         // Intercambios pendientes
         $intercambiosCount = \App\Models\Negociacion::where('estado', 'En negociacion')
             ->where(function ($q) use ($user) {
-                $q->where('id_oferente', $user->id)
-                  ->orWhereHas('item', function ($iq) use ($user) {
-                      $iq->where('id_user', $user->id);
-                  });
+                $q->where('usuario_emisor_id', $user->id)
+                  ->orWhere('usuario_receptor_id', $user->id);
             })->count();
 
         return response()->json([

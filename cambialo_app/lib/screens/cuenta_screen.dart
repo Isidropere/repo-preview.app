@@ -37,24 +37,30 @@ class _CuentaScreenState extends State<CuentaScreen> {
   }
 
   Future<void> _load() async {
-    final u = await AuthService.me();
-    if (!mounted) return;
-    setState(() { _user = u; _loading = false; });
-    if (u == null) {
-      final loggedIn = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-      if (loggedIn == true) {
-        _load();
-      } else {
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.pop(context);
+    try {
+      final u = await AuthService.me();
+      if (!mounted) return;
+      setState(() { _user = u; _loading = false; });
+      if (u == null) {
+        final loggedIn = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        if (loggedIn == true) {
+          _load();
+        } else {
+          if (mounted && Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
         }
+      } else {
+        _refreshBackground();
+        _loadNotificationsCount();
       }
-    } else {
-      _refreshBackground();
-      _loadNotificationsCount();
+    } catch (e) {
+      if (mounted) {
+        setState(() { _loading = false; });
+      }
     }
   }
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/api_client.dart';
-import '../core/auth_service.dart';
 import '../core/theme.dart';
+import 'direcciones_screen.dart';
 
 /// Pantalla de Checkout — selección de dirección + tarjetas + resumen + pago
 class CheckoutScreen extends StatefulWidget {
@@ -22,6 +22,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool   _loading      = true;
   bool   _pagando      = false;
   String _errorMsg     = '';
+
+  double _costoEnvio = 0.0;
+  int? _diasHabiles;
+  bool _calculandoEnvio = false;
 
   // Formulario nueva tarjeta
   final _formTarjetaKey   = GlobalKey<FormState>();
@@ -82,21 +86,137 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     setState(() => _loading = false);
+
+    // Calcular costo de envío inicial
+    await _calcularCostoEnvio();
+  }
+
+  Future<void> _calcularCostoEnvio() async {
+    if (_idDireccion == null || widget.carrito['tipo'] == 'servicio') {
+      if (mounted) {
+        setState(() {
+          _costoEnvio = 0.0;
+          _diasHabiles = null;
+        });
+      }
+      return;
+    }
+
+    // Buscar dirección seleccionada
+    final d = _direcciones.firstWhere((element) => element['id_direccion'] == _idDireccion, orElse: () => null);
+    if (d == null) return;
+
+    final municipio = d['municipio']?['municipio']?.toString();
+    if (municipio == null || municipio.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _costoEnvio = 0.0;
+          _diasHabiles = null;
+        });
+      }
+      return;
+    }
+
+    if (mounted) setState(() => _calculandoEnvio = true);
+
+    try {
+      final res = await ApiClient.get(
+        '/delivery/calcular?pueblo=${Uri.encodeComponent(municipio)}&valor_articulo=$_subtotal',
+        auth: false,
+      );
+
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true) {
+          if (mounted) {
+            setState(() {
+              _costoEnvio = double.tryParse(body['costo_envio_total'].toString()) ?? 0.0;
+              _diasHabiles = int.tryParse(body['dias_habiles'].toString());
+              _calculandoEnvio = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      // Fallback a 0
+    }
+
+    if (mounted) {
+      setState(() {
+        _costoEnvio = 0.0;
+        _diasHabiles = null;
+        _calculandoEnvio = false;
+      });
+    }
+  }
+
+  String _obtenerFechaEntregaEstimada(int diasHabiles) {
+    DateTime fecha = DateTime.now();
+    int agregados = 0;
+    while (agregados < diasHabiles) {
+      fecha = fecha.add(const Duration(days: 1));
+      if (fecha.weekday != DateTime.saturday && fecha.weekday != DateTime.sunday) {
+        agregados++;
+      }
+    }
+    
+    // Formatear en español
+    final List<String> meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    final List<String> dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    
+    return "${dias[fecha.weekday - 1]} ${fecha.day} de ${meses[fecha.month - 1]}";
+  }
+
+  Future<void> _gestionarDirecciones() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DireccionesScreen()),
+    );
+    // Al regresar de gestionar las direcciones, recargar los datos
+    _loadDatos();
   }
 
   double get _subtotal {
-    final total = widget.carrito['total'];
-    if (total == null) return 0.0;
-    if (total is num) return total.toDouble();
-    return double.tryParse(total.toString()) ?? 0.0;
+    // Calcular dinámicamente del carrito el subtotal antes de descuento
+    final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
+    double sum = 0.0;
+    for (var i in items) {
+      final esSel = i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      if (esSel) {
+        final itemData = i['item'] as Map? ?? {};
+        final double valor = double.tryParse((itemData['valor'] ?? 0).toString()) ?? 0.0;
+        final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
+        sum += valor * cantidad;
+      }
+    }
+    return sum;
   }
 
-  double get _envio => 200.0; // En Cambialord es dinámico, fijado por defecto básico aquí.
+  double get _totalDescuento {
+    final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
+    double sum = 0.0;
+    for (var i in items) {
+      final esSel = i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      if (esSel) {
+        final double descuento = double.tryParse((i['descuento'] ?? 0).toString()) ?? 0.0;
+        final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
+        sum += descuento * cantidad;
+      }
+    }
+    return sum;
+  }
 
-  double get _totalFinal => _subtotal + _envio;
+  double get _envio {
+    if (widget.carrito['tipo'] == 'servicio') return 0.0;
+    return _costoEnvio;
+  }
+
+  double get _totalFinal => _subtotal - _totalDescuento + _envio;
 
   Future<void> _pagar() async {
-    if (_idDireccion == null) {
+    final bool esServicio = widget.carrito['tipo'] == 'servicio';
+    if (!esServicio && _idDireccion == null) {
       setState(() => _errorMsg = 'Debes seleccionar una dirección de entrega.');
       return;
     }
@@ -110,12 +230,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     setState(() { _pagando = true; _errorMsg = ''; });
 
-    final res = await ApiClient.post('/pago/checkout', {
-      'id_direccion': _idDireccion,
+    final Map<String, dynamic> payload = {
       'id_tarjeta':   _idTarjeta,
       'cvv':          _cvvCtrl.text.trim(),
       'total':        _totalFinal,
-    }, auth: true);
+    };
+    if (!esServicio) {
+      payload['id_direccion'] = _idDireccion;
+    }
+
+    final res = await ApiClient.post('/pago/checkout', payload, auth: true);
 
     setState(() => _pagando = false);
 
@@ -165,6 +289,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         content: Text(body['message'] ?? 'Error al guardar la tarjeta.'),
         backgroundColor: Colors.red,
       ));
+    }
+  }
+
+  Future<void> _eliminarTarjeta(dynamic idTarjeta) async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar tarjeta?'),
+        content: const Text('Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true) return;
+
+    final res = await ApiClient.delete('/tarjetas/$idTarjeta', auth: true);
+    if (res.statusCode == 200 || res.statusCode == 204) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Tarjeta eliminada con éxito'),
+          backgroundColor: Colors.green,
+        ));
+      }
+      _loadDatos();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Error al eliminar la tarjeta'),
+          backgroundColor: Colors.red,
+        ));
+      }
     }
   }
 
@@ -264,20 +428,141 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-                // ─ Dirección ─
-                const Text('Dirección de entrega', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
-                const SizedBox(height: 8),
-                if (_direcciones.isEmpty)
-                  _aviso(Icons.location_off, 'No tienes direcciones guardadas. Agrega una en "Mi cuenta → Dirección".')
-                else
-                  ..._direcciones.map((d) => RadioListTile<int>(
-                    value: d['id_direccion'],
-                    groupValue: _idDireccion,
-                    onChanged: (v) => setState(() => _idDireccion = v),
-                    activeColor: kPrimary,
-                    title: Text('${d['calle']}, #${d['N_casa_edificio'] ?? ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: Text('${d['municipio']?['municipio'] ?? ''}, ${d['provincia']?['provincia'] ?? ''}', style: TextStyle(fontSize: 12, color: kTextGray)),
-                  )),
+                // ─ Dirección de entrega o Información del proveedor (Servicio) ─
+                if (widget.carrito['tipo'] == 'servicio') ...[
+                  _aviso(Icons.star, 'Servicio / Talento — no requiere envío', color: Colors.orange.shade50, iconColor: kSecondary),
+                  const SizedBox(height: 12),
+                  const Text('Información del proveedor', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
+                  const SizedBox(height: 8),
+                  Builder(
+                    builder: (context) {
+                      final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
+                      final selectedItems = items.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).toList();
+                      final Map<String, Map> proveedores = {};
+                      for (var i in selectedItems) {
+                        final itemData = i['item'] as Map? ?? {};
+                        final prov = i['proveedor_info'] as Map?;
+                        final provId = itemData['id_user']?.toString();
+                        if (prov != null && provId != null) {
+                          proveedores[provId] = prov;
+                        }
+                      }
+
+                      if (proveedores.isEmpty) {
+                        return _aviso(Icons.info_outline, 'No se pudo obtener información del proveedor.');
+                      }
+
+                      return Column(
+                        children: proveedores.values.map((prov) {
+                          final String nombre = prov['nombre']?.toString() ?? 'Proveedor';
+                          final String municipio = prov['municipio']?.toString() ?? 'No disponible';
+                          final String provincia = prov['provincia']?.toString() ?? '';
+                          final String calle = prov['calle']?.toString() ?? '';
+                          final String casa = prov['N_casa_edificio']?.toString() ?? '';
+                          final String apto = prov['apto']?.toString() ?? '';
+                          final String geolocalizacion = prov['geolocalizacion']?.toString() ?? '';
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: Colors.orange.shade50.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.orange.shade100, width: 1.5),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.person_pin_circle_outlined, color: kSecondary, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '$nombre — $municipio',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.brown),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Divider(height: 16, color: Colors.orange),
+                                  if (provincia.isNotEmpty)
+                                    Text('Provincia: $provincia', style: const TextStyle(fontSize: 12)),
+                                  if (calle.isNotEmpty)
+                                    Text('Calle: $calle', style: const TextStyle(fontSize: 12)),
+                                  if (casa.isNotEmpty)
+                                    Text('Número de casa o edificio: $casa', style: const TextStyle(fontSize: 12)),
+                                  if (apto.isNotEmpty)
+                                    Text('Apartamento: $apto', style: const TextStyle(fontSize: 12)),
+                                  if (geolocalizacion.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                          content: Text('Coordenadas: $geolocalizacion'),
+                                          duration: const Duration(seconds: 4),
+                                        ));
+                                      },
+                                      icon: const Icon(Icons.map_outlined, size: 14, color: Colors.brown),
+                                      label: const Text(
+                                        'Ver ubicación',
+                                        style: TextStyle(decoration: TextDecoration.underline, color: Colors.brown, fontSize: 12),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    }
+                  ),
+                ] else ...[
+                  // ─ Dirección ─
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Dirección de entrega', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
+                      TextButton.icon(
+                        onPressed: _gestionarDirecciones,
+                        icon: const Icon(Icons.add_location_alt_outlined, size: 16, color: kPrimary),
+                        label: const Text('Gestionar', style: TextStyle(color: kPrimary, fontSize: 13)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (_direcciones.isEmpty)
+                    GestureDetector(
+                      onTap: _gestionarDirecciones,
+                      child: _aviso(
+                        Icons.location_off,
+                        'No tienes direcciones guardadas. Agrega una en "Mi cuenta → Dirección".',
+                        color: Colors.orange.shade50,
+                        iconColor: Colors.orange.shade800,
+                      ),
+                    )
+                  else
+                    ..._direcciones.map((d) => RadioListTile<int>(
+                      value: d['id_direccion'],
+                      groupValue: _idDireccion,
+                      onChanged: (v) {
+                        setState(() {
+                          _idDireccion = v;
+                        });
+                        _calcularCostoEnvio();
+                      },
+                      activeColor: kPrimary,
+                      title: Text('${d['calle']}, #${d['N_casa_edificio'] ?? ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: Text('${d['municipio']?['municipio'] ?? ''}, ${d['provincia']?['provincia'] ?? ''}', style: TextStyle(fontSize: 12, color: kTextGray)),
+                    )),
+                ],
 
                 const Divider(height: 24),
 
@@ -295,10 +580,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   _aviso(Icons.credit_card_off, 'No tienes tarjetas guardadas. Agrega una para continuar.')
                 else ...[
                   ..._tarjetas.map((t) => RadioListTile<String>(
-                    value: t['id_tarjeta'],
+                    value: t['id_tarjeta']?.toString() ?? '',
                     groupValue: _idTarjeta,
                     onChanged: (v) => setState(() => _idTarjeta = v),
                     activeColor: kPrimary,
+                    controlAffinity: ListTileControlAffinity.leading,
                     title: Text('**** **** **** ${t['last4']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     subtitle: Builder(
                       builder: (_) {
@@ -310,6 +596,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         );
                       },
                     ),
+                    secondary: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      onPressed: () => _eliminarTarjeta(t['id_tarjeta']),
+                    ),
                   )),
                   const SizedBox(height: 12),
                   // Ingresar CVV
@@ -320,7 +610,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     maxLength: 4,
                     decoration: const InputDecoration(
                       labelText: 'Código de seguridad (CVV) *',
-                      border: OutlineInputBorder(),
                       counterText: '',
                       prefixIcon: Icon(Icons.lock_outline),
                     ),
@@ -332,11 +621,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 // ─ Resumen ─
                 const Text('Resumen del pedido', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
                 const SizedBox(height: 8),
-                ...((widget.carrito['items'] as List? ?? []).map((i) {
+                ...(((widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [])
+                    .where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true)
+                    .map((i) {
                   final item = i['item'] as Map? ?? {};
                   final double valor = double.tryParse((item['valor'] ?? 0).toString()) ?? 0.0;
                   final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
-                  final subtotalItem = valor * cantidad;
+                  final double subtotalItem = valor * cantidad;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(children: [
@@ -346,14 +637,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       Text('RD\$ ${subtotalItem.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13, color: kPrimary, fontWeight: FontWeight.bold)),
                     ]),
                   );
-                })),
+                }))),
 
                 const Divider(height: 24),
 
                 // ─ Totales ─
                 _fila('Subtotal', 'RD\$ ${_subtotal.toStringAsFixed(2)}'),
-                const SizedBox(height: 4),
-                _fila('Envío estimado', 'RD\$ ${_envio.toStringAsFixed(2)}'),
+                if (_totalDescuento > 0) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Descuento', style: TextStyle(fontSize: 14, color: Colors.red)),
+                      Text('- RD\$ ${_totalDescuento.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, color: Colors.red, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+                if (widget.carrito['tipo'] != 'servicio') ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Envío estimado', style: TextStyle(fontSize: 14, color: kTextGray)),
+                      _calculandoEnvio
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: kPrimary))
+                          : Text('RD\$ ${_envio.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, color: kTextDark)),
+                    ],
+                  ),
+                  if (!_calculandoEnvio && _diasHabiles != null) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '🚚 Entrega estimada: ${_obtenerFechaEntregaEstimada(_diasHabiles!)} (~$_diasHabiles días hábiles)',
+                        style: const TextStyle(fontSize: 12, color: kTextGray),
+                      ),
+                    ),
+                  ],
+                ],
                 const Divider(height: 16),
                 _fila('TOTAL', 'RD\$ ${_totalFinal.toStringAsFixed(2)}', bold: true),
 
@@ -372,7 +693,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     icon: _pagando
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.payment, color: Colors.white),
-                    label: Text(_pagando ? 'Procesando...' : 'Confirmar y pagar', style: const TextStyle(color: Colors.white, fontSize: 15)),
+                    label: Text(_pagando ? 'Procesando...' : (widget.carrito['tipo'] == 'servicio' ? 'Confirmar y pagar servicio' : 'Confirmar y pagar'), style: const TextStyle(color: Colors.white, fontSize: 15)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kSecondary,
                       padding: const EdgeInsets.symmetric(vertical: 14),

@@ -114,11 +114,122 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final items = (_data?['todosLosItems'] as List?) ?? [];
     for (var item in items) {
        bool esSel = item['es_seleccionado'] == 1 || item['es_seleccionado'] == true;
+       final itemData = item['item'] as Map? ?? {};
+       final isServicio = (itemData['id_categoria_item'] == 29);
+       final estadoSolicitud = item['estado_solicitud']?.toString();
+       if (isServicio && estadoSolicitud != 'aprobada') {
+         continue; // Saltar servicios no aprobados
+       }
        if (esSel != seleccionar) {
           await ApiClient.put('/carrito/${item['id_item_intencion_compra']}/seleccion', {'estado': seleccionar}, auth: true);
        }
     }
     _load();
+  }
+
+  Future<void> _gestionarSolicitudServicio(Map item, String? estadoActual) async {
+    final itemData = item['item'] as Map? ?? {};
+    final int itemId = int.tryParse(itemData['id_item'].toString()) ?? 0;
+
+    if (estadoActual == 'pendiente_aprobacion') {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('⏳ Solicitud en espera'),
+          content: const Text(
+            'Ya has enviado la solicitud de aprobación para este servicio. '
+            'Debes esperar a que el proveedor responda antes de proceder al pago.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Si está aprobada, se puede seleccionar de manera normal
+    if (estadoActual == 'aprobada') {
+      return;
+    }
+
+    // Si es null o rechazada, mostrar selector de fecha
+    final DateTime? fechaSel = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'SELECCIONA LA FECHA DEL SERVICIO',
+    );
+
+    if (fechaSel == null) return;
+
+    final String fechaStr = "${fechaSel.year}-${fechaSel.month.toString().padLeft(2, '0')}-${fechaSel.day.toString().padLeft(2, '0')}";
+
+    if (!mounted) return;
+
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Solicitar aprobación'),
+        content: Text(
+          '¿Deseas enviar la solicitud de aprobación al proveedor para la fecha: $fechaStr?\n\n'
+          'El proveedor de este servicio debe aprobar la fecha antes de realizar el pago.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+            child: const Text('Enviar solicitud', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true) return;
+
+    setState(() => _loading = true);
+
+    try {
+      final res = await ApiClient.post('/solicitudes-servicio/enviar', {
+        'id_item': itemId,
+        'fecha_servicio': fechaStr,
+      }, auth: true);
+
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Solicitud enviada con éxito.'),
+            backgroundColor: Colors.green,
+          ));
+        }
+      } else {
+        final body = jsonDecode(res.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Error al enviar solicitud.'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Error de conexión al enviar la solicitud.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      _load();
+    }
   }
 
   Future<bool> _confirmar(String titulo, String msg) async {
@@ -207,10 +318,18 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final double envio = 0.0; // Todo: integrar calculo de envio
     final double granTotal = totalEstimado + envio;
 
-    // Verificar si todos están seleccionados
-    bool todosSeleccionados = todosLosItems.every((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true);
+    // Verificar si todos están seleccionados (para servicios, solo consideramos los aprobados)
+    bool todosSeleccionados = todosLosItems.every((i) {
+      final itemData = i['item'] as Map? ?? {};
+      final isServicio = (itemData['id_categoria_item'] == 29);
+      if (isServicio) {
+        return i['estado_solicitud']?.toString() != 'aprobada' || i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      }
+      return i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+    });
     
     int totalSeleccionadosProductos = itemsProducto.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).length;
+    int totalSeleccionadosServicios = itemsServicio.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).length;
 
     return Column(children: [
       Expanded(
@@ -304,8 +423,6 @@ class _CarritoScreenState extends State<CarritoScreen> {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
                 onPressed: totalSeleccionadosProductos > 0 ? () {
-                  // Mismo comportamiento actual, pero enviando el carrito de productos
-                  // checkout_screen.dart necesitará ajustarse luego para usar el carrito filtrado.
                   Navigator.push(context, MaterialPageRoute(
                     builder: (_) => CheckoutScreen(carrito: carritoProducto!),
                   ));
@@ -322,14 +439,31 @@ class _CarritoScreenState extends State<CarritoScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.access_time, color: kTextGray, size: 18),
-                onPressed: null, // Los servicios dependen de aprobación
+                icon: Icon(
+                  totalSeleccionadosServicios > 0 ? Icons.payment : Icons.access_time,
+                  color: totalSeleccionadosServicios > 0 ? Colors.white : kTextGray,
+                  size: 18,
+                ),
+                onPressed: totalSeleccionadosServicios > 0 ? () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => CheckoutScreen(carrito: carritoServicio!),
+                  ));
+                } : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: kSecondary,
                   disabledBackgroundColor: Colors.grey.shade100,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                label: const Text('Servicios pendientes de aprobación', style: TextStyle(color: kTextGray, fontSize: 14)),
+                label: Text(
+                  totalSeleccionadosServicios > 0
+                      ? 'Pagar Servicios aprobados ($totalSeleccionadosServicios)'
+                      : 'Servicios pendientes de aprobación',
+                  style: TextStyle(
+                    color: totalSeleccionadosServicios > 0 ? Colors.white : kTextGray,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ]
@@ -347,13 +481,14 @@ class _CarritoScreenState extends State<CarritoScreen> {
     // Categoría badge
     final catNombre = itemData['categoria']?['nombre'] ?? '';
 
-    final String? imgUrl = itemData['image_url'] as String? ??
+    final String? imgUrl = itemData['image_url']?.toString() ??
         ((itemData['imagenes'] != null && (itemData['imagenes'] as List).isNotEmpty)
             ? (itemData['imagenes'][0]['ruta']?.toString().startsWith('http') == true
                 ? itemData['imagenes'][0]['ruta'].toString()
                 : '${kBaseUrl.replaceAll('/api', '')}/${itemData['imagenes'][0]['ruta'].toString().trim().replaceAll(RegExp(r'^/'), '')}/${itemData['imagenes'][0]['nombre']}')
             : null);
 
+    final String? estadoSolicitud = item['estado_solicitud']?.toString();
     bool esSeleccionado = item['es_seleccionado'] == 1 || item['es_seleccionado'] == true;
 
     return Container(
@@ -369,9 +504,19 @@ class _CarritoScreenState extends State<CarritoScreen> {
         children: [
           // Checkbox
           Checkbox(
-            value: esSeleccionado,
-            activeColor: kPrimary,
-            onChanged: (val) => _marcarSeleccionado(item, val ?? false),
+            value: esServicio ? (estadoSolicitud == 'aprobada' && esSeleccionado) : esSeleccionado,
+            activeColor: esServicio ? kSecondary : kPrimary,
+            onChanged: (val) {
+              if (esServicio) {
+                if (estadoSolicitud == 'aprobada') {
+                  _marcarSeleccionado(item, val ?? false);
+                } else {
+                  _gestionarSolicitudServicio(item, estadoSolicitud);
+                }
+              } else {
+                _marcarSeleccionado(item, val ?? false);
+              }
+            },
           ),
           
           // Image
@@ -436,17 +581,76 @@ class _CarritoScreenState extends State<CarritoScreen> {
                   if (esServicio) ...[
                     const SizedBox(height: 4),
                     Text('Cantidad: $cantidad', style: const TextStyle(fontSize: 11, color: kTextGray)),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(4)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.hourglass_empty, size: 10, color: Colors.amber.shade800),
-                          const SizedBox(width: 4),
-                          Text('Solicitud pendiente de aprobación', style: TextStyle(fontSize: 10, color: Colors.amber.shade800)),
-                        ],
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: () => _gestionarSolicitudServicio(item, estadoSolicitud),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: estadoSolicitud == 'pendiente_aprobacion'
+                              ? Colors.amber.shade50
+                              : estadoSolicitud == 'aprobada'
+                                  ? Colors.green.shade50
+                                  : estadoSolicitud == 'rechazada'
+                                      ? Colors.red.shade50
+                                      : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: estadoSolicitud == 'pendiente_aprobacion'
+                                ? Colors.amber.shade200
+                                : estadoSolicitud == 'aprobada'
+                                    ? Colors.green.shade200
+                                    : estadoSolicitud == 'rechazada'
+                                        ? Colors.red.shade200
+                                        : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              estadoSolicitud == 'pendiente_aprobacion'
+                                  ? Icons.hourglass_empty
+                                  : estadoSolicitud == 'aprobada'
+                                      ? Icons.check_circle_outline
+                                      : estadoSolicitud == 'rechazada'
+                                          ? Icons.error_outline
+                                          : Icons.add_circle_outline,
+                              size: 14,
+                              color: estadoSolicitud == 'pendiente_aprobacion'
+                                  ? Colors.amber.shade800
+                                  : estadoSolicitud == 'aprobada'
+                                      ? Colors.green.shade800
+                                      : estadoSolicitud == 'rechazada'
+                                          ? Colors.red.shade800
+                                          : Colors.grey.shade700,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                estadoSolicitud == 'pendiente_aprobacion'
+                                    ? 'Solicitud pendiente de aprobación'
+                                    : estadoSolicitud == 'aprobada'
+                                        ? 'Aprobado — puedes proceder al pago'
+                                        : estadoSolicitud == 'rechazada'
+                                            ? 'Solicitud rechazada (pulsar para reenviar)'
+                                            : 'Marca para solicitar aprobación al proveedor',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: estadoSolicitud == 'pendiente_aprobacion'
+                                      ? Colors.amber.shade900
+                                      : estadoSolicitud == 'aprobada'
+                                          ? Colors.green.shade900
+                                          : estadoSolicitud == 'rechazada'
+                                              ? Colors.red.shade900
+                                              : Colors.grey.shade800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -461,8 +665,6 @@ class _CarritoScreenState extends State<CarritoScreen> {
                       if (itemData['intercambio'] == 1 || esServicio)
                         ElevatedButton.icon(
                           onPressed: () {
-                            // Acción para negociar con el vendedor
-                            // Navigator.push(context, MaterialPageRoute(builder: (_) => NegociacionDetalleScreen(negociacionId: ...)));
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ir a negociar')));
                           },
                           icon: const Icon(Icons.handshake, color: Colors.white, size: 14),

@@ -17,20 +17,29 @@ class PagoApiController extends Controller
     /** POST /api/pago/checkout */
     public function checkout(Request $request)
     {
-        $request->validate([
+        $userId = $request->user()->id;
+
+        // Obtener el tipo de carrito para saber si la dirección es obligatoria
+        $carrito = \App\Models\Carrito::where('id_user', $userId)->first();
+        $esServicio = $carrito && $carrito->tipo === 'servicio';
+
+        $rules = [
             'id_tarjeta'   => 'required|string|exists:tarjetas_pagos,id_tarjeta',
             'cvv'          => 'nullable|string|max:4',
-            'id_direccion' => 'required|integer|exists:direcciones,id_direccion',
-        ]);
+            'id_direccion' => $esServicio ? 'nullable|integer|exists:direcciones,id_direccion' : 'required|integer|exists:direcciones,id_direccion',
+        ];
 
-        $userId = $request->user()->id;
+        $request->validate($rules);
+
         $idDireccion = $request->input('id_direccion');
 
-        // Establecer la dirección elegida como predeterminada para que el CheckoutService la use
-        Direcciones::where('id_user', $userId)->update(['es_predeterminada' => 0]);
-        Direcciones::where('id_direccion', $idDireccion)
-            ->where('id_user', $userId)
-            ->update(['es_predeterminada' => 1]);
+        // Establecer la dirección elegida como predeterminada para que el CheckoutService la use si se envía
+        if ($idDireccion) {
+            Direcciones::where('id_user', $userId)->update(['es_predeterminada' => 0]);
+            Direcciones::where('id_direccion', $idDireccion)
+                ->where('id_user', $userId)
+                ->update(['es_predeterminada' => 1]);
+        }
 
         Log::info('Iniciando proceso de pago API', ['user_id' => $userId, 'id_tarjeta' => $request->id_tarjeta]);
 

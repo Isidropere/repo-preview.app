@@ -363,7 +363,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                       GestureDetector(
                                         onTap: () {
                                           final rawUrl =
-                                              item['image_url'] as String?;
+                                              item['image_url']?.toString();
                                           if (rawUrl != null &&
                                               rawUrl.isNotEmpty) {
                                             _showLightbox(
