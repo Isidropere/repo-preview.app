@@ -168,6 +168,21 @@ Route::get('/migrate-images', function () {
     return "Migración completada: {$count} archivos copiados a public/.";
 });
 
+Route::get('/debug-paths', function () {
+    return response()->json([
+        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
+        'base_path' => base_path(),
+        'public_path' => public_path(),
+        'storage_path' => storage_path('app/public'),
+        'has_public_html' => file_exists(base_path('public_html')),
+        'has_symlink' => file_exists(public_path('storage')),
+        'sample_image_in_public' => file_exists(public_path('imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
+        'sample_image_in_storage' => file_exists(storage_path('app/public/imgs/articulos/items/item_21_20260529135916_PsnYkcMrGO.jpg')),
+        'storage_dir_exists' => is_dir(storage_path('app/public/imgs/articulos/items')),
+        'public_dir_exists' => is_dir(public_path('imgs/articulos/items'))
+    ]);
+});
+
 Route::get('/sync-public-folders', function () {
     $source = base_path('public');
     $dest   = base_path('public_html');
