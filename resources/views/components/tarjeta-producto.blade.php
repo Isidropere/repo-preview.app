@@ -1,8 +1,9 @@
 @php
-    $imgNombre = $item->imagenes->where('estado', 'aprobado')->first()?->nombre;
+    $img = $item->imagenes->where('estado', 'aprobado')->first() ?? $item->imagenes->first();
+    $imgNombre = $img?->nombre;
     $imgSrc    = $imgNombre
         ? \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $imgNombre)
-        : asset('storage/imgs/producto_defaul.png');
+        : asset('imgs/defaults/producto_default.svg');
     $esVenta       = in_array($item->tipo_trans, [1, 3]);
     $esIntercambio = in_array($item->tipo_trans, [2, 3]);
     $stock         = $item->inventarios?->cantidad ?? 1;

@@ -39,13 +39,16 @@
                 <!-- Image Gallery -->
                 <div class="md:w-1/2 p-4">
                     <!-- Main Image -->
-                    <div class="mb-4 rounded-lg overflow-hidden bg-gray-100" style="height: 400px;">
-                        @if($item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty())
-                            @php $firstApproved = $item->imagenes->where('estado', 'aprobado')->first(); @endphp
-                            <img id="mainImage"  
-                                 src="{{ \App\Helpers\ImageHelper::urlMedia($firstApproved->ruta, $firstApproved->nombre) }}" 
-                                 class="w-full h-full object-contain"
-                                 alt="Imagen del artículo">
+                    @php 
+                        $hasApproved = $item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty();
+                        $imgsToShow = $hasApproved ? $item->imagenes->where('estado', 'aprobado') : ($item->imagenes ?? collect());
+                    @endphp
+                    <div style="position:relative;background:#f8fafc;border-radius:1rem;overflow:hidden;min-height:300px;display:flex;align-items:center;justify-content:center;">
+                        @if($imgsToShow->isNotEmpty())
+                            @php $firstImg = $imgsToShow->first(); @endphp
+                                <img id="imagen-principal-{{ $item->id_item }}"
+                                     src="{{ \App\Helpers\ImageHelper::urlMedia($firstImg->ruta, $firstImg->nombre) }}"
+                                     alt="{{ $item->item }}" class="w-full h-full object-contain">
                         @else
                             <div class="w-full h-full flex items-center justify-center bg-gray-300">
                                 <span class="text-gray-500">Imagen en espera de aprobación</span>
@@ -53,10 +56,10 @@
                         @endif
                     </div>
               
-             <!-- Thumbnails compactos -->
-@if($item->imagenes->where('estado', 'aprobado')->count() > 0)
-    <div class="grid grid-cols-2 gap-1">
-        @foreach($item->imagenes->where('estado', 'aprobado') as $index => $imagen)
+             <!-- Thumbnails -->
+                @if($imgsToShow->count() > 0)
+                <div style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:none;-ms-overflow-style:none;">
+                    @foreach($imgsToShow as $index => $imagen)
             @if($index === 0 || $index === 1 )
                 <!-- Dos imágenes pequeñas arriba -->
                 <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
@@ -189,14 +192,11 @@
                     <div class="mt-6 grid gap-y-10 gap-x-6" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
                       @foreach($relatedItems as $relatedItem)
                         <div class="group relative bg-white shadow rounded-lg overflow-hidden">
-                            @php
-                                // Obtener la imagen principal con orden_visualizacion = 1
-                            // $image = $item->imagenes->firstWhere('orden_visualizacion', 1);
-                                $mainImage = $relatedItem->imagenes->where('estado', 'aprobado')->firstWhere('orden_visualizacion', 1);
-             
-                                // Si no existe imagen con orden 1, usar la primera disponible
-                                $displayImage = $mainImage ?? $relatedItem->imagenes->where('estado', 'aprobado')->first();
-                            @endphp
+                            @php 
+                                    $hasApp = $relatedItem->imagenes->where('estado', 'aprobado')->isNotEmpty();
+                                    $relImgs = $hasApp ? $relatedItem->imagenes->where('estado', 'aprobado') : $relatedItem->imagenes;
+                                    $displayImage = $relImgs->firstWhere('orden_visualizacion', 1) ?? $relImgs->first();
+                                @endphp
 
                             @if($displayImage && $displayImage->nombre != null)
                                 <div class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">

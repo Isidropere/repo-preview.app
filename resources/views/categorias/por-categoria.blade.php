@@ -77,7 +77,7 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;">
                 @foreach($items as $item)
                     @php
-                        $imagen = $item->imagenes->where('estado', 'aprobado')->first();
+                        $imagen = $item->imagenes->where('estado', 'aprobado')->first() ?? $item->imagenes->first();
                         $rutaImagen = \App\Helpers\ImageHelper::urlItem($imagen, $item->id_categoria_item ?? 0);
                     @endphp
                     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;overflow:hidden;transition:box-shadow .3s,transform .2s;display:flex;flex-direction:column;"
