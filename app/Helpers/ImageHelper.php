@@ -121,11 +121,9 @@ class ImageHelper
             if (file_exists(public_path($ruta))) {
                 return asset($ruta);
             }
-            // Fallback: buscar en storage/
-            $rutaStorage = 'storage/' . $ruta;
-            if (file_exists(public_path($rutaStorage))) {
-                return asset($rutaStorage);
-            }
+            // En MochaHost, el public_path('storage/...') puede fallar si el symlink es absoluto o no accesible
+            // Asumimos que si no está directo en public, estaba en storage (como funcionaba antes)
+            return asset('storage/' . ltrim($ruta, '/'));
         }
 
         // Imagen por defecto según categoría
@@ -143,13 +141,8 @@ class ImageHelper
         if (file_exists(public_path($directPath))) {
             return asset($directPath);
         }
-        // Fallback: buscar en public/storage/
-        $storagePath = 'storage/' . $directPath;
-        if (file_exists(public_path($storagePath))) {
-            return asset($storagePath);
-        }
-        // Retornar la ruta directa aunque no exista (para que el onerror del img maneje)
-        return asset($directPath);
+        // Fallback sin file_exists por temas de symlink en Mochahost
+        return asset('storage/' . ltrim($directPath, '/'));
     }
 
     /**

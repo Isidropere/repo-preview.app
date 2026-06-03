@@ -32,6 +32,22 @@ class CarritoApiController extends Controller
             ], 404);
         }
 
+        // Adjuntar image_url para el app móvil
+        if (isset($resultado['data']['todosLosItems'])) {
+            foreach ($resultado['data']['todosLosItems'] as $intencion) {
+                if ($intencion->item && $intencion->imagenes && count($intencion->imagenes) > 0) {
+                    $img = $intencion->imagenes[0];
+                    $ruta = trim($img->ruta ?? 'imgs/articulos/items', '/');
+                    $nombre = $img->nombre;
+                    // Mismas reglas de fallback sin file_exists estricto para storage
+                    $url = file_exists(public_path("{$ruta}/{$nombre}"))
+                        ? url("{$ruta}/{$nombre}")
+                        : url("storage/{$ruta}/{$nombre}");
+                    $intencion->item->setAttribute('image_url', $url);
+                }
+            }
+        }
+
         // Return the full structured data for the mobile app
         return response()->json($resultado['data']);
     }

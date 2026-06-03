@@ -626,23 +626,18 @@ class ItemApiController extends Controller
             $nombre  = $primera['nombre'] ?? '';
             $ruta    = trim($primera['ruta'] ?? 'imgs/articulos/items', '/');
 
-            // Intentar storage symlink primero
-            $storagePath = public_path("storage/{$ruta}/{$nombre}");
-            if (file_exists($storagePath)) {
-                $arr['image_url'] = url("storage/{$ruta}/{$nombre}");
-            } else {
-                // Fallback: Apache htdocs
-                $arr['image_url'] = url("{$ruta}/{$nombre}");
-            }
+            // Intentar ruta directa primero (public/), si no, asumir que está en storage/
+            $arr['image_url'] = file_exists(public_path("{$ruta}/{$nombre}"))
+                ? url("{$ruta}/{$nombre}")
+                : url("storage/{$ruta}/{$nombre}");
 
             // Agregar image_url a cada imagen
             $arr['imagenes'] = array_map(function ($img) use ($ruta) {
                 $n = $img['nombre'] ?? '';
                 $r = trim($img['ruta'] ?? $ruta, '/');
-                $storagePath = public_path("storage/{$r}/{$n}");
-                $img['image_url'] = file_exists($storagePath)
-                    ? url("storage/{$r}/{$n}")
-                    : url("{$r}/{$n}");
+                $img['image_url'] = file_exists(public_path("{$r}/{$n}"))
+                    ? url("{$r}/{$n}")
+                    : url("storage/{$r}/{$n}");
                 return $img;
             }, $imagenes);
         } else {

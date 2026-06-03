@@ -481,12 +481,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
     // Categoría badge
     final catNombre = itemData['categoria']?['nombre'] ?? '';
 
-    final String? imgUrl = itemData['image_url']?.toString() ??
-        ((itemData['imagenes'] != null && (itemData['imagenes'] as List).isNotEmpty)
-            ? (itemData['imagenes'][0]['ruta']?.toString().startsWith('http') == true
-                ? itemData['imagenes'][0]['ruta'].toString()
-                : '${kBaseUrl.replaceAll('/api', '')}/${itemData['imagenes'][0]['ruta'].toString().trim().replaceAll(RegExp(r'^/'), '')}/${itemData['imagenes'][0]['nombre']}')
-            : null);
+    final String? imgUrl = itemData['image_url']?.toString();
 
     final String? estadoSolicitud = item['estado_solicitud']?.toString();
     bool esSeleccionado = item['es_seleccionado'] == 1 || item['es_seleccionado'] == true;
