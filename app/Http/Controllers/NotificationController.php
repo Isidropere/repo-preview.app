@@ -57,6 +57,35 @@ class NotificationController extends Controller
         }
     }
 
+    public function listarTodasApi()
+    {
+        try {
+            $userId = Auth::id();
+            if (!$userId) return response()->json(['error' => 'No autenticado'], 401);
+
+            $mensajes = Message::with('sender:id,nombres,apellidos')
+                ->where('id_receptor', $userId)
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get();
+            return response()->json(['mensajes' => $mensajes]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error interno al listar todas'], 500);
+        }
+    }
+
+    public function marcarTodasLeidasApi()
+    {
+        try {
+            Message::where('id_receptor', Auth::id())
+                ->where('leido', 0)
+                ->update(['leido' => 1]);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar'], 500);
+        }
+    }
+
     /**
      * Página completa de notificaciones del usuario
      */

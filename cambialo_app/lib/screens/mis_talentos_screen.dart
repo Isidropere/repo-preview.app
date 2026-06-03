@@ -4,17 +4,17 @@ import '../core/api_client.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
 import 'item_detail_screen.dart';
-import 'publicar_articulo_screen.dart';
+import 'publicar_talento_screen.dart';
 
-/// Lista de artículos propios del usuario autenticado
-class MisArticulosScreen extends StatefulWidget {
-  const MisArticulosScreen({super.key});
+class MisTalentosScreen extends StatefulWidget {
+  const MisTalentosScreen({super.key});
+
   @override
-  State<MisArticulosScreen> createState() => _MisArticulosScreenState();
+  State<MisTalentosScreen> createState() => _MisTalentosScreenState();
 }
 
-class _MisArticulosScreenState extends State<MisArticulosScreen> {
-  List _items = [];
+class _MisTalentosScreenState extends State<MisTalentosScreen> {
+  List _talentos = [];
   bool _loading = true;
 
   // Filtros de búsqueda (idénticos a la web)
@@ -34,10 +34,10 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
     if (res.statusCode == 200) {
       final list = jsonDecode(res.body) as List;
       setState(() {
-        _items = list.where((item) {
+        _talentos = list.where((item) {
           final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
           final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          return tipo != 2 && cat != 29;
+          return tipo == 2 || cat == 29;
         }).toList();
         _loading = false;
       });
@@ -50,25 +50,107 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
     final ok = await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Eliminar artículo'),
-            content: Text('¿Seguro que deseas eliminar "$nombre"?'),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded,
+                      color: Colors.red, size: 22),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  '¿Eliminar este talento?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        '⚠️ Aviso importante',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                            fontSize: 13),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Cambialord RD no se hace responsable de los talentos o servicios eliminados. Si se borra el talento y le queda inventario, el mismo no se podrá restablecer ni se hará una devolución del dinero.',
+                        style: TextStyle(fontSize: 11, color: Colors.black87),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Esta acción es irreversible.',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar')),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar',
+                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+              ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
+                child: const Text('Sí, eliminar',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         ) ??
         false;
     if (!ok) return;
-    await ApiClient.delete('/items/$idItem', auth: true);
-    ApiClient.clearCache('/mis-items');
-    _load();
+
+    final res = await ApiClient.delete('/items/$idItem', auth: true);
+    if (!mounted) return;
+    if (res.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Talento eliminado correctamente.'),
+        backgroundColor: Colors.green,
+      ));
+      ApiClient.clearCache('/mis-items');
+      _load();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error al eliminar el talento.'),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   String _formatDate(String? dateStr) {
@@ -148,7 +230,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
   @override
   Widget build(BuildContext context) {
     // Aplicar filtros locales de la misma forma que en Javascript de la web
-    final filteredItems = _items.where((item) {
+    final filteredTalentos = _talentos.where((item) {
       // 1. Filtro por nombre
       final name = (item['item'] ?? '').toString().toLowerCase();
       if (_searchQuery.isNotEmpty &&
@@ -174,13 +256,15 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
 
     return Scaffold(
       backgroundColor: kBgLight,
-      appBar: AppBar(title: const Text('Mis Artículos')),
+      appBar: AppBar(
+        title: const Text('Mis Talentos'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => const PublicarArticuloScreen()));
+                  builder: (_) => const PublicarTalentoScreen()));
           _load();
         },
         backgroundColor: kPrimary,
@@ -205,7 +289,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                       TextField(
                         onChanged: (val) => setState(() => _searchQuery = val),
                         decoration: InputDecoration(
-                          hintText: 'Buscar producto...',
+                          hintText: 'Buscar talento...',
                           prefixIcon: const Icon(Icons.search, color: Colors.grey),
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 8, horizontal: 12),
@@ -299,17 +383,17 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                     ],
                   ),
                 ),
-                // Listado de Artículos
+                // Listado de Talentos
                 Expanded(
-                  child: filteredItems.isEmpty
+                  child: filteredTalentos.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inventory_2_outlined,
+                              Icon(Icons.star_outline,
                                   size: 56, color: Colors.grey.shade300),
                               const SizedBox(height: 12),
-                              Text('No se encontraron artículos',
+                              Text('No se encontraron talentos',
                                   style: TextStyle(color: kTextGray)),
                             ],
                           ),
@@ -319,29 +403,29 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                           color: kPrimary,
                           child: ListView.builder(
                             padding: const EdgeInsets.all(12),
-                            itemCount: filteredItems.length,
+                            itemCount: filteredTalentos.length,
                             itemBuilder: (_, i) {
-                              final item = filteredItems[i];
-                               final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
-                               final int statusVal = int.tryParse(item['estatus']?.toString() ?? '') ?? 0;
+                              final item = filteredTalentos[i];
+                              final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
+                              final int statusVal = int.tryParse(item['estatus']?.toString() ?? '') ?? 0;
 
-                               // Mapeo exacto de estados de la web
-                               final String statusText = statusVal == 1
-                                   ? 'Activo'
-                                   : (statusVal == 2 ? 'Inactivo' : 'Pausado');
-                               final Color badgeColor = statusVal == 1
-                                   ? Colors.green
-                                   : (statusVal == 2
-                                       ? Colors.red
-                                       : Colors.yellow.shade800);
+                              // Mapeo exacto de estados de la web
+                              final String statusText = statusVal == 1
+                                  ? 'Activo'
+                                  : (statusVal == 2 ? 'Inactivo' : 'Pausado');
+                              final Color badgeColor = statusVal == 1
+                                  ? Colors.green
+                                  : (statusVal == 2
+                                      ? Colors.red
+                                      : Colors.yellow.shade800);
 
-                               final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
-                               final String transText = transVal == 1
-                                   ? 'Venta'
-                                   : (transVal == 2
-                                       ? 'Intercambio'
-                                       : 'Ambos');
-                               final String pubDate = _formatDate(item['fecha']);
+                              final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
+                              final String transText = transVal == 1
+                                  ? 'Venta'
+                                  : (transVal == 2
+                                      ? 'Intercambio'
+                                      : 'Ambos');
+                              final String pubDate = _formatDate(item['fecha']);
 
                               return GestureDetector(
                                 onTap: () => Navigator.push(
@@ -359,7 +443,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // Imagen con Lightbox (Al presionar abre visor)
+                                      // Imagen con Lightbox
                                       GestureDetector(
                                         onTap: () {
                                           final rawUrl =
@@ -382,7 +466,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Información Completa
+                                      // Información
                                       Expanded(
                                         child: Padding(
                                           padding: const EdgeInsets.all(10),
@@ -442,7 +526,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                                 ],
                                               ),
                                               const SizedBox(height: 5),
-                                              // Precio, Tipo de Transacción y Fecha
+                                              // Precio, Tipo y Fecha
                                               Row(
                                                 mainAxisAlignment:
                                                     MainAxisAlignment
@@ -452,7 +536,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                                     'RD\$ ${_formatPrice(item['valor'])}',
                                                     style: const TextStyle(
                                                         fontSize: 13,
-                                                        color: kPrimary,
+                                                        color: kSecondary,
                                                         fontWeight:
                                                             FontWeight.bold),
                                                   ),
@@ -478,7 +562,7 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (_) =>
-                                                  PublicarArticuloScreen(
+                                                  PublicarTalentoScreen(
                                                       itemId: itemId),
                                             ),
                                           );

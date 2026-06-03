@@ -1,5 +1,12 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'api_client.dart';
+
+/// Cache en memoria del perfil del usuario autenticado
+/// para evitar llamadas HTTP a /auth/me en cada pantalla
+Map<String, dynamic>? _cachedUser;
+DateTime?             _userCachedAt;
+const Duration        _userCacheTtl = Duration(minutes: 5);
 
 class AuthService {
   static Future<Map<String, dynamic>> login(String email, String password) async {
@@ -8,6 +15,9 @@ class AuthService {
       final body = jsonDecode(res.body);
       if (res.statusCode == 200) {
         await ApiClient.saveToken(body['token']);
+        await ApiClient.saveUser(body['user']);
+        _cachedUser    = body['user'];
+        _userCachedAt  = DateTime.now();
         return {'success': true, 'user': body['user']};
       }
       final errors = body['errors'] ?? {};
@@ -23,6 +33,9 @@ class AuthService {
     final body = jsonDecode(res.body);
     if (res.statusCode == 201) {
       await ApiClient.saveToken(body['token']);
+      await ApiClient.saveUser(body['user']);
+      _cachedUser   = body['user'];
+      _userCachedAt = DateTime.now();
       return {'success': true, 'user': body['user']};
     }
     final errors = body['errors'] ?? {};
@@ -31,14 +44,70 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    _cachedUser   = null;
+    _userCachedAt = null;
     await ApiClient.post('/auth/logout', {}, auth: true);
     await ApiClient.deleteToken();
+    await ApiClient.deleteUser();
   }
 
-  static Future<Map<String, dynamic>?> me() async {
-    final res = await ApiClient.get('/auth/me', auth: true);
-    if (res.statusCode == 200) return jsonDecode(res.body);
+  /// Retorna datos del usuario — usa cache en memoria (5 min TTL) para evitar
+  /// llamadas repetitivas a /auth/me en cada pantalla que carga el perfil.
+  /// Implementa Cache-First para cargar instantáneamente de disco local (SecureStorage).
+  static Future<Map<String, dynamic>?> me({bool forceRefresh = false}) async {
+    // Verificar si hay token rápidamente (en memoria)
+    final token = await ApiClient.getToken();
+    if (token == null) return null;
+
+    // Retornar del cache si es válido y fresco
+    if (!forceRefresh && _cachedUser != null && _userCachedAt != null) {
+      if (DateTime.now().difference(_userCachedAt!) < _userCacheTtl) {
+        return _cachedUser;
+      }
+    }
+
+    // Cache-First: Si no está en memoria, intentar leer de SecureStorage de inmediato
+    if (!forceRefresh && _cachedUser == null) {
+      final savedUser = await ApiClient.getUser();
+      if (savedUser != null) {
+        _cachedUser = savedUser;
+        _userCachedAt = DateTime.now(); // marcamos temporalmente como fresco
+        // Lanzamos la actualización de red en segundo plano de forma asíncrona
+        _refreshUserBackground();
+        return _cachedUser; // Respuesta instantánea en 0ms!
+      }
+    }
+
+    // De lo contrario, hacer la consulta síncrona real
+    return await _fetchUserFromApi();
+  }
+
+  static Future<Map<String, dynamic>?> _fetchUserFromApi() async {
+    final res = await ApiClient.get('/auth/me', auth: true, useCache: false);
+    if (res.statusCode == 200) {
+      try {
+        final user = jsonDecode(res.body) as Map<String, dynamic>;
+        _cachedUser   = user;
+        _userCachedAt = DateTime.now();
+        await ApiClient.saveUser(user);
+        return _cachedUser;
+      } catch (e) {
+        return null;
+      }
+    }
     return null;
+  }
+
+  static Future<void> _refreshUserBackground() async {
+    try {
+      await _fetchUserFromApi();
+    } catch (_) {}
+  }
+
+  /// Fuerza recarga del perfil (usar después de actualizar perfil)
+  static void invalidateUserCache() {
+    _cachedUser   = null;
+    _userCachedAt = null;
   }
 
   static Future<bool> isLoggedIn() async {
@@ -46,12 +115,41 @@ class AuthService {
     return token != null;
   }
 
-  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
-    final res = await ApiClient.post('/auth/profile', data, auth: true);
+  static Future<Map<String, dynamic>> updateProfile(
+    Map<String, String> data, {
+    http.MultipartFile? profilePhoto,
+  }) async {
+    final res = await ApiClient.multipartPost(
+      '/auth/profile',
+      data,
+      auth: true,
+      mainImage: profilePhoto,
+    );
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) {
+      // Actualizar cache
+      _cachedUser   = body['user'];
+      _userCachedAt = DateTime.now();
+      await ApiClient.saveUser(body['user']);
       return {'success': true, 'user': body['user']};
     }
     return {'success': false, 'message': body['message'] ?? 'Error al actualizar el perfil.'};
+  }
+
+  static Future<Map<String, dynamic>> loginWithGoogle(Map<String, dynamic> googleData) async {
+    try {
+      final res = await ApiClient.post('/auth/google', googleData);
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        await ApiClient.saveToken(body['token']);
+        await ApiClient.saveUser(body['user']);
+        _cachedUser   = body['user'];
+        _userCachedAt = DateTime.now();
+        return {'success': true, 'user': body['user']};
+      }
+      return {'success': false, 'message': body['message'] ?? 'Error al iniciar sesión con Google'};
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor.'};
+    }
   }
 }

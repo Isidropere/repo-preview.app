@@ -34,41 +34,18 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'stripe' => [
-        'key'    => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-    ],
 
     /*
     |--------------------------------------------------------------------------
-    | CardNet / Ztrans (República Dominicana)
+    | Azul (Banco Popular Dominicano)
     |--------------------------------------------------------------------------
-    | CARDNET_ENV=QA          → usa labservicios.cardnet.com.do (pruebas)
-    | CARDNET_ENV=production  → usa ecommerce.cardnet.com.do
-    |
-    | Datos de QA por defecto (del documento de integración):
-    |   merchant_id = 349041263
-    |   terminal_id = 77777777
-    |   currency    = 214 (DOP)
     */
-    'cardnet' => [
-        'env'         => env('CARDNET_ENV', 'QA'),
-        'merchant_id' => env('CARDNET_MERCHANT_ID', ''),
-        'terminal_id' => env('CARDNET_TERMINAL_ID', ''),
-        'token'       => env('CARDNET_TOKEN', ''),
-        'environment' => env('CARDNET_ENVIRONMENT', 'ECommerce'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Driver de pago activo
-    |--------------------------------------------------------------------------
-    | Cambia PAYMENT_DRIVER en .env para alternar entre proveedores:
-    |   PAYMENT_DRIVER=cardnet   → CardNet/Ztrans
-    |   PAYMENT_DRIVER=stripe    → Stripe
-    */
-    'payment' => [
-        'driver' => env('PAYMENT_DRIVER', 'cardnet'),
+    'azul' => [
+        'env'         => env('AZUL_ENV', 'QA'),
+        'store'       => env('AZUL_STORE', ''),
+        'auth1'       => env('AZUL_AUTH1', ''),
+        'auth2'       => env('AZUL_AUTH2', ''),
+        'channel'     => env('AZUL_CHANNEL', 'EC'),
     ],
 
     // ── OAuth Social Login ──────────────────────────────────────────────────

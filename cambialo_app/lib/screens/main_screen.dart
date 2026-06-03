@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import '../core/api_client.dart';
 import '../core/theme.dart';
+import '../core/auth_service.dart';
 import 'home_screen.dart';
 import 'items_list_screen.dart';
 import 'carrito_screen.dart';
 import 'cuenta_screen.dart';
+import 'login_screen.dart';
 
 /// Pantalla principal con Bottom Navigation Bar
-/// Igual que la web: Home | Intercambio | Comprar | Carrito | Mi cuenta
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
   @override
@@ -15,31 +19,126 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _index = 0;
+  int _authKey = 0;
+  bool _lastAuthState = false;
+  
+  int _cartCount = 0;
+  int _intercambiosCount = 0;
+  int _notifCount = 0;
+  Timer? _badgeTimer;
 
-  final _screens = const [
-    HomeScreen(),
-    ItemsListScreen(tipo: 2),   // Intercambio
-    ItemsListScreen(tipo: 1),   // Comprar
-    CarritoScreen(),
-    CuentaScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStateInit();
+    _loadBadges();
+    _badgeTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadBadges());
+  }
+
+  Future<void> _checkAuthStateInit() async {
+    _lastAuthState = await AuthService.isLoggedIn();
+  }
+
+  @override
+  void dispose() {
+    _badgeTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadBadges() async {
+    if (!await AuthService.isLoggedIn()) {
+      if (_cartCount != 0 || _intercambiosCount != 0 || _notifCount != 0) {
+        if (mounted) setState(() { _cartCount = 0; _intercambiosCount = 0; _notifCount = 0; });
+      }
+      return;
+    }
+    try {
+      final res = await ApiClient.get('/auth/badges', auth: true, useCache: false);
+      if (res.statusCode == 200 && mounted) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _cartCount = data['cart'] ?? 0;
+          _intercambiosCount = data['intercambios'] ?? 0;
+          _notifCount = data['notificaciones'] ?? 0;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _onTabTapped(int i) async {
+    if (i == 3 || i == 4) {
+      final isLoggedIn = await AuthService.isLoggedIn();
+      if (!isLoggedIn) {
+        if (!mounted) return;
+        final loggedIn = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        if (loggedIn == true) {
+          if (mounted) {
+            setState(() {
+              _index = i;
+              _lastAuthState = true;
+              _authKey++;
+            });
+            _loadBadges();
+          }
+        }
+        return;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _index = i);
+    }
+    AuthService.isLoggedIn().then((isLoggedIn) {
+       if (isLoggedIn != _lastAuthState) {
+          if (mounted) {
+             setState(() {
+                _lastAuthState = isLoggedIn;
+                _authKey++;
+             });
+          }
+       }
+    }).catchError((_) {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeScreen(key: ValueKey('home_$_authKey')),
+      ItemsListScreen(key: ValueKey('inter_$_authKey'), tipo: 2),
+      ItemsListScreen(key: ValueKey('comp_$_authKey'), tipo: 1),
+      CarritoScreen(key: ValueKey('cart_$_authKey')),
+      CuentaScreen(key: ValueKey('cuenta_$_authKey')),
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: IndexedStack(index: _index, children: screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: _onTabTapped,
         backgroundColor: Colors.white,
         indicatorColor: kPrimary.withOpacity(0.12),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: kPrimary), label: 'Inicio'),
-          NavigationDestination(icon: Icon(Icons.swap_horiz_outlined), selectedIcon: Icon(Icons.swap_horiz, color: kPrimary), label: 'Intercambiar'),
-          NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Comprar'),
-          NavigationDestination(icon: Icon(Icons.shopping_cart_outlined), selectedIcon: Icon(Icons.shopping_cart, color: kPrimary), label: 'Carrito'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: kPrimary), label: 'Mi cuenta'),
+        destinations: [
+          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: kPrimary), label: 'Inicio'),
+          NavigationDestination(
+            icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined)),
+            selectedIcon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz, color: kPrimary)),
+            label: 'Intercambiar',
+          ),
+          const NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Comprar'),
+          NavigationDestination(
+            icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined)),
+            selectedIcon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart, color: kPrimary)),
+            label: 'Carrito',
+          ),
+          NavigationDestination(
+            icon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person_outline)),
+            selectedIcon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person, color: kPrimary)),
+            label: 'Mi cuenta',
+          ),
         ],
       ),
     );

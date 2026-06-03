@@ -17,7 +17,6 @@
         "predis/predis": "^3.4",
         "spatie/laravel-image-optimizer": "^1.8",
         "spatie/laravel-medialibrary": "^11.22",
-        "stripe/stripe-php": "^17.6",
         "tymon/jwt-auth": "^2.2",
         "vinkla/hashids": "^12.0"
     },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
 import 'main_screen.dart';
@@ -48,9 +49,101 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (_) => false,
+      );
     } else {
       setState(() => _error = result['message']);
+    }
+  }
+
+  Future<void> _loginGoogle() async {
+    if (_loading) return;
+    setState(() { _loading = true; _error = null; });
+
+    final Map<String, dynamic>? selectedAccount = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        final accounts = [
+          {
+            'google_id': 'google_isidro_perez_777',
+            'email': 'isidro.perez.google@gmail.com',
+            'nombres': 'Isidro',
+            'apellidos': 'Pérez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Isidro+Perez&background=4285F4&color=fff&size=128',
+          },
+          {
+            'google_id': 'google_juan_rod_888',
+            'email': 'juan.rodriguez.google@gmail.com',
+            'nombres': 'Juan',
+            'apellidos': 'Rodríguez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Juan+Rodriguez&background=34A853&color=fff&size=128',
+          },
+          {
+            'google_id': 'google_maria_gomez_999',
+            'email': 'maria.gomez.google@gmail.com',
+            'nombres': 'María',
+            'apellidos': 'Gómez',
+            'profile_photo_url': 'https://ui-avatars.com/api/?name=Maria+Gomez&background=EA4335&color=fff&size=128',
+          },
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Regístrate con Google',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Selecciona una cuenta para continuar en Cambialord',
+                style: TextStyle(fontSize: 12, color: kTextGray),
+              ),
+              const Divider(height: 24),
+              ...accounts.map((acc) => ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(acc['profile_photo_url']!),
+                ),
+                title: Text('${acc['nombres']} ${acc['apellidos']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text(acc['email']!, style: const TextStyle(fontSize: 12)),
+                onTap: () => Navigator.pop(context, acc),
+              )),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedAccount == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    try {
+      final result = await AuthService.loginWithGoogle(selectedAccount);
+      setState(() => _loading = false);
+      if (result['success']) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (_) => false,
+        );
+      } else {
+        setState(() => _error = result['message']);
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'No se pudo conectar al servidor. Verifica que esté corriendo.';
+      });
     }
   }
 
@@ -65,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               // Logo
               Image.network(
-                'http://10.0.2.2:8000/imgs/logoTypes/logoFooter.png',
+                '${kBaseUrl.replaceAll('/api', '')}/imgs/logoTypes/logoFooter.png',
                 height: 80,
                 errorBuilder: (_, __, ___) => const Text(
                   'Cambialord',
@@ -107,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // Botón Google
                       OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: _loading ? null : _loginGoogle,
                         icon: const Icon(Icons.g_mobiledata, color: Color(0xFF4285F4), size: 22),
                         label: const Text('Regístrate con Google',
                             style: TextStyle(color: kTextDark, fontSize: 13)),

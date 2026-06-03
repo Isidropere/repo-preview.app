@@ -59,7 +59,7 @@ class TalentoRegistroPagoService
         $monto = (float) $config->monto_registro;
 
         // 4. Preparar datos de tarjeta y cobrar
-        $datosTarjeta = $tarjeta->datosCardnet($cvv);
+        $datosTarjeta = $tarjeta->datosDriver($cvv);
         $opciones = [
             'client_ip'        => $clientIp,
             'invoice_number'   => 'TAL' . Str::random(10),

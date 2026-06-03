@@ -13,16 +13,10 @@ class ProcesarPagoRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        return [
             'id_tarjeta' => 'required|string',
+            'cvv'        => 'required|string|min:3|max:4',
         ];
-
-        // CVV requerido solo para CardNet
-        if (config('services.payment.driver', 'cardnet') === 'cardnet') {
-            $rules['cvv'] = 'required|string|min:3|max:4';
-        }
-
-        return $rules;
     }
 
     public function messages(): array

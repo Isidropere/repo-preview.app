@@ -36,6 +36,7 @@ class CarritoService
         $carritos = Carrito::where('id_user', $userId)
             ->with([
                 'itemsIntencionCompra.item.categoria',
+                'itemsIntencionCompra.item.usuario.direcciones' => fn($q) => $q->where('es_predeterminada', 1)->with(['municipio', 'provincia']),
                 'itemsIntencionCompra.imagenes',
                 'itemsIntencionCompra.inventario',
                 'itemsIntencionCompra.color',
@@ -50,6 +51,36 @@ class CarritoService
 
         // Combinar items de todos los carritos para la vista
         $todosLosItems = $carritos->flatMap(fn($c) => $c->itemsIntencionCompra);
+
+        // Enriquecer items de tipo servicio con información de solicitudes y proveedores
+        foreach ($todosLosItems as $itemIntencion) {
+            if ($itemIntencion->item && (int) $itemIntencion->item->id_categoria_item === 29) {
+                $solicitudItem = \App\Models\SolicitudServicio::where('id_comprador', $userId)
+                    ->where('id_item', $itemIntencion->id_item)
+                    ->latest('fecha_creacion')
+                    ->first();
+                $itemIntencion->setAttribute('estado_solicitud', $solicitudItem?->estado ?? null);
+                $itemIntencion->setAttribute('id_solicitud', $solicitudItem?->id_solicitud ?? null);
+
+                // Obtener datos del proveedor
+                $proveedor = $itemIntencion->item->usuario;
+                if ($proveedor) {
+                    $dirProv = $proveedor->direcciones->first(); // Ya está filtrado por es_predeterminada = 1
+                    $itemIntencion->setAttribute('proveedor_info', [
+                        'nombre'          => trim(($proveedor->nombres ?? '') . ' ' . ($proveedor->apellidos ?? '')),
+                        'municipio'       => $dirProv?->municipio?->municipio ?? 'Ubicación no disponible',
+                        'provincia'       => $dirProv?->municipio?->provincia?->provincia ?? '',
+                        'calle'           => $dirProv?->calle ?? '',
+                        'N_casa_edificio' => $dirProv?->N_casa_edificio ?? '',
+                        'apto'            => $dirProv?->apto ?? '',
+                        'geolocalizacion' => $dirProv?->geolocalizacion ?? '',
+                    ]);
+                } else {
+                    $itemIntencion->setAttribute('proveedor_info', null);
+                }
+            }
+        }
+
         $totales = $this->calcularTotales($todosLosItems);
 
         return [

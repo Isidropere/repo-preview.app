@@ -4,7 +4,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
-import 'propuesta_intercambio_screen.dart';
+import '../widgets/item_image.dart';
+import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
+import 'login_screen.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -38,11 +40,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Future<void> _addToCart() async {
     final loggedIn = await AuthService.isLoggedIn();
     if (!loggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Inicia sesión para agregar al carrito'),
-        backgroundColor: Colors.red,
-      ));
-      return;
+      if (!mounted) return;
+      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+      if (result != true) return;
     }
     setState(() => _addingToCart = true);
     final res = await ApiClient.post('/carrito/agregar',
@@ -61,12 +61,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (_item == null) return const Scaffold(body: Center(child: Text('Producto no encontrado')));
 
     final imagenes = _item!['imagenes'] as List? ?? [];
-    final condicion = switch (_item!['condicion']) {
+    final condVal = int.tryParse(_item!['condicion']?.toString() ?? '') ?? 0;
+    final condicion = switch (condVal) {
       1 => 'Nuevo',
       2 => 'Como nuevo',
       _ => 'Usado',
     };
-    final tipoTrans = _item!['tipo_trans'] == 1 ? 'Venta' : 'Intercambio';
+    final tipoTransRaw = int.tryParse(_item!['tipo_trans'].toString()) ?? 0;
+    final esVenta       = tipoTransRaw == 1;
+    final esIntercambio = tipoTransRaw == 2;
+    final esMixto       = tipoTransRaw == 3;
+    final tipoTrans     = esVenta ? 'Venta' : (esMixto ? 'Venta+Intercambio' : 'Intercambio');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -88,18 +93,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             SizedBox(
               height: 280,
               child: imagenes.isEmpty
-                  ? Container(color: Colors.grey.shade100,
-                      child: const Icon(Icons.image, size: 80, color: Colors.grey))
+                  ? ItemImage(item: _item!, width: double.infinity, height: 280)
                   : PageView.builder(
                       itemCount: imagenes.length,
                       onPageChanged: (i) => setState(() => _imgIndex = i),
-                      itemBuilder: (_, i) => CachedNetworkImage(
-                        imageUrl: imagenes[i]['image_url'] ?? '',
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(color: Colors.grey.shade100),
-                        errorWidget: (_, __, ___) => Container(color: Colors.grey.shade100,
-                            child: const Icon(Icons.image_not_supported, color: Colors.grey)),
-                      ),
+                      itemBuilder: (_, i) {
+                        return ItemImage(
+                          item: _item!,
+                          imageUrl: imagenes[i]['image_url'],
+                          width: double.infinity,
+                          height: 280,
+                        );
+                      },
                     ),
             ),
             if (imagenes.length > 1)
@@ -134,8 +139,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   Text('RD\$ ${_item!['valor']}',
                       style: const TextStyle(fontSize: 20, color: kPrimary, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 12),
-                _badge(tipoTrans, tipoTrans == 'Venta' ? const Color(0xFF1D4ED8) : const Color(0xFF15803D),
-                    tipoTrans == 'Venta' ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4)),
+                _badge(
+                  tipoTrans,
+                  esVenta ? const Color(0xFF1D4ED8) : (esMixto ? Colors.deepPurple : const Color(0xFF15803D)),
+                  esVenta ? const Color(0xFFEFF6FF) : (esMixto ? const Color(0xFFF3E8FF) : const Color(0xFFF0FDF4)),
+                ),
                 const SizedBox(width: 6),
                 _badge(condicion, kTextGray, kBgGray),
               ]),
@@ -169,39 +177,38 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               const Divider(),
               const SizedBox(height: 16),
 
-              // Botón agregar al carrito
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _addingToCart ? null : _addToCart,
-                  icon: _addingToCart
-                      ? const SizedBox(width: 18, height: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                  label: const Text('Agregar al carrito',
-                      style: TextStyle(fontSize: 15, color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kSecondary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              // Botón agregar al carrito (solo para Venta o Mixto)
+              if (esVenta || esMixto)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _addingToCart ? null : _addToCart,
+                    icon: _addingToCart
+                        ? const SizedBox(width: 18, height: 18,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                    label: const Text('Agregar al carrito',
+                        style: TextStyle(fontSize: 15, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kSecondary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
+              if (esVenta || esMixto) const SizedBox(height: 12),
 
-              // Botón negociar (intercambio)
-              if (_item!['tipo_trans'] != 1)
+              // Botón proponer intercambio (para Intercambio o Mixto)
+              if (esIntercambio || esMixto)
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () async {
                       final loggedIn = await AuthService.isLoggedIn();
                       if (!loggedIn) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Inicia sesión para proponer un intercambio'),
-                          backgroundColor: Colors.red,
-                        ));
-                        return;
+                        if (!mounted) return;
+                        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                        if (result != true) return;
                       }
                       Navigator.push(context, MaterialPageRoute(
                         builder: (_) => PropuestaIntercambioScreen(
@@ -221,6 +228,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     ),
                   ),
                 ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final loggedIn = await AuthService.isLoggedIn();
+                    if (!loggedIn) {
+                      if (!mounted) return;
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                      if (result != true) return;
+                    }
+                    if (!mounted) return;
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen()));
+                  },
+                  icon: const Icon(Icons.swap_horiz, color: kPrimary, size: 16),
+                  label: const Text('Ver mis intercambios',
+                      style: TextStyle(color: kPrimary, fontSize: 13)),
+                ),
+              ),
             ]),
           ),
         ]),

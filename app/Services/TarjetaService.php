@@ -38,18 +38,14 @@ class TarjetaService
      */
     public function registrar(int $userId, array $datos): array
     {
-        $driver = config('services.payment.driver', 'cardnet');
+        $datos['last4'] = substr($datos['no_tarjeta'], -4);
+        $datos['mes_expiracion'] = (int) $datos['mes_expiracion'];
 
-        if ($driver !== 'stripe') {
-            $datos['last4'] = substr($datos['no_tarjeta'], -4);
-            $datos['mes_expiracion'] = (int) $datos['mes_expiracion'];
-
-            // La columna en BD se llama año_expiracion (con ñ = \u00F1)
-            if (isset($datos['anio_expiracion'])) {
-                $colAnio = "a\u{00F1}o_expiracion";
-                $datos[$colAnio] = (int) $datos['anio_expiracion'];
-                unset($datos['anio_expiracion']);
-            }
+        // La columna en BD se llama año_expiracion (con ñ = \u00F1)
+        if (isset($datos['anio_expiracion'])) {
+            $colAnio = "a\u{00F1}o_expiracion";
+            $datos[$colAnio] = (int) $datos['anio_expiracion'];
+            unset($datos['anio_expiracion']);
         }
 
         $datos['estatus'] = 1;

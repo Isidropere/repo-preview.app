@@ -426,7 +426,7 @@ class NegociacionController extends Controller
                 $pagoService = app(\App\Services\PagoService::class);
                 $resultadoPago = $pagoService->cobrarTarjeta(
                     (float) $montoACobrar, '214',
-                    $tarjeta->datosCardnet($request->cvv),
+                    $tarjeta->datosDriver($request->cvv),
                     ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
                 );
 

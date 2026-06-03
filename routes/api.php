@@ -29,16 +29,23 @@ use App\Http\Controllers\TarjetaPagoController;
 Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthApiController::class, 'login']);
     Route::post('/register', [AuthApiController::class, 'register']);
+    Route::post('/google',   [AuthApiController::class, 'loginGoogle']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',             [AuthApiController::class, 'logout']);
         Route::get('/me',                  [AuthApiController::class, 'me']);
+        Route::get('/badges',              [AuthApiController::class, 'getBadges']);
         Route::post('/cambiar-contrasena', [AuthApiController::class, 'cambiarContrasena']);
         Route::post('/profile',            [AuthApiController::class, 'updateProfile']);
     });
 });
 
 // ── Productos (públicos) ───────────────────────────────────────────────
+Route::get('/items',          [ItemApiController::class, 'index']);
+Route::get('/items/buscar',   [ItemApiController::class, 'buscar']);
+Route::get('/items/{id}',     [ItemApiController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/categorias',     [ItemApiController::class, 'categorias']);
+Route::get('/colors',         [ItemApiController::class, 'colors']);
 Route::post('/images', [\App\Http\Controllers\ImageController::class, 'store'])->middleware('auth:sanctum');
 
 // ── Ubicación (públicos) ───────────────────────────────────────────────
@@ -54,10 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/agregar',      [CarritoApiController::class, 'agregar']);
         Route::delete('/vaciar',     [CarritoApiController::class, 'vaciar']);
         Route::delete('/{id_item}',  [CarritoApiController::class, 'eliminar']);
+        Route::put('/{itemIntencionId}/cantidad', [CarritoApiController::class, 'actualizarCantidad']);
+        Route::put('/{itemIntencionId}/seleccion', [CarritoApiController::class, 'marcarSeleccionado']);
     });
 
     // Mis artículos (CRUD)
     Route::get('/mis-items',    [ItemApiController::class, 'userItems']);
+    Route::get('/mis-items/{id}', [ItemApiController::class, 'userItemDetail'])->where('id', '[0-9]+');
+    Route::post('/items/{id}/update', [ItemApiController::class, 'update'])->where('id', '[0-9]+');
     Route::post('/items',       [ItemApiController::class, 'store']);
     Route::delete('/items/{id}', [ItemApiController::class, 'destroy'])->where('id', '[0-9]+');
 
@@ -73,8 +84,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/confirmar-emisor', [NegociacionApiController::class, 'confirmarEmisor']);
         Route::post('/{id}/confirmar-receptor', [NegociacionApiController::class, 'confirmarReceptor']);
         Route::post('/{id}/aceptar-como-emisor', [NegociacionApiController::class, 'aceptarComoEmisor']);
+        Route::post('/{id}/aceptar-contraoferta', [NegociacionApiController::class, 'aceptarComoEmisor']);
         Route::post('/{id}/modo-entrega',   [NegociacionApiController::class, 'seleccionarModoEntrega']);
         Route::post('/{id}/confirmar-entrega', [NegociacionApiController::class, 'confirmarEntrega']);
+        Route::post('/{id}/completar',      [NegociacionApiController::class, 'completar']);
         Route::get('/{id}/mensajes',        [NegociacionApiController::class, 'mensajes']);
         Route::post('/{id}/mensajes',       [NegociacionApiController::class, 'enviarMensaje']);
         Route::post('/{id}/pago',           [\App\Http\Controllers\NegociacionController::class, 'procesarPago']);
@@ -93,7 +106,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/hoja-vida',  [HojaVidaApiController::class, 'show']);
     Route::post('/hoja-vida', [HojaVidaApiController::class, 'store']);
 
+    // Talentos
+    Route::get('/talentos/config', function () {
+        return response()->json([
+            'monto_registro' => (float) \App\Models\ConfigTarifaCategoria29::vigente()->monto_registro,
+        ]);
+    });
+    Route::post('/talentos', [ItemApiController::class, 'storeTalento']);
+
+    // Notificaciones
+    Route::prefix('notificaciones')->group(function () {
+        Route::get('/',             [\App\Http\Controllers\NotificationController::class, 'listar']);
+        Route::get('/todas',        [\App\Http\Controllers\NotificationController::class, 'listarTodasApi']);
+        Route::post('/leer-todas',  [\App\Http\Controllers\NotificationController::class, 'marcarTodasLeidasApi']);
+        Route::post('/{id}/leido',  [\App\Http\Controllers\NotificationController::class, 'marcarLeido']);
+    });
+
     // Historial
+
+    // Rating de intercambios
+    Route::post('/rating', function (\Illuminate\Http\Request $request) {
+        $request->validate(['id_miembro' => 'required|integer|exists:users,id', 'rating' => 'required|integer|min:1|max:5']);
+        \App\Models\Rating::create(['id_usuario' => auth()->id(), 'id_miembro' => $request->id_miembro, 'rating' => $request->rating]);
+        return response()->json(['success' => true, 'message' => '¡Gracias por tu calificación!']);
+    });
     Route::get('/historial', function () {
         $userId = auth()->id();
 
@@ -121,6 +157,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Checkout y pagos
     Route::post('/pago/checkout', [PagoApiController::class, 'checkout']);
+
+    // Solicitudes de servicio (aprobación previa al pago de talentos)
+    Route::post('/solicitudes-servicio/enviar', [\App\Http\Controllers\SolicitudServicioController::class, 'enviarDesdeCarrito']);
+    Route::get('/solicitudes-servicio/estado/{idItem}', [\App\Http\Controllers\SolicitudServicioController::class, 'estadoItem']);
 
     // Tarjetas de pago
     Route::prefix('tarjetas')->group(function () {
