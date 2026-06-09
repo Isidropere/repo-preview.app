@@ -153,10 +153,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const status = document.getElementById('statusFilter');
     const type = document.getElementById('typeFilter');
     const items = document.querySelectorAll('.product-item');
+    function normalizar(texto) {
+        return (texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
     function filter() {
-        const q = search.value.toLowerCase(), s = status.value, t = type.value;
+        const q = normalizar(search.value), s = status.value, t = type.value;
         items.forEach(el => {
-            const title = el.querySelector('h3').textContent.toLowerCase();
+            const title = normalizar(el.querySelector('h3').textContent);
             el.style.display = (title.includes(q) && (s === 'all' || el.dataset.status === s) && (t === 'all' || el.dataset.type === t)) ? '' : 'none';
         });
     }

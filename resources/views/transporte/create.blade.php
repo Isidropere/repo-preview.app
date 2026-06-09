@@ -476,9 +476,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('checklist-articulos-container');
     const items = document.querySelectorAll('.articulo-item');
 
+    function normalizar(texto) {
+        return (texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
     function filterArticles() {
         const selectedValue = selectServicio.value;
-        const searchTerm = searchInput.value.trim().toLowerCase();
+        const searchTerm = normalizar(searchInput.value.trim());
         
         if (!selectedValue) {
             container.classList.add('hidden');
@@ -496,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         items.forEach(item => {
             const cat = item.getAttribute('data-category');
-            const nombre = item.querySelector('label').innerText.toLowerCase();
+            const nombre = normalizar(item.querySelector('label').innerText);
             const checkbox = item.querySelector('.articulo-checkbox');
             
             const matchesCategory = (cat === selectedValue || cat === 'ambos');
