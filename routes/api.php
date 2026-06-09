@@ -189,4 +189,22 @@ Route::prefix('delivery')->group(function () {
     });
 });
 
+// Ruta temporal para indexación de Elasticsearch (Laravel Scout) desde el móvil / API
+Route::get('/scout-import-items', function () {
+    try {
+        \Artisan::call('scout:import', [
+            'model' => 'App\Models\Item'
+        ]);
+        return response()->json([
+            'success' => true,
+            'output' => \Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 

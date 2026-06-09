@@ -898,3 +898,15 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'show'])->name('config_tarifa.show');
     Route::put('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'update'])->name('config_tarifa.update');
 });
+
+// Ruta temporal para indexación de Elasticsearch (Laravel Scout)
+Route::get('/scout-import-items', function () {
+    try {
+        \Artisan::call('scout:import', [
+            'model' => 'App\Models\Item'
+        ]);
+        return "<pre>Sincronización exitosa:\n" . \Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "Error al indexar: " . $e->getMessage();
+    }
+});
