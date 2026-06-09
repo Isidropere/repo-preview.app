@@ -35,6 +35,25 @@ class AdminComprasController extends Controller
 
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if ($user->isContableUser() && !$user->isAdmin && !$user->isSuperAdmin) {
+            return view('admin.index', [
+                'tab'                       => 'erp',
+                'totalCompras'              => 0,
+                'totalVentas'               => 0,
+                'totalIntercambios'         => 0,
+                'totalIntencionCompra'      => 0,
+                'totalIntencionIntercambio' => 0,
+                'compras'                   => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'ventas'                    => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'intercambios'              => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'intencionCompra'           => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'intencionIntercambio'      => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'estadosCompra'             => [],
+                'estadosIntercambio'        => [],
+            ]);
+        }
+
         $request->validate([
             'tab'     => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio,intercambios_confirmados',
             'estatus' => 'nullable|string|max:50',

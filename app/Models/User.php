@@ -81,6 +81,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return (bool) ($this->attributes['isSuperAdmin'] ?? false);
     }
 
+    /** Contable: acceso exclusivo al ERP */
+    public function isContableUser(): bool
+    {
+        return (bool) ($this->attributes['isContable'] ?? false);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -101,6 +107,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'isContable' => 'boolean',
         ];
     }
 

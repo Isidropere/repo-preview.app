@@ -14,10 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin'              => \App\Http\Middleware\AdminMiddleware::class,
-            'superadmin'         => \App\Http\Middleware\SuperAdminMiddleware::class,
-            'role'               => \App\Http\Middleware\CheckUserType::class,
-            'throttle.sensitive' => \App\Http\Middleware\ThrottleSensitiveRoutes::class,
+            'admin'                  => \App\Http\Middleware\AdminMiddleware::class,
+            'superadmin'             => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'admin_or_superadmin'    => \App\Http\Middleware\AdminOrSuperAdminMiddleware::class,
+            'superadmin_or_contable' => \App\Http\Middleware\SuperAdminOrContableMiddleware::class,
+            'role'                   => \App\Http\Middleware\CheckUserType::class,
+            'throttle.sensitive'     => \App\Http\Middleware\ThrottleSensitiveRoutes::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
