@@ -21,31 +21,60 @@ class ItemApiController extends Controller
 
         $result = \Cache::remember($cacheKey, 120, function () use ($request) {
             if ($request->filled('q')) {
-                $scout = Item::search($request->q)
-                    ->where('estatus', 1);
+                try {
+                    $scout = Item::search($request->q)
+                        ->where('estatus', 1);
 
-                if ($request->filled('categoria')) {
-                    $scout->where('id_categoria_item', (int) $request->categoria);
-                }
+                    if ($request->filled('categoria')) {
+                        $scout->where('id_categoria_item', (int) $request->categoria);
+                    }
 
-                $query = $scout->query(function ($q) use ($request) {
-                    $q->with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                    $query = $scout->query(function ($q) use ($request) {
+                        $q->with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
+
+                        if ($request->filled('tipo')) {
+                            $tipo = (int) $request->tipo;
+                            if ($tipo === 2) {
+                                $q->whereIn('tipo_trans', [2, 3]);
+                            } elseif ($tipo === 1) {
+                                $q->whereIn('tipo_trans', [1, 3]);
+                            } else {
+                                $q->where('tipo_trans', $tipo);
+                            }
+                        }
+                        $q->latest('fecha');
+                    });
+
+                    $items = $query->paginate(12);
+                } catch (\Throwable $scoutException) {
+                    \Log::warning('Elasticsearch caído o no configurado en API index, usando fallback de DB: ' . $scoutException->getMessage());
+                    
+                    $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                        ->where('estatus', 1)
+                        ->where(function($query) use ($request) {
+                            $query->where('item', 'like', '%' . $request->q . '%')
+                                  ->orWhere('presentacion', 'like', '%' . $request->q . '%');
+                        })
                         ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
 
                     if ($request->filled('tipo')) {
                         $tipo = (int) $request->tipo;
                         if ($tipo === 2) {
-                            $q->whereIn('tipo_trans', [2, 3]);
+                            $query->whereIn('tipo_trans', [2, 3]);
                         } elseif ($tipo === 1) {
-                            $q->whereIn('tipo_trans', [1, 3]);
+                            $query->whereIn('tipo_trans', [1, 3]);
                         } else {
-                            $q->where('tipo_trans', $tipo);
+                            $query->where('tipo_trans', $tipo);
                         }
                     }
-                    $q->latest('fecha');
-                });
 
-                $items = $query->paginate(12);
+                    if ($request->filled('categoria')) {
+                        $query->where('id_categoria_item', $request->categoria);
+                    }
+
+                    $items = $query->latest('fecha')->paginate(12);
+                }
             } else {
                 $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
                     ->where('estatus', 1)
@@ -117,15 +146,31 @@ class ItemApiController extends Controller
         $q = $request->input('q', '');
 
         if (!empty($q)) {
-            $items = Item::search($q)
-                ->where('estatus', 1)
-                ->query(fn($query) => $query->with(['imagenes:id_imagen,id_item,nombre,ruta'])
+            try {
+                $items = Item::search($q)
+                    ->where('estatus', 1)
+                    ->query(fn($query) => $query->with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                        ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
+                        ->latest('fecha')
+                    )
+                    ->take(20)
+                    ->get()
+                    ->map(fn($item) => $this->appendImageUrl($item));
+            } catch (\Throwable $scoutException) {
+                \Log::warning('Elasticsearch caído o no configurado en API buscar, usando fallback de DB: ' . $scoutException->getMessage());
+                
+                $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                    ->where('estatus', 1)
+                    ->where(function($query) use ($q) {
+                        $query->where('item', 'like', '%' . $q . '%')
+                              ->orWhere('presentacion', 'like', '%' . $q . '%');
+                    })
                     ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
                     ->latest('fecha')
-                )
-                ->take(20)
-                ->get()
-                ->map(fn($item) => $this->appendImageUrl($item));
+                    ->limit(20)
+                    ->get()
+                    ->map(fn($item) => $this->appendImageUrl($item));
+            }
         } else {
             $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
                 ->where('estatus', 1)
