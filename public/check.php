@@ -47,6 +47,30 @@ try {
             echo "✅ Columna 'id_emisor' ya es NULLABLE\n";
         }
     }
+
+    // Verificación de Motivos de Devolución
+    if (Schema::hasTable('motivos_devolucion')) {
+        $count = DB::table('motivos_devolucion')->count();
+        echo "✅ Tabla 'motivos_devolucion' detectada ($count motivos registrados)\n";
+    } else {
+        echo "⚠️ Tabla 'motivos_devolucion' NO existe (se ejecutará en la migración)\n";
+    }
+
+    // Verificación de columnas en pagos_compra para Devoluciones
+    if (Schema::hasTable('pagos_compra')) {
+        if (Schema::hasColumn('pagos_compra', 'id_motivo_devolucion')) {
+            echo "✅ Columna 'id_motivo_devolucion' presente en pagos_compra\n";
+        } else {
+            echo "⚠️ Columna 'id_motivo_devolucion' faltante en pagos_compra (se ejecutará en la migración)\n";
+        }
+    }
+
+    // Verificación de logs_pagos
+    if (Schema::hasTable('logs_pagos')) {
+        echo "✅ Tabla 'logs_pagos' detectada\n";
+    } else {
+        echo "⚠️ Tabla 'logs_pagos' NO existe (se ejecutará en la migración)\n";
+    }
 } catch (Throwable $e) {
     echo "⚠️ Advertencia en Hotfixes: " . $e->getMessage() . " (Posiblemente ya aplicados)\n";
 }
