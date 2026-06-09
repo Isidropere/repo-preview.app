@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
@@ -20,6 +21,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _remember    = false;
   bool _obscurePass = true;
   String? _error;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: '888336739336-ti3q4e2ejj4tuf6voeb36bbh5e2fua40.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
+  );
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -50,72 +55,38 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_loading) return;
     setState(() { _loading = true; _error = null; });
 
-    final Map<String, dynamic>? selectedAccount = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (context) {
-        final accounts = [
-          {
-            'google_id': 'google_isidro_perez_777',
-            'email': 'isidro.perez.google@gmail.com',
-            'nombres': 'Isidro',
-            'apellidos': 'Pérez',
-            'profile_photo_url': 'https://ui-avatars.com/api/?name=Isidro+Perez&background=4285F4&color=fff&size=128',
-          },
-          {
-            'google_id': 'google_juan_rod_888',
-            'email': 'juan.rodriguez.google@gmail.com',
-            'nombres': 'Juan',
-            'apellidos': 'Rodríguez',
-            'profile_photo_url': 'https://ui-avatars.com/api/?name=Juan+Rodriguez&background=34A853&color=fff&size=128',
-          },
-          {
-            'google_id': 'google_maria_gomez_999',
-            'email': 'maria.gomez.google@gmail.com',
-            'nombres': 'María',
-            'apellidos': 'Gómez',
-            'profile_photo_url': 'https://ui-avatars.com/api/?name=Maria+Gomez&background=EA4335&color=fff&size=128',
-          },
-        ];
-
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Acceder con Google',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Selecciona una cuenta para continuar en Cambialord',
-                style: TextStyle(fontSize: 12, color: kTextGray),
-              ),
-              const Divider(height: 24),
-              ...accounts.map((acc) => ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(acc['profile_photo_url']!),
-                ),
-                title: Text('${acc['nombres']} ${acc['apellidos']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                subtitle: Text(acc['email']!, style: const TextStyle(fontSize: 12)),
-                onTap: () => Navigator.pop(context, acc),
-              )),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (selectedAccount == null) {
-      setState(() => _loading = false);
-      return;
-    }
     try {
+      // 1. Iniciar flujo nativo de Google Sign-In
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        // El usuario canceló la autenticación
+        setState(() => _loading = false);
+        return;
+      }
+
+      // 2. Extraer datos del perfil
+      final String googleId = googleUser.id;
+      final String email = googleUser.email;
+      final String nombres = googleUser.displayName ?? '';
+      
+      // Separar nombres y apellidos
+      final nameParts = nombres.split(' ');
+      final String firstName = nameParts.isNotEmpty ? nameParts[0] : nombres;
+      final String lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+      final Map<String, dynamic> selectedAccount = {
+        'google_id': googleId,
+        'email': email,
+        'nombres': firstName,
+        'apellidos': lastName,
+        'profile_photo_url': googleUser.photoUrl,
+      };
+
+      // 3. Enviar datos al API de Laravel
       final result = await AuthService.loginWithGoogle(selectedAccount);
       setState(() => _loading = false);
+      
       if (result['success']) {
         if (!mounted) return;
         Navigator.pushAndRemoveUntil(
@@ -129,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = 'No se pudo conectar al servidor. Verifica que esté corriendo.';
+        _error = 'Error de inicio de sesión con Google: $e';
       });
     }
   }

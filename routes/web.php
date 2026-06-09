@@ -169,25 +169,15 @@ Route::get('/migrate-images', function () {
 });
 
 Route::get('/debug-paths', function () {
-    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? base_path();
-    $targetFile = 'item_25_20260602141235_EZGf2lH4kJ.jpg';
-    $foundPaths = [];
-    
-    try {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docRoot, RecursiveDirectoryIterator::SKIP_DOTS));
-        foreach ($iterator as $file) {
-            if ($file->getFilename() === $targetFile) {
-                $foundPaths[] = $file->getPathname();
-            }
-        }
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage(), 'doc_root' => $docRoot]);
-    }
+    $symlink = public_path('storage');
+    $isLink = is_link($symlink);
+    $target = $isLink ? readlink($symlink) : 'Not a link';
     
     return response()->json([
-        'docRoot' => $docRoot,
-        'target' => $targetFile,
-        'found_at' => $foundPaths
+        'docRoot' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
+        'public_storage_is_link' => $isLink,
+        'public_storage_target' => $target,
+        'image_exists_locally_in_storage' => file_exists(storage_path('app/public/imgs/articulos/items/item_25_20260602141235_EZGf2lH4kJ.jpg'))
     ]);
 });
 
@@ -308,6 +298,8 @@ Route::get('/contraseña', function () {
 })->name('contraseña');
 
 Route::get('/historial', [\App\Http\Controllers\HistorialController::class, 'index'])->middleware('auth')->name('historial');
+Route::get('/historial/compra/{id}/invoice', [\App\Http\Controllers\HistorialController::class, 'descargarFactura'])->middleware('auth')->name('historial.factura');
+Route::post('/historial/devolucion/{id}', [\App\Http\Controllers\HistorialController::class, 'procesarDevolucion'])->middleware('auth')->name('historial.devolucion');
 
 Route::get('/items/search_header', [ItemController::class, 'search_header'])->middleware('throttle:30,1')->name('items.search_header');
 // /buscar redirige a search_header (consolidado)
@@ -326,11 +318,10 @@ Route::get('distritos-municipales', [DistritoMunicipalController::class, 'index'
 Route::get('/intercambio', [ItemController::class, 'showItemsTipo2y3'])->middleware('throttle:60,1')->name('intercambio');
 Route::get('/compras', [ItemController::class, 'showItemsTipo1'])->middleware('throttle:60,1')->name('compra');
 
-
-
-
-
-
+// Ruta de compatibilidad para enlaces antiguos compartidos desde la app móvil (sin prefijo items)
+Route::get('/producto/{slug}', function ($slug) {
+    return redirect()->to('/items/producto/' . $slug, 301);
+});
 
 Route::prefix('items')->group(function () {
     Route::get('/', [ItemController::class, 'index'])->name('items.index');
@@ -755,6 +746,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // --- GESTIÓN EMPRESARIAL (Super Admin) ---
     Route::prefix('erp')->name('erp.')->group(function () {
+        Route::get('/historial/pdf', [ERPController::class, 'descargarHistorialPdf'])->name('historial.pdf');
+        Route::get('/historial', [ERPController::class, 'historialTransacciones'])->name('historial');
         Route::get('/contabilidad', [ERPController::class, 'contabilidad'])->name('contabilidad');
         Route::post('/contabilidad/asiento', [ERPController::class, 'storeAsiento'])->name('contabilidad.asiento');
         Route::get('/contabilidad/asientos/{id}/detalle', [ERPController::class, 'detalleAsiento'])->name('contabilidad.asiento.detalle');
@@ -791,6 +784,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/notificaciones', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'index'])->name('notificaciones.index');
     Route::post('/notificaciones/enviar', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviar'])->name('notificaciones.enviar');
     Route::get('/notificaciones/buscar-usuarios', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'buscarUsuarios'])->name('notificaciones.buscar');
+    Route::get('/notificaciones/categorias', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'indexCategorias'])->name('notificaciones.categorias');
+    Route::post('/notificaciones/enviar-directa', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviarDirecta'])->name('notificaciones.enviarDirecta');
 
     // Panel de aprobación de imágenes (accesible por admin y superadmin)
     Route::prefix('imagenes')->name('imagenes.')->group(function () {
@@ -806,6 +801,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 // Rutas exclusivas de superadmin
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    // Motivos de Devolución (CRUD Super Admin)
+    Route::resource('motivos-devolucion', \App\Http\Controllers\Admin\AdminMotivosDevolucionController::class)->names('motivos_devolucion');
+
     // Dashboard de estadísticas
     Route::get('/estadisticas', [AdminStatsController::class, 'index'])->name('stats.index');
     Route::get('/estadisticas/data', [AdminStatsController::class, 'data'])->name('stats.data');

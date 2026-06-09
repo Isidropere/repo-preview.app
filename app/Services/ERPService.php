@@ -33,6 +33,106 @@ class ERPService
     }
 
     /**
+     * Registra la contabilidad, inventario y caja en reversa para una venta cancelada/devuelta.
+     */
+    public function procesarVentaCancelada(PagoCompra $pagoCompra)
+    {
+        try {
+            DB::transaction(function () use ($pagoCompra) {
+                $this->revertirAsientoContable($pagoCompra);
+                $this->registrarMovimientosInventarioCancelacion($pagoCompra);
+                $this->registrarReversionCaja($pagoCompra);
+            });
+        } catch (\Exception $e) {
+            Log::error('Error en ERPService al procesar cancelación de venta: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reversa el asiento contable de la venta.
+     */
+    private function revertirAsientoContable(PagoCompra $pagoCompra)
+    {
+        $asiento = ContDiario::create([
+            'fecha'           => now(),
+            'concepto'        => "Reversión por cancelación de venta - Orden #{$pagoCompra->id_pago_compra}",
+            'total_debe'      => $pagoCompra->total,
+            'total_haber'     => $pagoCompra->total,
+            'referencia_tipo' => 'pago_compra',
+            'referencia_id'   => $pagoCompra->id_pago_compra,
+            'estado'          => 'asentado',
+            'id_usuario_crea' => auth()->id() ?? 1,
+        ]);
+
+        $ctaBanco   = ContCuenta::where('codigo', '1.1.01.02')->first(); // Banco Operativo
+        $ctaIngreso = ContCuenta::where('codigo', '4.1')->first();      // Ingresos por Ventas
+
+        if ($ctaBanco && $ctaIngreso) {
+            // DEBE: Ingresos (Disminuye el ingreso)
+            ContDiarioDetalle::create([
+                'id_diario' => $asiento->id,
+                'id_cuenta' => $ctaIngreso->id,
+                'debe'      => $pagoCompra->total,
+                'haber'     => 0,
+            ]);
+
+            // HABER: Banco (Disminuye el activo)
+            ContDiarioDetalle::create([
+                'id_diario' => $asiento->id,
+                'id_cuenta' => $ctaBanco->id,
+                'debe'      => 0,
+                'haber'     => $pagoCompra->total,
+            ]);
+        }
+    }
+
+    /**
+     * Registra movimientos de entrada en inventario (devolución al almacén).
+     */
+    private function registrarMovimientosInventarioCancelacion(PagoCompra $pagoCompra)
+    {
+        $almacen = Almacen::first();
+        if (!$almacen) return;
+
+        foreach ($pagoCompra->pagoItems as $pagoItem) {
+            $item = $pagoItem->item;
+            if ($item) {
+                InventarioMovimiento::create([
+                    'id_item'         => $item->id_item,
+                    'id_almacen'      => $almacen->id,
+                    'tipo'            => 'entrada',
+                    'cantidad'        => $pagoItem->cantidad,
+                    'costo_unitario'  => $pagoItem->precio_unitario,
+                    'motivo'          => "Entrada por devolución/cancelación de venta - Orden #{$pagoCompra->id_pago_compra}",
+                    'referencia_tipo' => 'pago_compra',
+                    'referencia_id'   => $pagoCompra->id_pago_compra,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Reversa la entrada de efectivo en caja.
+     */
+    private function registrarReversionCaja(PagoCompra $pagoCompra)
+    {
+        $sesion = CajaSesion::where('estado', 'abierta')->first();
+        if (!$sesion) return;
+
+        CajaTransaccion::create([
+            'id_sesion'       => $sesion->id,
+            'tipo'            => 'egreso',
+            'monto'           => $pagoCompra->total,
+            'concepto'        => "Devolución/cancelación de venta - Orden #{$pagoCompra->id_pago_compra}",
+            'referencia_tipo' => 'pago_compra',
+            'referencia_id'   => $pagoCompra->id_pago_compra,
+        ]);
+
+        $sesion->decrement('monto_final_esperado', $pagoCompra->total);
+    }
+
+
+    /**
      * Genera el asiento contable de la venta (Partida Doble).
      * Bancos vs Ingresos por Ventas
      */

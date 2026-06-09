@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../widgets/item_image.dart';
 import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
 import 'login_screen.dart';
+import 'carrito_screen.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -82,7 +83,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CarritoScreen()),
+              );
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -212,9 +221,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       }
                       Navigator.push(context, MaterialPageRoute(
                         builder: (_) => PropuestaIntercambioScreen(
-                          receptorItemId:  _item!['id_item'],
+                          receptorItemId:  int.tryParse(_item!['id_item']?.toString() ?? '') ?? 0,
                           nombreArticulo:  _item!['item'] ?? '',
-                          idCategoriaItem: _item!['id_categoria_item'],
+                          idCategoriaItem: int.tryParse(_item!['id_categoria_item']?.toString() ?? '') ?? 0,
                         ),
                       ));
                     },

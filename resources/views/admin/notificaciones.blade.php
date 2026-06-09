@@ -94,6 +94,21 @@
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none"></textarea>
                 </div>
 
+                {{-- Enviar vía (Canales) --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enviar vía</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="canales[]" value="web" checked class="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/30">
+                            <span class="text-sm text-gray-700">Notificación Web/Móvil</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="canales[]" value="email" checked class="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/30">
+                            <span class="text-sm text-gray-700">Correo Electrónico</span>
+                        </label>
+                    </div>
+                </div>
+
                 <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold rounded-lg bg-secondary text-white hover:bg-hoverSecondary flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     Enviar notificación

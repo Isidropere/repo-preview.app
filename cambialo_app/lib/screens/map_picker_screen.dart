@@ -20,6 +20,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   late LatLng _selectedLocation;
   final MapController _mapController = MapController();
   bool _loadingLocation = false;
+  bool _mapReady = false;
+  LatLng? _pendingLocationMove;
 
   @override
   void initState() {
@@ -47,7 +49,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               setState(() {
                 _selectedLocation = loc;
               });
-              _mapController.move(loc, 14.0);
+              if (_mapReady) {
+                _mapController.move(loc, 14.0);
+              } else {
+                _pendingLocationMove = loc;
+              }
             }
           }
         }
@@ -135,6 +141,13 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             options: MapOptions(
               initialCenter: _selectedLocation,
               initialZoom: 14.0,
+              onMapReady: () {
+                _mapReady = true;
+                if (_pendingLocationMove != null) {
+                  _mapController.move(_pendingLocationMove!, 14.0);
+                  _pendingLocationMove = null;
+                }
+              },
               onTap: (tapPosition, point) {
                 setState(() {
                   _selectedLocation = point;

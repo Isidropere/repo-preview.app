@@ -24,6 +24,14 @@ class ItemIntencionCompra extends Model
         'id_color'
     ];
 
+    protected $casts = [
+        'es_seleccionado' => 'boolean',
+        'cantidad' => 'integer',
+        'id_carrito' => 'integer',
+        'id_item' => 'integer',
+        'id_color' => 'integer',
+    ];
+
     public function carrito()
     {
         return $this->belongsTo(Carrito::class, 'id_carrito', 'id_carrito');

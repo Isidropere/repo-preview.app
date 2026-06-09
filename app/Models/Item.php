@@ -48,6 +48,7 @@ class Item extends Model
     protected $table = 'items';
     protected $primaryKey = 'id_item';
     public $incrementing = true;
+    protected $appends = ['slug'];
     protected $fillable = [
         'id_item',
         'item',

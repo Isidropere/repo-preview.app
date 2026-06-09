@@ -148,12 +148,16 @@ Route::middleware('auth:sanctum')->group(function () {
             ->orderByDesc('id_negociacion')
             ->get();
 
+        $motivos = \App\Models\MotivoDevolucion::where('activo', true)->get();
+
         return response()->json([
             'compras'      => $compras,
             'ventas'       => $ventas,
             'intercambios' => $intercambios,
+            'motivos'      => $motivos,
         ]);
     });
+    Route::post('/historial/devolucion/{id}', [\App\Http\Controllers\HistorialController::class, 'procesarDevolucionApi']);
 
     // Checkout y pagos
     Route::post('/pago/checkout', [PagoApiController::class, 'checkout']);

@@ -33,6 +33,15 @@ class ApiClient {
     return null;
   }
 
+  static bool parseBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is double) return value.toInt() == 1;
+    final String str = value.toString().toLowerCase().trim();
+    return str == '1' || str == 'true';
+  }
+
   static String fixImageUrl(String? url) {
     if (url == null || url.isEmpty) return 'https://via.placeholder.com/150';
     

@@ -15,6 +15,7 @@ import 'items_list_screen.dart';
 import 'main_screen.dart';
 import 'carrito_screen.dart';
 import 'publicar_articulo_screen.dart';
+import 'publicar_talento_screen.dart';
 import 'notificaciones_screen.dart';
 import 'cuenta_screen.dart';
 import 'otras_categorias_screen.dart';
@@ -258,24 +259,56 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final loggedIn = await AuthService.isLoggedIn();
-                            if (!loggedIn) {
-                              if (!mounted) return;
-                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-                              if (result != true) return; // canceló login
-                            }
-                            if (!mounted) return;
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2)));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kSecondary,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                          ),
-                          child: const Text('Solicitar cambio', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final loggedIn = await AuthService.isLoggedIn();
+                                  if (!loggedIn) {
+                                    if (!mounted) return;
+                                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                    if (result != true) return;
+                                  }
+                                  if (!mounted) return;
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarArticuloScreen()));
+                                },
+                                icon: const Icon(Icons.add_shopping_cart, color: Colors.white, size: 16),
+                                label: const Text('Crear producto', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimary,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final loggedIn = await AuthService.isLoggedIn();
+                                  if (!loggedIn) {
+                                    if (!mounted) return;
+                                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                    if (result != true) return;
+                                  }
+                                  if (!mounted) return;
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarTalentoScreen()));
+                                },
+                                icon: const Icon(Icons.psychology, color: Colors.white, size: 16),
+                                label: const Text('Crear talento', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kSecondary,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 2,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ]),
                     ),
@@ -708,7 +741,7 @@ class _ProductCard extends StatelessWidget {
     Future<void> handleShare() async {
       final baseUrl = kBaseUrl.replaceAll('/api', '');
       final slug = item['slug'] ?? itemId.toString();
-      final itemUrl = '$baseUrl/producto/$slug';
+      final itemUrl = '$baseUrl/items/producto/$slug';
       final itemTitle = item['item'] ?? 'Artículo';
       try {
         await SharePlus.instance.share(
