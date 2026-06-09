@@ -1039,28 +1039,57 @@ class ItemController extends Controller
             $perPage = min($perPage, 10);
 
             if ($request->has('q') && !empty($request->q)) {
-                $scout = Item::search($request->q);
-                
-                if ($request->has('categoria')) {
-                    $scout->where('id_categoria_item', (int) $request->categoria);
-                }
-
-                if ($request->has('tipo_trans')) {
-                    $scout->where('tipo_trans', (int) $request->tipo);
-                }
-
-                $query = $scout->query(function ($q) use ($request) {
-                    $q->with(['categoria', 'direcciones', 'imagenes']);
-                    if ($request->has('min_valor') && $request->has('max_valor')) {
-                        $q->whereBetween('valor', [$request->min_valor, $request->max_valor]);
-                    } elseif ($request->has('min_valor')) {
-                        $q->where('valor', '>=', $request->min_valor);
-                    } elseif ($request->has('max_valor')) {
-                        $q->where('valor', '<=', $request->max_valor);
+                try {
+                    $scout = Item::search($request->q);
+                    
+                    if ($request->has('categoria')) {
+                        $scout->where('id_categoria_item', (int) $request->categoria);
                     }
-                });
 
-                return $query->paginate($perPage);
+                    if ($request->has('tipo_trans')) {
+                        $scout->where('tipo_trans', (int) $request->tipo);
+                    }
+
+                    $query = $scout->query(function ($q) use ($request) {
+                        $q->with(['categoria', 'direcciones', 'imagenes']);
+                        if ($request->has('min_valor') && $request->has('max_valor')) {
+                            $q->whereBetween('valor', [$request->min_valor, $request->max_valor]);
+                        } elseif ($request->has('min_valor')) {
+                            $q->where('valor', '>=', $request->min_valor);
+                        } elseif ($request->has('max_valor')) {
+                            $q->where('valor', '<=', $request->max_valor);
+                        }
+                    });
+
+                    return $query->paginate($perPage);
+                } catch (\Throwable $scoutException) {
+                    \Log::warning('Elasticsearch caído o no configurado en search, usando fallback de DB: ' . $scoutException->getMessage());
+                    
+                    $query = Item::query()->with(['categoria', 'direcciones', 'imagenes']);
+                    
+                    $query->where(function($q) use ($request) {
+                        $q->where('item', 'like', '%' . $request->q . '%')
+                          ->orWhere('presentacion', 'like', '%' . $request->q . '%');
+                    });
+
+                    if ($request->has('categoria')) {
+                        $query->where('id_categoria_item', $request->categoria);
+                    }
+
+                    if ($request->has('tipo_trans')) {
+                        $query->where('tipo_trans', $request->tipo);
+                    }
+
+                    if ($request->has('min_valor') && $request->has('max_valor')) {
+                        $query->whereBetween('valor', [$request->min_valor, $request->max_valor]);
+                    } elseif ($request->has('min_valor')) {
+                        $query->where('valor', '>=', $request->min_valor);
+                    } elseif ($request->has('max_valor')) {
+                        $query->where('valor', '<=', $request->max_valor);
+                    }
+
+                    return $query->paginate($perPage);
+                }
             }
 
             $query = Item::query();
@@ -1141,36 +1170,73 @@ class ItemController extends Controller
             $hasSearch = request()->has('search') && !empty(request('search'));
 
             if ($hasSearch) {
-                $scout = Item::search(request('search'))
-                    ->where('id_categoria_item', (int) $id)
-                    ->where('estatus', 1);
+                try {
+                    $scout = Item::search(request('search'))
+                        ->where('id_categoria_item', (int) $id)
+                        ->where('estatus', 1);
 
-                $query = $scout->query(function ($q) {
+                    $query = $scout->query(function ($q) {
+                        switch (request('sort')) {
+                            case 'newest':
+                                $q->orderBy('id_item', 'desc');
+                                break;
+                            case 'oldest':
+                                $q->orderBy('id_item', 'asc');
+                                break;
+                            case 'price_asc':
+                                $q->orderBy('valor', 'asc');
+                                break;
+                            case 'price_desc':
+                                $q->orderBy('valor', 'desc');
+                                break;
+                            case 'name_asc':
+                                $q->orderBy('item', 'asc');
+                                break;
+                            case 'name_desc':
+                                $q->orderBy('item', 'desc');
+                                break;
+                            default:
+                                $q->orderBy('id_item', 'desc');
+                        }
+                    });
+
+                    $items = $query->paginate(12)->appends(request()->query());
+                } catch (\Throwable $scoutException) {
+                    \Log::warning('Elasticsearch caído o no configurado en porCategoria, usando fallback de DB: ' . $scoutException->getMessage());
+                    
+                    $query = Item::where('id_categoria_item', $id)
+                        ->where('estatus', 1)
+                        ->where(function($q) {
+                            $searchTerm = request('search');
+                            $q->where('item', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('presentacion', 'like', '%' . $searchTerm . '%');
+                        });
+
                     switch (request('sort')) {
                         case 'newest':
-                            $q->orderBy('id_item', 'desc');
+                            $query->orderBy('id_item', 'desc');
                             break;
                         case 'oldest':
-                            $q->orderBy('id_item', 'asc');
+                            $query->orderBy('id_item', 'asc');
                             break;
                         case 'price_asc':
-                            $q->orderBy('valor', 'asc');
+                            $query->orderBy('valor', 'asc');
                             break;
                         case 'price_desc':
-                            $q->orderBy('valor', 'desc');
+                            $query->orderBy('valor', 'desc');
                             break;
                         case 'name_asc':
-                            $q->orderBy('item', 'asc');
+                            $query->orderBy('item', 'asc');
                             break;
                         case 'name_desc':
-                            $q->orderBy('item', 'desc');
+                            $query->orderBy('item', 'desc');
                             break;
                         default:
-                            $q->orderBy('id_item', 'desc');
+                            $query->orderBy('id_item', 'desc');
                     }
-                });
 
-                $items = $query->paginate(12)->appends(request()->query());
+                    $items = $query->paginate(12)->appends(request()->query());
+                }
             } else {
                 $query = Item::where('id_categoria_item', $id)->where('estatus', 1);
 
@@ -1431,14 +1497,29 @@ class ItemController extends Controller
             $hasSearch = !empty($searchTerm);
             
             if ($hasSearch) {
-                $items = Item::search($searchTerm)
-                    ->where('estatus', 1)
-                    ->query(fn($q) => $q->whereIn('tipo_trans', [1, 2, 3])
+                try {
+                    $items = Item::search($searchTerm)
+                        ->where('estatus', 1)
+                        ->query(fn($q) => $q->whereIn('tipo_trans', [1, 2, 3])
+                            ->with(['categoria', 'direcciones', 'imagenes'])
+                            ->orderByDesc('fecha')
+                        )
+                        ->paginate(12)
+                        ->appends($request->query());
+                } catch (\Throwable $scoutException) {
+                    \Log::warning('Elasticsearch caído o no configurado en search_header, usando fallback de DB: ' . $scoutException->getMessage());
+                    
+                    $items = Item::where('estatus', 1)
+                        ->whereIn('tipo_trans', [1, 2, 3])
+                        ->where(function($query) use ($searchTerm) {
+                            $query->where('item', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('presentacion', 'like', '%' . $searchTerm . '%');
+                        })
                         ->with(['categoria', 'direcciones', 'imagenes'])
                         ->orderByDesc('fecha')
-                    )
-                    ->paginate(12)
-                    ->appends($request->query());
+                        ->paginate(12)
+                        ->appends($request->query());
+                }
             } else {
                 $items = Item::where('estatus', 1)
                     ->whereIn('tipo_trans', [1, 2, 3])
