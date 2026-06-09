@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import 'negociacion_detalle_screen.dart';
@@ -151,6 +154,65 @@ class _ComprasTab extends StatelessWidget {
     }
   }
 
+  Future<void> _descargarFactura(BuildContext context, String id) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: kPrimary)),
+    );
+
+    try {
+      final res = await ApiClient.get('/historial/compra/$id/invoice', auth: true, useCache: false);
+      if (!context.mounted) return;
+      Navigator.pop(context); // Quitar loader
+
+      if (res.statusCode == 200) {
+        final bytes = res.bodyBytes;
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/factura-compra-$id.pdf');
+        await file.writeAsBytes(bytes);
+
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path, mimeType: 'application/pdf')],
+            subject: 'Factura Compra $id',
+            text: 'Descarga tu factura de Cambialord de la orden #$id',
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al descargar la factura: Código ${res.statusCode}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Quitar loader
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al descargar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 11, color: kTextGray)),
+          Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kTextDark)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (compras.isEmpty) return _empty('No tienes compras registradas aún', Icons.shopping_cart_outlined);
@@ -161,6 +223,7 @@ class _ComprasTab extends StatelessWidget {
         final c = compras[i];
         final estatus = c['estatus'] ?? 'pendiente';
         final bool editable = estatus.toLowerCase() == 'pendiente' || estatus.toLowerCase() == 'aprobado';
+        final bool hasInvoice = estatus.toLowerCase() == 'aprobado' || estatus.toLowerCase() == 'enviado' || estatus.toLowerCase() == 'entregado';
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -201,7 +264,90 @@ class _ComprasTab extends StatelessWidget {
                   Text('x${pi['cantidad']}', style: TextStyle(fontSize: 12, color: kTextGray)),
                 ]),
               ))),
-            if (editable) ...[
+
+            // Detalles de Pago y descarga de factura
+            if (hasInvoice) ...[
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.payment, size: 16, color: kSecondary),
+                              SizedBox(width: 6),
+                              Text(
+                                'Detalles del Pago',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextDark),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 12, color: Color(0xFFEEEEEE)),
+                          if (c['tarjeta'] != null) ...[
+                            _infoRow('Tarjeta:', '${c['tarjeta']['tipo_tarjeta'] ?? 'Tarjeta'} (*** ${c['tarjeta']['last4'] ?? ''})'),
+                            if (c['tarjeta']['nombre_titular'] != null)
+                              _infoRow('Titular:', c['tarjeta']['nombre_titular']),
+                          ],
+                          if (c['autorizacion_pago'] != null)
+                            _infoRow('Autorización:', c['autorizacion_pago']),
+                          if (c['transaction_id'] != null)
+                            _infoRow('Transacción ID:', c['transaction_id']),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (editable) ...[
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red.shade700,
+                              backgroundColor: Colors.red.shade50,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(color: Colors.red.shade100),
+                              ),
+                            ),
+                            icon: const Icon(Icons.undo, size: 16),
+                            label: const Text('Solicitar Devolución', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            onPressed: () => _confirmDevolucion(context, c['id_pago_compra'] ?? ''),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF58634), // Web orange #f58634
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: const Icon(Icons.picture_as_pdf, size: 16),
+                          label: const Text('Factura PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          onPressed: () => _descargarFactura(context, c['id_pago_compra'] ?? ''),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (editable) ...[
               const Divider(height: 1, color: Color(0xFFEEEEEE)),
               Padding(
                 padding: const EdgeInsets.all(8),

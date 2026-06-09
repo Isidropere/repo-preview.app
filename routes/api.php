@@ -134,7 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $userId = auth()->id();
 
         $compras = \App\Models\PagoCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
-            ->with(['pagoItems', 'trazabilidad'])
+            ->with(['pagoItems', 'trazabilidad', 'tarjeta'])
             ->orderByDesc('fecha')
             ->get();
 
@@ -145,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         $intercambios = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
             ->orWhere('usuario_receptor_id', $userId)
+            ->with(['pagoEnvios' => fn($q) => $q->where('id_user', $userId)->with('tarjeta')])
             ->orderByDesc('id_negociacion')
             ->get();
 
@@ -158,6 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
     Route::post('/historial/devolucion/{id}', [\App\Http\Controllers\HistorialController::class, 'procesarDevolucionApi']);
+    Route::get('/historial/compra/{id}/invoice', [\App\Http\Controllers\HistorialController::class, 'descargarFactura']);
 
     // Checkout y pagos
     Route::post('/pago/checkout', [PagoApiController::class, 'checkout']);
