@@ -68,22 +68,23 @@ class _DireccionesScreenState extends State<DireccionesScreen> {
                     itemCount: _direcciones.length,
                     itemBuilder: (_, i) {
                       final d = _direcciones[i];
+                      final bool isPred = ApiClient.parseInt(d['es_predeterminada']) == 1;
                       return Card(
                         elevation: 1,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                           side: BorderSide(
-                            color: d['es_predeterminada'] == 1 ? kPrimary : Colors.grey.shade200,
-                            width: d['es_predeterminada'] == 1 ? 2 : 1,
+                            color: isPred ? kPrimary : Colors.grey.shade200,
+                            width: isPred ? 2 : 1,
                           ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Row(children: [
-                            Icon(Icons.location_on, color: d['es_predeterminada'] == 1 ? kPrimary : Colors.grey),
+                            Icon(Icons.location_on, color: isPred ? kPrimary : Colors.grey),
                             const SizedBox(width: 10),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              if (d['es_predeterminada'] == 1)
+                              if (isPred)
                                 Container(
                                   margin: const EdgeInsets.only(bottom: 4),
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -101,7 +102,7 @@ class _DireccionesScreenState extends State<DireccionesScreen> {
                             ])),
                             IconButton(
                               icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                              onPressed: () => _eliminar(d['id_direccion']),
+                              onPressed: () => _eliminar(ApiClient.parseInt(d['id_direccion']) ?? 0),
                             ),
                           ]),
                         ),

@@ -112,8 +112,9 @@ class _CarritoScreenState extends State<CarritoScreen> {
   Future<void> _toggleSeleccionarTodos(bool seleccionar) async {
     setState(() => _loading = true);
     final items = (_data?['todosLosItems'] as List?) ?? [];
+    final List<Future> requests = [];
     for (var item in items) {
-       bool esSel = item['es_seleccionado'] == 1 || item['es_seleccionado'] == true;
+       bool esSel = ApiClient.parseBool(item['es_seleccionado']);
        final itemData = item['item'] as Map? ?? {};
        final isServicio = (itemData['id_categoria_item'] == 29);
        final estadoSolicitud = item['estado_solicitud']?.toString();
@@ -121,8 +122,11 @@ class _CarritoScreenState extends State<CarritoScreen> {
          continue; // Saltar servicios no aprobados
        }
        if (esSel != seleccionar) {
-          await ApiClient.put('/carrito/${item['id_item_intencion_compra']}/seleccion', {'estado': seleccionar}, auth: true);
+          requests.add(ApiClient.put('/carrito/${item['id_item_intencion_compra']}/seleccion', {'estado': seleccionar}, auth: true));
        }
+    }
+    if (requests.isNotEmpty) {
+      await Future.wait(requests);
     }
     _load();
   }
@@ -319,17 +323,17 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final double granTotal = totalEstimado + envio;
 
     // Verificar si todos están seleccionados (para servicios, solo consideramos los aprobados)
-    bool todosSeleccionados = todosLosItems.every((i) {
+    bool todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
       final itemData = i['item'] as Map? ?? {};
       final isServicio = (itemData['id_categoria_item'] == 29);
       if (isServicio) {
-        return i['estado_solicitud']?.toString() != 'aprobada' || i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+        return i['estado_solicitud']?.toString() != 'aprobada' || ApiClient.parseBool(i['es_seleccionado']);
       }
-      return i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      return ApiClient.parseBool(i['es_seleccionado']);
     });
     
-    int totalSeleccionadosProductos = itemsProducto.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).length;
-    int totalSeleccionadosServicios = itemsServicio.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).length;
+    int totalSeleccionadosProductos = itemsProducto.where((i) => ApiClient.parseBool(i['es_seleccionado'])).length;
+    int totalSeleccionadosServicios = itemsServicio.where((i) => ApiClient.parseBool(i['es_seleccionado'])).length;
 
     return Column(children: [
       Expanded(
@@ -484,7 +488,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final String? imgUrl = itemData['image_url']?.toString();
 
     final String? estadoSolicitud = item['estado_solicitud']?.toString();
-    bool esSeleccionado = item['es_seleccionado'] == 1 || item['es_seleccionado'] == true;
+    bool esSeleccionado = ApiClient.parseBool(item['es_seleccionado']);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

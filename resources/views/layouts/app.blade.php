@@ -687,16 +687,48 @@
                 title: titulo,
                 text: 'Mira este artículo en Cambialord: ' + titulo,
                 url: url
-            }).catch(console.error);
+            }).catch(function(err) {
+                // Fallback si navigator.share falla (ej. bloqueado en HTTP o cancelado por usuario)
+                ejecutarCopia(url);
+            });
         } else {
+            ejecutarCopia(url);
+        }
+    };
+
+    function ejecutarCopia(url) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(function() {
                 alert('¡Enlace copiado al portapapeles!');
             }).catch(function(err) {
-                console.error('Error al copiar el enlace: ', err);
-                alert('No se pudo copiar el enlace. URL: ' + url);
+                fallbackCopiar(url);
             });
+        } else {
+            fallbackCopiar(url);
         }
-    };
+    }
+
+    function fallbackCopiar(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                alert('¡Enlace copiado al portapapeles!');
+            } else {
+                alert('No se pudo copiar el enlace. URL: ' + text);
+            }
+        } catch (err) {
+            alert('No se pudo copiar el enlace. URL: ' + text);
+        }
+        document.body.removeChild(textArea);
+    }
 
 </script>
 

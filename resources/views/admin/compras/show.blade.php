@@ -676,6 +676,7 @@ function btnCopiar(string $id, string $label = ''): string {
             @csrf
             <input type="hidden" name="destino" value="usuario">
             <input type="hidden" name="usuario_id" value="{{ $comprador->id }}">
+            <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
             
             <div class="px-6 py-5 space-y-4">
                 {{-- Info Usuario --}}
@@ -698,6 +699,21 @@ function btnCopiar(string $id, string $label = ''): string {
                             <span class="text-xs text-gray-700">{{ $icon }} {{ $label }}</span>
                         </label>
                         @endforeach
+                    </div>
+                </div>
+
+                {{-- Canales de envío --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-2">Enviar vía</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="canales[]" value="web" checked class="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/30">
+                            <span class="text-xs text-gray-700">Notificación Web/Móvil</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="canales[]" value="email" checked class="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/30">
+                            <span class="text-xs text-gray-700">Correo Electrónico</span>
+                        </label>
                     </div>
                 </div>
 

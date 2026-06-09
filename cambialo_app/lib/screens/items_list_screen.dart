@@ -114,10 +114,12 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_title),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
       ),
       body: _loading && _items.isEmpty
           ? const Center(child: CircularProgressIndicator(color: kPrimary))
@@ -255,7 +257,7 @@ class _ItemGridCard extends StatelessWidget {
     Future<void> handleShare() async {
       final baseUrl = kBaseUrl.replaceAll('/api', '');
       final slug = item['slug'] ?? itemId.toString();
-      final itemUrl = '$baseUrl/producto/$slug';
+      final itemUrl = '$baseUrl/items/producto/$slug';
       final itemTitle = item['item'] ?? 'Artículo';
       try {
         await SharePlus.instance.share(

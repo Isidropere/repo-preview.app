@@ -178,7 +178,7 @@ function abrirImagen(src) { if (!src) return; document.getElementById('imgLightb
 
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-sm text-amber-800 leading-relaxed">
             <p class="font-semibold mb-1">⚠️ Aviso importante</p>
-            <p>Cambialord RD <strong>no se hace responsable</strong> de los talentos o servicios eliminados por el usuario, y <strong>no realiza reembolsos</strong> del monto pagado por la publicación de este servicio.</p>
+            <p>Cambialord RD <strong>no se hace responsable</strong> de los talentos o servicios eliminados. Si se borra el talento y le queda inventario, el mismo no se podrá restablecer ni se hará una devolución del dinero.</p>
             <p class="mt-2">Esta acción es <strong>irreversible</strong>.</p>
         </div>
 

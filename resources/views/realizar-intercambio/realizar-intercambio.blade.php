@@ -28,7 +28,7 @@
                 <div class="flex flex-col md:flex-row items-start">
                     <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-6 w-full md:w-1/3">
                         <div class="bg-gray-200 h-64 flex items-center justify-center"> <span
-                                class="text-gray-500 text-center">Imagen paso 2</span> </div>
+                                class="text-gray-500 text-center"> Imagen paso 2 </span> </div>
                     </div>
                     <div class="flex-grow">
                         <h2 class="font-semibold text-primary text-2xl mb-2">2. Busca un intercambio</h2>

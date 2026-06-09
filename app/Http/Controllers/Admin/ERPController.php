@@ -10,6 +10,8 @@ use App\Models\CajaSesion;
 use App\Models\Almacen;
 use App\Models\InventarioMovimiento;
 use App\Models\Item;
+use App\Models\Negociacion;
+use App\Models\PagoCompra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -450,5 +452,152 @@ class ERPController extends Controller
         });
 
         return back()->with('success', 'Asiento contable registrado correctamente.');
+    }
+
+    public function historialTransacciones(Request $request)
+    {
+        $request->validate([
+            'tab'         => 'nullable|string|in:ventas,intercambios',
+            'buscar'      => 'nullable|string|max:100',
+            'fecha_desde' => 'nullable|date',
+            'fecha_hasta' => 'nullable|date',
+            'estatus'     => 'nullable|string|max:50',
+        ]);
+
+        $tab = $request->get('tab', 'ventas');
+        $buscar = $request->get('buscar');
+        $estatus = $request->get('estatus');
+
+        // Ventas completadas/procesadas (aprobado, enviado, entregado)
+        $ventasQuery = PagoCompra::whereIn('estatus', ['aprobado', 'enviado', 'entregado'])
+            ->with(['pagoItems.item.imagenes', 'carrito.usuario', 'tarjeta'])
+            ->orderByDesc('fecha');
+
+        if ($request->filled('estatus')) {
+            $ventasQuery->where('estatus', $estatus);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $ventasQuery->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $ventasQuery->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        if ($tab === 'ventas' && $buscar) {
+            $ventasQuery->where(fn($q) => $q
+                ->where('id_pago_compra', 'like', "%$buscar%")
+                ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%")));
+        }
+
+        $ventas = $ventasQuery->paginate(15, ['*'], 'page_ventas')->withQueryString();
+
+        // Intercambios completados/procesados (aceptado, en_envio, completado)
+        $intercambiosQuery = Negociacion::whereIn('estado', ['aceptado', 'en_envio', 'completado'])
+            ->with(['item.imagenes', 'usuario', 'usuarioReceptor', 'pagoEnvios.tarjeta'])
+            ->orderByDesc('id_negociacion');
+
+        if ($request->filled('estatus')) {
+            $intercambiosQuery->where('estado', $estatus);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $intercambiosQuery->whereDate('fecha_creacion', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $intercambiosQuery->whereDate('fecha_creacion', '<=', $request->fecha_hasta);
+        }
+
+        if ($tab === 'intercambios' && $buscar) {
+            $intercambiosQuery->where(fn($q) => $q
+                ->where('id_negociacion', 'like', "%$buscar%")
+                ->orWhereHas('usuario', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('usuarioReceptor', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('item', fn($q2) => $q2
+                    ->where('item', 'like', "%$buscar%")));
+        }
+
+        $intercambios = $intercambiosQuery->paginate(15, ['*'], 'page_intercambios')->withQueryString();
+
+        return view('admin.erp.historial', compact('ventas', 'intercambios', 'tab'));
+    }
+
+    public function descargarHistorialPdf(Request $request)
+    {
+        $request->validate([
+            'tab'         => 'nullable|string|in:ventas,intercambios',
+            'buscar'      => 'nullable|string|max:100',
+            'fecha_desde' => 'nullable|date',
+            'fecha_hasta' => 'nullable|date',
+            'estatus'     => 'nullable|string|max:50',
+        ]);
+
+        $tab = $request->get('tab', 'ventas');
+        $buscar = $request->get('buscar');
+        $estatus = $request->get('estatus');
+        $fecha_desde = $request->get('fecha_desde');
+        $fecha_hasta = $request->get('fecha_hasta');
+
+        if ($tab === 'ventas') {
+            $query = PagoCompra::whereIn('estatus', ['aprobado', 'enviado', 'entregado'])
+                ->with(['pagoItems.item', 'carrito.usuario', 'tarjeta'])
+                ->orderByDesc('fecha');
+
+            if ($request->filled('estatus')) {
+                $query->where('estatus', $estatus);
+            }
+            if ($request->filled('fecha_desde')) {
+                $query->whereDate('fecha', '>=', $fecha_desde);
+            }
+            if ($request->filled('fecha_hasta')) {
+                $query->whereDate('fecha', '<=', $fecha_hasta);
+            }
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->where('id_pago_compra', 'like', "%$buscar%")
+                    ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%")));
+            }
+            $data = $query->get();
+        } else {
+            $query = Negociacion::whereIn('estado', ['aceptado', 'en_envio', 'completado'])
+                ->with(['item.imagenes', 'usuario', 'usuarioReceptor', 'pagoEnvios.tarjeta'])
+                ->orderByDesc('id_negociacion');
+
+            if ($request->filled('estatus')) {
+                $query->where('estado', $estatus);
+            }
+            if ($request->filled('fecha_desde')) {
+                $query->whereDate('fecha_creacion', '>=', $fecha_desde);
+            }
+            if ($request->filled('fecha_hasta')) {
+                $query->whereDate('fecha_creacion', '<=', $fecha_hasta);
+            }
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->where('id_negociacion', 'like', "%$buscar%")
+                    ->orWhereHas('usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('usuarioReceptor', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
+            }
+            $data = $query->get();
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.erp.historial_pdf', compact('data', 'tab', 'buscar', 'estatus', 'fecha_desde', 'fecha_hasta'));
+        
+        $filename = "reporte-{$tab}-erp-" . date('Ymd_His') . ".pdf";
+        return $pdf->download($filename);
     }
 }

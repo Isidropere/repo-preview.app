@@ -45,3 +45,9 @@
     AddOutputFilterByType DEFLATE application/javascript application/json
     AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpeg|jpg|png|gif|webp|svg|mp4)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>

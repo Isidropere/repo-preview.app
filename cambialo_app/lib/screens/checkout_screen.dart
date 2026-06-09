@@ -56,39 +56,51 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _loadDatos() async {
-    setState(() => _loading = true);
-    final results = await Future.wait([
-      ApiClient.get('/direcciones', auth: true, useCache: false),
-      ApiClient.get('/tarjetas', auth: true, useCache: false),
-      ApiClient.get('/delivery/config'),
-    ]);
+    setState(() {
+      _loading = true;
+      _errorMsg = '';
+    });
+    try {
+      final results = await Future.wait([
+        ApiClient.get('/direcciones', auth: true, useCache: false),
+        ApiClient.get('/tarjetas', auth: true, useCache: false),
+        ApiClient.get('/delivery/config'),
+      ]);
 
-    if (results[0].statusCode == 200) _direcciones = jsonDecode(results[0].body);
-    if (results[1].statusCode == 200) _tarjetas = jsonDecode(results[1].body);
-    if (results[2].statusCode == 200) _delivery = jsonDecode(results[2].body);
+      if (results[0].statusCode == 200) _direcciones = jsonDecode(results[0].body);
+      if (results[1].statusCode == 200) _tarjetas = jsonDecode(results[1].body);
+      if (results[2].statusCode == 200) _delivery = jsonDecode(results[2].body);
 
-    // Preseleccionar la dirección predeterminada
-    if (_direcciones.isNotEmpty) {
-      final pred = _direcciones.firstWhere(
-        (d) => d['es_predeterminada'] == 1,
-        orElse: () => _direcciones.first,
-      );
-      _idDireccion = pred['id_direccion'];
+      // Preseleccionar la dirección predeterminada
+      if (_direcciones.isNotEmpty) {
+        final pred = _direcciones.firstWhere(
+          (d) => ApiClient.parseInt(d['es_predeterminada']) == 1,
+          orElse: () => _direcciones.first,
+        );
+        _idDireccion = ApiClient.parseInt(pred['id_direccion']);
+      } else {
+        _idDireccion = null;
+      }
+
+      // Preseleccionar tarjeta activa o la primera
+      if (_tarjetas.isNotEmpty) {
+        final activa = _tarjetas.firstWhere(
+          (t) => t['usar_esta_tarjeta'] == 1,
+          orElse: () => _tarjetas.first,
+        );
+        _idTarjeta = activa['id_tarjeta'];
+      } else {
+        _idTarjeta = null;
+      }
+    } catch (e) {
+      _errorMsg = 'Error al cargar los datos del checkout: $e';
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      // Calcular costo de envío inicial
+      await _calcularCostoEnvio();
     }
-
-    // Preseleccionar tarjeta activa o la primera
-    if (_tarjetas.isNotEmpty) {
-      final activa = _tarjetas.firstWhere(
-        (t) => t['usar_esta_tarjeta'] == 1,
-        orElse: () => _tarjetas.first,
-      );
-      _idTarjeta = activa['id_tarjeta'];
-    }
-
-    setState(() => _loading = false);
-
-    // Calcular costo de envío inicial
-    await _calcularCostoEnvio();
   }
 
   Future<void> _calcularCostoEnvio() async {
@@ -103,7 +115,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     // Buscar dirección seleccionada
-    final d = _direcciones.firstWhere((element) => element['id_direccion'] == _idDireccion, orElse: () => null);
+    final d = _direcciones.firstWhere((element) => ApiClient.parseInt(element['id_direccion']) == _idDireccion, orElse: () => null);
     if (d == null) return;
 
     final municipio = d['municipio']?['municipio']?.toString();
@@ -182,7 +194,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
     double sum = 0.0;
     for (var i in items) {
-      final esSel = i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      final esSel = ApiClient.parseBool(i['es_seleccionado']);
       if (esSel) {
         final itemData = i['item'] as Map? ?? {};
         final double valor = double.tryParse((itemData['valor'] ?? 0).toString()) ?? 0.0;
@@ -197,7 +209,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
     double sum = 0.0;
     for (var i in items) {
-      final esSel = i['es_seleccionado'] == 1 || i['es_seleccionado'] == true;
+      final esSel = ApiClient.parseBool(i['es_seleccionado']);
       if (esSel) {
         final double descuento = double.tryParse((i['descuento'] ?? 0).toString()) ?? 0.0;
         final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
@@ -437,7 +449,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Builder(
                     builder: (context) {
                       final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
-                      final selectedItems = items.where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true).toList();
+                      final selectedItems = items.where((i) => ApiClient.parseBool(i['es_seleccionado'])).toList();
                       final Map<String, Map> proveedores = {};
                       for (var i in selectedItems) {
                         final itemData = i['item'] as Map? ?? {};
@@ -549,19 +561,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     )
                   else
-                    ..._direcciones.map((d) => RadioListTile<int>(
-                      value: d['id_direccion'],
-                      groupValue: _idDireccion,
-                      onChanged: (v) {
-                        setState(() {
-                          _idDireccion = v;
-                        });
-                        _calcularCostoEnvio();
-                      },
-                      activeColor: kPrimary,
-                      title: Text('${d['calle']}, #${d['N_casa_edificio'] ?? ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      subtitle: Text('${d['municipio']?['municipio'] ?? ''}, ${d['provincia']?['provincia'] ?? ''}', style: TextStyle(fontSize: 12, color: kTextGray)),
-                    )),
+                    ..._direcciones.map((d) {
+                      final int dirId = ApiClient.parseInt(d['id_direccion']) ?? 0;
+                      return RadioListTile<int>(
+                        value: dirId,
+                        groupValue: _idDireccion,
+                        onChanged: (v) {
+                          setState(() {
+                            _idDireccion = v;
+                          });
+                          _calcularCostoEnvio();
+                        },
+                        activeColor: kPrimary,
+                        title: Text('${d['calle']}, #${d['N_casa_edificio'] ?? ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        subtitle: Text('${d['municipio']?['municipio'] ?? ''}, ${d['provincia']?['provincia'] ?? ''}', style: TextStyle(fontSize: 12, color: kTextGray)),
+                      );
+                    }),
                 ],
 
                 const Divider(height: 24),
@@ -622,7 +637,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const Text('Resumen del pedido', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
                 const SizedBox(height: 8),
                 ...(((widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [])
-                    .where((i) => i['es_seleccionado'] == 1 || i['es_seleccionado'] == true)
+                    .where((i) => ApiClient.parseBool(i['es_seleccionado']))
                     .map((i) {
                   final item = i['item'] as Map? ?? {};
                   final double valor = double.tryParse((item['valor'] ?? 0).toString()) ?? 0.0;

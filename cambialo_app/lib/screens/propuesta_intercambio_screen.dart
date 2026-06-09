@@ -50,7 +50,10 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
       setState(() {
         // Solo artículos disponibles para intercambio (tipo_trans 2 o 3)
         _misItems = (jsonDecode(res.body) as List)
-            .where((i) => i['tipo_trans'] == 2 || i['tipo_trans'] == 3)
+            .where((i) {
+              final tt = ApiClient.parseInt(i['tipo_trans']);
+              return tt == 2 || tt == 3;
+            })
             .toList();
         _loading = false;
       });
@@ -103,8 +106,9 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
     bool hasService = reqEsServicio;
 
     for (var item in _misItems) {
-      if (_itemsSeleccionados.contains(item['id_item'])) {
-        final isServ = item['id_categoria_item'] == 29;
+      final itemIdParsed = ApiClient.parseInt(item['id_item']);
+      if (itemIdParsed != null && _itemsSeleccionados.contains(itemIdParsed)) {
+        final isServ = ApiClient.parseInt(item['id_categoria_item']) == 29;
         if (isServ) {
           hasService = true;
         } else {
@@ -244,7 +248,7 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                       itemBuilder: (context, idx) {
                         final item = _misItems[idx];
                         final id = ApiClient.parseInt(item['id_item']) ?? 0;
-                        final isService = item['id_categoria_item'] == 29;
+                        final isService = ApiClient.parseInt(item['id_categoria_item']) == 29;
                         final isSelected = _itemsSeleccionados.contains(id);
 
                         return CheckboxListTile(

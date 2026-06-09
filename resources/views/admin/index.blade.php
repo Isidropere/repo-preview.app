@@ -9,86 +9,136 @@
         @include('components.btn-volver', ['backUrl' => route('admin.index')])
 
         {{-- Encabezado --}}
-        <div class="mb-6 flex items-center justify-between">
+        <div class="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Panel de Administración</h1>
-                <p class="text-sm text-gray-500 mt-1">Gestiona compras, ventas e intercambios de la plataforma.</p>
+                <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    Panel de Administración
+                </h1>
+                <p class="text-xs text-gray-500 mt-0.5">Gestión centralizada de compras, ventas, intercambios y servicios.</p>
             </div>
-            @if(auth()->user()->isSuperAdminUser())
-            <a href="{{ route('admin.stats.index') }}"
-               class="inline-flex items-center gap-2 bg-primary hover:bg-hoverPrimary text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Estadísticas
+            <a href="/" target="_blank" class="self-start md:self-auto inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold">
+                Ver Sitio Web
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
             </a>
-            @endif
-            <a href="{{ route('admin.mensajes.index') }}"
-               class="inline-flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                </svg>
-                Mensajes predefinidos
-            </a>
-            <a href="{{ route('admin.imagenes.index') }}"
-               class="inline-flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                Aprobación de Imágenes
-            </a>
-            <a href="{{ route('admin.notificaciones.index') }}"
-               class="inline-flex items-center gap-2 bg-secondary hover:bg-hoverSecondary text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                Notificaciones
-            </a>
+        </div>
+
+        {{-- Herramientas de Control --}}
+        <div class="mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                @if(auth()->user()->isSuperAdminUser())
+                <a href="{{ route('admin.stats.index') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <span>Estadísticas</span>
+                </a>
+                @endif
+                <a href="{{ route('admin.imagenes.index') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <span>Aprobación de Fotos</span>
+                </a>
+                <a href="{{ route('admin.notificaciones.categorias') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                    </div>
+                    <span>Notificar Categorías</span>
+                </a>
+                <a href="{{ route('admin.notificaciones.index') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <span>Notificaciones</span>
+                </a>
+                <a href="{{ route('admin.mensajes.index') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                        </svg>
+                    </div>
+                    <span>Mensajes Predefinidos</span>
+                </a>
+                @if(auth()->user()->isSuperAdminUser())
+                <a href="{{ route('admin.motivos_devolucion.index') }}"
+                   class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
+                    <div class="text-gray-400 group-hover:text-primary transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3zM7 11V7a2 2 0 012-2h6a2 2 0 012 2v4M5 19v-2a2 2 0 012-2h10a2 2 0 012 2v2"/>
+                        </svg>
+                    </div>
+                    <span>Motivos Devolución</span>
+                </a>
+                @endif
+            </div>
         </div>
 
         {{-- Accesos Rápidos ERP (Solo Super Admin) --}}
         @if(auth()->user()->isSuperAdminUser())
-        <div class="mb-8">
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gestión Empresarial</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="mb-6 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Gestión Empresarial (ERP)</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <a href="{{ route('admin.erp.contabilidad') }}" 
-                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
-                    <div class="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                   class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 hover:border-primary/30 hover:bg-white hover:shadow transition-all group">
+                    <div class="bg-primary/10 p-2.5 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-all flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     </div>
-                    <div>
-                        <p class="font-bold text-gray-800">Contabilidad</p>
-                        <p class="text-xs text-gray-400">Libro diario y cuentas</p>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-xs truncate">Contabilidad</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">Libro diario y cuentas</p>
                     </div>
                 </a>
                 <a href="{{ route('admin.erp.inventario') }}" 
-                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
-                    <div class="bg-emerald-50 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                   class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 hover:border-secondary/30 hover:bg-white hover:shadow transition-all group">
+                    <div class="bg-secondary/10 p-2.5 rounded-lg text-secondary group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
-                    <div>
-                        <p class="font-bold text-gray-800">Inventario</p>
-                        <p class="text-xs text-gray-400">Stock y Almacén</p>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-xs truncate">Inventario</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">Stock y Almacén</p>
                     </div>
                 </a>
                 <a href="{{ route('admin.erp.caja') }}" 
-                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
-                    <div class="bg-orange-50 p-3 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                   class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 hover:border-amber-500/30 hover:bg-white hover:shadow transition-all group">
+                    <div class="bg-amber-50 p-2.5 rounded-lg text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </div>
-                    <div>
-                        <p class="font-bold text-gray-800">Cuadre de Caja</p>
-                        <p class="text-xs text-gray-400">Apertura y cierre diario</p>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-xs truncate">Cuadre de Caja</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">Apertura y cierre diario</p>
                     </div>
                 </a>
                 <a href="{{ route('admin.erp.transporte.index') }}" 
-                   class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary hover:shadow-md transition-all group">
-                    <div class="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                   class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 hover:border-indigo-500/30 hover:bg-white hover:shadow transition-all group">
+                    <div class="bg-indigo-50 p-2.5 rounded-lg text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                     </div>
-                    <div>
-                        <p class="font-bold text-gray-800">Transporte</p>
-                        <p class="text-xs text-gray-400">Solicitudes de mudanza</p>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-xs truncate">Transporte</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">Solicitudes de mudanza</p>
+                    </div>
+                </a>
+                <a href="{{ route('admin.erp.historial') }}" 
+                   class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 hover:border-emerald-500/30 hover:bg-white hover:shadow transition-all group">
+                    <div class="bg-emerald-50 p-2.5 rounded-lg text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-xs truncate">Ventas e Intercambios</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">Historial de procesados</p>
                     </div>
                 </a>
             </div>
@@ -113,27 +163,32 @@
             @endif
 
             {{-- KPIs --}}
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-                <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                    <p class="text-xs text-gray-500 uppercase tracking-wide">Compras</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($totalCompras, 0) }}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                    <p class="text-xs text-blue-600 uppercase tracking-wide">Ventas</p>
-                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ number_format($totalVentas, 0) }}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                    <p class="text-xs text-purple-600 uppercase tracking-wide">Intercambios</p>
-                    <p class="text-2xl font-bold text-purple-600 mt-1">{{ number_format($totalIntercambios, 0) }}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                    <p class="text-xs text-orange-500 uppercase tracking-wide">Int. Compra</p>
-                    <p class="text-2xl font-bold text-orange-500 mt-1">{{ number_format($totalIntencionCompra, 0) }}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                    <p class="text-xs text-pink-500 uppercase tracking-wide">Int. Intercambio</p>
-                    <p class="text-2xl font-bold text-pink-500 mt-1">{{ number_format($totalIntencionIntercambio, 0) }}</p>
-                </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-5">
+                <a href="{{ route('admin.index', ['tab' => 'compras']) }}"
+                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'compras' ? 'border-primary ring-1 ring-primary/20 bg-primary/5 shadow' : 'border-gray-100 border-l-primary' }} hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider truncate">Compras</p>
+                    <p class="text-base font-black text-gray-900 mt-0.5">{{ number_format($totalCompras, 0) }}</p>
+                </a>
+                <a href="{{ route('admin.index', ['tab' => 'ventas']) }}"
+                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'ventas' ? 'border-secondary ring-1 ring-secondary/20 bg-secondary/5 shadow' : 'border-gray-100 border-l-secondary' }} hover:border-secondary/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
+                    <p class="text-[9px] font-bold text-secondary uppercase tracking-wider truncate">Ventas</p>
+                    <p class="text-base font-black text-secondary mt-0.5">{{ number_format($totalVentas, 0) }}</p>
+                </a>
+                <a href="{{ route('admin.index', ['tab' => 'intercambios']) }}"
+                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'intercambios' ? 'border-purple-500 ring-1 ring-purple-500/20 bg-purple-50/30 shadow' : 'border-gray-100 border-l-purple-500' }} hover:border-purple-500/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
+                    <p class="text-[9px] font-bold text-purple-600 uppercase tracking-wider truncate">Intercambios</p>
+                    <p class="text-base font-black text-purple-600 mt-0.5">{{ number_format($totalIntercambios, 0) }}</p>
+                </a>
+                <a href="{{ route('admin.index', ['tab' => 'intencion_compra']) }}"
+                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'intencion_compra' ? 'border-amber-500 ring-1 ring-amber-500/20 bg-amber-50/30 shadow' : 'border-gray-100 border-l-amber-500' }} hover:border-amber-500/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
+                    <p class="text-[9px] font-bold text-amber-600 uppercase tracking-wider truncate">Int. Compra</p>
+                    <p class="text-base font-black text-amber-600 mt-0.5">{{ number_format($totalIntencionCompra, 0) }}</p>
+                </a>
+                <a href="{{ route('admin.index', ['tab' => 'intencion_intercambio']) }}"
+                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'intencion_intercambio' ? 'border-pink-500 ring-1 ring-pink-500/20 bg-pink-50/30 shadow' : 'border-gray-100 border-l-pink-500' }} hover:border-pink-500/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
+                    <p class="text-[9px] font-bold text-pink-600 uppercase tracking-wider truncate">Int. Intercambio</p>
+                    <p class="text-base font-black text-pink-600 mt-0.5">{{ number_format($totalIntencionIntercambio, 0) }}</p>
+                </a>
             </div>
 
             {{-- Tabs --}}

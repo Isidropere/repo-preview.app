@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Historial - Cambialord')
 
@@ -18,10 +18,23 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <div class="flex-1">
-                <p class="font-semibold text-sm">Pago exitoso</p>
+                <p class="font-semibold text-sm">Transacción completada</p>
                 <p class="text-sm mt-0.5">{{ session('success') }}</p>
             </div>
             <button onclick="this.parentElement.remove()" class="text-green-400 hover:text-green-600 text-xl leading-none ml-2">&#10005;</button>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4 mb-6 shadow-sm">
+            <svg class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div class="flex-1">
+                <p class="font-semibold text-sm">Error en la transacción</p>
+                <p class="text-sm mt-0.5">{{ session('error') }}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xl leading-none ml-2">&#10005;</button>
         </div>
         @endif
 
@@ -83,6 +96,15 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="text-lg font-bold text-primary">RD$ {{ number_format($pago->total ?? 0, 2) }}</span>
+                                @if(in_array($pago->estatus, ['pendiente', 'aprobado']))
+                                <button type="button" onclick="abrirModalDevolucion('{{ $pago->id_pago_compra }}')"
+                                        class="text-xs text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-all">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                    </svg>
+                                    Solicitar Devolución
+                                </button>
+                                @endif
                                 @if($pago->trazabilidad->count())
                                 <button onclick="toggleTrazabilidad('traz-{{ $loop->index }}')"
                                     class="text-xs text-primary hover:text-hoverPrimary font-medium flex items-center gap-1 transition-colors">
@@ -141,6 +163,36 @@
                             @empty
                             <div class="px-5 py-3 text-xs text-gray-400 italic">Sin detalle de articulos</div>
                             @endforelse
+                        </div>
+
+                        {{-- Detalles de Pago y Descarga de Factura --}}
+                        <div class="px-5 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-gray-600">
+                            <div>
+                                <p class="font-bold text-gray-700 mb-1">Detalles del Pago</p>
+                                @if($pago->tarjeta)
+                                    <p class="flex items-center gap-1.5 text-gray-700 font-medium">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                        {{ strtoupper($pago->tarjeta->tipo_tarjeta ?? 'Tarjeta') }} terminado en <strong>{{ $pago->tarjeta->last4 }}</strong>
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Titular: {{ $pago->tarjeta->nombre_titular }}</p>
+                                @else
+                                    <p class="text-gray-400">Método de pago no registrado</p>
+                                @endif
+                                
+                                @if($pago->autorizacion_pago)
+                                    <p class="text-[10px] text-gray-500 mt-1">Código de Autorización: <span class="font-mono font-bold text-gray-700">{{ $pago->autorizacion_pago }}</span></p>
+                                @endif
+                                @if($pago->transaction_id)
+                                    <p class="text-[10px] text-gray-400 font-mono">ID Transacción: {{ $pago->transaction_id }}</p>
+                                @endif
+                            </div>
+                            <div class="w-full sm:w-auto">
+                                <a href="{{ route('historial.factura', $pago->id_pago_compra) }}" 
+                                   class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-700 hover:text-primary hover:border-primary/45 px-3.5 py-2 rounded-xl font-bold shadow-sm hover:shadow transition-all text-xs">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Descargar Factura PDF
+                                </a>
+                            </div>
                         </div>
 
                         {{-- Trazabilidad expandible --}}
@@ -390,6 +442,47 @@
                                     </div>
                                 </div>
                             </div>
+
+                            @php
+                                $miPago = $neg->pagoEnvios->first();
+                            @endphp
+                            @if($miPago && ($miPago->estado === 'pagado' || $miPago->estado === 'pagado_pull'))
+                                <div class="mt-4 bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 text-xs text-gray-600">
+                                    <p class="font-bold text-emerald-800 flex items-center gap-1.5 text-sm mb-2">
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Pago de Envío Realizado
+                                    </p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <div>
+                                            <span class="text-gray-400">Monto del Envío:</span>
+                                            <p class="font-bold text-gray-800 mt-0.5">
+                                                @if($miPago->estado === 'pagado_pull')
+                                                    Descontado de Pull (1 crédito)
+                                                @else
+                                                    RD$ {{ number_format($miPago->monto, 2) }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                        @if($miPago->tarjeta)
+                                        <div>
+                                            <span class="text-gray-400">Método de Pago:</span>
+                                            <p class="font-bold text-gray-800 mt-0.5 uppercase">
+                                                {{ $miPago->tarjeta->tipo_tarjeta }} ending in {{ $miPago->tarjeta->last4 }}
+                                            </p>
+                                        </div>
+                                        @endif
+                                        @if($miPago->approval_code)
+                                        <div>
+                                            <span class="text-gray-400">Código de Autorización:</span>
+                                            <p class="font-bold text-gray-800 mt-0.5 font-mono">
+                                                {{ $miPago->approval_code }}
+                                            </p>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
                             @if(in_array($neg->estado, ['aceptada', 'confirmada']) && !($neg->estado === 'completada'))
                             <a href="{{ route('negociaciones.mis') }}"
                                style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.8rem;font-size:0.78rem;font-weight:600;color:#fff;background:#f58634;border-radius:0.5rem;text-decoration:none;">
@@ -413,6 +506,66 @@
             @endif
         </div>
 
+        {{-- Modal de Solicitud de Devolución --}}
+        <div id="modalDevolucion" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="cerrarModalDevolucion()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+                    <form id="formModalDevolucion" method="POST">
+                        @csrf
+                        <div class="bg-white px-6 pt-6 pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-50 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">
+                                        Solicitar Devolución / Reembolso
+                                    </h3>
+                                    <div class="mt-3 text-sm text-gray-500">
+                                        <p class="mb-4">Por favor, selecciona el motivo de la devolución. Esta acción es definitiva y reversará el stock del inventario.</p>
+                                        
+                                        <div class="mb-4">
+                                            <label for="id_motivo_devolucion" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Motivo de Devolución *</label>
+                                            <select name="id_motivo_devolucion" id="id_motivo_devolucion" required
+                                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                <option value="">-- Selecciona un motivo --</option>
+                                                @foreach($motivos as $motivo)
+                                                    <option value="{{ $motivo->id }}">{{ $motivo->motivo }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <label for="comentario_devolucion" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Comentarios adicionales (Opcional)</label>
+                                            <textarea name="comentario_devolucion" id="comentario_devolucion" rows="3"
+                                                      placeholder="Escribe aquí detalles sobre la devolución..."
+                                                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse gap-3">
+                            <button type="submit"
+                                    class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all">
+                                Enviar Solicitud
+                            </button>
+                            <button type="button" onclick="cerrarModalDevolucion()"
+                                    class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-200 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm transition-all">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         </div> {{-- fin #historialPaneles --}}
 
         @else
@@ -427,6 +580,20 @@
 
 @push('scripts')
 <script>
+function abrirModalDevolucion(id) {
+    const form = document.getElementById('formModalDevolucion');
+    if (form) {
+        form.action = `/historial/devolucion/${id}`;
+        document.getElementById('id_motivo_devolucion').value = "";
+        document.getElementById('comentario_devolucion').value = "";
+        document.getElementById('modalDevolucion').classList.remove('hidden');
+    }
+}
+
+function cerrarModalDevolucion() {
+    document.getElementById('modalDevolucion').classList.add('hidden');
+}
+
 function mostrarProgreso() {
     document.getElementById('historialLoader').classList.remove('hidden');
     document.getElementById('historialPaneles').classList.add('hidden');

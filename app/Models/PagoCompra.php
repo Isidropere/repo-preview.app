@@ -51,6 +51,8 @@ class PagoCompra extends Model
         'id_direccion',      // Dirección de envío capturada al momento del pago
         'tracking_code',     // Código/sufijo de rastreo del envío
         'tracking_url',      // URL completa de rastreo construida por el admin
+        'id_motivo_devolucion',
+        'comentario_devolucion',
     ];
 
     public $timestamps = true;
@@ -109,5 +111,10 @@ class PagoCompra extends Model
     public function direccion()
     {
         return $this->belongsTo(Direcciones::class, 'id_direccion', 'id_direccion');
+    }
+
+    public function motivoDevolucion()
+    {
+        return $this->belongsTo(MotivoDevolucion::class, 'id_motivo_devolucion');
     }
 }

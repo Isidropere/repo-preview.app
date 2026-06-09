@@ -755,10 +755,14 @@ class ItemController extends Controller
     public function showDetail($slug)
     {
         try {
-            // Extraer el hash (última parte después del último guión)
-            $parts = explode('-', $slug);
-            $hash  = array_pop($parts);
-            $id    = \App\Helpers\HashIdHelper::decode($hash);
+            if (ctype_digit((string) $slug)) {
+                $id = (int) $slug;
+            } else {
+                // Extraer el hash (última parte después del último guión)
+                $parts = explode('-', $slug);
+                $hash  = array_pop($parts);
+                $id    = \App\Helpers\HashIdHelper::decode($hash);
+            }
 
             if (!$id) {
                 abort(404, 'Producto no encontrado');
@@ -773,6 +777,11 @@ class ItemController extends Controller
                     'direccionPredeterminada',
                 ])
                 ->findOrFail($id);
+
+            // Si llegó con ID numérico, redirigir al slug correcto (SEO)
+            if (ctype_digit((string) $slug)) {
+                return redirect()->route('producto.detalle', $item->slug, 301);
+            }
 
             // Registrar vista si no es el dueño
             if (auth()->id() !== $item->id_user) {
