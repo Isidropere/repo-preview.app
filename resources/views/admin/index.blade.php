@@ -22,7 +22,8 @@
             </a>
         </div>
 
-        {{-- Herramientas de Control --}}
+        {{-- Herramientas de Control (Solo Admin o Super Admin) --}}
+        @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
         <div class="mb-6">
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 @if(auth()->user()->isSuperAdminUser())
@@ -30,7 +31,7 @@
                    class="flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 p-3 rounded-xl text-xs font-semibold text-gray-700 hover:text-primary transition-all group shadow-sm">
                     <div class="text-gray-400 group-hover:text-primary transition-colors">
                         <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
                     </div>
                     <span>Estadísticas</span>
@@ -85,9 +86,10 @@
                 @endif
             </div>
         </div>
+        @endif
 
-        {{-- Accesos Rápidos ERP (Solo Super Admin) --}}
-        @if(auth()->user()->isSuperAdminUser())
+        {{-- Accesos Rápidos ERP (Solo Super Admin o Contable) --}}
+        @if(auth()->user()->isSuperAdminUser() || auth()->user()->isContableUser())
         <div class="mb-6 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Gestión Empresarial (ERP)</h2>
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -162,6 +164,8 @@
             </div>
             @endif
 
+            {{-- KPIs y Tablas Generales (Solo Admin o Super Admin) --}}
+            @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
             {{-- KPIs --}}
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-5">
                 <a href="{{ route('admin.index', ['tab' => 'compras']) }}"
@@ -300,6 +304,7 @@
                 @endif
 
             </div>{{-- /card --}}
+            @endif
 
         </div>{{-- /mainContent --}}
     </div>

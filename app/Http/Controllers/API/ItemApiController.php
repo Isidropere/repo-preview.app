@@ -15,35 +15,59 @@ use Illuminate\Http\Request;
  */
 class ItemApiController extends Controller
 {
-    /** GET /api/items — listado paginado */
     public function index(Request $request)
     {
         $cacheKey = 'api_items_' . md5(json_encode($request->only('tipo', 'categoria', 'q', 'page')));
 
         $result = \Cache::remember($cacheKey, 120, function () use ($request) {
-            $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
-                ->where('estatus', 1)
-                ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
-
-            if ($request->filled('tipo')) {
-                $tipo = (int) $request->tipo;
-                // tipo=2 (intercambio) y tipo=1 (venta): mostrar también tipo=3 (ambos)
-                if ($tipo === 2) {
-                    $query->whereIn('tipo_trans', [2, 3]);
-                } elseif ($tipo === 1) {
-                    $query->whereIn('tipo_trans', [1, 3]);
-                } else {
-                    $query->where('tipo_trans', $tipo);
-                }
-            }
-            if ($request->filled('categoria')) {
-                $query->where('id_categoria_item', $request->categoria);
-            }
             if ($request->filled('q')) {
-                $query->where('item', 'like', '%' . $request->q . '%');
+                $scout = Item::search($request->q)
+                    ->where('estatus', 1);
+
+                if ($request->filled('categoria')) {
+                    $scout->where('id_categoria_item', (int) $request->categoria);
+                }
+
+                $query = $scout->query(function ($q) use ($request) {
+                    $q->with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                        ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
+
+                    if ($request->filled('tipo')) {
+                        $tipo = (int) $request->tipo;
+                        if ($tipo === 2) {
+                            $q->whereIn('tipo_trans', [2, 3]);
+                        } elseif ($tipo === 1) {
+                            $q->whereIn('tipo_trans', [1, 3]);
+                        } else {
+                            $q->where('tipo_trans', $tipo);
+                        }
+                    }
+                    $q->latest('fecha');
+                });
+
+                $items = $query->paginate(12);
+            } else {
+                $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                    ->where('estatus', 1)
+                    ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
+
+                if ($request->filled('tipo')) {
+                    $tipo = (int) $request->tipo;
+                    if ($tipo === 2) {
+                        $query->whereIn('tipo_trans', [2, 3]);
+                    } elseif ($tipo === 1) {
+                        $query->whereIn('tipo_trans', [1, 3]);
+                    } else {
+                        $query->where('tipo_trans', $tipo);
+                    }
+                }
+                if ($request->filled('categoria')) {
+                    $query->where('id_categoria_item', $request->categoria);
+                }
+
+                $items = $query->latest('fecha')->paginate(12);
             }
 
-            $items = $query->latest('fecha')->paginate(12);
             $data  = collect($items->items())->map(fn($item) => $this->appendImageUrl($item));
 
             return [
@@ -92,14 +116,25 @@ class ItemApiController extends Controller
     {
         $q = $request->input('q', '');
 
-        $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
-            ->where('estatus', 1)
-            ->where('item', 'like', "%{$q}%")
-            ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
-            ->latest('fecha')
-            ->limit(20)
-            ->get()
-            ->map(fn($item) => $this->appendImageUrl($item));
+        if (!empty($q)) {
+            $items = Item::search($q)
+                ->where('estatus', 1)
+                ->query(fn($query) => $query->with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                    ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
+                    ->latest('fecha')
+                )
+                ->take(20)
+                ->get()
+                ->map(fn($item) => $this->appendImageUrl($item));
+        } else {
+            $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                ->where('estatus', 1)
+                ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
+                ->latest('fecha')
+                ->limit(20)
+                ->get()
+                ->map(fn($item) => $this->appendImageUrl($item));
+        }
 
         return response()->json($items);
     }

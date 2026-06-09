@@ -24,8 +24,8 @@ class AdminMiddleware
 
         $user = auth()->user();
 
-        // 2. Verificar que el usuario tenga el flag isAdmin o isSuperAdmin activo
-        if (!$user->isAdmin && !$user->isSuperAdmin) {
+        // 2. Verificar que el usuario tenga el flag isAdmin, isSuperAdmin o isContable activo
+        if (!$user->isAdmin && !$user->isSuperAdmin && !$user->isContable) {
             // Registrar intento de acceso no autorizado para auditoría
             Log::warning('Intento de acceso no autorizado al panel admin', [
                 'user_id' => $user->id,

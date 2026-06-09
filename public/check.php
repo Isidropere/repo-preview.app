@@ -71,6 +71,18 @@ try {
     } else {
         echo "⚠️ Tabla 'logs_pagos' NO existe (se ejecutará en la migración)\n";
     }
+
+    // Hotfix: isContable en tabla users
+    if (Schema::hasTable('users')) {
+        if (!Schema::hasColumn('users', 'isContable')) {
+            Schema::table('users', function ($table) {
+                $table->boolean('isContable')->default(false)->after('isSuperAdmin');
+            });
+            echo "✅ Columna isContable añadida a 'users'\n";
+        } else {
+            echo "✅ Tabla 'users' ya tiene isContable\n";
+        }
+    }
 } catch (Throwable $e) {
     echo "⚠️ Advertencia en Hotfixes: " . $e->getMessage() . " (Posiblemente ya aplicados)\n";
 }

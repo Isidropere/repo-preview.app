@@ -552,7 +552,7 @@ Route::get('/debug-negociaciones', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Gestión de usuarios (solo admin)
-    Route::middleware('admin')->controller(UserController::class)->group(function () {
+    Route::middleware('admin_or_superadmin')->controller(UserController::class)->group(function () {
         Route::resource('usuarios', UserController::class)->except(['create', 'store']);
         Route::put('/usuarios/{id}/toggle-status', 'toggleStatus')->name('usuarios.toggle-status');
     });
@@ -727,25 +727,11 @@ Route::fallback(function () {
 
 // Rutas accesibles por admin Y superadmin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Panel principal con tabs
+    // Panel principal con tabs (Accesible por admin, superadmin y contable)
     Route::get('/', [AdminComprasController::class, 'index'])->name('index');
 
-    // Compras
-    Route::get('/compras', [AdminComprasController::class, 'indexCompras'])->name('compras.index');
-    Route::get('/compras/{id}', [AdminComprasController::class, 'showCompra'])->name('compras.show');
-    Route::post('/compras/{id}/estado', [AdminComprasController::class, 'actualizarEstado'])->name('compras.estado');
-    Route::post('/compras/{id}/tracking', [AdminComprasController::class, 'enviarTracking'])->name('compras.tracking');
-    Route::get('/compras/{id}/pdf', [AdminComprasController::class, 'descargarPdf'])->name('compras.pdf');
-
-    // Ventas
-    Route::get('/ventas/{id}', [AdminComprasController::class, 'showVenta'])->name('ventas.show');
-
-    // Intercambios
-    Route::get('/intercambios/{id}', [AdminComprasController::class, 'showIntercambio'])->name('intercambios.show');
-    Route::post('/intercambios/{id}/estado', [AdminComprasController::class, 'actualizarEstadoIntercambio'])->name('intercambios.estado');
-
-    // --- GESTIÓN EMPRESARIAL (Super Admin) ---
-    Route::prefix('erp')->name('erp.')->group(function () {
+    // --- GESTIÓN EMPRESARIAL (ERP: Super Admin o Contable) ---
+    Route::middleware('superadmin_or_contable')->prefix('erp')->name('erp.')->group(function () {
         Route::get('/historial/pdf', [ERPController::class, 'descargarHistorialPdf'])->name('historial.pdf');
         Route::get('/historial', [ERPController::class, 'historialTransacciones'])->name('historial');
         Route::get('/contabilidad', [ERPController::class, 'contabilidad'])->name('contabilidad');
@@ -764,7 +750,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyArticulo'])->name('transporte.articulos.destroy');
         Route::put('/transporte/config', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateConfig'])->name('transporte.config.update');
 
-
         // Cuentas CRUD
         Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');
         Route::put('/contabilidad/cuentas/{id}', [ERPController::class, 'updateCuenta'])->name('contabilidad.cuentas.update');
@@ -777,25 +762,42 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/caja/cerrar', [ERPController::class, 'cerrarCaja'])->name('caja.cerrar');
     });
 
-    // Mensajes predefinidos — solo lectura para admin normal
-    Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');
+    // --- RUTAS ADMINISTRATIVAS GENERALES (Solo Admin o Super Admin) ---
+    Route::middleware('admin_or_superadmin')->group(function () {
+        // Compras
+        Route::get('/compras', [AdminComprasController::class, 'indexCompras'])->name('compras.index');
+        Route::get('/compras/{id}', [AdminComprasController::class, 'showCompra'])->name('compras.show');
+        Route::post('/compras/{id}/estado', [AdminComprasController::class, 'actualizarEstado'])->name('compras.estado');
+        Route::post('/compras/{id}/tracking', [AdminComprasController::class, 'enviarTracking'])->name('compras.tracking');
+        Route::get('/compras/{id}/pdf', [AdminComprasController::class, 'descargarPdf'])->name('compras.pdf');
 
-    // Notificaciones a usuarios
-    Route::get('/notificaciones', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'index'])->name('notificaciones.index');
-    Route::post('/notificaciones/enviar', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviar'])->name('notificaciones.enviar');
-    Route::get('/notificaciones/buscar-usuarios', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'buscarUsuarios'])->name('notificaciones.buscar');
-    Route::get('/notificaciones/categorias', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'indexCategorias'])->name('notificaciones.categorias');
-    Route::post('/notificaciones/enviar-directa', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviarDirecta'])->name('notificaciones.enviarDirecta');
+        // Ventas
+        Route::get('/ventas/{id}', [AdminComprasController::class, 'showVenta'])->name('ventas.show');
 
-    // Panel de aprobación de imágenes (accesible por admin y superadmin)
-    Route::prefix('imagenes')->name('imagenes.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'index'])->name('index');
-        Route::post('/items/aprobar-todas',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosItems'])->name('items.aprobarTodas');
-        Route::post('/items/{id}/aprobar',     [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarItem'])->name('items.aprobar');
-        Route::post('/items/{id}/rechazar',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarItem'])->name('items.rechazar');
-        Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
-        Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
-        Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+        // Intercambios
+        Route::get('/intercambios/{id}', [AdminComprasController::class, 'showIntercambio'])->name('intercambios.show');
+        Route::post('/intercambios/{id}/estado', [AdminComprasController::class, 'actualizarEstadoIntercambio'])->name('intercambios.estado');
+
+        // Mensajes predefinidos — solo lectura para admin normal
+        Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');
+
+        // Notificaciones a usuarios
+        Route::get('/notificaciones', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'index'])->name('notificaciones.index');
+        Route::post('/notificaciones/enviar', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviar'])->name('notificaciones.enviar');
+        Route::get('/notificaciones/buscar-usuarios', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'buscarUsuarios'])->name('notificaciones.buscar');
+        Route::get('/notificaciones/categorias', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'indexCategorias'])->name('notificaciones.categorias');
+        Route::post('/notificaciones/enviar-directa', [\App\Http\Controllers\Admin\AdminNotificacionesController::class, 'enviarDirecta'])->name('notificaciones.enviarDirecta');
+
+        // Panel de aprobación de imágenes (accesible por admin y superadmin)
+        Route::prefix('imagenes')->name('imagenes.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'index'])->name('index');
+            Route::post('/items/aprobar-todas',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosItems'])->name('items.aprobarTodas');
+            Route::post('/items/{id}/aprobar',     [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarItem'])->name('items.aprobar');
+            Route::post('/items/{id}/rechazar',    [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarItem'])->name('items.rechazar');
+            Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
+            Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
+            Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+        });
     });
 });
 
@@ -895,4 +897,16 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     // Config tarifa categoría 29
     Route::get('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'show'])->name('config_tarifa.show');
     Route::put('/config-tarifa', [\App\Http\Controllers\Admin\AdminConfigTarifaController::class, 'update'])->name('config_tarifa.update');
+});
+
+// Ruta temporal para indexación de Elasticsearch (Laravel Scout)
+Route::get('/scout-import-items', function () {
+    try {
+        \Artisan::call('scout:import', [
+            'model' => 'App\Models\Item'
+        ]);
+        return "<pre>Sincronización exitosa:\n" . \Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "Error al indexar: " . $e->getMessage();
+    }
 });

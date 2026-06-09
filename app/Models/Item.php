@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Helpers\HashIdHelper;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 /**
  * ============================================================
@@ -32,7 +33,7 @@ use Illuminate\Support\Str;
  */
 class Item extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected static function booted()
     {
@@ -210,5 +211,35 @@ class Item extends Model
     public function pagoRegistro()
     {
         return $this->hasOne(PagoRegistroTalento::class, 'id_item', 'id_item');
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id_item'           => (int) $this->id_item,
+            'item'              => $this->item,
+            'presentacion'      => $this->presentacion,
+            'categoria'         => $this->categoria?->categoria,
+            'id_categoria_item' => (int) $this->id_categoria_item,
+            'estatus'           => (int) $this->estatus,
+            'tipo_trans'        => (int) $this->tipo_trans,
+            'id_user'           => (int) $this->id_user,
+            'valor'             => (float) $this->valor,
+        ];
+    }
+
+    public function getScoutKey(): mixed
+    {
+        return $this->id_item;
+    }
+
+    public function getScoutKeyName(): mixed
+    {
+        return 'id_item';
     }
 }

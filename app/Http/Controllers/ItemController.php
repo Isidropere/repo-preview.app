@@ -1035,15 +1035,35 @@ class ItemController extends Controller
     public function search(Request $request)
     {
         try {
-            $query = Item::query();
+            $perPage = $request->per_page ?? 5;
+            $perPage = min($perPage, 10);
 
-            if ($request->has('q')) {
-                $query->where(function ($query) use ($request) {
-                    $q = str_replace(['%', '_'], ['\\%', '\\_'], $request->q);
-                    $query->where('item', 'like', '%' . $q . '%')
-                        ->orWhere('presentacion', 'like', '%' . $q . '%');
+            if ($request->has('q') && !empty($request->q)) {
+                $scout = Item::search($request->q);
+                
+                if ($request->has('categoria')) {
+                    $scout->where('id_categoria_item', (int) $request->categoria);
+                }
+
+                if ($request->has('tipo_trans')) {
+                    $scout->where('tipo_trans', (int) $request->tipo);
+                }
+
+                $query = $scout->query(function ($q) use ($request) {
+                    $q->with(['categoria', 'direcciones', 'imagenes']);
+                    if ($request->has('min_valor') && $request->has('max_valor')) {
+                        $q->whereBetween('valor', [$request->min_valor, $request->max_valor]);
+                    } elseif ($request->has('min_valor')) {
+                        $q->where('valor', '>=', $request->min_valor);
+                    } elseif ($request->has('max_valor')) {
+                        $q->where('valor', '<=', $request->max_valor);
+                    }
                 });
+
+                return $query->paginate($perPage);
             }
+
+            $query = Item::query();
 
             if ($request->has('categoria')) {
                 $query->where('id_categoria_item', $request->categoria);
@@ -1061,9 +1081,6 @@ class ItemController extends Controller
                 $query->where('valor', '<=', $request->max_valor);
             }
 
-            $perPage = $request->per_page ?? 5;
-            $perPage = min($perPage, 10);
-
             return $query->with(['categoria', 'direcciones', 'imagenes'])
                 ->paginate($perPage);
         } catch (Throwable $e) {
@@ -1073,7 +1090,7 @@ class ItemController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Error en la bíºsqueda',
+                'error' => 'Error en la búsqueda',
                 'details' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -1121,37 +1138,67 @@ class ItemController extends Controller
                 return redirect()->route('categorias.show', $categoria->slug, 301);
             }
 
-            $query = Item::where('id_categoria_item', $id);
+            $hasSearch = request()->has('search') && !empty(request('search'));
 
-            switch (request('sort')) {
-                case 'newest':
-                    $query->orderBy('id_item', 'desc');
-                    break;
-                case 'oldest':
-                    $query->orderBy('id_item', 'asc');
-                    break;
-                case 'price_asc':
-                    $query->orderBy('valor', 'asc');
-                    break;
-                case 'price_desc':
-                    $query->orderBy('valor', 'desc');
-                    break;
-                case 'name_asc':
-                    $query->orderBy('item', 'asc');
-                    break;
-                case 'name_desc':
-                    $query->orderBy('item', 'desc');
-                    break;
-                default:
-                    $query->orderBy('id_item', 'desc');
+            if ($hasSearch) {
+                $scout = Item::search(request('search'))
+                    ->where('id_categoria_item', (int) $id)
+                    ->where('estatus', 1);
+
+                $query = $scout->query(function ($q) {
+                    switch (request('sort')) {
+                        case 'newest':
+                            $q->orderBy('id_item', 'desc');
+                            break;
+                        case 'oldest':
+                            $q->orderBy('id_item', 'asc');
+                            break;
+                        case 'price_asc':
+                            $q->orderBy('valor', 'asc');
+                            break;
+                        case 'price_desc':
+                            $q->orderBy('valor', 'desc');
+                            break;
+                        case 'name_asc':
+                            $q->orderBy('item', 'asc');
+                            break;
+                        case 'name_desc':
+                            $q->orderBy('item', 'desc');
+                            break;
+                        default:
+                            $q->orderBy('id_item', 'desc');
+                    }
+                });
+
+                $items = $query->paginate(12)->appends(request()->query());
+            } else {
+                $query = Item::where('id_categoria_item', $id)->where('estatus', 1);
+
+                switch (request('sort')) {
+                    case 'newest':
+                        $query->orderBy('id_item', 'desc');
+                        break;
+                    case 'oldest':
+                        $query->orderBy('id_item', 'asc');
+                        break;
+                    case 'price_asc':
+                        $query->orderBy('valor', 'asc');
+                        break;
+                    case 'price_desc':
+                        $query->orderBy('valor', 'desc');
+                        break;
+                    case 'name_asc':
+                        $query->orderBy('item', 'asc');
+                        break;
+                    case 'name_desc':
+                        $query->orderBy('item', 'desc');
+                        break;
+                    default:
+                        $query->orderBy('id_item', 'desc');
+                }
+
+                $items = $query->paginate(12)->appends(request()->query());
             }
-
-            if (request()->has('search')) {
-                $s = str_replace(['%', '_'], ['\\%', '\\_'], request('search'));
-                $query->where('item', 'like', '%' . $s . '%');
-            }
-
-            $items = $query->paginate(12);
 
             return view('categorias.por-categoria', compact('items', 'categoria'));
         } catch (Throwable $e) {
@@ -1383,24 +1430,23 @@ class ItemController extends Controller
             $searchTerm = $request->q ?? '';
             $hasSearch = !empty($searchTerm);
             
-            $query = Item::where('estatus', 1)
-                ->whereIn('tipo_trans', [1, 2, 3]);
-
             if ($hasSearch) {
-                $cleanTerm = str_replace(['%', '_'], ['\\%', '\\_'], $searchTerm);
-                $query->where(function ($q) use ($cleanTerm) {
-                    $q->where('item', 'like', '%' . $cleanTerm . '%')
-                        ->orWhere('presentacion', 'like', '%' . $cleanTerm . '%')
-                        ->orWhereHas('categoria', function ($catQuery) use ($cleanTerm) {
-                            $catQuery->where('categoria', 'like', '%' . $cleanTerm . '%');
-                        });
-                });
+                $items = Item::search($searchTerm)
+                    ->where('estatus', 1)
+                    ->query(fn($q) => $q->whereIn('tipo_trans', [1, 2, 3])
+                        ->with(['categoria', 'direcciones', 'imagenes'])
+                        ->orderByDesc('fecha')
+                    )
+                    ->paginate(12)
+                    ->appends($request->query());
+            } else {
+                $items = Item::where('estatus', 1)
+                    ->whereIn('tipo_trans', [1, 2, 3])
+                    ->with(['categoria', 'direcciones', 'imagenes'])
+                    ->orderByDesc('fecha')
+                    ->paginate(12)
+                    ->appends($request->query());
             }
-
-            $items = $query->orderByDesc('fecha')
-                ->with(['categoria', 'direcciones', 'imagenes'])
-                ->paginate(12)
-                ->appends($request->query());
 
             // Si no hay resultados y hubo búsqueda, obtener items relevantes
             $noResults = $hasSearch && $items->isEmpty();

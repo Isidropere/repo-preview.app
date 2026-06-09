@@ -160,10 +160,14 @@
 document.addEventListener("DOMContentLoaded", function () {
     var input = document.getElementById("buscarCategoria");
     var items = document.querySelectorAll("#navbar-secondary-content .cat-item");
+    function normalizar(texto) {
+        return (texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
     input.addEventListener("keyup", function () {
-        var filtro = input.value.toLowerCase();
+        var filtro = normalizar(input.value);
         items.forEach(function(el) {
-            el.style.display = el.textContent.toLowerCase().includes(filtro) ? "flex" : "none";
+            var content = normalizar(el.textContent);
+            el.style.display = content.includes(filtro) ? "flex" : "none";
         });
     });
 });

@@ -350,7 +350,7 @@ class ERPController extends Controller
 
         // Lista de admins para el filtro
         $admins = \App\Models\User::where(function($q) {
-                $q->where('isAdmin', true)->orWhere('isSuperAdmin', true);
+                $q->where('isAdmin', true)->orWhere('isSuperAdmin', true)->orWhere('isContable', true);
             })
             ->orderBy('nombres')
             ->get(['id', 'nombres', 'apellidos']);
