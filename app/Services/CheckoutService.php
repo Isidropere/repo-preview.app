@@ -317,7 +317,7 @@ class CheckoutService
                         "Dirección de Entrega: {$dirTexto}\n\n" .
                         "----------------------------------------\n" .
                         "Cámbialo RD\n" .
-                        "Dirección permanente: Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana\n" .
+                        "Dirección permanente: Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana\n" .
                         "Soporte al Cliente: Teléfono: (829) 963-4839 | Email: cambialord.com@gmail.com\n" .
                         "http://cambialord.com.do\n\n" .
                         "Nota de seguridad: Cámbialo RD no almacena la información completa de tu tarjeta de crédito o débito ni tu CVV. Toda la información de pago es transmitida de forma segura y encriptada (cifrado TLS 1.2) a través del procesador de pagos AZUL.";

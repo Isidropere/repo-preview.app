@@ -420,7 +420,7 @@
                     <div class="border-t border-gray-100 mt-3 pt-3 text-[10px] text-gray-400 leading-normal">
                         <p class="font-semibold uppercase text-gray-500 tracking-wider mb-1">Comercio Afiliado</p>
                         <p class="font-medium text-gray-600">Cámbialo RD</p>
-                        <p>Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana</p>
+                        <p>Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana</p>
                     </div>
                 </div>
             </div>

@@ -64,7 +64,7 @@
         <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-500">
             <div class="space-y-1.5 text-center md:text-left">
                 <p class="font-semibold text-gray-800 text-sm">Cámbialo RD</p>
-                <p>Dirección permanente: Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana</p>
+                <p>Dirección permanente: Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana</p>
                 <p>Soporte al Cliente: Teléfono: <a href="tel:8299634839" class="hover:text-primary font-semibold transition-colors">(829) 963-4839</a> | Correo: <a href="mailto:cambialord.com@gmail.com" class="hover:text-primary font-semibold transition-colors">cambialord.com@gmail.com</a></p>
             </div>
             <div class="flex flex-col items-center md:items-end gap-2">

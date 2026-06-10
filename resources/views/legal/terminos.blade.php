@@ -18,7 +18,7 @@
 
                 <h2 class="text-xl font-semibold text-secondary mt-6">1. Nombre Comercial e Identificación del Comercio</h2>
                 <p>
-                    El nombre comercial utilizado y expuesto a lo largo de este portal es <strong>Cámbialo RD</strong>. La dirección permanente del comercio es <strong>Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana</strong>.
+                    El nombre comercial utilizado y expuesto a lo largo de este portal es <strong>Cámbialo RD</strong>. La dirección permanente del comercio es <strong>Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana</strong>.
                 </p>
 
                 <h2 class="text-xl font-semibold text-secondary mt-6">2. Política de Entrega y Envío</h2>

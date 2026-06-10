@@ -763,7 +763,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       const SizedBox(height: 4),
                       const Text(
                         'Nombre comercial: Cámbialo RD\n'
-                        'Dirección permanente: Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana\n'
+                        'Dirección permanente: Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana\n'
                         'Soporte: (829) 963-4839 | cambialord.com@gmail.com',
                         style: TextStyle(fontSize: 9, color: kTextGray, height: 1.3),
                       ),

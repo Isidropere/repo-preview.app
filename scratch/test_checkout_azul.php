@@ -74,7 +74,7 @@ function setupTestData() {
 
     // 2. Obtener o crear una dirección predeterminada
     $direccion = Direcciones::where('id_user', $user->id)
-        ->where('calle', 'Av. John F. Kennedy #12')
+        ->where('calle', 'Napoleón Bonaparte')
         ->first();
 
     if (!$direccion) {
@@ -82,10 +82,11 @@ function setupTestData() {
         $direccion = Direcciones::create([
             'id_direccion' => $maxId + 1,
             'id_user' => $user->id,
-            'calle' => 'Av. John F. Kennedy #12',
+            'calle' => 'Napoleón Bonaparte',
+            'N_casa_edificio' => 'Manzana T, Edificio 21',
+            'sector' => 'Res. Pablo Mella Morales II',
             'id_provincia' => 1, // Santo Domingo
             'id_municipio' => 1,
-            'N_casa_edificio' => '12',
             'es_predeterminada' => 1,
             'telefono_contacto' => '(829) 963-4839',
         ]);
