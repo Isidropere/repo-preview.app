@@ -37,6 +37,17 @@ class _DireccionesScreenState extends State<DireccionesScreen> {
     _load();
   }
 
+  Future<void> _setPredeterminada(int id) async {
+    setState(() => _loading = true);
+    final res = await ApiClient.put('/direcciones/$id', {
+      'es_predeterminada': true,
+    }, auth: true);
+    if (res.statusCode == 200) {
+      ApiClient.clearCache();
+    }
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +92,16 @@ class _DireccionesScreenState extends State<DireccionesScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Row(children: [
-                            Icon(Icons.location_on, color: isPred ? kPrimary : Colors.grey),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                isPred ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: isPred ? kPrimary : Colors.grey,
+                                size: 24,
+                              ),
+                              onPressed: isPred ? null : () => _setPredeterminada(ApiClient.parseInt(d['id_direccion']) ?? 0),
+                            ),
                             const SizedBox(width: 10),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               if (isPred)
