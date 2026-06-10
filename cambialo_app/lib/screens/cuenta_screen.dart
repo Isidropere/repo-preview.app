@@ -158,6 +158,12 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'sub': 'Gestiona tus propuestas activas',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
     },
+    {
+      'icon': Icons.gavel_outlined,
+      'title': 'Políticas y Legal',
+      'sub': 'Términos, privacidad y reembolsos',
+      'onTap': () => _mostrarDialogoPoliticas(),
+    },
   ];
 
   @override
@@ -423,6 +429,101 @@ class _CuentaScreenState extends State<CuentaScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             child: const Text('Completar ahora', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoPoliticas() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Políticas y Legal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimary)),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                const TabBar(
+                  labelColor: kPrimary,
+                  unselectedLabelColor: kTextGray,
+                  indicatorColor: kPrimary,
+                  labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  tabs: [
+                    Tab(text: 'Términos'),
+                    Tab(text: 'Privacidad'),
+                    Tab(text: 'Devolución'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Tab 1: Términos
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Términos y Condiciones (Política de Entrega)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Cámbialo RD es un mercado en línea registrado en la República Dominicana.\n\n'
+                              '1. Envíos y Entregas: Los artículos se entregan a través de socios logísticos seleccionados. Las entregas se completan entre 2 a 5 días hábiles.\n\n'
+                              '2. Restricciones de Envío y Exportación: Los envíos están limitados EXCLUSIVAMENTE al territorio de la República Dominicana. No realizamos exportaciones ni entregas fuera del país.',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Tab 2: Privacidad
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Política de Privacidad y Seguridad', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Protegemos tus datos personales.\n\n'
+                              'Seguridad de Tarjetas: No guardamos, almacenamos ni compartimos los números de tus tarjetas de crédito/débito ni el código de seguridad CVV. Toda la transmisión de datos financieros se realiza de forma cifrada mediante protocolo seguro TLS 1.2 directamente a la pasarela de pagos AZUL (Banco Popular Dominicano).',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Tab 3: Devolución
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Políticas de Devoluciones y Cancelación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '1. Devoluciones: Dispones de un plazo de 48 horas contadas a partir de la recepción física del artículo para notificar disconformidades o defectos graves.\n\n'
+                              '2. Reembolsos: No se realizan reembolsos de dinero en compras de artículos físicos por cambios de opinión. En caso de devoluciones válidas, los reembolsos se acreditarán a la tarjeta de pago original a través de AZUL.\n\n'
+                              '3. Cancelaciones: Los pedidos de productos físicos pueden cancelarse sin cargo antes de ser enviados.',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: kPrimary),
+            child: const Text('Entendido'),
           ),
         ],
       ),

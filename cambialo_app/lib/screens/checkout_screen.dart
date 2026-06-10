@@ -26,6 +26,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double _costoEnvio = 0.0;
   int? _diasHabiles;
   bool _calculandoEnvio = false;
+  bool _aceptarPoliticas = false;
 
   // Formulario nueva tarjeta
   final _formTarjetaKey   = GlobalKey<FormState>();
@@ -238,6 +239,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     if (_cvvCtrl.text.trim().isEmpty) {
       setState(() => _errorMsg = 'Debes ingresar el código CVV.');
+      return;
+    }
+    if (!_aceptarPoliticas) {
+      setState(() => _errorMsg = 'Debes aceptar los Términos y Condiciones y las Políticas de Privacidad.');
       return;
     }
     setState(() { _pagando = true; _errorMsg = ''; });
@@ -693,12 +698,97 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const Divider(height: 16),
                 _fila('TOTAL', 'RD\$ ${_totalFinal.toStringAsFixed(2)}', bold: true),
 
+                // ─ Checkbox Políticas y Legal (Requisito AZUL) ─
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: _aceptarPoliticas,
+                        onChanged: (v) => setState(() => _aceptarPoliticas = v ?? false),
+                        activeColor: kPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InkWell(
+                        onTap: _mostrarDialogoPoliticas,
+                        child: RichText(
+                          text: const TextSpan(
+                            style: TextStyle(color: kTextGray, fontSize: 11, height: 1.3),
+                            children: [
+                              TextSpan(text: 'He leído y acepto los '),
+                              TextSpan(
+                                text: 'Términos y Condiciones (Política de Entrega)',
+                                style: TextStyle(color: kPrimary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              ),
+                              TextSpan(text: ', la '),
+                              TextSpan(
+                                text: 'Política de Privacidad',
+                                style: TextStyle(color: kPrimary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              ),
+                              TextSpan(text: ' y la '),
+                              TextSpan(
+                                text: 'Política de Devoluciones',
+                                style: TextStyle(color: kPrimary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              ),
+                              TextSpan(text: ' de Cámbialo RD.'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ─ Información de Comercio y Seguridad (Requisitos AZUL) ─
+                Container(
+                  margin: const EdgeInsets.only(top: 16, bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'INFORMACIÓN DEL COMERCIO',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kSecondary, letterSpacing: 0.5),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Nombre comercial: Cámbialo RD\n'
+                        'Dirección permanente: Av. John F. Kennedy #12, Plaza Metropolitana, Santo Domingo, República Dominicana\n'
+                        'Soporte: (829) 963-4839 | cambialord.com@gmail.com',
+                        style: TextStyle(fontSize: 9, color: kTextGray, height: 1.3),
+                      ),
+                      const Divider(height: 16),
+                      const Text(
+                        'SEGURIDAD DE TARJETAS Y MONEDA',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kSecondary, letterSpacing: 0.5),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '• Todas las transacciones se facturan y procesan en Pesos Dominicanos (RD\$ / DOP).\n'
+                        '• No almacenamos ni compartimos tus datos de tarjeta ni CVV.\n'
+                        '• La información se transmite de forma cifrada mediante TLS 1.2 directamente al procesador AZUL.',
+                        style: TextStyle(fontSize: 9, color: kTextGray, height: 1.3),
+                      ),
+                    ],
+                  ),
+                ),
+
                 if (_errorMsg.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _aviso(Icons.error_outline, _errorMsg, color: Colors.red.shade50, iconColor: Colors.red),
                 ],
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // ─ Botón pagar ─
                 SizedBox(
@@ -717,6 +807,101 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ]),
             ),
+    );
+  }
+
+  void _mostrarDialogoPoliticas() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Políticas y Legal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimary)),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                const TabBar(
+                  labelColor: kPrimary,
+                  unselectedLabelColor: kTextGray,
+                  indicatorColor: kPrimary,
+                  labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  tabs: [
+                    Tab(text: 'Términos'),
+                    Tab(text: 'Privacidad'),
+                    Tab(text: 'Devolución'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Tab 1: Términos
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Términos y Condiciones (Política de Entrega)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Cámbialo RD es un mercado en línea registrado en la República Dominicana.\n\n'
+                              '1. Envíos y Entregas: Los artículos se entregan a través de socios logísticos seleccionados. Las entregas se completan entre 2 a 5 días hábiles.\n\n'
+                              '2. Restricciones de Envío y Exportación: Los envíos están limitados EXCLUSIVAMENTE al territorio de la República Dominicana. No realizamos exportaciones ni entregas fuera del país.',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Tab 2: Privacidad
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Política de Privacidad y Seguridad', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Protegemos tus datos personales.\n\n'
+                              'Seguridad de Tarjetas: No guardamos, almacenamos ni compartimos los números de tus tarjetas de crédito/débito ni el código de seguridad CVV. Toda la transmisión de datos financieros se realiza de forma cifrada mediante protocolo seguro TLS 1.2 directamente a la pasarela de pagos AZUL (Banco Popular Dominicano).',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Tab 3: Devolución
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Políticas de Devoluciones y Cancelación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextDark)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '1. Devoluciones: Dispones de un plazo de 48 horas contadas a partir de la recepción física del artículo para notificar disconformidades o defectos graves.\n\n'
+                              '2. Reembolsos: No se realizan reembolsos de dinero en compras de artículos físicos por cambios de opinión. En caso de devoluciones válidas, los reembolsos se acreditarán a la tarjeta de pago original a través de AZUL.\n\n'
+                              '3. Cancelaciones: Los pedidos de productos físicos pueden cancelarse sin cargo antes de ser enviados.',
+                              style: TextStyle(fontSize: 11, color: kTextGray, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: kPrimary),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
     );
   }
 
