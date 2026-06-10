@@ -773,7 +773,9 @@
 
         });
 
-</script>
+    </script>
+
+@include('legal.partials.modal')
 
 @stack('scripts')
 
