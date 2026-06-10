@@ -1,7 +1,7 @@
 {{-- Botón "Volver" — usa history.back() si hay historial, sino va a $backUrl --}}
 <div style="margin-bottom: 1rem;">
     <a href="{{ $backUrl ?? route('home') }}"
-       onclick="if(document.referrer && document.referrer !== window.location.href){ event.preventDefault(); history.back(); }"
+       onclick="if(window.history.length > 1 && document.referrer && document.referrer !== window.location.href){ event.preventDefault(); history.back(); } else if(document.referrer && document.referrer.indexOf(window.location.host) !== -1){ event.preventDefault(); window.location.href = document.referrer; }"
        style="display: inline-flex; align-items: center; gap: 6px; color: #666; font-size: 0.9rem; text-decoration: none; padding: 6px 12px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
        onmouseover="this.style.background='#f0f0f0'; this.style.color='#333';"
        onmouseout="this.style.background='transparent'; this.style.color='#666';"

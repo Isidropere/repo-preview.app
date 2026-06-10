@@ -254,6 +254,18 @@ Route::get('/envios', function () {
     return view('envios.envios');
 })->name('envios');
 
+Route::get('/politica-privacidad', function () {
+    return view('legal.privacidad');
+})->name('legal.privacidad');
+
+Route::get('/politica-devoluciones', function () {
+    return view('legal.devoluciones');
+})->name('legal.devoluciones');
+
+Route::get('/terminos-condiciones', function () {
+    return view('legal.terminos');
+})->name('legal.terminos');
+
 Route::get('/empleos', function () {
     return view('empleos.empleos');
 })->name('empleos');

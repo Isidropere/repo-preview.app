@@ -226,7 +226,7 @@ class CheckoutService
         int $userId,
     ): array {
         try {
-            DB::transaction(function () use ($itemsSeleccionados, $carrito, $tarjeta, $resultadoPago, $montoTotal, $direccion) {
+            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $tarjeta, $resultadoPago, $montoTotal, $direccion) {
                 // Bloqueo pesimista: evita pedidos duplicados por doble submit (ventana de 2 minutos)
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
@@ -265,6 +265,8 @@ class CheckoutService
 
                 // --- AUTOMATIZACIÓN ERP ---
                 $this->erpService->procesarVentaAprobada($pagoCompra);
+
+                return $pagoCompra;
             });
 
             Log::info('Pago completado', ['user_id' => $userId, 'carrito' => $carrito->id_carrito]);
@@ -277,6 +279,56 @@ class CheckoutService
                         $this->solicitudService->marcarPagada($solicitud->id_solicitud);
                     }
                 }
+            }
+
+            // Enviar recibo por correo al cliente (Requisito AZUL)
+            try {
+                $user = \App\Models\User::find($userId);
+                if ($user && $user->email) {
+                    $fecha = now()->format('d/m/Y H:i A');
+                    $itemsText = "";
+                    foreach ($itemsSeleccionados as $itemSel) {
+                        $nombre = $itemSel->item->item ?? 'Artículo';
+                        $cant = $itemSel->cantidad;
+                        $sub = number_format(($itemSel->item->valor * $itemSel->cantidad) - ($itemSel->descuento ?? 0), 2);
+                        $itemsText .= "- {$nombre} x{$cant}: RD\$ {$sub}\n";
+                    }
+                    
+                    $totalFormatted = number_format($montoTotal, 2);
+                    
+                    $dirTexto = "N/A (Servicio)";
+                    if ($direccion) {
+                        $dirTexto = "{$direccion->calle}";
+                        if ($direccion->N_casa_edificio) $dirTexto .= ", #{$direccion->N_casa_edificio}";
+                        if ($direccion->municipio?->municipio) $dirTexto .= ", {$direccion->municipio->municipio}";
+                        if ($direccion->provincia?->provincia) $dirTexto .= ", {$direccion->provincia->provincia}";
+                        $dirTexto .= ", República Dominicana";
+                    }
+
+                    $emailContent = "Hola, {$user->nombres} {$user->apellidos}:\n\n" .
+                        "¡Gracias por tu compra en Cámbialo RD! A continuación, te presentamos el detalle de tu recibo:\n\n" .
+                        "Número de Orden: {$pagoCompra->id_pago_compra}\n" .
+                        "Fecha: {$fecha}\n" .
+                        "Estatus de Transacción: Aprobado\n" .
+                        "Código de Autorización: " . ($resultadoPago['approval_code'] ?? 'N/A') . "\n\n" .
+                        "Detalle de la Compra:\n" .
+                        $itemsText . "\n" .
+                        "Total Procesado: RD\$ {$totalFormatted} (DOP)\n\n" .
+                        "Dirección de Entrega: {$dirTexto}\n\n" .
+                        "----------------------------------------\n" .
+                        "Cámbialo RD\n" .
+                        "Dirección permanente: Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana\n" .
+                        "Soporte al Cliente: Teléfono: (829) 963-4839 | Email: cambialord.com@gmail.com\n" .
+                        "http://cambialord.com.do\n\n" .
+                        "Nota de seguridad: Cámbialo RD no almacena la información completa de tu tarjeta de crédito o débito ni tu CVV. Toda la información de pago es transmitida de forma segura y encriptada (cifrado TLS 1.2) a través del procesador de pagos AZUL.";
+
+                    \Illuminate\Support\Facades\Mail::raw($emailContent, function ($message) use ($user) {
+                        $message->to($user->email)
+                                ->subject('Recibo de compra - Cámbialo RD');
+                    });
+                }
+            } catch (\Throwable $e) {
+                Log::error('Error al enviar el recibo de compra por email', ['error' => $e->getMessage()]);
             }
 
             return $this->exito('¡Pago procesado correctamente! Tu pedido está en camino.');

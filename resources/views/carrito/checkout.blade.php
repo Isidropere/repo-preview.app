@@ -268,6 +268,15 @@
                 </div>
                         @endif
 
+                        <div class="mb-4">
+                            <label class="flex items-start gap-2.5 cursor-pointer select-none">
+                                <input type="checkbox" required class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="text-xs text-gray-500 leading-normal">
+                                    He leído y acepto los <a href="{{ route('legal.terminos') }}" target="_blank" class="text-blue-600 hover:underline font-semibold">Términos y Condiciones (Política de Entrega)</a>, la <a href="{{ route('legal.privacidad') }}" target="_blank" class="text-blue-600 hover:underline font-semibold">Política de Privacidad</a> y la <a href="{{ route('legal.devoluciones') }}" target="_blank" class="text-blue-600 hover:underline font-semibold">Política de Devoluciones y Cancelación</a> de Cámbialo RD.
+                                </span>
+                            </label>
+                        </div>
+
                         <button type="submit" id="btnPagar"
                             class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white
                                    py-5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200
@@ -286,6 +295,21 @@
                                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                             Pago cifrado con TLS 1.2 &middot; Procesado por Azul
+                        </div>
+
+                        <div class="mt-4 p-3 bg-gray-50 rounded-xl space-y-2 text-[11px] text-gray-500 leading-normal">
+                            <div class="flex items-start gap-2">
+                                <svg class="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <span><strong>Seguridad de Datos de Tarjetas:</strong> No almacenamos ni compartimos la información completa de tu tarjeta de crédito o débito ni el CVV. Los datos de pago son transmitidos de forma segura y encriptada mediante protocolo <strong>TLS 1.2</strong> directamente a la pasarela de pagos de <strong>AZUL</strong>.</span>
+                            </div>
+                            <div class="flex items-start gap-2 border-t border-gray-200/60 pt-2">
+                                <svg class="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span><strong>Moneda de Facturación:</strong> Todas las transacciones comerciales en este portal son procesadas y facturadas en <strong>Pesos Dominicanos (RD$ / DOP)</strong>.</span>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -388,8 +412,15 @@
                         <span class="font-bold text-gray-800">Total</span>
                         <div class="text-right">
                             <p class="text-xl font-bold text-blue-600" id="total-final">RD$ {{ number_format($totalFinal, 2) }}</p>
-                            <p class="text-xs text-gray-400">DOP</p>
+                            <p class="text-xs text-gray-400 font-semibold text-gray-500">DOP</p>
                         </div>
+                    </div>
+
+                    {{-- Dirección permanente (Requisito AZUL en el checkout) --}}
+                    <div class="border-t border-gray-100 mt-3 pt-3 text-[10px] text-gray-400 leading-normal">
+                        <p class="font-semibold uppercase text-gray-500 tracking-wider mb-1">Comercio Afiliado</p>
+                        <p class="font-medium text-gray-600">Cámbialo RD</p>
+                        <p>Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana</p>
                     </div>
                 </div>
             </div>
