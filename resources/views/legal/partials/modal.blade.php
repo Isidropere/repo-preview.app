@@ -38,7 +38,7 @@
         </div>
 
         <!-- Modal Body (Scrollable content) -->
-        <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 text-gray-700 leading-relaxed text-sm bg-white legal-content" id="legalModalBody">
+        <div class="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-6 text-gray-700 leading-relaxed text-sm bg-white legal-content" id="legalModalBody" style="-webkit-overflow-scrolling: touch; overflow-y: auto;">
             <div id="tab-content-terminos" class="hidden space-y-4">
                 @include('legal.partials.terminos')
             </div>
@@ -65,6 +65,18 @@
     }
     #globalLegalModal.show-modal .modal-card {
         transform: scale(1) !important;
+    }
+    .modal-card {
+        max-height: 85vh;
+        height: 85vh;
+        display: flex;
+        flex-direction: column;
+    }
+    #legalModalBody {
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
     .scrollbar-none::-webkit-scrollbar {
         display: none;
