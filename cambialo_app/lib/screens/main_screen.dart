@@ -66,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onTabTapped(int i) async {
-    if (i == 3) {
+    if (i == 3 || i == 4) {
       final isLoggedIn = await AuthService.isLoggedIn();
       if (!isLoggedIn) {
         if (!mounted) return;
@@ -100,7 +100,7 @@ class _MainScreenState extends State<MainScreen> {
              });
           }
        }
-    }).catchError((_) {});
+     }).catchError((_) {});
   }
 
   @override
@@ -109,6 +109,7 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(key: ValueKey('home_$_authKey')),
       ItemsListScreen(key: ValueKey('inter_$_authKey'), tipo: 2),
       ItemsListScreen(key: ValueKey('comp_$_authKey'), tipo: 1),
+      CarritoScreen(key: ValueKey('carrito_$_authKey')),
       CuentaScreen(key: ValueKey('cuenta_$_authKey')),
     ];
 
@@ -136,6 +137,11 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Intercambiar',
             ),
             const NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Comprar'),
+            NavigationDestination(
+              icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined)),
+              selectedIcon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart, color: kPrimary)),
+              label: 'Carrito',
+            ),
             NavigationDestination(
               icon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person_outline)),
               selectedIcon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person, color: kPrimary)),

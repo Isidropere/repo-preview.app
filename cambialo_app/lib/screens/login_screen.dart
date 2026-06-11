@@ -130,39 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           
-          // Back Button in Top Left Corner
-          Positioned(
-            top: 40,
-            left: 16,
-            child: SafeArea(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: kTextDark),
-                  onPressed: () {
-                    if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
-                    } else {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const MainScreen()),
-                      );
-                    }
-                  },
-                ),
-              ),
-            ),
-          ),
+
 
           SafeArea(
             child: Center(

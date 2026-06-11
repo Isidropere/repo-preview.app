@@ -168,23 +168,32 @@ class AuthApiController extends Controller
     /** POST /api/auth/cambiar-contrasena */
     public function cambiarContrasena(Request $request)
     {
-        $request->validate([
-            'password_actual'       => 'required|string',
-            'password'              => 'required|string|min:8|confirmed',
-        ], [
+        $user = $request->user();
+
+        $rules = [
+            'password' => 'required|string|min:8|confirmed',
+        ];
+
+        if ($user->password_defined) {
+            $rules['password_actual'] = 'required|string';
+        }
+
+        $request->validate($rules, [
             'password_actual.required' => 'La contraseña actual es obligatoria.',
             'password.required'        => 'La nueva contraseña es obligatoria.',
             'password.min'             => 'La nueva contraseña debe tener al menos 8 caracteres.',
             'password.confirmed'       => 'Las contraseñas no coinciden.',
         ]);
 
-        $user = $request->user();
-
-        if (!Hash::check($request->password_actual, $user->password)) {
-            return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+        if ($user->password_defined) {
+            if (!Hash::check($request->password_actual, $user->password)) {
+                return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+            }
         }
 
-        $user->update(['password' => Hash::make($request->password)]);
+        $user->password = Hash::make($request->password);
+        $user->password_defined = true;
+        $user->save();
 
         // Revocar todos los tokens para forzar re-login (seguridad)
         $user->tokens()->delete();
@@ -274,6 +283,7 @@ class AuthApiController extends Controller
                 'google_id'         => $request->google_id,
                 'nombre_usuario'    => $username,
                 'password'          => Hash::make(Str::random(24)),
+                'password_defined'  => false,
                 'estatus'           => 1,
                 'id_tipo_usuario'   => 1,
                 'email_verified_at' => now(),
@@ -318,6 +328,7 @@ class AuthApiController extends Controller
             'profile_photo_url' => $user->profile_photo_path
                 ? (filter_var($user->profile_photo_path, FILTER_VALIDATE_URL) ? $user->profile_photo_path : url($user->profile_photo_path))
                 : $avatarUrl,
+            'password_defined'  => (bool)($user->password_defined ?? true),
         ];
     }
 
