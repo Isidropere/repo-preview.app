@@ -328,6 +328,7 @@ class AuthApiController extends Controller
             'profile_photo_url' => $user->profile_photo_path
                 ? (filter_var($user->profile_photo_path, FILTER_VALIDATE_URL) ? $user->profile_photo_path : url($user->profile_photo_path))
                 : $avatarUrl,
+            'password_defined'  => (bool)($user->password_defined ?? true),
         ];
     }
 

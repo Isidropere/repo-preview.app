@@ -69,11 +69,17 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
       _success = '';
     });
 
-    final res = await ApiClient.post('/auth/cambiar-contrasena', {
-      'password_actual': _actualCtrl.text,
+    final bool hasPassword = _user?['password_defined'] ?? true;
+
+    final Map<String, dynamic> payload = {
       'password': _nuevaCtrl.text,
       'password_confirmation': _confirmarCtrl.text,
-    }, auth: true);
+    };
+    if (hasPassword) {
+      payload['password_actual'] = _actualCtrl.text;
+    }
+
+    final res = await ApiClient.post('/auth/cambiar-contrasena', payload, auth: true);
 
     setState(() => _saving = false);
 
@@ -82,7 +88,18 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
       if (body['token'] != null) {
         await ApiClient.saveToken(body['token']);
       }
-      setState(() => _success = 'Contraseña actualizada correctamente.');
+      setState(() {
+        _success = 'Contraseña actualizada correctamente.';
+        if (_user != null) {
+          _user!['password_defined'] = true;
+        }
+      });
+      // Actualizar el usuario guardado localmente
+      if (_user != null) {
+        await ApiClient.saveUser(_user!);
+      }
+      AuthService.invalidateUserCache();
+
       _actualCtrl.clear();
       _nuevaCtrl.clear();
       _confirmarCtrl.clear();
@@ -117,14 +134,16 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                       child: const Icon(Icons.lock_outline, size: 28, color: kPrimary),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Cambiar contraseña',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextDark),
+                    Text(
+                      _user?['password_defined'] ?? true ? 'Cambiar contraseña' : 'Crear contraseña',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextDark),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Ingresa tu contraseña actual para verificar tu identidad',
-                      style: TextStyle(fontSize: 12, color: kTextGray),
+                      _user?['password_defined'] ?? true 
+                          ? 'Ingresa tu contraseña actual para verificar tu identidad' 
+                          : 'Establece una contraseña para poder iniciar sesión directamente',
+                      style: const TextStyle(fontSize: 12, color: kTextGray),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -178,20 +197,46 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 ),
 
               // Inputs con placeholders y validaciones idénticas a la web
-              _passField(
-                _actualCtrl,
-                'Contraseña actual',
-                'Tu contraseña actual',
-                _ocultarActual,
-                () => setState(() => _ocultarActual = !_ocultarActual),
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return 'La contraseña actual es obligatoria.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+              if (_user?['password_defined'] ?? true) ...[
+                _passField(
+                  _actualCtrl,
+                  'Contraseña actual',
+                  'Tu contraseña actual',
+                  _ocultarActual,
+                  () => setState(() => _ocultarActual = !_ocultarActual),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) {
+                      return 'La contraseña actual es obligatoria.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade100),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Como te registraste usando una red social, puedes establecer tu primera contraseña directamente sin ingresar una contraseña actual.',
+                          style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               _passField(
                 _nuevaCtrl,
@@ -292,9 +337,9 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                           height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text(
-                          'Cambiar contraseña',
-                          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                      : Text(
+                          _user?['password_defined'] ?? true ? 'Cambiar contraseña' : 'Crear contraseña',
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
