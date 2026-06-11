@@ -310,6 +310,12 @@
                                 </svg>
                                 <span><strong>Moneda de Facturación:</strong> Todas las transacciones comerciales en este portal son procesadas y facturadas en <strong>Pesos Dominicanos (RD$ / DOP)</strong>.</span>
                             </div>
+                            <div class="flex items-center justify-center gap-3 border-t border-gray-200/60 pt-3 flex-wrap">
+                                <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-6 object-contain">
+                                <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-6 object-contain">
+                                <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-6 object-contain">
+                                <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-6 object-contain">
+                            </div>
                         </div>
                     </form>
                 </div>

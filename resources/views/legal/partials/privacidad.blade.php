@@ -9,13 +9,25 @@
 
 <h2 class="text-xl font-semibold text-secondary mt-6">2. Política de Seguridad para la Transmisión de Datos de Tarjetas</h2>
 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg my-4">
-    <p class="font-semibold text-blue-900 mb-1">Protección de Datos de Pago:</p>
+    <p class="font-semibold text-blue-900 mb-1">Protección y Seguridad de Datos de Pago:</p>
     <p class="text-blue-800 text-sm">
-        En Cámbialo RD, priorizamos la seguridad de sus datos financieros. <strong>No almacenamos, guardamos ni compartimos los números completos de sus tarjetas de crédito o débito, ni sus códigos de seguridad (CVV)</strong>.
+        Tomamos todas las medidas y precauciones razonables para proteger tu información personal y seguimos las mejores prácticas de la industria para asegurar que tu información no sea utilizada de manera inapropiada, alterada o destruida.
     </p>
     <p class="text-blue-800 text-sm mt-2">
-        Toda transmisión de datos de tarjetas de pago se realiza de forma cifrada mediante el protocolo seguro <strong>TLS 1.2</strong> directamente hacia los servidores de la pasarela de pagos <strong>AZUL</strong> (Banco Popular Dominicano). Cámbialo RD no tiene acceso ni control sobre los datos confidenciales de la tarjeta en ningún momento de la transacción.
+        Ciframos la información de tu tarjeta de crédito utilizando la tecnología de capa de puertos seguros o Secure Sockets Layer (SSL/TLS 1.2), y la almacenamos con el cifrado AES-256. También, seguimos todos los requerimientos del estándar PCI-DSS.
     </p>
+    <p class="text-blue-800 text-sm mt-2 font-semibold text-blue-900">
+        Proveedores de Pago de Terceros (AZUL):
+    </p>
+    <p class="text-blue-800 text-sm mt-1">
+        Los métodos de pago utilizados por Cámbialo RD son servicios de terceros. Estos servicios de terceros (AZUL), cumplen con todos los estándares de seguridad y cifrado para mantener tu información segura. Solo utilizarán la información necesaria para completar el proceso de facturación requerido. Recomendamos leer las políticas de privacidad de estos proveedores para entender mejor cómo manejan la información suministrada.
+    </p>
+    <div class="flex items-center gap-4 mt-4 bg-white p-3 rounded-lg border border-blue-100 flex-wrap justify-center sm:justify-start">
+        <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-6 object-contain">
+        <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-6 object-contain">
+        <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-6 object-contain">
+        <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-6 object-contain">
+    </div>
 </div>
 
 <h2 class="text-xl font-semibold text-secondary mt-6">3. Uso de la Información</h2>
