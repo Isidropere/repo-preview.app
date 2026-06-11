@@ -35,6 +35,7 @@ class GoogleController extends Controller
                 'google_id'       => $googleUser->getId(),
                 'nombre_usuario'  => strtolower(preg_replace('/\s+/', '', $googleUser->getName())) . '_' . Str::random(4),
                 'password'        => bcrypt(Str::random(16)),
+                'password_defined' => false,
                 'estatus'         => 1,
                 'id_tipo_usuario' => 1,
                 'email_verified_at' => now(),

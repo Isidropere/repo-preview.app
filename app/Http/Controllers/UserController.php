@@ -92,23 +92,31 @@ class UserController extends Controller
 
     public function updatePassword(Request $request)
     {
-        $request->validate([
-            'current_password' => 'required|string',
-            'password'         => 'required|string|min:8|confirmed',
-        ], [
+        $user = auth()->user();
+
+        $rules = [
+            'password' => 'required|string|min:8|confirmed',
+        ];
+
+        if ($user->password_defined) {
+            $rules['current_password'] = 'required|string';
+        }
+
+        $request->validate($rules, [
             'current_password.required' => 'La contraseña actual es obligatoria.',
             'password.required'         => 'La nueva contraseña es obligatoria.',
             'password.min'              => 'La nueva contraseña debe tener al menos 8 caracteres.',
             'password.confirmed'        => 'Las contraseñas no coinciden.',
         ]);
 
-        $user = auth()->user();
-
-        if (!\Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'La contraseña actual es incorrecta.']);
+        if ($user->password_defined) {
+            if (!\Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'La contraseña actual es incorrecta.']);
+            }
         }
 
         $user->password = \Hash::make($request->password);
+        $user->password_defined = true;
         $user->save();
 
         return redirect()->route('contraseña')->with('success', 'Contraseña actualizada correctamente.');

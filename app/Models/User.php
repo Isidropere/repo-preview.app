@@ -73,6 +73,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'updated_at',
         // 'isAdmin' / 'isSuperAdmin' excluidos de fillable — nunca asignar masivamente
         'profile_photo_path',
+        'password_defined',
     ];
 
     /** Superadmin: acceso a estadísticas y mensajes predefinidos */
@@ -108,6 +109,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'isContable' => 'boolean',
+            'password_defined' => 'boolean',
         ];
     }
 

@@ -92,6 +92,7 @@ class SocialAuthController extends Controller
                 $idField            => $socialUser->getId(),
                 'nombre_usuario'    => $username,
                 'password'          => bcrypt(Str::random(24)),
+                'password_defined'  => false,
                 'estatus'           => 1,
                 'id_tipo_usuario'   => 1,
                 'email_verified_at' => now(), // OAuth = email ya verificado

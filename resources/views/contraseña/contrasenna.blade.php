@@ -24,8 +24,12 @@
                         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
-                        <h1 class="text-2xl font-bold text-gray-800">Cambiar contraseña</h1>
-                        <p class="text-sm text-gray-500 mt-1">Ingresa tu contraseña actual para verificar tu identidad</p>
+                        <h1 class="text-2xl font-bold text-gray-800">
+                            {{ auth()->user()->password_defined ? 'Cambiar contraseña' : 'Crear contraseña' }}
+                        </h1>
+                        <p class="text-sm text-gray-500 mt-1">
+                            {{ auth()->user()->password_defined ? 'Ingresa tu contraseña actual para verificar tu identidad' : 'Establece una contraseña para poder iniciar sesión directamente' }}
+                        </p>
                     </div>
 
                     {{-- Info del usuario --}}
@@ -39,6 +43,7 @@
                     <form method="POST" action="{{ route('password.update.profile') }}">
                         @csrf
                         <div class="space-y-4">
+                            @if(auth()->user()->password_defined)
                             <div>
                                 <label for="current_password" class="block text-xs font-medium text-gray-700 mb-1">Contraseña actual</label>
                                 <div class="relative">
@@ -50,6 +55,12 @@
                                     </button>
                                 </div>
                             </div>
+                            @else
+                            <div class="p-3 bg-blue-50 text-blue-700 text-xs rounded-lg flex items-start gap-2">
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Como te registraste usando una red social, puedes establecer tu primera contraseña directamente sin ingresar una contraseña actual.</span>
+                            </div>
+                            @endif
 
                             <div>
                                 <label for="password" class="block text-xs font-medium text-gray-700 mb-1">Nueva contraseña</label>
@@ -77,7 +88,7 @@
 
                             <button type="submit"
                                     class="w-full py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary transition-colors">
-                                Cambiar contraseña
+                                {{ auth()->user()->password_defined ? 'Cambiar contraseña' : 'Crear contraseña' }}
                             </button>
                         </div>
                     </form>
