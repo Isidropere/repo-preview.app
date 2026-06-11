@@ -22,11 +22,11 @@
     <p class="text-blue-800 text-sm mt-1">
         Los métodos de pago utilizados por Cámbialo RD son servicios de terceros. Estos servicios de terceros (AZUL), cumplen con todos los estándares de seguridad y cifrado para mantener tu información segura. Solo utilizarán la información necesaria para completar el proceso de facturación requerido. Recomendamos leer las políticas de privacidad de estos proveedores para entender mejor cómo manejan la información suministrada.
     </p>
-    <div class="flex items-center gap-4 mt-4 bg-white p-3 rounded-lg border border-blue-100 flex-wrap justify-center sm:justify-start">
-        <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-6 object-contain">
-        <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-6 object-contain">
-        <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-6 object-contain">
-        <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-6 object-contain">
+    <div class="flex items-center gap-6 mt-4 bg-white p-3 rounded-lg border border-blue-100 flex-wrap justify-center sm:justify-start">
+        <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-10 object-contain">
+        <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-10 object-contain">
+        <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-10 object-contain">
+        <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-10 object-contain">
     </div>
 </div>
 
