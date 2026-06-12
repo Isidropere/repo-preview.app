@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
-import 'package:cambialo_app/screens/tarjetas_screen.dart';
 
 class NegociacionDetalleScreen extends StatefulWidget {
   final int negociacionId;
@@ -15,12 +15,9 @@ class NegociacionDetalleScreen extends StatefulWidget {
 class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
   Map<String, dynamic>? _neg;
   List _mensajes = [];
-  List _tarjetas = [];
   List _predefinidos = [];
   bool _loading = true;
   bool _actionLoading = false;
-  String? _selectedTarjetaId;
-  final _cvvCtrl = TextEditingController();
   final _msgCtrl = TextEditingController();
   final _contraOfertaCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
@@ -37,7 +34,6 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
 
   @override
   void dispose() {
-    _cvvCtrl.dispose();
     _msgCtrl.dispose();
     _contraOfertaCtrl.dispose();
     _scrollCtrl.dispose();
@@ -52,7 +48,6 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
         _loadCurrentUser(),
         _loadNegociacion(),
         _loadMensajes(),
-        _loadTarjetas(),
         _loadDirecciones(),
       ]);
     } catch (e) {
@@ -89,15 +84,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     }
   }
 
-  Future<void> _loadTarjetas() async {
-    final res = await ApiClient.get('/tarjetas', auth: true);
-    if (res.statusCode == 200) {
-      _tarjetas = jsonDecode(res.body) as List;
-      if (_tarjetas.isNotEmpty) {
-        _selectedTarjetaId = _tarjetas[0]['id_tarjeta'].toString();
-      }
-    }
-  }
+
 
   Future<void> _loadDirecciones() async {
     final res = await ApiClient.get('/direcciones', auth: true);
@@ -355,30 +342,6 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
       return;
     }
 
-    if (_tarjetas.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('No tienes tarjetas registradas'),
-          content: const Text('Por favor, registra una tarjeta de crédito en la sección de Mi Cuenta antes de continuar.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-            ElevatedButton(
-              onPressed: () {
-                 Navigator.pop(context);
-                 Navigator.push(context, MaterialPageRoute(builder: (_) => const TarjetasScreen())).then((_) {
-                    _loadTarjetas(); // Recargar tarjetas en background al volver
-                 });
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-              child: const Text('Agregar Tarjeta', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
     bool calculandoEnvio = true;
     double montoEnvio = 0.0;
     String errorEnvio = '';
@@ -429,48 +392,25 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                   ],
                   if (!calculandoEnvio && errorEnvio.isEmpty) ...[
                     Text('Monto de envío: RD\$ $montoEnvio', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kPrimary)),
-                    const SizedBox(height: 12),
-                    const Text('Selecciona una tarjeta para proceder:'),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedTarjetaId,
-                            items: _tarjetas.map((t) {
-                              return DropdownMenuItem<String>(
-                                value: t['id_tarjeta'].toString(),
-                                child: Text('${t['tipo_tarjeta'] ?? t['marca'] ?? 'Tarjeta'} **** ${t['last4'] ?? t['ultimos_cuatro'] ?? ''}'),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              setDialogState(() => _selectedTarjetaId = val);
-                            },
-                            decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10)),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.security, color: Colors.blue.shade800, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Serás redirigido a la pasarela de pago seguro de AZUL para completar la transacción. Tu información financiera está completamente protegida.',
+                              style: TextStyle(fontSize: 11, color: Colors.blue.shade900, height: 1.3),
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_card, color: kPrimary),
-                          tooltip: 'Añadir nueva tarjeta',
-                          onPressed: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const TarjetasScreen())).then((_) {
-                                _loadTarjetas().then((_) {
-                                   if (mounted && context.mounted) setDialogState(() {});
-                                });
-                             });
-                          },
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _cvvCtrl,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'CVV',
-                        hintText: '123',
-                        border: OutlineInputBorder(),
+                        ],
                       ),
                     ),
                   ],
@@ -479,7 +419,6 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                     _cvvCtrl.clear();
                      Navigator.pop(context);
                   },
                   child: const Text('Cancelar'),
@@ -487,16 +426,12 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                 if (!calculandoEnvio && errorEnvio.isEmpty)
                   ElevatedButton(
                     onPressed: () async {
-                      final cvv = _cvvCtrl.text.trim();
-                      if (cvv.isEmpty || cvv.length < 3) {
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, ingresa el CVV'), backgroundColor: Colors.red));
-                         return;
-                      }
                       Navigator.pop(context); // Close dialog
+
+                      setState(() => _actionLoading = true);
 
                       // SI elegimos enviar en este momento (Producto vs Servicio), procesamos modo_entrega primero
                       if (modoEntrega == 'envio') {
-                         setState(() => _actionLoading = true);
                          final modoRes = await ApiClient.post('/negociaciones/${widget.negociacionId}/modo-entrega', {'modo': 'envio'}, auth: true);
                          if (modoRes.statusCode != 200) {
                             setState(() => _actionLoading = false);
@@ -505,17 +440,45 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                          }
                       }
                       
-                      _ejecutarAccion(
-                        '/negociaciones/${widget.negociacionId}/pago',
-                        body: {
-                          'id_tarjeta': _selectedTarjetaId,
-                          'cvv': cvv,
-                        },
-                      );
-                      _cvvCtrl.clear();
+                      try {
+                        final res = await ApiClient.post(
+                          '/negociaciones/${widget.negociacionId}/pago',
+                          {}, // No credentials / card payload sent!
+                          auth: true,
+                        );
+                        
+                        setState(() => _actionLoading = false);
+
+                        if (res.statusCode == 200 || res.statusCode == 201) {
+                          final body = jsonDecode(res.body);
+                          final redirectUrl = body['redirect_url']?.toString() ?? body['redirect']?.toString();
+                          if (redirectUrl != null && redirectUrl.isNotEmpty) {
+                            final Uri url = Uri.parse(redirectUrl);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url, mode: LaunchMode.externalApplication);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                  content: Text('Redirigiendo a la pasarela de pago seguro...'),
+                                  backgroundColor: Colors.blue,
+                                ));
+                              }
+                            } else {
+                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo abrir la pasarela de pago.'), backgroundColor: Colors.red));
+                            }
+                          } else {
+                            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se recibió la URL de redirección.'), backgroundColor: Colors.red));
+                          }
+                        } else {
+                          final body = jsonDecode(res.body);
+                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(body['message'] ?? 'Error al procesar el pago.'), backgroundColor: Colors.red));
+                        }
+                      } catch (e) {
+                        setState(() => _actionLoading = false);
+                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de conexión: $e'), backgroundColor: Colors.red));
+                      }
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-                    child: Text(modoEntrega == 'envio' ? 'Confirmar envío y pagar' : 'Pagar y completar', style: const TextStyle(color: Colors.white)),
+                    child: const Text('Proceder al Pago Seguro', style: TextStyle(color: Colors.white)),
                   ),
               ],
             );
@@ -667,7 +630,6 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     final miConfirmado = isEmisor ? emisorConfirmado : receptorConfirmado;
     final otroConfirmado = isEmisor ? receptorConfirmado : emisorConfirmado;
     final miPago = isEmisor ? pagoEmisor : pagoReceptor;
-    final otroPago = isEmisor ? pagoReceptor : pagoEmisor;
 
     final itemSolicitadoEsServicio = item['id_categoria_item'] == 29;
     final duenioProductoId = itemSolicitadoEsServicio 

@@ -202,6 +202,51 @@ class PagoRedirectController extends Controller
     }
 
     /**
+     * Inicia el flujo de redirección a AZUL para compras originadas en la app móvil.
+     */
+    public function iniciarPagoMovil(string $id_pago_compra)
+    {
+        Log::info('[Azul Redirect Móvil] Procesando inicio de pago móvil', ['id_pago_compra' => $id_pago_compra]);
+
+        $pagoCompra = PagoCompra::where('id_pago_compra', $id_pago_compra)->first();
+
+        if (!$pagoCompra) {
+            Log::error('[Azul Redirect Móvil] Orden de compra no encontrada', ['id_pago_compra' => $id_pago_compra]);
+            return response('Orden no encontrada.', 404);
+        }
+
+        if ($pagoCompra->estatus !== 'pendiente') {
+            Log::warning('[Azul Redirect Móvil] La orden no está en estado pendiente', [
+                'id_pago_compra' => $id_pago_compra,
+                'estatus' => $pagoCompra->estatus
+            ]);
+            return response('La transacción ya fue procesada o no está pendiente.', 400);
+        }
+
+        // Generar los campos y el AuthHash para AZUL
+        $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra);
+
+        // Registrar log local del request
+        DB::table('logs_pagos')->insert([
+            'id_user'          => $pagoCompra->carrito?->id_user ?? auth()->id() ?? 0,
+            'custom_order_id'  => $pagoCompra->id_pago_compra,
+            'provider'         => 'azul_redirect_movil',
+            'transaction_type' => 'sale_init_movil',
+            'amount'           => $pagoCompra->total,
+            'request_payload'  => json_encode($azulData['fields']),
+            'response_payload' => json_encode([]),
+            'is_success'       => true,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        return view('pago.redirect', [
+            'url'    => $azulData['url'],
+            'fields' => $azulData['fields']
+        ]);
+    }
+
+    /**
      * Callback invocado al aprobarse la transacción.
      */
     public function pagoAprobado(Request $request)

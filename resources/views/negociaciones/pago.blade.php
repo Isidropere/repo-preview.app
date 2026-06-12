@@ -39,31 +39,12 @@
 
         <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
             @csrf
-            <div class="mb-4">
-                <p class="text-sm font-semibold text-gray-700 mb-2">Selecciona una tarjeta</p>
-                @forelse($tarjetas as $tarjeta)
-                <label class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer mb-2 hover:border-blue-300 transition-all {{ $loop->first ? 'border-blue-400 bg-blue-50' : 'border-gray-200' }}">
-                    <input type="radio" name="id_tarjeta" value="{{ $tarjeta->id_tarjeta }}" {{ $loop->first ? 'checked' : '' }} class="h-4 w-4 text-blue-600">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800">**** **** **** {{ $tarjeta->last4 }}</p>
-                        <p class="text-xs text-gray-400">{{ $tarjeta->nombre_titular }}</p>
-                    </div>
-                </label>
-                @empty
-                <p class="text-sm text-gray-400 text-center py-4">No tienes tarjetas guardadas. <a href="{{ route('carrito.checkout') }}" class="text-blue-600 underline">Agregar tarjeta</a></p>
-                @endforelse
+            <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mb-5 text-center">
+                <p class="text-sm text-gray-600">Serás redirigido a la página de pago seguro de AZUL para realizar la transacción.</p>
             </div>
-
-            @if($tarjetas->isNotEmpty())
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">CVV</label>
-                <input type="password" name="cvv" maxlength="4" placeholder="•••"
-                       class="w-28 border-2 border-gray-200 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:border-blue-500">
-            </div>
-            <button type="submit" onclick="this.disabled=true;this.textContent='Procesando...';this.form.submit();" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all">
-                💳 Confirmar pago
+            <button type="submit" onclick="this.disabled=true;this.textContent='Redirigiendo...';this.form.submit();" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all">
+                💳 Proceder al Pago Seguro
             </button>
-            @endif
         </form>
         @else
         <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">

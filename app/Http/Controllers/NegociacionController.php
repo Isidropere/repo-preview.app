@@ -402,82 +402,18 @@ class NegociacionController extends Controller
             return redirect()->route('direcciones.index')->with('error', $msg);
         }
 
-        // Con pago: validar tarjeta
-        $request->validate([
-            'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
-            'cvv'        => 'nullable|string|max:4',
-        ]);
-
-        if ($neg->monto_oferta > 0 || $request->input('monto_envio') || true) {
-            // Calcular el monto real de envío siempre que haya tarjeta
-            $montoACobrar = 0;
-            $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
-            if ($direccion && $direccion->municipio && $neg->item) {
-                $deliveryService = app(\App\Services\DeliveryService::class);
-                // Intercambio: valor_articulo=0 (sin seguro sobre el valor), tipo=persona
-                $resultado = $deliveryService->calcular($direccion->municipio->municipio ?? '', 'persona', 0);
-                $montoACobrar = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
-            }
-
-            if ($montoACobrar > 0) {
-                $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $request->id_tarjeta)
-                    ->where('id_user', $userId)->firstOrFail();
-
-                $pagoService = app(\App\Services\PagoService::class);
-                $resultadoPago = $pagoService->cobrarTarjeta(
-                    (float) $montoACobrar, '214',
-                    $tarjeta->datosDriver($request->cvv),
-                    ['client_ip' => $request->ip(), 'invoice_number' => 'INT' . $neg->id_negociacion . $userId]
-                );
-
-                if (!$resultadoPago['success']) {
-                    $msg = 'Pago rechazado: ' . ($resultadoPago['error'] ?? 'Error desconocido');
-                    if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 422);
-                    return back()->with('error', $msg);
-                }
-
-                $resultado = $resultadoPago; // para usar en PagoEnvioIntercambio
-            }
+        // Redirigir al flujo de pago seguro de AZUL
+        if ($request->wantsJson()) {
+            $url = route('negociaciones.pago.iniciar-movil', [
+                'id_negociacion' => $neg->id_negociacion,
+                'user_id' => $userId
+            ]);
+            return response()->json([
+                'success' => true,
+                'redirect' => $url,
+                'redirect_url' => $url
+            ]);
         }
-
-        $neg->update([$campo => true]);
-
-        // Registrar en pago_envio_intercambio
-        $pagoEnvio = \App\Models\PagoEnvioIntercambio::create([
-            'id_negociacion' => $neg->id_negociacion,
-            'id_user'        => $userId,
-            'monto'          => $montoACobrar ?? 0,
-            'tipo_pago'      => 'tarjeta',
-            'estado'         => 'pagado',
-            'id_tarjeta'     => $request->id_tarjeta ?? null,
-            'transaction_id' => $resultado['transaction_id'] ?? null,
-            'approval_code'  => $resultado['approval_code'] ?? null,
-        ]);
-
-        // Generar Contabilidad (Asiento y Caja)
-        app(\App\Services\ERPService::class)->procesarPagoEnvioAprobado($pagoEnvio);
-
-        $negFresh = $neg->fresh();
-        
-        // Lógica de transición de estado tras pago
-        $esProductoServicio = $this->negociacionService->esProductoServicio($negFresh);
-        
-        if ($esProductoServicio) {
-            // En Producto vs Servicio, si AL MENOS UNO paga, ya puede ir a envío
-            if ($negFresh->pago_emisor || $negFresh->pago_receptor) {
-                $neg->update(['estado' => 'en_envio']);
-                $this->negociacionService->notificarAdminsCompletado($negFresh);
-            }
-        } else {
-            // Caso Producto vs Producto: ambos deben pagar
-            if ($negFresh->pago_emisor && $negFresh->pago_receptor) {
-                $neg->update(['estado' => 'en_envio']);
-                $this->negociacionService->notificarAdminsCompletado($negFresh);
-            }
-        }
-
-        $msg = 'Pago registrado correctamente.';
-        if ($request->wantsJson()) return response()->json(['success' => true, 'message' => $msg]);
-        return redirect()->route('negociaciones.mis')->with('success', $msg);
+        return redirect()->route('negociaciones.pago.iniciar', $neg->id_negociacion);
     }
 }

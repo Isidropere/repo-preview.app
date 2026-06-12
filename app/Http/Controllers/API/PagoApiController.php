@@ -19,47 +19,153 @@ class PagoApiController extends Controller
     {
         $userId = $request->user()->id;
 
-        // Obtener el tipo de carrito para saber si la dirección es obligatoria
-        $carrito = \App\Models\Carrito::where('id_user', $userId)->first();
-        $esServicio = $carrito && $carrito->tipo === 'servicio';
+        // 1. Obtener carrito y sus items seleccionados
+        $carrito = \App\Models\Carrito::with('itemsIntencionCompra.item.inventarios')
+            ->where('id_user', $userId)
+            ->first();
 
-        $rules = [
-            'id_tarjeta'   => 'required|string|exists:tarjetas_pagos,id_tarjeta',
-            'cvv'          => 'nullable|string|max:4',
-            'id_direccion' => $esServicio ? 'nullable|integer|exists:direcciones,id_direccion' : 'required|integer|exists:direcciones,id_direccion',
-        ];
-
-        $request->validate($rules);
-
-        $idDireccion = $request->input('id_direccion');
-
-        // Establecer la dirección elegida como predeterminada para que el CheckoutService la use si se envía
-        if ($idDireccion) {
-            Direcciones::where('id_user', $userId)->update(['es_predeterminada' => 0]);
-            Direcciones::where('id_direccion', $idDireccion)
-                ->where('id_user', $userId)
-                ->update(['es_predeterminada' => 1]);
+        if (!$carrito) {
+            return response()->json(['success' => false, 'message' => 'No se encontró tu carrito.'], 404);
         }
 
-        Log::info('Iniciando proceso de pago API', ['user_id' => $userId, 'id_tarjeta' => $request->id_tarjeta]);
+        $itemsSeleccionados = $carrito->itemsIntencionCompra->where('es_seleccionado', true);
+        if ($itemsSeleccionados->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No hay ítems seleccionados para pagar.'], 422);
+        }
 
-        $resultado = $this->checkoutService->procesar(
-            userId:    $userId,
-            idTarjeta: $request->input('id_tarjeta'),
-            cvv:       $request->input('cvv'),
-            clientIp:  $request->ip(),
+        // 2. Validar que no compre a sí mismo
+        $itemsPropios = $itemsSeleccionados->filter(fn($i) => $i->item->id_user === $userId);
+        if ($itemsPropios->isNotEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No puedes comprar tus propios artículos.'], 422);
+        }
+
+        $esServicio = $carrito->tipo === 'servicio';
+
+        // 3. Validar dirección de envío (solo para productos)
+        $idDireccion = $request->input('id_direccion');
+        $direccion = null;
+        if (!$esServicio) {
+            if (!$idDireccion) {
+                // intentamos obtener la predeterminada
+                $direccion = \App\Models\Direcciones::where('id_user', $userId)
+                    ->where('es_predeterminada', 1)
+                    ->first();
+            } else {
+                $direccion = \App\Models\Direcciones::where('id_user', $userId)
+                    ->where('id_direccion', $idDireccion)
+                    ->first();
+            }
+
+            if (!$direccion) {
+                return response()->json(['success' => false, 'message' => 'Debes seleccionar una dirección de envío.'], 422);
+            }
+        }
+
+        // 4. Verificar stock disponible
+        foreach ($itemsSeleccionados as $item) {
+            if ($item->item->estatus != 1) {
+                return response()->json(['success' => false, 'message' => "El artículo \"{$item->item->item}\" ya no está disponible."], 422);
+            }
+
+            if (!$esServicio) {
+                $inventario = $item->item->inventarios;
+                if (!$inventario || $inventario->cantidad < $item->cantidad) {
+                    $disponible = $inventario->cantidad ?? 0;
+                    return response()->json(['success' => false, 'message' => "Stock insuficiente para: {$item->item->item}. Disponible: {$disponible}"], 422);
+                }
+            }
+        }
+
+        // 5. Calcular monto total
+        $montoTotal = $itemsSeleccionados->sum(
+            fn($i) => ($i->item->valor * $i->cantidad) - $i->descuento
         );
 
-        if (!$resultado['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => $resultado['message']
-            ], 422);
+        if ($montoTotal <= 0) {
+            return response()->json(['success' => false, 'message' => 'El monto total debe ser mayor a cero.'], 422);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => $resultado['message']
-        ]);
+        try {
+            $pagoCompra = \Illuminate\Support\Facades\DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion) {
+                $carritoLocked = \App\Models\Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
+                $yaExiste = \App\Models\PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
+                    ->whereIn('estatus', ['aprobado', 'pendiente'])
+                    ->where('fecha', '>=', now()->subMinutes(2))
+                    ->exists();
+
+                if ($yaExiste) {
+                    throw new \RuntimeException('duplicate_order');
+                }
+
+                $pagoCompra = \App\Models\PagoCompra::create([
+                    'id_pago_compra'    => \Illuminate\Support\Str::uuid()->toString(),
+                    'id_carrito'        => $carrito->id_carrito,
+                    'estatus'           => 'pendiente',
+                    'id_tarjeta'        => 'REDIRECT_AZUL_MOVIL',
+                    'autorizacion_pago' => null,
+                    'id_proveedor_pago' => 1, // AZUL
+                    'transaction_id'    => null,
+                    'total'             => $montoTotal,
+                    'cantidad_items'    => $itemsSeleccionados->count(),
+                    'id_direccion'      => $direccion?->id_direccion,
+                    'fecha'             => now(),
+                ]);
+
+                \App\Models\CompraTrazabilidad::create([
+                    'id_pago_compra'  => $pagoCompra->id_pago_compra,
+                    'estado_anterior' => null,
+                    'estado_nuevo'    => 'pendiente',
+                    'nota'            => 'Pago redireccionado móvil iniciado.',
+                    'id_admin'        => null,
+                ]);
+
+                foreach ($itemsSeleccionados as $itemIntencion) {
+                    $itemModel = $itemIntencion->item;
+                    $inventario = $itemModel->inventarios;
+
+                    $imagen = $itemModel->imagenes()->first();
+                    $imagenUrl = null;
+                    if ($imagen) {
+                        $ruta = trim($imagen->ruta ?? '', '/');
+                        $directPath = $ruta . '/' . $imagen->nombre;
+                        $imagenUrl = file_exists(public_path($directPath)) ? $directPath : (file_exists(public_path('storage/' . $directPath)) ? 'storage/' . $directPath : $directPath);
+                    }
+
+                    \App\Models\PagoItem::create([
+                        'id_pago_compra'  => $pagoCompra->id_pago_compra,
+                        'id_item'         => $itemModel->id_item,
+                        'nombre_item'     => $itemModel->item,
+                        'precio_unitario' => $itemModel->valor,
+                        'cantidad'        => $itemIntencion->cantidad,
+                        'descuento'       => $itemIntencion->descuento ?? 0,
+                        'subtotal'        => ($itemModel->valor * $itemIntencion->cantidad) - ($itemIntencion->descuento ?? 0),
+                        'imagen_url'      => $imagenUrl,
+                    ]);
+
+                    if ($inventario) {
+                        $inventario->cantidad -= $itemIntencion->cantidad;
+                        $inventario->save();
+                    }
+                }
+
+                return $pagoCompra;
+            });
+
+            $redirectUrl = route('pago.redirect.iniciar-movil', ['id_pago_compra' => $pagoCompra->id_pago_compra]);
+
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Orden creada. Redirigiendo al pago...',
+                'redirect_url' => $redirectUrl,
+            ]);
+
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === 'duplicate_order') {
+                return response()->json(['success' => false, 'message' => 'Ya hay un pago en procesamiento para esta orden.'], 422);
+            }
+            return response()->json(['success' => false, 'message' => 'Error al procesar la orden: ' . $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Error al procesar la orden: ' . $e->getMessage()], 500);
+        }
     }
 }

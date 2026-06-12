@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import 'hoja_vida_screen.dart';
@@ -23,7 +24,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
   final _descCtrl = TextEditingController();
   final _imgUrlCtrl = TextEditingController();
   final _cantidadCtrl = TextEditingController(text: '1');
-  final _cvvCtrl = TextEditingController();
 
   int _tipoTrans = 3; // 1=Venta, 2=Intercambio, 3=Ambos
   int _step = 1;
@@ -39,21 +39,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
   List<Map<String, dynamic>> _existingImages = [];
 
   double _montoRegistro = 150.0;
-  List _tarjetas = [];
-  String? _idTarjeta;
   bool _loadingConfig = true;
   bool _saving = false;
   String? _error;
-
-  // Tarjeta nueva
-  final _formTarjetaKey = GlobalKey<FormState>();
-  final _noTarjetaCtrl = TextEditingController();
-  final _nombreTitularCtrl = TextEditingController();
-  final _mesExpCtrl = TextEditingController();
-  final _anioExpCtrl = TextEditingController();
-  final _bancoCtrl = TextEditingController();
-  final _tipoCtrl = TextEditingController();
-  bool _registrandoTarjeta = false;
 
   @override
   void initState() {
@@ -71,13 +59,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     _descCtrl.dispose();
     _imgUrlCtrl.dispose();
     _cantidadCtrl.dispose();
-    _cvvCtrl.dispose();
-    _noTarjetaCtrl.dispose();
-    _nombreTitularCtrl.dispose();
-    _mesExpCtrl.dispose();
-    _anioExpCtrl.dispose();
-    _bancoCtrl.dispose();
-    _tipoCtrl.dispose();
     super.dispose();
   }
 
@@ -86,7 +67,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     try {
       final results = await Future.wait([
         ApiClient.get('/talentos/config', auth: true),
-        ApiClient.get('/tarjetas', auth: true, useCache: false),
         ApiClient.get('/hoja-vida', auth: true, useCache: false),
       ]);
 
@@ -94,18 +74,8 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         final body = jsonDecode(results[0].body);
         _montoRegistro = (body['monto_registro'] as num?)?.toDouble() ?? 150.0;
       }
-      if (results[1].statusCode == 200) {
-        _tarjetas = jsonDecode(results[1].body) as List;
-        if (_tarjetas.isNotEmpty) {
-          final activa = _tarjetas.firstWhere(
-            (t) => t['usar_esta_tarjeta'] == 1 || t['usar_esta_tarjeta'] == true,
-            orElse: () => _tarjetas.first,
-          );
-          _idTarjeta = activa['id_tarjeta'];
-        }
-      }
-      if (results[2].statusCode == 200 && widget.itemId == null) {
-        final body = jsonDecode(results[2].body);
+      if (results[1].statusCode == 200 && widget.itemId == null) {
+        final body = jsonDecode(results[1].body);
         final tieneHoja = body['tiene_hoja_vida'] as bool? ?? false;
         if (!tieneHoja) {
           setState(() {
@@ -210,140 +180,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     }
   }
 
-  Future<void> _agregarTarjeta() async {
-    if (!_formTarjetaKey.currentState!.validate()) return;
-    setState(() => _registrandoTarjeta = true);
-
-    try {
-      final res = await ApiClient.post('/tarjetas', {
-        'no_tarjeta': _noTarjetaCtrl.text.trim(),
-        'nombre_titular': _nombreTitularCtrl.text.trim(),
-        'mes_expiracion': _mesExpCtrl.text.trim(),
-        'anio_expiracion': _anioExpCtrl.text.trim(),
-        'banco_tarjeta': _bancoCtrl.text.trim().isEmpty ? 'Banco' : _bancoCtrl.text.trim(),
-        'tipo_tarjeta': _tipoCtrl.text.trim().isEmpty ? 'Visa' : _tipoCtrl.text.trim(),
-        'usar_esta_tarjeta': true
-      }, auth: true);
-
-      setState(() => _registrandoTarjeta = false);
-
-      if (!mounted) return;
-      if (res.statusCode == 201 || res.statusCode == 200) {
-        Navigator.pop(context); // cerrar bottom sheet
-        _noTarjetaCtrl.clear();
-        _nombreTitularCtrl.clear();
-        _mesExpCtrl.clear();
-        _anioExpCtrl.clear();
-        _bancoCtrl.clear();
-        _tipoCtrl.clear();
-        // Recargar tarjetas
-        await _loadData();
-      } else {
-        final body = jsonDecode(res.body);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(body['message'] ?? 'Error al guardar la tarjeta.'),
-          backgroundColor: Colors.red,
-        ));
-      }
-    } catch (e) {
-      setState(() => _registrandoTarjeta = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Error de conexión al agregar tarjeta.'),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  void _mostrarDialogoTarjeta() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            top: 20,
-            left: 20,
-            right: 20),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formTarjetaKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Nueva Tarjeta de Pago',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextDark)),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _noTarjetaCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Número de tarjeta *', border: OutlineInputBorder()),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nombreTitularCtrl,
-                  decoration: const InputDecoration(labelText: 'Nombre del titular *', border: OutlineInputBorder()),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _mesExpCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Mes Venc. (MM) *', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _anioExpCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Año Venc. (AAAA) *', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                    ),
-                  ),
-                ]),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _bancoCtrl,
-                      decoration: const InputDecoration(labelText: 'Banco (Ej. Popular)', border: OutlineInputBorder()),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tipoCtrl,
-                      decoration: const InputDecoration(labelText: 'Tipo (Ej. Visa)', border: OutlineInputBorder()),
-                    ),
-                  ),
-                ]),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _registrandoTarjeta ? null : _agregarTarjeta,
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
-                    child: _registrandoTarjeta
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Guardar Tarjeta', style: TextStyle(color: Colors.white, fontSize: 15)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _pickMainImage() async {
     try {
       final XFile? picked = await _picker.pickImage(
@@ -401,14 +237,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
   Future<void> _publicarTalento() async {
     final isEdit = widget.itemId != null;
 
-    if (!isEdit && _idTarjeta == null && _totalFinal > 0) {
-      setState(() => _error = 'Debes seleccionar una tarjeta.');
-      return;
-    }
-    if (!isEdit && _cvvCtrl.text.trim().isEmpty && _totalFinal > 0) {
-      setState(() => _error = 'Ingresa el código CVV.');
-      return;
-    }
     if (_mainImage == null && _existingMainImageUrl == null) {
       setState(() => _error = 'Debes subir una imagen principal.');
       return;
@@ -430,10 +258,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         'cantidad': (int.tryParse(_cantidadCtrl.text.trim()) ?? 1).toString(),
       };
 
-      if (!isEdit) {
-        fields['id_tarjeta'] = _idTarjeta ?? '';
-        fields['cvv'] = _cvvCtrl.text.trim();
-      } else {
+      if (isEdit) {
         // Enviar lista de IDs de imágenes adicionales que conservamos
         for (int i = 0; i < _existingImages.length; i++) {
           fields['imagenes_existentes[$i]'] = _existingImages[i]['id_imagen'].toString();
@@ -491,10 +316,28 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isEdit ? '¡Talento actualizado con éxito!' : '¡Talento publicado con éxito!'),
-          backgroundColor: Colors.green,
-        ));
+
+        final redirectUrl = body['redirect_url']?.toString();
+        if (redirectUrl != null && redirectUrl.isNotEmpty) {
+          final Uri url = Uri.parse(redirectUrl);
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Redirigiendo a la pasarela de pago seguro...'),
+              backgroundColor: Colors.blue,
+            ));
+          } else {
+            setState(() => _error = 'No se pudo abrir la pasarela de pago.');
+            return;
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(isEdit ? '¡Talento actualizado con éxito!' : '¡Talento publicado con éxito!'),
+            backgroundColor: Colors.green,
+          ));
+        }
+
         ApiClient.clearCache('/mis-items');
         Navigator.pop(context, true); // Retorna true para indicar que hubo cambios y recargar listado
       } else {
@@ -970,45 +813,24 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Card selector
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Selecciona una tarjeta', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextDark)),
-                TextButton(onPressed: _mostrarDialogoTarjeta, child: const Text('Nueva tarjeta')),
-              ],
-            ),
-            if (_tarjetas.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
-                child: const Text('No tienes tarjetas de pago guardadas. Agrega una para continuar.', style: TextStyle(fontSize: 12, color: kTextGray)),
-              )
-            else ...[
-              ..._tarjetas.map((t) => RadioListTile<String>(
-                    value: t['id_tarjeta'],
-                    groupValue: _idTarjeta,
-                    onChanged: (v) => setState(() => _idTarjeta = v),
-                    activeColor: kPrimary,
-                    title: Text('**** **** **** ${t['last4']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: Builder(
-                      builder: (_) {
-                        final rawYear = t['año_expiracion'] ?? t['anio_expiracion'] ?? '';
-                        final mesVal = t['mes_expiracion'].toString().padLeft(2, '0');
-                        return Text('${t['nombre_titular']} | Vence $mesVal/$rawYear', style: TextStyle(fontSize: 11, color: kTextGray));
-                      },
-                    ),
-                  )),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _cvvCtrl,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                maxLength: 4,
-                decoration: const InputDecoration(labelText: 'Código de seguridad (CVV) *', border: OutlineInputBorder(), counterText: '', prefixIcon: Icon(Icons.lock_outline)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
               ),
-            ],
+              child: Row(children: [
+                Icon(Icons.security, color: Colors.blue.shade800, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Serás redirigido a la pasarela de pago seguro de AZUL para completar la publicación. Tu información financiera está completamente protegida.',
+                    style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
+                  ),
+                ),
+              ]),
+            ),
 
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -1031,7 +853,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                     style: ElevatedButton.styleFrom(backgroundColor: kSecondary, padding: const EdgeInsets.symmetric(vertical: 14)),
                     child: _saving
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Pagar y publicar', style: TextStyle(color: Colors.white, fontSize: 15)),
+                        : const Text('Proceder al Pago Seguro', style: TextStyle(color: Colors.white, fontSize: 15)),
                   ),
                 ),
               ],
