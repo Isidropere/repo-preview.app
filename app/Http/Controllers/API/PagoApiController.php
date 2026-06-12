@@ -47,11 +47,11 @@ class PagoApiController extends Controller
         if (!$esServicio) {
             if (!$idDireccion) {
                 // intentamos obtener la predeterminada
-                $direccion = \App\Models\Direcciones::where('id_user', $userId)
+                $direccion = \App\Models\Direcciones::with('municipio')->where('id_user', $userId)
                     ->where('es_predeterminada', 1)
                     ->first();
             } else {
-                $direccion = \App\Models\Direcciones::where('id_user', $userId)
+                $direccion = \App\Models\Direcciones::with('municipio')->where('id_user', $userId)
                     ->where('id_direccion', $idDireccion)
                     ->first();
             }
@@ -76,13 +76,30 @@ class PagoApiController extends Controller
             }
         }
 
-        // 5. Calcular monto total
+        // 5. Calcular monto total (subtotal de artículos)
         $montoTotal = $itemsSeleccionados->sum(
             fn($i) => ($i->item->valor * $i->cantidad) - $i->descuento
         );
 
         if ($montoTotal <= 0) {
             return response()->json(['success' => false, 'message' => 'El monto total debe ser mayor a cero.'], 422);
+        }
+
+        // Calcular costo de envío si aplica (solo para productos físicos)
+        if (!$esServicio && $direccion) {
+            $deliveryService = app(\App\Services\DeliveryService::class);
+            $pueblo = $direccion->municipio->municipio ?? '';
+            $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal);
+            
+            if (!$resultadoDelivery['success'] && ($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espera a que el administrador defina el costo de envío.'
+                ], 422);
+            }
+            
+            $costoEnvio = $resultadoDelivery['success'] ? (float) ($resultadoDelivery['costo_envio_total'] ?? 0) : 0;
+            $montoTotal += $costoEnvio;
         }
 
         try {

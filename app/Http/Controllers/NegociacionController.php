@@ -402,8 +402,12 @@ class NegociacionController extends Controller
         $tieneDireccion = \App\Models\Direcciones::where('id_user', $userId)->exists();
         if (!$tieneDireccion) {
             $msg = 'Debes registrar una dirección de envío antes de pagar.';
-            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.index')], 422);
-            return redirect()->route('direcciones.index')->with('error', $msg);
+            if ($request->wantsJson()) {
+                $redirUrl = route('direcciones.index', ['return_url' => route('negociaciones.pago', $neg->id_negociacion)]);
+                return response()->json(['success' => false, 'message' => $msg, 'redirect' => $redirUrl], 422);
+            }
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', $neg->id_negociacion)))
+                ->with('error', $msg);
         }
 
         // Redirigir al flujo de pago seguro de AZUL

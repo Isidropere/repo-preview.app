@@ -58,7 +58,7 @@ class PagoRedirectController extends Controller
         // 3. Validar dirección de envío (solo para productos)
         $direccion = null;
         if (!$esServicio) {
-            $direccion = Direcciones::where('id_user', $userId)
+            $direccion = Direcciones::with('municipio')->where('id_user', $userId)
                 ->where('es_predeterminada', 1)
                 ->first();
             if (!$direccion) {
@@ -84,13 +84,29 @@ class PagoRedirectController extends Controller
             }
         }
 
-        // 5. Calcular monto total
+        // 5. Calcular monto total (subtotal de artículos)
         $montoTotal = $itemsSeleccionados->sum(
             fn($i) => ($i->item->valor * $i->cantidad) - $i->descuento
         );
 
         if ($montoTotal <= 0) {
             return redirect()->route('carrito.checkout_index')->with('error', 'El monto total debe ser mayor a cero.');
+        }
+
+        // Calcular costo de envío si aplica (solo para productos físicos)
+        if (!$esServicio && $direccion) {
+            $deliveryService = app(\App\Services\DeliveryService::class);
+            $pueblo = $direccion->municipio->municipio ?? '';
+            $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal);
+            
+            // Si el delivery dio error de tarifa no definida, redirigir informando al usuario
+            if (!$resultadoDelivery['success'] && ($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
+                return redirect()->route('carrito.checkout_index')
+                    ->with('error', 'El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espera a que el administrador defina el costo de envío.');
+            }
+            
+            $costoEnvio = $resultadoDelivery['success'] ? (float) ($resultadoDelivery['costo_envio_total'] ?? 0) : 0;
+            $montoTotal += $costoEnvio;
         }
 
         // 6. Transacción en base de datos para reservar stock y crear orden 'pendiente'

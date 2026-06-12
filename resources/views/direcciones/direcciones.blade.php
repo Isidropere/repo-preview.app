@@ -29,7 +29,7 @@
 <div style="max-width:1000px;margin:0 auto;padding:28px 16px;">
 
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
-    @include('components.btn-volver', ['backUrl' => route('tu_cuenta')])
+    @include('components.btn-volver', ['backUrl' => !empty($returnUrl) ? $returnUrl : route('tu_cuenta')])
     <h1 style="font-size:1.5rem;font-weight:700;color:#111827;margin:0;">Mis Direcciones</h1>
   </div>
 
@@ -52,7 +52,7 @@
         </div>
         <div style="display:flex;gap:6px;">
           <button class="btn-edit" data-id="{{ $dir->id_direccion }}" style="background:#eff6ff;border:none;border-radius:6px;padding:5px 10px;font-size:.78rem;color:#3b82f6;cursor:pointer;font-weight:600;">&#9998; Editar</button>
-          <form method="POST" action="{{ route('direcciones.destroy', $dir) }}" onsubmit="return confirm('Eliminar esta direcci\u00f3n?');" style="margin:0;">
+          <form method="POST" action="{{ route('direcciones.destroy', [$dir, 'return_url' => $returnUrl]) }}" onsubmit="return confirm('Eliminar esta direcci\u00f3n?');" style="margin:0;">
             @csrf @method('DELETE')
             <button type="submit" style="background:#fef2f2;border:none;border-radius:6px;padding:5px 10px;font-size:.78rem;color:#ef4444;cursor:pointer;font-weight:600;">&#128465; Eliminar</button>
           </form>
@@ -342,7 +342,14 @@
         method: 'POST',
         headers: {'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,'Content-Type':'application/json'}
       }).then(r=>r.json()).then(function(d){
-        if(d.success) { window.location.reload(); }
+        if(d.success) {
+          const returnUrl = '{{ $returnUrl ?? "" }}';
+          if (returnUrl) {
+              window.location.href = returnUrl;
+          } else {
+              window.location.reload();
+          }
+        }
         else { self.disabled = false; self.textContent = textoOriginal; }
       }).catch(function(){ self.disabled = false; self.textContent = textoOriginal; alert('Error al actualizar'); });
     });

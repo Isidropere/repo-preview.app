@@ -78,14 +78,14 @@
                         <div class="mb-5 bg-red-50 border border-red-200 rounded-xl p-4">
                             <p class="text-sm text-red-700 font-semibold mb-2">⚠️ No tienes una dirección de envío registrada.</p>
                             <p class="text-xs text-red-600 mb-3">Es necesaria para calcular el costo de entrega y procesar el envío.</p>
-                            <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}"
+                            <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}"
                                 class="inline-flex items-center gap-2 text-sm font-bold text-red-800 hover:underline">
                                 Agregar dirección de envío →
                             </a>
                         </div>
                         @endif
                         <div class="mb-5">
-                            <a href="{{ route('direcciones.index') }}"
+                            <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}"
                                 class="flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition group">
                                 <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-blue-100 transition flex-shrink-0">
                                     <img src="/imgs/icons/EditLocation.svg" alt="" class="h-5 w-5">

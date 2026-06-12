@@ -97,9 +97,16 @@ class DireccionesController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $this->direccionService->eliminar(auth()->id(), (int) $id);
+        $returnUrl = $request->query('return_url');
+        
+        if ($returnUrl) {
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode($returnUrl))
+                ->with('success', 'Dirección eliminada correctamente');
+        }
+        
         return redirect()->route('direcciones.index')->with('success', 'Dirección eliminada correctamente');
     }
 }

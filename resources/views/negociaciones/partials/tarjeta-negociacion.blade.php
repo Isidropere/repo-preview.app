@@ -247,10 +247,10 @@
         @if($ambosConfirmados && $requierePago && !$miPago)
             @if(!$tieneDireccion)
             <div class="w-full p-4 rounded-xl border" style="background:#fef2f2;border-color:#fecaca;">
-                <p class="text-sm font-semibold mb-2" style="color:#dc2626;">� Necesitas una dirección de envío</p>
+                <p class="text-sm font-semibold mb-2" style="color:#dc2626;">⚠️ Necesitas una dirección de envío</p>
                 <p class="text-xs mb-3" style="color:#991b1b;">Debes registrar tu dirección antes de realizar el pago.</p>
-                <a href="{{ route('direcciones.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
-                    � Crear dirección
+                <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}" class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#dc2626;text-decoration:none;">
+                    ➕ Crear dirección
                 </a>
             </div>
             @else

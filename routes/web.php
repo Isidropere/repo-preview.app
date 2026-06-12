@@ -404,22 +404,22 @@ Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function
 });
 
 // Rutas de pago con redirección de AZUL (PCI-DSS Compliant)
-Route::post('/pago/aprobado', [PagoRedirectController::class, 'pagoAprobado'])->name('pago.redirect.aprobado');
-Route::post('/pago/declinado', [PagoRedirectController::class, 'pagoDeclinado'])->name('pago.redirect.declinado');
-Route::post('/pago/cancelado', [PagoRedirectController::class, 'pagoCancelado'])->name('pago.redirect.cancelado');
+Route::match(['get', 'post'], '/pago/aprobado', [PagoRedirectController::class, 'pagoAprobado'])->name('pago.redirect.aprobado');
+Route::match(['get', 'post'], '/pago/declinado', [PagoRedirectController::class, 'pagoDeclinado'])->name('pago.redirect.declinado');
+Route::match(['get', 'post'], '/pago/cancelado', [PagoRedirectController::class, 'pagoCancelado'])->name('pago.redirect.cancelado');
 Route::post('/pago/ipn', [PagoRedirectController::class, 'ipnWebhook'])->name('pago.redirect.ipn');
 Route::get('/pago/redirect/iniciar-movil/{id_pago_compra}', [PagoRedirectController::class, 'iniciarPagoMovil'])->name('pago.redirect.iniciar-movil');
 
 // Callbacks de pago de talento AZUL
-Route::post('/talento/pago/aprobado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoAprobado'])->name('talento.pago.aprobado');
-Route::post('/talento/pago/declinado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoDeclinado'])->name('talento.pago.declinado');
-Route::post('/talento/pago/cancelado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoCancelado'])->name('talento.pago.cancelado');
+Route::match(['get', 'post'], '/talento/pago/aprobado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoAprobado'])->name('talento.pago.aprobado');
+Route::match(['get', 'post'], '/talento/pago/declinado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoDeclinado'])->name('talento.pago.declinado');
+Route::match(['get', 'post'], '/talento/pago/cancelado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoCancelado'])->name('talento.pago.cancelado');
 Route::get('/talento/pago/iniciar-movil/{id_item}', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'iniciarPagoMovil'])->name('talento.pago.iniciar-movil');
 
 // Callbacks de pago de negociaciones (envío) AZUL
-Route::post('/negociaciones/pago/aprobado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoAprobado'])->name('negociaciones.pago.aprobado');
-Route::post('/negociaciones/pago/declinado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoDeclinado'])->name('negociaciones.pago.declinado');
-Route::post('/negociaciones/pago/cancelado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoCancelado'])->name('negociaciones.pago.cancelado');
+Route::match(['get', 'post'], '/negociaciones/pago/aprobado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoAprobado'])->name('negociaciones.pago.aprobado');
+Route::match(['get', 'post'], '/negociaciones/pago/declinado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoDeclinado'])->name('negociaciones.pago.declinado');
+Route::match(['get', 'post'], '/negociaciones/pago/cancelado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoCancelado'])->name('negociaciones.pago.cancelado');
 Route::get('/negociaciones/pago/iniciar-movil/{id_negociacion}', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'iniciarPagoMovil'])->name('negociaciones.pago.iniciar-movil');
 
 Route::middleware(['auth'])->group(function () {

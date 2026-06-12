@@ -81,7 +81,8 @@ class NegociacionPagoRedirectController extends Controller
         // 1. Obtener dirección
         $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
         if (!$direccion) {
-            return redirect()->route('direcciones.index')->with('error', 'Debes registrar una dirección de envío antes de pagar.');
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', $neg->id_negociacion)))
+                ->with('error', 'Debes registrar una dirección de envío antes de pagar.');
         }
 
         // 2. Calcular costo

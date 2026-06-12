@@ -20,7 +20,7 @@
     @if(($direccionesCount ?? 0) === 0)
       <div style="background:#fff7ed;border:1px solid #ffedd5;border-radius:8px;padding:16px;margin-bottom:24px;">
         <p style="color:#9a3412;font-size:.9rem;font-weight:600;margin:0 0 10px;">⚠️ Se requiere una dirección para proceder.</p>
-        <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}" 
+        <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}" 
            style="color:#c2410c;font-size:.875rem;font-weight:700;text-decoration:underline;">
           Crear mi primera dirección →
         </a>
