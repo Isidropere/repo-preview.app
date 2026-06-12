@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'                   => \App\Http\Middleware\CheckUserType::class,
             'throttle.sensitive'     => \App\Http\Middleware\ThrottleSensitiveRoutes::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'pago/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Log custom mismatch session errors

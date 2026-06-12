@@ -21,23 +21,117 @@ class AzulProvider implements PaymentProviderInterface
     private string $auth1;
     private string $auth2;
     private string $channel;
+    private string $authKey;
+    private string $paymentPageUrl;
 
     public function __construct()
     {
         $env = config('services.azul.env', 'QA');
 
         if ($env === 'production') {
-            $this->primaryUrl   = 'https://pagos.azul.com.do/webservices/JSON/Default.aspx';
-            $this->secondaryUrl = 'https://contpagos.azul.com.do/webservices/JSON/Default.aspx';
+            $this->primaryUrl     = 'https://pagos.azul.com.do/webservices/JSON/Default.aspx';
+            $this->secondaryUrl   = 'https://contpagos.azul.com.do/webservices/JSON/Default.aspx';
+            $this->paymentPageUrl = 'https://pagos.azul.com.do/PaymentPage/Default.aspx';
         } else {
-            $this->primaryUrl   = 'https://pruebas.azul.com.do/webservices/JSON/Default.aspx';
-            $this->secondaryUrl = null;
+            $this->primaryUrl     = 'https://pruebas.azul.com.do/webservices/JSON/Default.aspx';
+            $this->secondaryUrl   = null;
+            $this->paymentPageUrl = 'https://pruebas.azul.com.do/PaymentPage/Default.aspx';
         }
 
         $this->store   = config('services.azul.store');
         $this->auth1   = config('services.azul.auth1');
         $this->auth2   = config('services.azul.auth2');
         $this->channel = config('services.azul.channel', 'EC');
+        $this->authKey = config('services.azul.auth_key', '');
+    }
+
+    /**
+     * Genera los campos del formulario oculto para redirigir al cliente a la Página de Pago de AZUL.
+     * Calcula la firma digital AuthHash utilizando UTF-16LE y HMAC-SHA512.
+     */
+    public function generarCamposFormulario(float $monto, string $orderNumber, array $opciones = []): array
+    {
+        $amountCents = (int) round($monto * 100);
+        $itbisCents = (int) round(($opciones['tax'] ?? 0) * 100);
+
+        $fields = [
+            'MerchantId'          => $this->store,
+            'MerchantName'        => $opciones['merchant_name'] ?? 'Cámbialo RD',
+            'MerchantType'        => 'ECommerce',
+            'CurrencyCode'        => '$',
+            'OrderNumber'         => $orderNumber,
+            'Amount'              => (string) $amountCents,
+            'ITBIS'               => $itbisCents > 0 ? (string) $itbisCents : '000',
+            'ApprovedUrl'         => route('pago.redirect.aprobado'),
+            'DeclinedUrl'         => route('pago.redirect.declinado'),
+            'CancelUrl'           => route('pago.redirect.cancelado'),
+            'UseCustomField1'     => '0',
+            'CustomField1Label'   => '',
+            'CustomField1Value'   => '',
+            'UseCustomField2'     => '0',
+            'CustomField2Label'   => '',
+            'CustomField2Value'   => '',
+        ];
+
+        // Concatenar todos los valores para el hash en el orden preciso del documento técnico
+        $concatStr = $fields['MerchantId'] .
+                     $fields['MerchantName'] .
+                     $fields['MerchantType'] .
+                     $fields['CurrencyCode'] .
+                     $fields['OrderNumber'] .
+                     $fields['Amount'] .
+                     $fields['ITBIS'] .
+                     $fields['ApprovedUrl'] .
+                     $fields['DeclinedUrl'] .
+                     $fields['CancelUrl'] .
+                     $fields['UseCustomField1'] .
+                     $fields['CustomField1Label'] .
+                     $fields['CustomField1Value'] .
+                     $fields['UseCustomField2'] .
+                     $fields['CustomField2Label'] .
+                     $fields['CustomField2Value'] .
+                     $this->authKey;
+
+        // Convertir a bytes UTF-16LE (Unicode en C#) antes de hashear
+        $utf16Str = mb_convert_encoding($concatStr, 'UTF-16LE', 'UTF-8');
+        
+        // Calcular HMAC SHA512
+        $authHash = hash_hmac('sha512', $utf16Str, $this->authKey);
+
+        $fields['AuthHash'] = $authHash;
+
+        return [
+            'url'    => $this->paymentPageUrl,
+            'fields' => $fields,
+        ];
+    }
+
+    /**
+     * Valida la firma AuthHash recibida de AZUL en la respuesta de redirección o IPN.
+     */
+    public function validarFirmaRespuesta(array $params): bool
+    {
+        $receivedHash = $params['AuthHash'] ?? $params['authHash'] ?? '';
+        if (empty($receivedHash)) {
+            return false;
+        }
+
+        // Concatenar parámetros de respuesta en el orden preciso del documento técnico (Pág 8)
+        $concatStr = ($params['OrderNumber'] ?? $params['orderNumber'] ?? '') .
+                     ($params['Amount'] ?? $params['amount'] ?? '') .
+                     ($params['AuthorizationCode'] ?? $params['authorizationCode'] ?? '') .
+                     ($params['DateTime'] ?? $params['dateTime'] ?? '') .
+                     ($params['ResponseCode'] ?? $params['responseCode'] ?? '') .
+                     ($params['IsoCode'] ?? $params['ISOCode'] ?? $params['isoCode'] ?? '') .
+                     ($params['ResponseMessage'] ?? $params['responseMessage'] ?? '') .
+                     ($params['ErrorDescription'] ?? $params['errorDescription'] ?? '') .
+                     ($params['RRN'] ?? $params['rrn'] ?? '') .
+                     $this->authKey;
+
+        $utf16Str = mb_convert_encoding($concatStr, 'UTF-16LE', 'UTF-8');
+        $expectedHash = hash_hmac('sha512', $utf16Str, $this->authKey);
+
+        return hash_equals(strtolower($expectedHash), strtolower($receivedHash));
     }
 
     public function cobrar(float $monto, string $currency, array $datosTarjeta, array $opciones = []): array

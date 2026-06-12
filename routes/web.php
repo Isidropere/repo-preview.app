@@ -11,6 +11,7 @@ use App\Http\Controllers\DireccionesController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\PagoRedirectController;
 use App\Http\Controllers\ProvinciaController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\DistritoMunicipalController;
@@ -400,6 +401,18 @@ Route::middleware(['auth'])->prefix('carrito')->name('carrito.')->group(function
     );
     Route::get('/negociaciones/ver/{id_emisor}/{id_receptor}', [NegociacionController::class, 'obtenerMensajes'])
         ->name('negociaciones.ver');
+});
+
+// Rutas de pago con redirección de AZUL (PCI-DSS Compliant)
+Route::post('/pago/aprobado', [PagoRedirectController::class, 'pagoAprobado'])->name('pago.redirect.aprobado');
+Route::post('/pago/declinado', [PagoRedirectController::class, 'pagoDeclinado'])->name('pago.redirect.declinado');
+Route::post('/pago/cancelado', [PagoRedirectController::class, 'pagoCancelado'])->name('pago.redirect.cancelado');
+Route::post('/pago/ipn', [PagoRedirectController::class, 'ipnWebhook'])->name('pago.redirect.ipn');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/pago/iniciar', [PagoRedirectController::class, 'iniciarPago'])
+        ->middleware('throttle.sensitive:5,1')
+        ->name('pago.redirect.iniciar');
 });
 
 Route::middleware(['auth'])->prefix('negociaciones')->group(function () {

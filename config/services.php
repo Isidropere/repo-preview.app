@@ -46,6 +46,7 @@ return [
         'auth1'       => env('AZUL_AUTH1', ''),
         'auth2'       => env('AZUL_AUTH2', ''),
         'channel'     => env('AZUL_CHANNEL', 'EC'),
+        'auth_key'    => env('AZUL_AUTH_KEY', ''),
     ],
 
     // ── OAuth Social Login ──────────────────────────────────────────────────
