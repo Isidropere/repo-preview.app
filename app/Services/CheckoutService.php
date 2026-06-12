@@ -105,6 +105,20 @@ class CheckoutService
             return $this->error('El monto total no puede ser cero o negativo.');
         }
 
+        // Calcular costo de envío si aplica (solo para productos físicos)
+        if (!$esServicio && $direccion) {
+            $deliveryService = app(\App\Services\DeliveryService::class);
+            $pueblo = $direccion->municipio->municipio ?? '';
+            $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal);
+            
+            if (!$resultadoDelivery['success'] && ($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
+                return $this->error('El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espera a que el administrador defina el costo de envío.');
+            }
+            
+            $costoEnvio = $resultadoDelivery['success'] ? (float) ($resultadoDelivery['costo_envio_total'] ?? 0) : 0;
+            $montoTotal += $costoEnvio;
+        }
+
         // 6. Validar tarjeta del usuario
         $tarjeta = $this->obtenerTarjetaUsuario($idTarjeta, $userId);
         if (!$tarjeta) {
@@ -148,7 +162,7 @@ class CheckoutService
 
     private function obtenerDireccionPredeterminada(int $userId): ?Direcciones
     {
-        return Direcciones::where('id_user', $userId)
+        return Direcciones::with('municipio')->where('id_user', $userId)
             ->where('es_predeterminada', 1)
             ->first();
     }

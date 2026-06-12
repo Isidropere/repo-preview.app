@@ -53,4 +53,24 @@ class PagoEnvioIntercambio extends Model
     {
         return $this->belongsTo(PagoRegistroTalento::class, 'id_pago_registro_talento');
     }
+
+    /**
+     * Obtiene la respuesta de Azul desde los logs de pago.
+     */
+    public function getAzulResponseAttribute(): ?array
+    {
+        $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
+            ->where('custom_order_id', 'like', "INT-{$this->id}-%")
+            ->where('is_success', true)
+            ->first();
+
+        if ($log && !empty($log->response_payload)) {
+            $payload = json_decode($log->response_payload, true);
+            if (is_array($payload)) {
+                return $payload;
+            }
+        }
+
+        return null;
+    }
 }

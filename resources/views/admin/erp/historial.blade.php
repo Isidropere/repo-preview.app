@@ -141,13 +141,66 @@
                                         <p class="text-xs text-gray-400 mt-0.5">{{ $pago->carrito?->usuario?->email ?? '-' }}</p>
                                     </td>
                                     <td class="px-6 py-4 text-xs text-gray-600">
-                                        @if($pago->tarjeta)
+                                        @if($pago->azul_response)
+                                            @php
+                                                $azul = $pago->azul_response;
+                                                $cardNumber = $azul['CardNumber'] ?? '';
+                                                $brand = $azul['DataVaultBrand'] ?? '';
+                                                if (empty($brand) && !empty($cardNumber)) {
+                                                    if (str_starts_with($cardNumber, '4')) {
+                                                        $brand = 'VISA';
+                                                    } elseif (str_starts_with($cardNumber, '5')) {
+                                                        $brand = 'MASTERCARD';
+                                                    } elseif (str_starts_with($cardNumber, '3')) {
+                                                        $brand = 'AMEX';
+                                                    }
+                                                }
+                                                
+                                                $azulDate = null;
+                                                $rawDate = $azul['DateTime'] ?? null;
+                                                if ($rawDate && strlen($rawDate) === 14) {
+                                                    $year = substr($rawDate, 0, 4);
+                                                    $month = substr($rawDate, 4, 2);
+                                                    $day = substr($rawDate, 6, 2);
+                                                    $hour = substr($rawDate, 8, 2);
+                                                    $min = substr($rawDate, 10, 2);
+                                                    $sec = substr($rawDate, 12, 2);
+                                                    $azulDate = "$day/$month/$year $hour:$min:$sec";
+                                                }
+                                            @endphp
+                                            <div class="flex flex-col gap-1">
+                                                <div>
+                                                    @if($brand)
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 mr-1">{{ strtoupper($brand) }}</span>
+                                                    @endif
+                                                    @if($cardNumber)
+                                                        <span class="font-mono font-bold text-gray-800">{{ $cardNumber }}</span>
+                                                    @endif
+                                                </div>
+                                                @if(!empty($azul['AzulOrderId']))
+                                                    <p class="text-[10px] text-gray-500 mt-0.5">Azul Order ID: <span class="font-mono font-semibold text-gray-700">{{ $azul['AzulOrderId'] }}</span></p>
+                                                @endif
+                                                @if(!empty($azul['AuthorizationCode']))
+                                                    <p class="text-[10px] text-gray-500">Aut: <span class="font-mono font-bold text-emerald-600 bg-emerald-50 px-1 rounded">{{ $azul['AuthorizationCode'] }}</span></p>
+                                                @endif
+                                                @if(!empty($azul['RRN']))
+                                                    <p class="text-[10px] text-gray-500">RRN: <span class="font-mono text-gray-700">{{ $azul['RRN'] }}</span></p>
+                                                @endif
+                                                @if($azulDate)
+                                                    <p class="text-[10px] text-gray-400">Fecha Azul: <span class="font-mono text-gray-600">{{ $azulDate }}</span></p>
+                                                @endif
+                                                <details class="mt-1 text-[10px] text-gray-500 bg-gray-50 rounded-lg p-1 border border-gray-200 cursor-pointer">
+                                                    <summary class="font-semibold text-gray-600 hover:text-gray-800 focus:outline-none">Ver JSON Completo</summary>
+                                                    <pre class="mt-1 font-mono text-[9px] overflow-auto whitespace-pre-wrap break-all bg-gray-900 text-emerald-400 p-2 rounded max-h-40">{{ json_encode($azul, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                </details>
+                                            </div>
+                                        @elseif($pago->tarjeta)
                                             <span class="font-medium capitalize">{{ $pago->tarjeta->tipo_tarjeta }}</span> terminada en <span class="font-mono font-bold">{{ $pago->tarjeta->last4 }}</span>
                                             @if($pago->autorizacion_pago)
                                                 <p class="text-[10px] text-gray-400 mt-0.5 font-mono">Aut: {{ $pago->autorizacion_pago }}</p>
                                             @endif
                                         @else
-                                            <span class="text-gray-400">Sin tarjeta registrada</span>
+                                            <span class="text-gray-400">Sin detalles de pago</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm font-bold text-right text-gray-800">
@@ -230,11 +283,62 @@
                                             $pagoEmisorObj = $neg->pagoEnvios->firstWhere('id_user', $neg->usuario_emisor_id);
                                             $pagoReceptorObj = $neg->pagoEnvios->firstWhere('id_user', $neg->usuario_receptor_id);
                                         @endphp
-                                        <div class="flex flex-col gap-1">
-                                            <div>
+                                        <div class="flex flex-col gap-2">
+                                            <div class="border-b border-gray-100 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
                                                 <span class="font-medium text-gray-500">Emisor:</span>
                                                 @if($pagoEmisorObj && $pagoEmisorObj->estado === 'pagado')
                                                     <span class="text-emerald-700 font-bold">RD$ {{ number_format($pagoEmisorObj->monto, 2) }}</span>
+                                                    @if($pagoEmisorObj->azul_response)
+                                                        @php
+                                                            $azulEmisor = $pagoEmisorObj->azul_response;
+                                                            $cardNumberEmisor = $azulEmisor['CardNumber'] ?? '';
+                                                            $brandEmisor = $azulEmisor['DataVaultBrand'] ?? '';
+                                                            if (empty($brandEmisor) && !empty($cardNumberEmisor)) {
+                                                                if (str_starts_with($cardNumberEmisor, '4')) {
+                                                                    $brandEmisor = 'VISA';
+                                                                } elseif (str_starts_with($cardNumberEmisor, '5')) {
+                                                                    $brandEmisor = 'MASTERCARD';
+                                                                } elseif (str_starts_with($cardNumberEmisor, '3')) {
+                                                                    $brandEmisor = 'AMEX';
+                                                                }
+                                                            }
+                                                            
+                                                            $azulDateEmisor = null;
+                                                            $rawDateEmisor = $azulEmisor['DateTime'] ?? null;
+                                                            if ($rawDateEmisor && strlen($rawDateEmisor) === 14) {
+                                                                $year = substr($rawDateEmisor, 0, 4);
+                                                                $month = substr($rawDateEmisor, 4, 2);
+                                                                $day = substr($rawDateEmisor, 6, 2);
+                                                                $hour = substr($rawDateEmisor, 8, 2);
+                                                                $min = substr($rawDateEmisor, 10, 2);
+                                                                $sec = substr($rawDateEmisor, 12, 2);
+                                                                $azulDateEmisor = "$day/$month/$year $hour:$min:$sec";
+                                                            }
+                                                        @endphp
+                                                        <div class="pl-2 mt-1 text-[10px] text-gray-500 border-l border-emerald-200">
+                                                            @if($brandEmisor || $cardNumberEmisor)
+                                                                <p class="font-mono font-semibold text-gray-800">
+                                                                    @if($brandEmisor)
+                                                                        <span class="bg-blue-50 text-blue-700 px-1 rounded text-[9px] mr-1">{{ $brandEmisor }}</span>
+                                                                    @endif
+                                                                    {{ $cardNumberEmisor }}
+                                                                </p>
+                                                            @endif
+                                                            @if(!empty($azulEmisor['AzulOrderId']))
+                                                                <p class="text-[9px] text-gray-400">ID: {{ $azulEmisor['AzulOrderId'] }}</p>
+                                                            @endif
+                                                            @if(!empty($azulEmisor['AuthorizationCode']))
+                                                                <p>Aut: <span class="font-mono font-bold text-emerald-600 bg-emerald-50 px-1 rounded text-[9px]">{{ $azulEmisor['AuthorizationCode'] }}</span></p>
+                                                            @endif
+                                                            @if($azulDateEmisor)
+                                                                <p class="text-[9px] text-gray-400">{{ $azulDateEmisor }}</p>
+                                                            @endif
+                                                            <details class="mt-1 text-[9px] bg-gray-50 rounded p-1 border border-gray-100 cursor-pointer">
+                                                                <summary class="font-semibold text-gray-600 hover:text-gray-800 focus:outline-none">JSON Azul</summary>
+                                                                <pre class="mt-1 font-mono text-[9px] overflow-auto whitespace-pre-wrap break-all bg-gray-900 text-emerald-400 p-1 rounded max-h-32">{{ json_encode($azulEmisor, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </details>
+                                                        </div>
+                                                    @endif
                                                 @elseif($pagoEmisorObj && $pagoEmisorObj->estado === 'pagado_pull')
                                                     <span class="text-purple-700 font-bold">Pull</span>
                                                 @else
@@ -245,6 +349,57 @@
                                                 <span class="font-medium text-gray-500">Receptor:</span>
                                                 @if($pagoReceptorObj && $pagoReceptorObj->estado === 'pagado')
                                                     <span class="text-emerald-700 font-bold">RD$ {{ number_format($pagoReceptorObj->monto, 2) }}</span>
+                                                    @if($pagoReceptorObj->azul_response)
+                                                        @php
+                                                            $azulReceptor = $pagoReceptorObj->azul_response;
+                                                            $cardNumberReceptor = $azulReceptor['CardNumber'] ?? '';
+                                                            $brandReceptor = $azulReceptor['DataVaultBrand'] ?? '';
+                                                            if (empty($brandReceptor) && !empty($cardNumberReceptor)) {
+                                                                if (str_starts_with($cardNumberReceptor, '4')) {
+                                                                    $brandReceptor = 'VISA';
+                                                                } elseif (str_starts_with($cardNumberReceptor, '5')) {
+                                                                    $brandReceptor = 'MASTERCARD';
+                                                                } elseif (str_starts_with($cardNumberReceptor, '3')) {
+                                                                    $brandReceptor = 'AMEX';
+                                                                }
+                                                            }
+                                                            
+                                                            $azulDateReceptor = null;
+                                                            $rawDateReceptor = $azulReceptor['DateTime'] ?? null;
+                                                            if ($rawDateReceptor && strlen($rawDateReceptor) === 14) {
+                                                                $year = substr($rawDateReceptor, 0, 4);
+                                                                $month = substr($rawDateReceptor, 4, 2);
+                                                                $day = substr($rawDateReceptor, 6, 2);
+                                                                $hour = substr($rawDateReceptor, 8, 2);
+                                                                $min = substr($rawDateReceptor, 10, 2);
+                                                                $sec = substr($rawDateReceptor, 12, 2);
+                                                                $azulDateReceptor = "$day/$month/$year $hour:$min:$sec";
+                                                            }
+                                                        @endphp
+                                                        <div class="pl-2 mt-1 text-[10px] text-gray-500 border-l border-emerald-200">
+                                                            @if($brandReceptor || $cardNumberReceptor)
+                                                                <p class="font-mono font-semibold text-gray-800">
+                                                                    @if($brandReceptor)
+                                                                        <span class="bg-blue-50 text-blue-700 px-1 rounded text-[9px] mr-1">{{ $brandReceptor }}</span>
+                                                                    @endif
+                                                                    {{ $cardNumberReceptor }}
+                                                                </p>
+                                                            @endif
+                                                            @if(!empty($azulReceptor['AzulOrderId']))
+                                                                <p class="text-[9px] text-gray-400">ID: {{ $azulReceptor['AzulOrderId'] }}</p>
+                                                            @endif
+                                                            @if(!empty($azulReceptor['AuthorizationCode']))
+                                                                <p>Aut: <span class="font-mono font-bold text-emerald-600 bg-emerald-50 px-1 rounded text-[9px]">{{ $azulReceptor['AuthorizationCode'] }}</span></p>
+                                                            @endif
+                                                            @if($azulDateReceptor)
+                                                                <p class="text-[9px] text-gray-400">{{ $azulDateReceptor }}</p>
+                                                            @endif
+                                                            <details class="mt-1 text-[9px] bg-gray-50 rounded p-1 border border-gray-100 cursor-pointer">
+                                                                <summary class="font-semibold text-gray-600 hover:text-gray-800 focus:outline-none">JSON Azul</summary>
+                                                                <pre class="mt-1 font-mono text-[9px] overflow-auto whitespace-pre-wrap break-all bg-gray-900 text-emerald-400 p-1 rounded max-h-32">{{ json_encode($azulReceptor, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </details>
+                                                        </div>
+                                                    @endif
                                                 @elseif($pagoReceptorObj && $pagoReceptorObj->estado === 'pagado_pull')
                                                     <span class="text-purple-700 font-bold">Pull</span>
                                                 @else

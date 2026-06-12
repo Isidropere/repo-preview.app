@@ -25,6 +25,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   int? _diasHabiles;
   bool _calculandoEnvio = false;
   bool _aceptarPoliticas = false;
+  bool _deliveryCostError = false;
 
   @override
   void initState() {
@@ -78,6 +79,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         setState(() {
           _costoEnvio = 0.0;
           _diasHabiles = null;
+          _deliveryCostError = false;
         });
       }
       return;
@@ -93,6 +95,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         setState(() {
           _costoEnvio = 0.0;
           _diasHabiles = null;
+          _deliveryCostError = false;
         });
       }
       return;
@@ -103,10 +106,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     try {
       final res = await ApiClient.get(
         '/delivery/calcular?pueblo=${Uri.encodeComponent(municipio)}&valor_articulo=$_subtotal',
-        auth: false,
+        auth: true,
       );
 
-      if (res.statusCode == 200) {
+      if (res.statusCode == 200 || res.statusCode == 404) {
         final body = jsonDecode(res.body);
         if (body['success'] == true) {
           if (mounted) {
@@ -114,6 +117,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               _costoEnvio = double.tryParse(body['costo_envio_total'].toString()) ?? 0.0;
               _diasHabiles = int.tryParse(body['dias_habiles'].toString());
               _calculandoEnvio = false;
+              _deliveryCostError = false;
+            });
+          }
+          return;
+        } else if (body['error_code'] == 'MISSING_DELIVERY_TARIFF') {
+          if (mounted) {
+            setState(() {
+              _costoEnvio = 0.0;
+              _diasHabiles = null;
+              _calculandoEnvio = false;
+              _deliveryCostError = true;
             });
           }
           return;
@@ -128,6 +142,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _costoEnvio = 0.0;
         _diasHabiles = null;
         _calculandoEnvio = false;
+        _deliveryCostError = false;
       });
     }
   }
@@ -199,6 +214,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final bool esServicio = widget.carrito['tipo'] == 'servicio';
     if (!esServicio && _idDireccion == null) {
       setState(() => _errorMsg = 'Debes seleccionar una dirección de entrega.');
+      return;
+    }
+    if (!esServicio && _deliveryCostError) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Costo de envío pendiente'),
+          content: const Text('Esperando por el administrador para el costo de envío'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
       return;
     }
     if (!_aceptarPoliticas) {
@@ -396,6 +427,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         subtitle: Text('${d['municipio']?['municipio'] ?? ''}, ${d['provincia']?['provincia'] ?? ''}', style: TextStyle(fontSize: 12, color: kTextGray)),
                       );
                     }),
+                  if (_deliveryCostError) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        border: Border.all(color: Colors.amber.shade200, width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 18),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'El sistema espera por una definición para el cálculo de Análisis de costos de envío.',
+                              style: TextStyle(fontSize: 12, color: Colors.brown, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
 
                 const Divider(height: 24),
@@ -455,7 +510,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       const Text('Envío estimado', style: TextStyle(fontSize: 14, color: kTextGray)),
                       _calculandoEnvio
                           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: kPrimary))
-                          : Text('RD\$ ${_envio.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, color: kTextDark)),
+                          : _deliveryCostError
+                              ? const Text('No se pudo calcular el envío', style: TextStyle(fontSize: 14, color: Colors.red, fontWeight: FontWeight.bold))
+                              : Text('RD\$ ${_envio.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, color: kTextDark)),
                     ],
                   ),
                   if (!_calculandoEnvio && _diasHabiles != null) ...[

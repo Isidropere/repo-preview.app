@@ -263,6 +263,27 @@
       </div>
     </div>
     <div id="bloque-delivery"></div>
+
+    <!-- Tarifa de Envío Pendientes (Errores de Cálculo) -->
+    <div id="delivery-errors-section" style="margin-top:24px;border-top:1px solid #e2e8f0;padding-top:20px;display:none;">
+      <h4 style="margin:0 0 10px;font-size:.9rem;font-weight:700;color:#e11d48;display:flex;align-items:center;gap:6px;">
+        <span>⚠️</span> Direcciones no Calculadas (Pendientes de Configuración de Tarifa)
+      </h4>
+      <p style="font-size:.75rem;color:#64748b;margin:0 0 12px;">Los siguientes usuarios intentaron realizar una compra pero el sistema no pudo calcular el costo de envío porque su dirección (municipio/pueblo) no está configurada en ninguna de las zonas de delivery.</p>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+          <thead>
+            <tr style="background:#fff1f2;border-bottom:1px solid #fecdd3;">
+              <th style="padding:10px 12px;text-align:left;color:#9f1239;font-weight:600;">Usuario</th>
+              <th style="padding:10px 12px;text-align:left;color:#9f1239;font-weight:600;">Dirección no calculable</th>
+              <th style="padding:10px 12px;text-align:left;color:#9f1239;font-weight:600;">Fecha y Hora</th>
+              <th style="padding:10px 12px;text-align:center;color:#9f1239;font-weight:600;width:120px;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyDeliveryErrors"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   </div><!-- /seccion-operacion -->
@@ -494,14 +515,42 @@ function renderTrazabilidad(rows) {
   ).join('');
 }
 
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderAlertas(alertas) {
   const colores = {danger:'#ef4444',warning:'#f59e0b',info:'#3b82f6',success:'#10b981'};
   document.getElementById('bloque-alertas').innerHTML = (alertas||[]).map(a => {
     const c = colores[a.tipo]||'#64748b';
+    let extraHtml = '';
+    if (a.items && a.items.length > 0) {
+      extraHtml = '<div style="margin-top:10px; padding-top:10px; border-top:1px dashed ' + c + '33; font-size:0.78rem;">' +
+        '<strong style="color:' + c + '; display:block; margin-bottom:6px;">Publicaciones inactivas (últimas 20):</strong>' +
+        '<div style="max-height:150px; overflow-y:auto; padding-right:5px;">' +
+        '<ul style="margin:0; padding-left:16px; list-style-type:disc; color:#475569;">' +
+        a.items.map(item => '<li style="margin-bottom:4px;">' +
+          '<a href="/items/' + item.slug + '/detalle" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:600;">' + 
+            escapeHtml(item.item) + 
+          '</a>' +
+          ' <span style="color:#64748b; font-size:0.72rem;">(ID: ' + item.id_item + ', publicado el ' + item.fecha + ')</span>' +
+        '</li>').join('') +
+        '</ul>' +
+        '</div>' +
+        '</div>';
+    }
     return '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;background:'+c+'11;border-left:3px solid '+c+';margin-bottom:8px;">' +
       '<span style="font-size:1.2rem;">'+a.icono+'</span>' +
-      '<div><div style="font-weight:600;font-size:.85rem;color:'+c+';">'+a.titulo+'</div>' +
-      '<div style="font-size:.8rem;color:#475569;margin-top:2px;">'+a.mensaje+'</div></div></div>';
+      '<div style="width: 100%;"><div style="font-weight:600;font-size:.85rem;color:'+c+';">'+a.titulo+'</div>' +
+      '<div style="font-size:.8rem;color:#475569;margin-top:2px;">'+a.mensaje+'</div>' +
+      extraHtml +
+      '</div></div>';
   }).join('');
 }
 
@@ -743,6 +792,69 @@ function renderDelivery(zonas) {
     }).join('') + '</div>';
 }
 
+function renderDeliveryErrors(errors) {
+  const container = document.getElementById('delivery-errors-section');
+  const tbody = document.getElementById('tbodyDeliveryErrors');
+  if (!container || !tbody) return;
+
+  if (!errors || errors.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  tbody.innerHTML = errors.map(err => {
+    return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+      '<td style="padding:10px 12px;font-weight:500;color:#1e293b;">' +
+        (err.usuario_nombre || 'Desconocido') + 
+        (err.usuario_id ? ' <span style="font-size:.7rem;color:#64748b;">(ID: ' + err.usuario_id + ')</span>' : '') +
+      '</td>' +
+      '<td style="padding:10px 12px;color:#e11d48;font-weight:600;">' + (err.direccion || 'Desconocida') + '</td>' +
+      '<td style="padding:10px 12px;color:#64748b;">' + (err.fecha || '-') + '</td>' +
+      '<td style="padding:10px 12px;text-align:center;">' +
+        '<button type="button" onclick="marcarErrorEnvioResuelto(' + err.id + ', this)" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.75rem;cursor:pointer;font-weight:600;transition:opacity 0.2s;">' +
+          'Marcar resuelto' +
+        '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+async function marcarErrorEnvioResuelto(id, btn) {
+  if (!confirm('¿Seguro que desea marcar esta dirección como resuelta? El reporte desaparecerá de la lista.')) {
+    return;
+  }
+  const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.textContent = 'Resolviendo...';
+  try {
+    const res = await fetch('/notificaciones/leido/' + id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    if (res.ok) {
+      await cargarDatos();
+    } else {
+      alert('No se pudo resolver la notificación. Intente nuevamente.');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Marcar resuelto';
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Error de red al intentar resolver la notificación.');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = 'Marcar resuelto';
+  }
+}
+
 let deliveryConfigCache = [];
 
 function abrirModalDelivery() {
@@ -832,6 +944,7 @@ async function cargarDatos() {
     renderProvincias(datos.actividad_provincia || []);
     renderDelivery(datos.delivery_zonas || []);
     renderResumenRutasDelivery(datos.delivery_config || []);
+    renderDeliveryErrors(datos.delivery_errors || []);
     if (typeof window.refrescarTablaZonasDelivery === 'function') {
       window.refrescarTablaZonasDelivery();
     }

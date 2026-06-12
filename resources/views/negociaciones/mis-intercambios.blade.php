@@ -219,7 +219,12 @@ function calcularMontoEnvioIntercambio(negId, montoEl) {
                 var spanMonto = document.getElementById('monto-envio-' + negId);
                 if (spanMonto) spanMonto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits: 2});
             } else {
-                montoEl.textContent = d.message || 'Municipio sin zona de delivery configurada';
+                if (d.error_code === 'MISSING_DELIVERY_TARIFF') {
+                    alert('El sistema espera por una definición para el cálculo de Análisis de costos de envío.');
+                    window.location.reload();
+                } else {
+                    montoEl.textContent = d.message || 'Municipio sin zona de delivery configurada';
+                }
             }
         })
         .catch(function() { montoEl.textContent = 'Error al calcular envío'; });

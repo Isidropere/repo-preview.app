@@ -66,6 +66,27 @@ class PagoCompra extends Model
         'total' => 'decimal:2',
     ];
 
+    /**
+     * Obtiene la respuesta de Azul desde los logs de pago.
+     */
+    public function getAzulResponseAttribute(): ?array
+    {
+        $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
+            ->where('custom_order_id', $this->id_pago_compra)
+            ->where('is_success', true)
+            ->whereIn('transaction_type', ['sale_approved', 'sale'])
+            ->first();
+
+        if ($log && !empty($log->response_payload)) {
+            $payload = json_decode($log->response_payload, true);
+            if (is_array($payload)) {
+                return $payload;
+            }
+        }
+
+        return null;
+    }
+
     public function carrito()
     {
         return $this->belongsTo(Carrito::class, 'id_carrito');

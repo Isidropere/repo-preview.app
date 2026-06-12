@@ -78,14 +78,14 @@
                         <div class="mb-5 bg-red-50 border border-red-200 rounded-xl p-4">
                             <p class="text-sm text-red-700 font-semibold mb-2">⚠️ No tienes una dirección de envío registrada.</p>
                             <p class="text-xs text-red-600 mb-3">Es necesaria para calcular el costo de entrega y procesar el envío.</p>
-                            <a href="{{ route('direcciones.index', ['return_url' => url()->current()]) }}"
+                            <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}"
                                 class="inline-flex items-center gap-2 text-sm font-bold text-red-800 hover:underline">
                                 Agregar dirección de envío →
                             </a>
                         </div>
                         @endif
                         <div class="mb-5">
-                            <a href="{{ route('direcciones.index') }}"
+                            <a href="{{ route('direcciones.index', ['return_url' => url()->full()]) }}"
                                 class="flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition group">
                                 <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-blue-100 transition flex-shrink-0">
                                     <img src="/imgs/icons/EditLocation.svg" alt="" class="h-5 w-5">
@@ -103,6 +103,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </a>
+                            <div id="msg-espera-admin-delivery" class="hidden mt-3 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl text-xs flex items-start gap-2.5 shadow-sm">
+                                <svg class="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <span>El sistema espera por una definición para el cálculo de Análisis de costos de envío.</span>
+                            </div>
                         </div>
                         @else
                         <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4">
@@ -419,8 +425,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     @endif
 
+    window.deliveryCostError = false;
+
     // ── Envío del form de pago (Redirección a AZUL) ────────
     document.getElementById('formPago')?.addEventListener('submit', function (e) {
+        if (window.deliveryCostError) {
+            e.preventDefault();
+            alert('Esperando por el administrador para definir el costo de envío');
+            return false;
+        }
         const btn = document.getElementById('btnPagar');
         if (btn) {
             btn.disabled = true;
@@ -457,11 +470,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + subtotal)
-            .then(r => r.json())
+            .then(r => {
+                return r.json().then(data => {
+                    if (!r.ok) {
+                        data.success = false;
+                    }
+                    return data;
+                }).catch(() => {
+                    return { success: false, error_code: 'CONNECTION_ERROR' };
+                });
+            })
             .then(d => {
                 if (!elCosto) return;
                 const costo = parseFloat(d.costo_envio_total ?? 0);
                 if (d.success && costo > 0) {
+                    window.deliveryCostError = false;
+                    document.getElementById('msg-espera-admin-delivery')?.classList.add('hidden');
                     elCosto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits:2});
                     elCosto.className   = 'font-medium text-gray-700';
                     if (elTotal) {
@@ -473,12 +497,27 @@ document.addEventListener('DOMContentLoaded', function () {
                         elDias.textContent = '🚚 Entrega estimada: ' + formatearFecha(fechaEntrega) + ' (~' + d.dias_habiles + ' días hábiles)';
                         elDias.classList.remove('hidden');
                     }
+                } else if (d.error_code === 'MISSING_DELIVERY_TARIFF') {
+                    window.deliveryCostError = true;
+                    elCosto.textContent = 'No se pudo calcular el envío';
+                    elCosto.className   = 'font-medium text-red-600';
+                    document.getElementById('msg-espera-admin-delivery')?.classList.remove('hidden');
+                    if (elTotal) {
+                        elTotal.textContent = 'RD$ ' + subtotal.toLocaleString('es-DO', {minimumFractionDigits:2});
+                    }
+                    if (elDias) {
+                        elDias.classList.add('hidden');
+                    }
                 } else {
+                    window.deliveryCostError = false;
+                    document.getElementById('msg-espera-admin-delivery')?.classList.add('hidden');
                     elCosto.textContent = 'Gratis';
                     elCosto.className   = 'font-medium text-green-600';
                 }
             })
             .catch(() => {
+                window.deliveryCostError = false;
+                document.getElementById('msg-espera-admin-delivery')?.classList.add('hidden');
                 if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.className = 'font-medium text-green-600'; }
             });
     })();

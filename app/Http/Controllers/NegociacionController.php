@@ -271,7 +271,11 @@ class NegociacionController extends Controller
             foreach ($todasNegs as $neg) {
                 if ($neg->item) {
                     $resultado = $deliveryService->calcular($municipioUsuario, 'persona', 0);
-                    $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
+                    if ($resultado['success']) {
+                        $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['costo_envio_total'] ?? 0;
+                    } else {
+                        $costoEnvioPorNeg[$neg->id_negociacion] = ($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' ? 'MISSING_DELIVERY_TARIFF' : 0;
+                    }
                 } else {
                     $costoEnvioPorNeg[$neg->id_negociacion] = 0;
                 }
@@ -398,8 +402,12 @@ class NegociacionController extends Controller
         $tieneDireccion = \App\Models\Direcciones::where('id_user', $userId)->exists();
         if (!$tieneDireccion) {
             $msg = 'Debes registrar una dirección de envío antes de pagar.';
-            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $msg, 'redirect' => route('direcciones.index')], 422);
-            return redirect()->route('direcciones.index')->with('error', $msg);
+            if ($request->wantsJson()) {
+                $redirUrl = route('direcciones.index', ['return_url' => route('negociaciones.pago', $neg->id_negociacion)]);
+                return response()->json(['success' => false, 'message' => $msg, 'redirect' => $redirUrl], 422);
+            }
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', $neg->id_negociacion)))
+                ->with('error', $msg);
         }
 
         // Redirigir al flujo de pago seguro de AZUL

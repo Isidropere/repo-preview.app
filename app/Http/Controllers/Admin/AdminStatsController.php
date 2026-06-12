@@ -307,7 +307,36 @@ class AdminStatsController extends Controller
         $itemsParados60 = Item::where('estatus', 1)->where('fecha', '<=', now()->subDays(60))
             ->whereDoesntHave('views', fn($q) => $q->where('created_at', '>=', now()->subDays(60)))->count();
         if ($itemsParados60 > 0) {
-            $alertas[] = ['tipo'=>'info','icono'=>'📦','titulo'=>'Items sin actividad','mensaje'=>"{$itemsParados60} publicaciones llevan más de 60 días sin vistas."];
+            $itemsSinVisitas60 = Item::where('estatus', 1)->where('fecha', '<=', now()->subDays(60))
+                ->whereDoesntHave('views', fn($q) => $q->where('created_at', '>=', now()->subDays(60)))
+                ->orderBy('fecha', 'desc')
+                ->limit(20)
+                ->get();
+
+            $itemsPayload = $itemsSinVisitas60->map(function ($item) {
+                $fechaStr = '-';
+                if ($item->fecha) {
+                    try {
+                        $fechaStr = \Illuminate\Support\Carbon::parse($item->fecha)->format('d/m/Y');
+                    } catch (\Throwable $e) {
+                        $fechaStr = $item->fecha;
+                    }
+                }
+                return [
+                    'id_item' => $item->id_item,
+                    'item' => $item->item,
+                    'slug' => $item->slug,
+                    'fecha' => $fechaStr,
+                ];
+            });
+
+            $alertas[] = [
+                'tipo' => 'info',
+                'icono' => '📦',
+                'titulo' => 'Items sin actividad',
+                'mensaje' => "{$itemsParados60} publicaciones llevan más de 60 días sin vistas.",
+                'items' => $itemsPayload
+            ];
         }
 
         if ($tasaConversionCompra < 20 && $totalIntenciones > 10) {
@@ -317,6 +346,22 @@ class AdminStatsController extends Controller
         if (empty($alertas)) {
             $alertas[] = ['tipo'=>'success','icono'=>'✅','titulo'=>'Todo en orden','mensaje'=>'No se detectaron alertas en el período seleccionado.'];
         }
+
+        $deliveryErrors = \App\Models\Message::where('mensaje', 'like', '%pero no se pudo calcular el costo de envío porque no está registrada%')
+            ->where('leido', false)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($msg) {
+                preg_match("/El usuario (?:comprador )?(.*?) \(ID: (\d+)\) tiene registrada la dirección '(.*?)'/", $msg->mensaje, $matches);
+                return [
+                    'id' => $msg->id,
+                    'usuario_id' => $matches[2] ?? null,
+                    'usuario_nombre' => $matches[1] ?? 'Desconocido',
+                    'direccion' => $matches[3] ?? 'Desconocida',
+                    'fecha' => $msg->created_at ? $msg->created_at->format('d/m/Y H:i:s') : '-',
+                ];
+            });
 
         return response()->json([
             'kpis'                    => $kpis,
@@ -350,6 +395,7 @@ class AdminStatsController extends Controller
             'alertas'                 => $alertas,
             'delivery_zonas'          => $deliveryStats,
             'delivery_config'         => $deliveryConfigData,
+            'delivery_errors'         => $deliveryErrors,
             'filtros'                 => [
                 'desde'   => $desde->format('Y-m-d'),
                 'hasta'   => $hasta->format('Y-m-d'),
