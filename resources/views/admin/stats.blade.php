@@ -515,14 +515,42 @@ function renderTrazabilidad(rows) {
   ).join('');
 }
 
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderAlertas(alertas) {
   const colores = {danger:'#ef4444',warning:'#f59e0b',info:'#3b82f6',success:'#10b981'};
   document.getElementById('bloque-alertas').innerHTML = (alertas||[]).map(a => {
     const c = colores[a.tipo]||'#64748b';
+    let extraHtml = '';
+    if (a.items && a.items.length > 0) {
+      extraHtml = '<div style="margin-top:10px; padding-top:10px; border-top:1px dashed ' + c + '33; font-size:0.78rem;">' +
+        '<strong style="color:' + c + '; display:block; margin-bottom:6px;">Publicaciones inactivas (últimas 20):</strong>' +
+        '<div style="max-height:150px; overflow-y:auto; padding-right:5px;">' +
+        '<ul style="margin:0; padding-left:16px; list-style-type:disc; color:#475569;">' +
+        a.items.map(item => '<li style="margin-bottom:4px;">' +
+          '<a href="/items/' + item.slug + '/detalle" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:600;">' + 
+            escapeHtml(item.item) + 
+          '</a>' +
+          ' <span style="color:#64748b; font-size:0.72rem;">(ID: ' + item.id_item + ', publicado el ' + item.fecha + ')</span>' +
+        '</li>').join('') +
+        '</ul>' +
+        '</div>' +
+        '</div>';
+    }
     return '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;background:'+c+'11;border-left:3px solid '+c+';margin-bottom:8px;">' +
       '<span style="font-size:1.2rem;">'+a.icono+'</span>' +
-      '<div><div style="font-weight:600;font-size:.85rem;color:'+c+';">'+a.titulo+'</div>' +
-      '<div style="font-size:.8rem;color:#475569;margin-top:2px;">'+a.mensaje+'</div></div></div>';
+      '<div style="width: 100%;"><div style="font-weight:600;font-size:.85rem;color:'+c+';">'+a.titulo+'</div>' +
+      '<div style="font-size:.8rem;color:#475569;margin-top:2px;">'+a.mensaje+'</div>' +
+      extraHtml +
+      '</div></div>';
   }).join('');
 }
 

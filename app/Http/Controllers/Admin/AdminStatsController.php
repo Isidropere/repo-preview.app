@@ -307,7 +307,36 @@ class AdminStatsController extends Controller
         $itemsParados60 = Item::where('estatus', 1)->where('fecha', '<=', now()->subDays(60))
             ->whereDoesntHave('views', fn($q) => $q->where('created_at', '>=', now()->subDays(60)))->count();
         if ($itemsParados60 > 0) {
-            $alertas[] = ['tipo'=>'info','icono'=>'📦','titulo'=>'Items sin actividad','mensaje'=>"{$itemsParados60} publicaciones llevan más de 60 días sin vistas."];
+            $itemsSinVisitas60 = Item::where('estatus', 1)->where('fecha', '<=', now()->subDays(60))
+                ->whereDoesntHave('views', fn($q) => $q->where('created_at', '>=', now()->subDays(60)))
+                ->orderBy('fecha', 'desc')
+                ->limit(20)
+                ->get();
+
+            $itemsPayload = $itemsSinVisitas60->map(function ($item) {
+                $fechaStr = '-';
+                if ($item->fecha) {
+                    try {
+                        $fechaStr = \Illuminate\Support\Carbon::parse($item->fecha)->format('d/m/Y');
+                    } catch (\Throwable $e) {
+                        $fechaStr = $item->fecha;
+                    }
+                }
+                return [
+                    'id_item' => $item->id_item,
+                    'item' => $item->item,
+                    'slug' => $item->slug,
+                    'fecha' => $fechaStr,
+                ];
+            });
+
+            $alertas[] = [
+                'tipo' => 'info',
+                'icono' => '📦',
+                'titulo' => 'Items sin actividad',
+                'mensaje' => "{$itemsParados60} publicaciones llevan más de 60 días sin vistas.",
+                'items' => $itemsPayload
+            ];
         }
 
         if ($tasaConversionCompra < 20 && $totalIntenciones > 10) {
