@@ -410,137 +410,23 @@ document.addEventListener('DOMContentLoaded', function () {
         this.value = v.replace(/(.{4})/g, '$1 ').trim();
     });
 
-    // ── Selección de tarjeta guardada ──────────────────────
-    document.querySelectorAll('.tarjeta-item').forEach(el => {
-        el.addEventListener('click', () => {
-            document.querySelectorAll('.tarjeta-item').forEach(t => {
-                t.classList.remove('border-blue-500', 'bg-blue-50');
-                t.classList.add('border-gray-200');
-            });
-            el.classList.add('border-blue-500', 'bg-blue-50');
-            el.classList.remove('border-gray-200');
-
-            const radio = el.querySelector('input[type="radio"]');
-            if (radio) radio.checked = true;
-            if (hiddenId) hiddenId.value = el.dataset.id;
-
-            fetch(@json(route('carrito.tarjetas_usar')), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
-                body: JSON.stringify({ id_tarjeta: el.dataset.id })
-            }).catch(console.error);
-        });
-    });
-
-    // Preseleccionar tarjeta activa al cargar
-    const activa = document.querySelector('.tarjeta-item.border-blue-500');
-    if (activa && hiddenId) {
-        hiddenId.value = activa.dataset.id;
-        const r = activa.querySelector('input[type="radio"]');
-        if (r) r.checked = true;
-    }
-
     // Re-habilitar botón si la página recargó con error o errores de validación
     @if(session('error') || $errors->any())
     const btnPagarInit = document.getElementById('btnPagar');
     if (btnPagarInit) {
         btnPagarInit.disabled = false;
-        btnPagarInit.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> Confirmar y Pagar';
+        btnPagarInit.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> Pagar con AZUL';
     }
     @endif
 
-    // ── Validación y envío del form de pago ────────────────
+    // ── Envío del form de pago (Redirección a AZUL) ────────
     document.getElementById('formPago')?.addEventListener('submit', function (e) {
-        const selected = document.querySelector('input[name="id_tarjeta_select"]:checked');
-        const idTarjeta = selected?.value || hiddenId?.value || '';
-
-        if (!idTarjeta) {
-            e.preventDefault();
-            alert('Selecciona una tarjeta para continuar.');
-            return;
-        }
-        if (hiddenId) hiddenId.value = idTarjeta;
-
-        const cvv = document.getElementById('inputCvv')?.value.trim();
-        if (!cvv || cvv.length < 3) {
-            e.preventDefault();
-            alert('Ingresa el CVV de tu tarjeta.');
-            document.getElementById('inputCvv')?.focus();
-            return;
-        }
-
         const btn = document.getElementById('btnPagar');
-        btn.disabled = true;
-        btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Procesando...';
-    });
-
-    // ── Eliminar tarjeta ───────────────────────────────────
-    document.querySelectorAll('.btn-eliminar-tarjeta').forEach(btn => {
-        btn.addEventListener('click', async function (e) {
-            e.stopPropagation();
-            e.preventDefault();
-            if (!confirm('¿Eliminar esta tarjeta?')) return;
-
-            const id = this.dataset.id;
-            try {
-                const resp = await fetch('/carrito/tarjetas/' + id, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': @json(csrf_token()),
-                        'Accept': 'application/json'
-                    }
-                });
-                if (resp.ok) {
-                    document.querySelector('.tarjeta-wrapper[data-id="' + id + '"]')?.remove();
-                    if (hiddenId && hiddenId.value === id) hiddenId.value = '';
-                } else {
-                    alert('No se pudo eliminar la tarjeta.');
-                }
-            } catch {
-                alert('Error de red. Intenta de nuevo.');
-            }
-        });
-    });
-
-    // ── Guardar tarjeta (Azul) ─────────────────────────────
-    if (formAgregar) {
-        formAgregar.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnGuardarTarjeta');
+        if (btn) {
             btn.disabled = true;
-            btn.textContent = 'Guardando...';
-
-            try {
-                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
-                    method: 'POST',
-                    body: new FormData(formAgregar),
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                const ct = resp.headers.get('content-type') || '';
-                if (!ct.includes('application/json')) {
-                    console.error('Respuesta no-JSON:', resp.status, await resp.text().then(t => t.substring(0, 300)));
-                    alert('Error del servidor. Intenta de nuevo.');
-                    btn.disabled = false;
-                    btn.textContent = 'Guardar tarjeta';
-                    return;
-                }
-
-                const result = await resp.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert(result.message || 'Error al guardar la tarjeta.');
-                    btn.disabled = false;
-                    btn.textContent = 'Guardar tarjeta';
-                }
-            } catch {
-                alert('Error de red. Intenta de nuevo.');
-                btn.disabled = false;
-                btn.textContent = 'Guardar tarjeta';
-            }
-        });
-    }
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Redirigiendo a AZUL...';
+        }
+    });
     // ── Cálculo de envío ──────────────────────────────────
     (function () {
         const municipio = @json($municipioDefault ?? '');
