@@ -318,6 +318,22 @@ class AdminStatsController extends Controller
             $alertas[] = ['tipo'=>'success','icono'=>'✅','titulo'=>'Todo en orden','mensaje'=>'No se detectaron alertas en el período seleccionado.'];
         }
 
+        $deliveryErrors = \App\Models\Message::where('mensaje', 'like', '%pero no se pudo calcular el costo de envío porque no está registrada%')
+            ->where('leido', false)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($msg) {
+                preg_match("/El usuario (.*?) \(ID: (\d+)\) tiene registrada la dirección '(.*?)'/", $msg->mensaje, $matches);
+                return [
+                    'id' => $msg->id,
+                    'usuario_id' => $matches[2] ?? null,
+                    'usuario_nombre' => $matches[1] ?? 'Desconocido',
+                    'direccion' => $matches[3] ?? 'Desconocida',
+                    'fecha' => $msg->created_at ? $msg->created_at->format('d/m/Y H:i:s') : '-',
+                ];
+            });
+
         return response()->json([
             'kpis'                    => $kpis,
             'compras_por_dia'         => $comprasPorDia,
@@ -350,6 +366,7 @@ class AdminStatsController extends Controller
             'alertas'                 => $alertas,
             'delivery_zonas'          => $deliveryStats,
             'delivery_config'         => $deliveryConfigData,
+            'delivery_errors'         => $deliveryErrors,
             'filtros'                 => [
                 'desde'   => $desde->format('Y-m-d'),
                 'hasta'   => $hasta->format('Y-m-d'),

@@ -303,6 +303,9 @@
                     <span id="carrito-envio-costo" class="text-gray-400 text-xs">Calculando...</span>
                 </div>
                 <div id="carrito-envio-dias" class="text-right text-xs text-gray-400 hidden"></div>
+                <div id="carrito-espera-admin-delivery" class="hidden mt-1 text-xs text-amber-600 text-right">
+                    El sistema espera por una definición para el cálculo de Análisis de costos de envío.
+                </div>
 
                 <hr class="my-3">
 
@@ -1542,14 +1545,21 @@ window.recalcularEnvio = function() {
         window.costoEnvioActual = 0;
         if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.style.color = '#16a34a'; }
         if (elDias) elDias.classList.add('hidden');
+        document.getElementById('carrito-espera-admin-delivery')?.classList.add('hidden');
         if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
         return;
     }
 
     fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
         .then(r => {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json();
+            return r.json().then(data => {
+                if (!r.ok) {
+                    data.success = false;
+                }
+                return data;
+            }).catch(() => {
+                return { success: false, error_code: 'CONNECTION_ERROR' };
+            });
         })
         .then(d => {
             if (!elCosto) return;
@@ -1558,15 +1568,23 @@ window.recalcularEnvio = function() {
                 window.costoEnvioActual = costo;
                 elCosto.textContent = 'RD$ ' + formatter.format(costo);
                 elCosto.style.color = '#374151';
+                document.getElementById('carrito-espera-admin-delivery')?.classList.add('hidden');
                 if (elDias && d.dias_habiles) {
                     const fechaEntrega = agregarDiasHabiles(new Date(), d.dias_habiles);
                     elDias.textContent = '🚚 Entrega estimada: ' + formatearFecha(fechaEntrega) + ' (~' + d.dias_habiles + ' días hábiles)';
                     elDias.classList.remove('hidden');
                 }
+            } else if (d.error_code === 'MISSING_DELIVERY_TARIFF') {
+                window.costoEnvioActual = 0;
+                elCosto.textContent = 'No se pudo calcular el envío';
+                elCosto.style.color = '#ef4444';
+                if (elDias) elDias.classList.add('hidden');
+                document.getElementById('carrito-espera-admin-delivery')?.classList.remove('hidden');
             } else {
                 window.costoEnvioActual = 0;
                 elCosto.textContent = 'Gratis';
                 elCosto.style.color = '#16a34a';
+                document.getElementById('carrito-espera-admin-delivery')?.classList.add('hidden');
                 if (elDias) elDias.classList.add('hidden');
             }
             // Sumar envío al total estimado
@@ -1579,6 +1597,7 @@ window.recalcularEnvio = function() {
                 elCosto.style.color = '#ef4444';
             }
             if (elDias) elDias.classList.add('hidden');
+            document.getElementById('carrito-espera-admin-delivery')?.classList.remove('hidden');
             if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
         });
 };

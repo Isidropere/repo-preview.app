@@ -51,7 +51,55 @@ class DeliveryService
         $zonaEncontrada = $this->buscarZonaPorPueblo($pueblo);
 
         if (!$zonaEncontrada) {
-            return ['success' => false, 'message' => "No se encontró zona de delivery para: {$pueblo}"];
+            $user = auth()->user() ?? auth('sanctum')->user();
+            if ($user) {
+                $userName = trim(($user->nombres ?? '') . ' ' . ($user->apellidos ?? ''));
+                if (empty($userName)) {
+                    $userName = $user->email ?? 'Usuario';
+                }
+
+                $notifMensaje = "El usuario {$userName} (ID: {$user->id}) tiene registrada la dirección '{$pueblo}', pero no se pudo calcular el costo de envío porque no está registrada en los cálculos de Análisis de costos de envío. Por favor, regístrela.";
+
+                $admins = \App\Models\User::where('isAdmin', 1)
+                    ->orWhere('isSuperAdmin', 1)
+                    ->get();
+
+                foreach ($admins as $admin) {
+                    $alreadyNotified = \App\Models\Message::where('id_receptor', $admin->id)
+                        ->where('mensaje', 'like', "%la dirección '{$pueblo}'%")
+                        ->where('mensaje', 'like', "%(ID: {$user->id})%")
+                        ->where('leido', false)
+                        ->exists();
+
+                    if (!$alreadyNotified) {
+                        \App\Models\Message::create([
+                            'id_emisor'   => null,
+                            'id_receptor' => $admin->id,
+                            'mensaje'     => $notifMensaje,
+                            'leido'       => false,
+                        ]);
+
+                        try {
+                            \Illuminate\Support\Facades\DB::table('notificaciones')->insert([
+                                'id_usuario'  => $admin->id,
+                                'mensaje'     => $notifMensaje,
+                                'leida'       => 0,
+                                'fecha_envio' => now()
+                            ]);
+                        } catch (\Throwable $e) {
+                            // Si la tabla no existe o falla la consulta, ignorar
+                        }
+
+                        event(new \App\Events\NuevaNotificacion($notifMensaje, $admin->id));
+                    }
+                }
+            }
+
+            return [
+                'success' => false,
+                'error_code' => 'MISSING_DELIVERY_TARIFF',
+                'message' => 'No se pudo calcular el envío'
+            ];
         }
 
         return array_merge(
