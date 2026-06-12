@@ -57,122 +57,20 @@
 
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- PASO 1: Tarjeta de pago --}}
+            {{-- Confirmación de Pago Seguro --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
-                    <span class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex-shrink-0">1</span>
-                    <h2 class="font-semibold text-gray-800">Método de pago</h2>
-                </div>
-
-                <div class="p-6 space-y-3">
-                    @php
-                        $tarjetas = auth()->user()->tarjetasPago ?? collect();
-                        $logos = [
-                            'visa'       => asset('storage/imgs/imgTarjetas/visa.png'),
-                            'mastercard' => asset('storage/imgs/imgTarjetas/mastercard.png'),
-                            'amex'       => asset('storage/imgs/imgTarjetas/amex.png'),
-                        ];
-                    @endphp
-
-                    @forelse($tarjetas as $tarjeta)
-                    <div class="tarjeta-wrapper relative" data-id="{{ $tarjeta->id_tarjeta }}">
-                        <label class="tarjeta-item flex items-center p-4 pr-14 border-2 rounded-xl cursor-pointer transition-all
-                            {{ $tarjeta->usar_esta_tarjeta ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50' }}"
-                            style="gap:1rem;"
-                            data-id="{{ $tarjeta->id_tarjeta }}">
-
-                            <input type="radio" name="id_tarjeta_select" value="{{ $tarjeta->id_tarjeta }}"
-                                class="h-4 w-4 text-blue-600 flex-shrink-0"
-                                {{ $tarjeta->usar_esta_tarjeta ? 'checked' : '' }}>
-
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-gray-800 text-sm">
-                                    **** **** **** {{ $tarjeta->last4 ?? substr($tarjeta->no_tarjeta ?? '', -4) }}
-                                </p>
-                                <p class="text-xs text-gray-500 mt-0.5">
-                                    {{ $tarjeta->nombre_titular ?? 'Titular' }}
-                                    @if($tarjeta->mes_expiracion && $tarjeta->getAttribute(\App\Models\TarjetaPago::COL_ANIO))
-                                        &nbsp;&middot;&nbsp; Vence {{ sprintf('%02d', $tarjeta->mes_expiracion) }}/{{ substr((string)$tarjeta->getAttribute(\App\Models\TarjetaPago::COL_ANIO), -2) }}
-                                    @endif
-                                    @if($tarjeta->banco_tarjeta)
-                                        &nbsp;&middot;&nbsp; {{ $tarjeta->banco_tarjeta }}
-                                    @endif
-                                </p>
-                            </div>
-
-                            @php $brand = strtolower($tarjeta->tipo_tarjeta ?? '') @endphp
-                            @if($brand && isset($logos[$brand]))
-                                <img src="{{ $logos[$brand] }}" alt="{{ $brand }}" class="h-7 flex-shrink-0" style="margin-left:8px;">
-                            @else
-                                <span class="text-xs text-gray-400 bg-gray-100 rounded-lg flex-shrink-0" style="padding:4px 8px;margin-left:8px;white-space:nowrap;">
-                                    {{ strtoupper($tarjeta->tipo_tarjeta ?? 'CARD') }}
-                                </span>
-                            @endif
-                        </label>
-
-                        {{-- Botón eliminar: separado a la derecha --}}
-                        <button type="button"
-                            class="btn-eliminar-tarjeta absolute top-1/2 l left-2 right-2 -translate-y-1/2
-                                   p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                            data-id="{{ $tarjeta->id_tarjeta }}"
-                            title="Eliminar tarjeta">
-                            <svg class="h-4 w-4" fill="none" viewBox="-4 2 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
-                    </div>
-                    @empty
-                    <div class="text-center py-8 text-gray-400">
-                        <svg class="h-10 w-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    <span class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex-shrink-0">
+                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
-                        <p class="text-sm">No tienes tarjetas guardadas.</p>
-                        <p class="text-xs mt-1">Agrega una para continuar.</p>
-                    </div>
-                    @endforelse
-
-                    <button id="btnAgregarTarjeta" type="button"
-                        class="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300
-                               hover:border-blue-400 hover:bg-blue-50 text-gray-500 hover:text-blue-600
-                               py-3 rounded-xl text-sm font-medium transition-all">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Agregar nueva tarjeta
-                    </button>
-                </div>
-            </div>
-
-            {{-- PASO 2: CVV y confirmar --}}
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
-                    <span class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex-shrink-0">2</span>
-                    <h2 class="font-semibold text-gray-800">Confirmar pago</h2>
+                    </span>
+                    <h2 class="font-semibold text-gray-800">Confirmación y Pago Seguro</h2>
                 </div>
 
                 <div class="p-6">
-                    <form id="formPago" action="{{ route('carrito.pago_procesar') }}" method="POST">
+                    <form id="formPago" action="{{ route('pago.redirect.iniciar') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="id_tarjeta" id="hiddenIdTarjeta" value="">
-
-                        <div class="mb-5">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Código de seguridad (CVV)
-                            </label>
-                            <div class="flex items-center gap-4">
-                                <div class="relative w-36">
-                                    <input type="password" name="cvv" id="inputCvv"
-                                        maxlength="4" placeholder="&#x2022; &#x2022; &#x2022; &#x2022;"
-                                        autocomplete="cc-csc"
-                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-lg
-                                               tracking-widest font-mono focus:outline-none focus:border-blue-500 transition">
-                                </div>
-                                <p class="text-xs text-gray-400 leading-relaxed">
-                                    Los 3 o 4 dígitos al dorso<br>de tu tarjeta. No se almacena.
-                                </p>
-                            </div>
-                        </div>
 
                         @if($carrito->tipo !== 'servicio')
                         @php $direccionesCount = auth()->user()->direcciones()->count(); @endphp
@@ -194,7 +92,12 @@
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-700">Dirección de envío</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">Seleccionar o agregar dirección</p>
+                                    @php
+                                        $dirPredeterminada = auth()->user()->direcciones()->where('es_predeterminada', 1)->first();
+                                    @endphp
+                                    <p class="text-xs text-gray-400 mt-0.5">
+                                        {{ $dirPredeterminada ? "{$dirPredeterminada->calle}, #{$dirPredeterminada->N_casa_edificio} ({$dirPredeterminada->municipio?->municipio}, {$dirPredeterminada->provincia?->provincia})" : 'Seleccionar o agregar dirección de entrega' }}
+                                    </p>
                                 </div>
                                 <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -202,70 +105,41 @@
                             </a>
                         </div>
                         @else
-                      <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4">
-                    <p class="text-sm text-orange-700 font-medium text-center mb-3">⭐ Servicio / Talento — no requiere envio</p>
+                        <div class="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                            <p class="text-sm text-orange-700 font-medium text-center mb-3">⭐ Servicio / Talento — no requiere envío</p>
 
-                    @if(!empty($proveedoresInfo))
-                    <div style="border-top:1px solid #fed7aa;padding-top:0.75rem;">
-                        <p style="font-size:0.78rem;font-weight:700;color:#92400e;margin-bottom:0.5rem;">
-                            Informacion del proveedor:
-                        </p>
+                            @if(!empty($proveedoresInfo))
+                            <div style="border-top:1px solid #fed7aa;padding-top:0.75rem;">
+                                <p style="font-size:0.78rem;font-weight:700;color:#92400e;margin-bottom:0.5rem;">
+                                    Información del proveedor:
+                                </p>
 
-                        @foreach($proveedoresInfo as $itemId => $prov)
-                        <div style="margin-bottom:0.5rem;">
-
-                            <!-- Nombre + municipio -->
-                            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#78350f;">
-                                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                                <span>
-                                    <strong>{{ $prov['nombre'] }}</strong> — {{ $prov['municipio'] }}
-                                </span>
+                                @foreach($proveedoresInfo as $itemId => $prov)
+                                <div style="margin-bottom:0.5rem;">
+                                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#78350f;">
+                                        <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        <span>
+                                            <strong>{{ $prov['nombre'] }}</strong> — {{ $prov['municipio'] }}
+                                        </span>
+                                    </div>
+                                    <div style="font-size:0.75rem;color:#92400e;margin-left:1.2rem;">
+                                        @if(!empty($prov['calle']))
+                                            Calle: {{ $prov['calle'] }}<br>
+                                        @endif
+                                        @if(!empty($prov['N_casa_edificio']))
+                                            Número: {{ $prov['N_casa_edificio'] }}<br>
+                                        @endif
+                                        @if(!empty($prov['geolocalizacion']))
+                                            <a href="https://www.google.com/maps?q={{ $prov['geolocalizacion'] }}" target="_blank" style="color:#b45309;text-decoration:underline;">Ver ubicación</a>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
                             </div>
-
-                         <!-- Dirección -->
-                    <div style="font-size:0.75rem;color:#92400e;margin-left:1.2rem;">
-                            @if(!empty($prov['calle']))
-                                Calle: {{ $prov['calle'] }}<br>
                             @endif
-
-                            @if(!empty($prov['N_casa_edificio']))
-                                Número de casa o edificio: {{ $prov['N_casa_edificio'] }}<br>
-                            @endif
-
-                            @if(!empty($prov['apto']))
-                                Apartamento: {{ $prov['apto'] }}<br>
-                            @endif
-
-                            @if(!empty($prov['geolocalizacion']))
-                                <a href="https://www.google.com/maps?q={{ $prov['geolocalizacion'] }}" 
-                                target="_blank" 
-                                style="display:inline-flex;align-items:center;gap:4px;color:#b45309;text-decoration:underline;">
-                                    
-                                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-
-                                    Ver ubicación en el mapa
-                                </a>
-                            @endif
-
                         </div>
-
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    <p style="font-size:0.75rem;color:#92400e;margin-top:0.5rem;text-align:center;">
-                        Al confirmar, se enviara una solicitud al proveedor para su aprobacion.
-                    </p>
-                </div>
                         @endif
 
                         <div class="mb-4">
@@ -283,18 +157,16 @@
                                    transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             {{ (($carrito->tipo ?? '') !== 'servicio' && auth()->user()->direcciones()->count() === 0) ? 'disabled' : '' }}>
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
-                            {{ ($carrito->tipo ?? '') === 'servicio' ? 'Enviar Solicitud al Proveedor' : 'Confirmar y Pagar' }}
+                            {{ ($carrito->tipo ?? '') === 'servicio' ? 'Enviar Solicitud al Proveedor' : 'Pagar con AZUL' }}
                         </button>
 
                         <div class="flex items-center justify-center gap-1.5 mt-4 text-xs text-gray-400">
                             <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
-                            Pago cifrado con TLS 1.2 &middot; Procesado por Azul
+                            Serás redirigido de forma segura a la pasarela cifrada de AZUL
                         </div>
 
                         <div class="mt-4 p-3 bg-gray-50 rounded-xl space-y-2 text-[11px] text-gray-500 leading-normal">
@@ -309,6 +181,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span><strong>Moneda de Facturación:</strong> Todas las transacciones comerciales en este portal son procesadas y facturadas en <strong>Pesos Dominicanos (RD$ / DOP)</strong>.</span>
+                            </div>
+                            <div class="flex items-center justify-center gap-4 border-t border-gray-200/60 pt-3 flex-wrap">
+                                <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-14 object-contain">
+                                <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-14 object-contain">
+                                <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-16 object-contain">
+                                <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-16 object-contain">
                             </div>
                         </div>
                     </form>
@@ -532,137 +410,23 @@ document.addEventListener('DOMContentLoaded', function () {
         this.value = v.replace(/(.{4})/g, '$1 ').trim();
     });
 
-    // ── Selección de tarjeta guardada ──────────────────────
-    document.querySelectorAll('.tarjeta-item').forEach(el => {
-        el.addEventListener('click', () => {
-            document.querySelectorAll('.tarjeta-item').forEach(t => {
-                t.classList.remove('border-blue-500', 'bg-blue-50');
-                t.classList.add('border-gray-200');
-            });
-            el.classList.add('border-blue-500', 'bg-blue-50');
-            el.classList.remove('border-gray-200');
-
-            const radio = el.querySelector('input[type="radio"]');
-            if (radio) radio.checked = true;
-            if (hiddenId) hiddenId.value = el.dataset.id;
-
-            fetch(@json(route('carrito.tarjetas_usar')), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
-                body: JSON.stringify({ id_tarjeta: el.dataset.id })
-            }).catch(console.error);
-        });
-    });
-
-    // Preseleccionar tarjeta activa al cargar
-    const activa = document.querySelector('.tarjeta-item.border-blue-500');
-    if (activa && hiddenId) {
-        hiddenId.value = activa.dataset.id;
-        const r = activa.querySelector('input[type="radio"]');
-        if (r) r.checked = true;
-    }
-
     // Re-habilitar botón si la página recargó con error o errores de validación
     @if(session('error') || $errors->any())
     const btnPagarInit = document.getElementById('btnPagar');
     if (btnPagarInit) {
         btnPagarInit.disabled = false;
-        btnPagarInit.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> Confirmar y Pagar';
+        btnPagarInit.innerHTML = '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> Pagar con AZUL';
     }
     @endif
 
-    // ── Validación y envío del form de pago ────────────────
+    // ── Envío del form de pago (Redirección a AZUL) ────────
     document.getElementById('formPago')?.addEventListener('submit', function (e) {
-        const selected = document.querySelector('input[name="id_tarjeta_select"]:checked');
-        const idTarjeta = selected?.value || hiddenId?.value || '';
-
-        if (!idTarjeta) {
-            e.preventDefault();
-            alert('Selecciona una tarjeta para continuar.');
-            return;
-        }
-        if (hiddenId) hiddenId.value = idTarjeta;
-
-        const cvv = document.getElementById('inputCvv')?.value.trim();
-        if (!cvv || cvv.length < 3) {
-            e.preventDefault();
-            alert('Ingresa el CVV de tu tarjeta.');
-            document.getElementById('inputCvv')?.focus();
-            return;
-        }
-
         const btn = document.getElementById('btnPagar');
-        btn.disabled = true;
-        btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Procesando...';
-    });
-
-    // ── Eliminar tarjeta ───────────────────────────────────
-    document.querySelectorAll('.btn-eliminar-tarjeta').forEach(btn => {
-        btn.addEventListener('click', async function (e) {
-            e.stopPropagation();
-            e.preventDefault();
-            if (!confirm('¿Eliminar esta tarjeta?')) return;
-
-            const id = this.dataset.id;
-            try {
-                const resp = await fetch('/carrito/tarjetas/' + id, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': @json(csrf_token()),
-                        'Accept': 'application/json'
-                    }
-                });
-                if (resp.ok) {
-                    document.querySelector('.tarjeta-wrapper[data-id="' + id + '"]')?.remove();
-                    if (hiddenId && hiddenId.value === id) hiddenId.value = '';
-                } else {
-                    alert('No se pudo eliminar la tarjeta.');
-                }
-            } catch {
-                alert('Error de red. Intenta de nuevo.');
-            }
-        });
-    });
-
-    // ── Guardar tarjeta (Azul) ─────────────────────────────
-    if (formAgregar) {
-        formAgregar.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnGuardarTarjeta');
+        if (btn) {
             btn.disabled = true;
-            btn.textContent = 'Guardando...';
-
-            try {
-                const resp = await fetch(@json(route('carrito.tarjetas_store')), {
-                    method: 'POST',
-                    body: new FormData(formAgregar),
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                const ct = resp.headers.get('content-type') || '';
-                if (!ct.includes('application/json')) {
-                    console.error('Respuesta no-JSON:', resp.status, await resp.text().then(t => t.substring(0, 300)));
-                    alert('Error del servidor. Intenta de nuevo.');
-                    btn.disabled = false;
-                    btn.textContent = 'Guardar tarjeta';
-                    return;
-                }
-
-                const result = await resp.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert(result.message || 'Error al guardar la tarjeta.');
-                    btn.disabled = false;
-                    btn.textContent = 'Guardar tarjeta';
-                }
-            } catch {
-                alert('Error de red. Intenta de nuevo.');
-                btn.disabled = false;
-                btn.textContent = 'Guardar tarjeta';
-            }
-        });
-    }
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Redirigiendo a AZUL...';
+        }
+    });
     // ── Cálculo de envío ──────────────────────────────────
     (function () {
         const municipio = @json($municipioDefault ?? '');

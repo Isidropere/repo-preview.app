@@ -69,10 +69,12 @@
             </div>
             <div class="flex flex-col items-center md:items-end gap-2">
                 <span class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Tarjetas y Pagos Aceptados</span>
-                <div class="flex items-center gap-3">
-                    <img src="{{ asset('storage/imgs/imgTarjetas/visa.png') }}" alt="Visa" class="h-6 object-contain" onerror="this.style.display='none'">
-                    <img src="{{ asset('storage/imgs/imgTarjetas/mastercard.png') }}" alt="Mastercard" class="h-6 object-contain" onerror="this.style.display='none'">
-                    <div class="flex items-center bg-blue-600 text-white font-black px-2 py-1 rounded text-[9px] tracking-widest uppercase shadow-sm select-none">
+                <div class="flex items-center gap-4 flex-wrap justify-center md:justify-end">
+                    <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-14 object-contain">
+                    <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-14 object-contain">
+                    <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-16 object-contain">
+                    <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-16 object-contain">
+                    <div class="flex items-center bg-blue-600 text-white font-black px-4 py-2 rounded-lg text-sm tracking-widest uppercase shadow-sm select-none h-14">
                         AZUL
                     </div>
                 </div>

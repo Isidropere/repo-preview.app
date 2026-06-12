@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import 'direcciones_screen.dart';
@@ -14,11 +15,8 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   List   _direcciones  = [];
-  List   _tarjetas     = [];
   Map?   _delivery;
   int?   _idDireccion;
-  String? _idTarjeta;
-  final _cvvCtrl       = TextEditingController();
   bool   _loading      = true;
   bool   _pagando      = false;
   String _errorMsg     = '';
@@ -28,16 +26,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _calculandoEnvio = false;
   bool _aceptarPoliticas = false;
 
-  // Formulario nueva tarjeta
-  final _formTarjetaKey   = GlobalKey<FormState>();
-  final _noTarjetaCtrl    = TextEditingController();
-  final _nombreTitularCtrl= TextEditingController();
-  final _mesExpCtrl       = TextEditingController();
-  final _anioExpCtrl      = TextEditingController();
-  final _bancoCtrl        = TextEditingController();
-  final _tipoCtrl         = TextEditingController();
-  bool  _registrandoTarjeta = false;
-
   @override
   void initState() {
     super.initState();
@@ -46,13 +34,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
-    _cvvCtrl.dispose();
-    _noTarjetaCtrl.dispose();
-    _nombreTitularCtrl.dispose();
-    _mesExpCtrl.dispose();
-    _anioExpCtrl.dispose();
-    _bancoCtrl.dispose();
-    _tipoCtrl.dispose();
     super.dispose();
   }
 
@@ -64,13 +45,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     try {
       final results = await Future.wait([
         ApiClient.get('/direcciones', auth: true, useCache: false),
-        ApiClient.get('/tarjetas', auth: true, useCache: false),
         ApiClient.get('/delivery/config'),
       ]);
 
       if (results[0].statusCode == 200) _direcciones = jsonDecode(results[0].body);
-      if (results[1].statusCode == 200) _tarjetas = jsonDecode(results[1].body);
-      if (results[2].statusCode == 200) _delivery = jsonDecode(results[2].body);
+      if (results[1].statusCode == 200) _delivery = jsonDecode(results[1].body);
 
       // Preseleccionar la dirección predeterminada
       if (_direcciones.isNotEmpty) {
@@ -81,17 +60,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _idDireccion = ApiClient.parseInt(pred['id_direccion']);
       } else {
         _idDireccion = null;
-      }
-
-      // Preseleccionar tarjeta activa o la primera
-      if (_tarjetas.isNotEmpty) {
-        final activa = _tarjetas.firstWhere(
-          (t) => t['usar_esta_tarjeta'] == 1,
-          orElse: () => _tarjetas.first,
-        );
-        _idTarjeta = activa['id_tarjeta'];
-      } else {
-        _idTarjeta = null;
       }
     } catch (e) {
       _errorMsg = 'Error al cargar los datos del checkout: $e';
@@ -233,206 +201,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() => _errorMsg = 'Debes seleccionar una dirección de entrega.');
       return;
     }
-    if (_idTarjeta == null) {
-      setState(() => _errorMsg = 'Debes seleccionar una tarjeta de pago.');
-      return;
-    }
-    if (_cvvCtrl.text.trim().isEmpty) {
-      setState(() => _errorMsg = 'Debes ingresar el código CVV.');
-      return;
-    }
     if (!_aceptarPoliticas) {
       setState(() => _errorMsg = 'Debes aceptar los Términos y Condiciones y las Políticas de Privacidad.');
       return;
     }
     setState(() { _pagando = true; _errorMsg = ''; });
 
-    final Map<String, dynamic> payload = {
-      'id_tarjeta':   _idTarjeta,
-      'cvv':          _cvvCtrl.text.trim(),
-      'total':        _totalFinal,
-    };
+    final Map<String, dynamic> payload = {};
     if (!esServicio) {
       payload['id_direccion'] = _idDireccion;
     }
 
-    final res = await ApiClient.post('/pago/checkout', payload, auth: true);
+    try {
+      final res = await ApiClient.post('/pago/checkout', payload, auth: true);
 
-    setState(() => _pagando = false);
+      setState(() => _pagando = false);
 
-    if (res.statusCode == 200 || res.statusCode == 201) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('¡Compra realizada con éxito!'),
-        backgroundColor: Colors.green,
-      ));
-      // Vaciar localmente caché del carrito
-      ApiClient.clearCache('/carrito');
-      Navigator.pop(context);
-    } else {
-      final body = jsonDecode(res.body);
-      setState(() => _errorMsg = body['message'] ?? 'Error al procesar el pago.');
-    }
-  }
-
-  Future<void> _agregarTarjeta() async {
-    if (!_formTarjetaKey.currentState!.validate()) return;
-    setState(() => _registrandoTarjeta = true);
-
-    final res = await ApiClient.post('/tarjetas', {
-      'no_tarjeta':     _noTarjetaCtrl.text.trim(),
-      'nombre_titular': _nombreTitularCtrl.text.trim(),
-      'mes_expiracion': _mesExpCtrl.text.trim(),
-      'anio_expiracion':_anioExpCtrl.text.trim(),
-      'banco_tarjeta':  _bancoCtrl.text.trim().isEmpty ? 'Banco' : _bancoCtrl.text.trim(),
-      'tipo_tarjeta':   _tipoCtrl.text.trim().isEmpty ? 'Visa' : _tipoCtrl.text.trim(),
-      'usar_esta_tarjeta': true
-    }, auth: true);
-
-    setState(() => _registrandoTarjeta = false);
-
-    if (res.statusCode == 201 || res.statusCode == 200) {
-      Navigator.pop(context); // cerrar bottom sheet
-      _noTarjetaCtrl.clear();
-      _nombreTitularCtrl.clear();
-      _mesExpCtrl.clear();
-      _anioExpCtrl.clear();
-      _bancoCtrl.clear();
-      _tipoCtrl.clear();
-      _loadDatos(); // Recargar datos
-    } else {
-      final body = jsonDecode(res.body);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(body['message'] ?? 'Error al guardar la tarjeta.'),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  Future<void> _eliminarTarjeta(dynamic idTarjeta) async {
-    final bool? confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar tarjeta?'),
-        content: const Text('Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmar != true) return;
-
-    final res = await ApiClient.delete('/tarjetas/$idTarjeta', auth: true);
-    if (res.statusCode == 200 || res.statusCode == 204) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Tarjeta eliminada con éxito'),
-          backgroundColor: Colors.green,
-        ));
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final body = jsonDecode(res.body);
+        final redirectUrl = body['redirect_url']?.toString();
+        if (redirectUrl != null && redirectUrl.isNotEmpty) {
+          final Uri url = Uri.parse(redirectUrl);
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Redirigiendo a la pasarela de pago seguro...'),
+              backgroundColor: Colors.blue,
+            ));
+            ApiClient.clearCache('/carrito');
+            Navigator.pop(context);
+          } else {
+            setState(() => _errorMsg = 'No se pudo abrir la pasarela de pago.');
+          }
+        } else {
+          setState(() => _errorMsg = 'No se recibió la URL de redirección.');
+        }
+      } else {
+        final body = jsonDecode(res.body);
+        setState(() => _errorMsg = body['message'] ?? 'Error al procesar el pago.');
       }
-      _loadDatos();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Error al eliminar la tarjeta'),
-          backgroundColor: Colors.red,
-        ));
-      }
+    } catch (e) {
+      setState(() {
+        _pagando = false;
+        _errorMsg = 'Error de conexión: $e';
+      });
     }
-  }
-
-  void _mostrarDialogoTarjeta() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          top: 20, left: 20, right: 20
-        ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formTarjetaKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Nueva Tarjeta de Pago', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextDark)),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _noTarjetaCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Número de tarjeta *', border: OutlineInputBorder()),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nombreTitularCtrl,
-                  decoration: const InputDecoration(labelText: 'Nombre del titular *', border: OutlineInputBorder()),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _mesExpCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Mes Venc. (MM) *', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _anioExpCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Año Venc. (AA) *', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                    ),
-                  ),
-                ]),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _bancoCtrl,
-                      decoration: const InputDecoration(labelText: 'Banco (Ej. Popular)', border: OutlineInputBorder()),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tipoCtrl,
-                      decoration: const InputDecoration(labelText: 'Tipo (Ej. Visa)', border: OutlineInputBorder()),
-                    ),
-                  ),
-                ]),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _registrandoTarjeta ? null : _agregarTarjeta,
-                    style: ElevatedButton.styleFrom(backgroundColor: kPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
-                    child: _registrandoTarjeta
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Guardar Tarjeta', style: TextStyle(color: Colors.white, fontSize: 15)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -587,54 +401,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const Divider(height: 24),
 
                 // ─ Tarjetas ─
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Text('Método de Pago', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
-                  TextButton.icon(
-                    onPressed: _mostrarDialogoTarjeta,
-                    icon: const Icon(Icons.add, size: 16, color: kPrimary),
-                    label: const Text('Nueva tarjeta', style: TextStyle(color: kPrimary, fontSize: 13)),
-                  ),
-                ]),
+                const Text('Método de Pago', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kTextDark)),
                 const SizedBox(height: 8),
-                if (_tarjetas.isEmpty)
-                  _aviso(Icons.credit_card_off, 'No tienes tarjetas guardadas. Agrega una para continuar.')
-                else ...[
-                  ..._tarjetas.map((t) => RadioListTile<String>(
-                    value: t['id_tarjeta']?.toString() ?? '',
-                    groupValue: _idTarjeta,
-                    onChanged: (v) => setState(() => _idTarjeta = v),
-                    activeColor: kPrimary,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: Text('**** **** **** ${t['last4']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: Builder(
-                      builder: (_) {
-                        final rawYear = t['año_expiracion'] ?? t['anio_expiracion'] ?? '';
-                        final mesVal = t['mes_expiracion'].toString().padLeft(2, '0');
-                        return Text(
-                          '${t['nombre_titular']} | Vence $mesVal/$rawYear',
-                          style: TextStyle(fontSize: 12, color: kTextGray),
-                        );
-                      },
-                    ),
-                    secondary: IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                      onPressed: () => _eliminarTarjeta(t['id_tarjeta']),
-                    ),
-                  )),
-                  const SizedBox(height: 12),
-                  // Ingresar CVV
-                  TextFormField(
-                    controller: _cvvCtrl,
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    maxLength: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Código de seguridad (CVV) *',
-                      counterText: '',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                  ),
-                ],
+                _aviso(
+                  Icons.security,
+                  'Serás redirigido a la pasarela de pago seguro de AZUL. Tu información financiera está completamente protegida.',
+                  color: Colors.blue.shade50,
+                  iconColor: Colors.blue.shade800,
+                ),
 
                 const Divider(height: 24),
 

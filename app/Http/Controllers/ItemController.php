@@ -117,132 +117,17 @@ class ItemController extends Controller
                 'tiene_video' => false,
             ];
 
-            // Interceptar categoría 29: procesar pago inline via modal
+            // Interceptar categoría 29: procesar pago via redirección a AZUL
             $esCategoria29 = (int) $validatedData['id_categoria_item'] === 29;
             $tipoTransConPago = in_array((int) $validatedData['tipo_trans'], [1, 2, 3]);
             if ($esCategoria29 && $tipoTransConPago) {
-                // Validar datos de pago del modal
-                $request->validate([
-                    'id_tarjeta' => 'required|string|exists:tarjetas_pagos,id_tarjeta',
-                    'cvv'        => 'nullable|string|max:4',
-                ]);
-
-                // Preservar archivos ANTES del cobro (PHP limpia los tmp durante requests largos)
-                $savedFiles = [];
-                if ($request->hasFile('imagen_principal')) {
-                    $f = $request->file('imagen_principal');
-                    $savedFiles['principal'] = [
-                        'content'   => file_get_contents($f->getRealPath()),
-                        'extension' => $f->extension(),
-                        'mime'      => $f->getMimeType(),
-                        'original'  => $f->getClientOriginalName(),
-                    ];
-                }
-                if ($request->hasFile('imagenes')) {
-                    foreach ($request->file('imagenes') as $i => $f) {
-                        if ($f->isValid()) {
-                            $savedFiles['extra_' . $i] = [
-                                'content'   => file_get_contents($f->getRealPath()),
-                                'extension' => $f->extension(),
-                                'mime'      => $f->getMimeType(),
-                                'original'  => $f->getClientOriginalName(),
-                            ];
-                        }
-                    }
-                }
-
                 $config = ConfigTarifaCategoria29::vigente();
                 $cantidadServicios = (int) ($validatedData['cantidad'] ?? 1);
                 $monto = (float) $config->monto_registro * $cantidadServicios;
 
-                $tarjeta = TarjetaPago::where('id_tarjeta', $request->input('id_tarjeta'))
-                    ->where('id_user', auth()->id())
-                    ->where('estatus', 1)
-                    ->first();
-
-                if (!$tarjeta) {
-                    return response()->json(['success' => false, 'message' => 'Tarjeta no válida.'], 422);
+                if ($monto > 0) {
+                    $itemData['estatus'] = 0; // Inactivo hasta recibir confirmación de pago
                 }
-
-                // Cobrar (los archivos ya están en memoria)
-                $pagoService = app(PagoService::class);
-                $datosTarjeta = $tarjeta->datosDriver($request->input('cvv'));
-                $opciones = [
-                    'client_ip'        => $request->ip(),
-                    'invoice_number'   => 'TAL' . Str::random(10),
-                    'reference_number' => 'talento_' . auth()->id() . '_' . time(),
-                ];
-
-                $resultadoPago = $pagoService->cobrarTarjeta($monto, '214', $datosTarjeta, $opciones);
-
-                if (!$resultadoPago['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $resultadoPago['error'] ?? 'Pago rechazado. Intenta con otra tarjeta.',
-                    ], 422);
-                }
-
-                // Pago aprobado — crear item y guardar archivos desde memoria
-                $item = Item::create($itemData);
-
-                Inventario::create([
-                    'id_item' => $item->id_item,
-                    'cantidad' => $cantidadServicios,
-                    'fecha' => now(),
-                ]);
-
-                // ERP: Registrar entrada en Almacén
-                $this->erpService->registrarEntradaRegistroItem($item, $cantidadServicios);
-
-                // Guardar archivos preservados
-                if (!empty($savedFiles['principal'])) {
-                    $sf = $savedFiles['principal'];
-                    $isVideo = str_starts_with($sf['mime'], 'video/');
-                    $dir = $isVideo ? 'imgs/videos/items' : 'imgs/articulos/items';
-                    $prefix = $isVideo ? 'video_' : 'item_';
-                    $fileName = $prefix . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(10) . '.' . $sf['extension'];
-
-                    \App\Helpers\ImageHelper::guardarContenido($sf['content'], $dir, $fileName);
-
-                    DB::table('imagenes_item')->insert([
-                        'nombre' => $fileName, 'extension' => $sf['extension'],
-                        'id_item' => $item->id_item, 'orden_visualizacion' => 1,
-                        'ruta' => $dir, 'tipo' => $isVideo ? 'video' : 'imagen', 'estado' => 'pendiente',
-                    ]);
-
-                    if ($isVideo) { $item->update(['tiene_video' => true]); }
-                }
-
-                $orden = 2;
-                foreach ($savedFiles as $key => $sf) {
-                    if ($key === 'principal') continue;
-                    $fileName = 'item_' . $item->id_item . '_' . now()->format('YmdHis') . '_' . Str::random(8) . '.' . $sf['extension'];
-                    \App\Helpers\ImageHelper::guardarContenido($sf['content'], 'imgs/articulos/items', $fileName);
-                    DB::table('imagenes_item')->insert([
-                        'nombre' => $fileName, 'extension' => $sf['extension'],
-                        'id_item' => $item->id_item, 'orden_visualizacion' => $orden++,
-                        'ruta' => 'imgs/articulos/items', 'tipo' => 'imagen', 'estado' => 'pendiente',
-                    ]);
-                }
-
-                // Registrar pago
-                \App\Models\PagoRegistroTalento::create([
-                    'id_item'        => $item->id_item,
-                    'id_user'        => auth()->id(),
-                    'transaction_id' => $resultadoPago['transaction_id'],
-                    'monto_pagado'   => $monto,
-                    'estatus'        => 'aprobado',
-                ]);
-
-                DB::commit();
-
-                \Illuminate\Support\Facades\Cache::forget('home_intercambio');
-                \Illuminate\Support\Facades\Cache::forget('home_venta');
-
-                if ($request->wantsJson()) {
-                    return response()->json(['success' => true, 'message' => 'Talento publicado exitosamente!', 'redirect' => route('items.admintalento')]);
-                }
-                return redirect()->route('items.admintalento')->with('success', 'Talento publicado exitosamente!');
             }
 
 
@@ -305,22 +190,21 @@ class ItemController extends Controller
             DB::commit();
             Log::info('Transacción completada exitosamente');
 
-            // Registrar pago de talento si aplica (categoría 29)
-            $pagoResultado = session('_talento_pago_resultado');
-            if ($pagoResultado) {
-                \App\Models\PagoRegistroTalento::create([
-                    'id_item'        => $item->id_item,
-                    'id_user'        => auth()->id(),
-                    'transaction_id' => $pagoResultado['transaction_id'],
-                    'monto_pagado'   => session('_talento_pago_monto'),
-                    'estatus'        => 'aprobado',
-                ]);
-                session()->forget(['_talento_pago_resultado', '_talento_pago_monto']);
-            }
-
             // Invalidar cache del home para reflejar el nuevo item
             \Illuminate\Support\Facades\Cache::forget('home_intercambio');
             \Illuminate\Support\Facades\Cache::forget('home_venta');
+
+            // Si es categoría 29 y requiere pago, redirigir al flujo de pago
+            if ($esCategoria29 && $tipoTransConPago && isset($monto) && $monto > 0) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Talento registrado. Redirigiendo al pago...',
+                        'redirect' => route('talento.pago.iniciar', $item->id_item)
+                    ]);
+                }
+                return redirect()->route('talento.pago.iniciar', $item->id_item);
+            }
 
             if ($request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Talento creado exitosamente!', 'redirect' => route('items.admintalento')]);

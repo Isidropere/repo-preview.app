@@ -543,8 +543,6 @@ class ItemApiController extends Controller
             'image_url'         => 'nullable|string',
             'imagen_principal'  => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov|max:20480',
             'imagenes.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'id_tarjeta'        => 'required|string|exists:tarjetas_pagos,id_tarjeta',
-            'cvv'               => 'nullable|string|max:4',
             'cantidad'          => 'nullable|integer|min:1',
         ];
 
@@ -560,42 +558,9 @@ class ItemApiController extends Controller
         $cantidad = (int) ($validated['cantidad'] ?? 1);
         $monto = (float) $config->monto_registro * $cantidad;
 
-        // 4. Buscar tarjeta
-        $tarjeta = \App\Models\TarjetaPago::where('id_tarjeta', $validated['id_tarjeta'])
-            ->where('id_user', $user->id)
-            ->where('estatus', 1)
-            ->first();
-
-        if (!$tarjeta) {
-            return response()->json(['success' => false, 'message' => 'Tarjeta no válida.'], 422);
-        }
-
         \DB::beginTransaction();
         try {
-            // 5. Cobrar a través de PagoService
-            if ($monto > 0) {
-                $pagoService = app(\App\Services\PagoService::class);
-                $datosTarjeta = $tarjeta->datosDriver($validated['cvv'] ?? null);
-                $opciones = [
-                    'client_ip'        => $request->ip(),
-                    'invoice_number'   => 'TAL' . \Illuminate\Support\Str::random(10),
-                    'reference_number' => 'talento_' . $user->id . '_' . time(),
-                ];
-
-                $resultadoPago = $pagoService->cobrarTarjeta($monto, '214', $datosTarjeta, $opciones);
-
-                if (!$resultadoPago['success']) {
-                    \DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => $resultadoPago['error'] ?? 'Pago rechazado. Intenta con otra tarjeta.',
-                    ], 422);
-                }
-
-                $transactionId = $resultadoPago['transaction_id'];
-            } else {
-                $transactionId = 'GRATIS_' . time() . '_' . \Illuminate\Support\Str::random(4);
-            }
+            $estatus = $monto > 0 ? 0 : 1; // Inactivo si requiere pago, activo si es gratis
 
             // 6. Crear el Item de tipo talento (id_tipo_item = 2)
             $item = Item::create([
@@ -606,7 +571,7 @@ class ItemApiController extends Controller
                 'condicion'         => $validated['condicion'],
                 'tipo_trans'        => $validated['tipo_trans'],
                 'id_user'           => $user->id,
-                'estatus'           => 1, // Aprobado por defecto al pagar
+                'estatus'           => $estatus,
                 'fecha'             => now(),
                 'id_tipo_item'      => 2, // Talento
                 'tiene_video'       => false,
@@ -658,7 +623,23 @@ class ItemApiController extends Controller
                 }
             }
 
-            // Registrar PagoRegistroTalento
+            if ($monto > 0) {
+                \DB::commit();
+
+                \Illuminate\Support\Facades\Cache::forget('home_intercambio');
+                \Illuminate\Support\Facades\Cache::forget('home_venta');
+
+                $redirectUrl = route('talento.pago.iniciar-movil', ['id_item' => $item->id_item]);
+
+                return response()->json([
+                    'success'      => true,
+                    'message'      => 'Talento registrado. Redirigiendo al pago...',
+                    'redirect_url' => $redirectUrl,
+                ], 201);
+            }
+
+            // Registrar PagoRegistroTalento para tarifa gratuita
+            $transactionId = 'GRATIS_' . time() . '_' . \Illuminate\Support\Str::random(4);
             \App\Models\PagoRegistroTalento::create([
                 'id_item'        => $item->id_item,
                 'id_user'        => $user->id,
