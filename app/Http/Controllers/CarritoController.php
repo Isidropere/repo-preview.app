@@ -87,6 +87,11 @@ class CarritoController extends Controller
         $resultado = $this->carritoService->prepararCheckout(auth()->id(), $tipo);
         $data = $resultado['data'];
 
+        if (!empty($data['carrito'])) {
+            \App\Models\PagoCompra::liberarOrdenesPendientes($data['carrito']->id_carrito);
+        }
+
+
         // Para servicios: cargar info del proveedor de cada item
       $proveedoresInfo = [];
 

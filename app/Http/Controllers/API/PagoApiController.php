@@ -103,6 +103,8 @@ class PagoApiController extends Controller
         }
 
         try {
+            \App\Models\PagoCompra::liberarOrdenesPendientes($carrito->id_carrito);
+
             $pagoCompra = \Illuminate\Support\Facades\DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion) {
                 $carritoLocked = \App\Models\Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = \App\Models\PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
