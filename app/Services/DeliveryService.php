@@ -58,7 +58,7 @@ class DeliveryService
                     $userName = $user->email ?? 'Usuario';
                 }
 
-                $notifMensaje = "El usuario {$userName} (ID: {$user->id}) tiene registrada la dirección '{$pueblo}', pero no se pudo calcular el costo de envío porque no está registrada en los cálculos de Análisis de costos de envío. Por favor, regístrela.";
+                $notifMensaje = "El usuario comprador {$userName} (ID: {$user->id}) tiene registrada la dirección '{$pueblo}', pero no se pudo calcular el costo de envío porque no está registrada en los cálculos de Análisis de costos de envío. Por favor, regístrela.";
 
                 $admins = \App\Models\User::where('isAdmin', 1)
                     ->orWhere('isSuperAdmin', 1)

@@ -353,7 +353,7 @@ class AdminStatsController extends Controller
             ->limit(50)
             ->get()
             ->map(function ($msg) {
-                preg_match("/El usuario (.*?) \(ID: (\d+)\) tiene registrada la dirección '(.*?)'/", $msg->mensaje, $matches);
+                preg_match("/El usuario (?:comprador )?(.*?) \(ID: (\d+)\) tiene registrada la dirección '(.*?)'/", $msg->mensaje, $matches);
                 return [
                     'id' => $msg->id,
                     'usuario_id' => $matches[2] ?? null,
