@@ -271,7 +271,11 @@ class NegociacionController extends Controller
             foreach ($todasNegs as $neg) {
                 if ($neg->item) {
                     $resultado = $deliveryService->calcular($municipioUsuario, 'persona', 0);
-                    $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
+                    if ($resultado['success']) {
+                        $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['costo_envio_total'] ?? 0;
+                    } else {
+                        $costoEnvioPorNeg[$neg->id_negociacion] = ($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' ? 'MISSING_DELIVERY_TARIFF' : 0;
+                    }
                 } else {
                     $costoEnvioPorNeg[$neg->id_negociacion] = 0;
                 }

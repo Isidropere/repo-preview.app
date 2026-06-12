@@ -254,19 +254,36 @@
                 </a>
             </div>
             @else
-            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
-                <p class="text-sm font-semibold mb-1" style="color:#c2410c;">💳 Ambos aprobaron — Procede con el pago del envío</p>
+            <div class="w-full p-4 rounded-xl border" style="background:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fffbeb' : '#fff7ed' }};border-color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fde68a' : '#fed7aa' }};">
+                <p class="text-sm font-semibold mb-1" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#c2410c' }};">
+                    {{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '⚠️ Esperando definición de costo de envío' : '💳 Ambos aprobaron — Procede con el pago del envío' }}
+                </p>
+                @if($montoEnvio === 'MISSING_DELIVERY_TARIFF')
+                    <p class="text-xs mb-3" style="color:#b45309;">El sistema espera por una definición para el cálculo de Análisis de costos de envío. No se puede realizar el pago hasta que el administrador configure la tarifa.</p>
+                @endif
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
-                    <p class="text-xs" style="color:#9a3412;margin:0;">Monto a pagar: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                    <p class="text-xs" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#9a3412' }};margin:0;">
+                        Monto a pagar: 
+                        <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? 'color:#e11d48;' : '' }}">
+                            {{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? 'No se pudo calcular el envío' : 'RD$ ' . number_format($montoEnvio, 2) }}
+                        </span>
+                    </p>
                     <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
-                            style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;" title="Recalcular envío">🔄</button>
+                            style="background:none;border:1px solid {{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fde68a' : '#fed7aa' }};border-radius:4px;padding:1px 6px;font-size:0.7rem;color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#c2410c' }};cursor:pointer;" title="Recalcular envío">🔄</button>
                 </div>
-                <p class="text-xs mb-3" style="color:#9a3412;">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
-                <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                        id="btn-pago-{{ $neg->id_negociacion }}"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                    💳 Realizar pago de envío
-                </button>
+                <p class="text-xs mb-3" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#9a3412' }};">Artículo: {{ $neg->item?->item ?? 'N/A' }}</p>
+                @if($montoEnvio === 'MISSING_DELIVERY_TARIFF')
+                    <button type="button" disabled
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#cbd5e1;cursor:not-allowed;">
+                        💳 Esperando por el administrador para el costo de envío
+                    </button>
+                @else
+                    <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                            id="btn-pago-{{ $neg->id_negociacion }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                        💳 Realizar pago de envío
+                    </button>
+                @endif
             </div>
             @endif
         @endif
@@ -284,16 +301,25 @@
 
             @if($soyDuenioProducto && !$modoYaElegido)
             {{-- Dueño del producto elige cómo entregarlo --}}
-            <div class="w-full p-4 rounded-xl border" style="background:#fff7ed;border-color:#fed7aa;">
-                <p class="text-sm font-semibold mb-1" style="color:#c2410c;">📦 ¿Cómo entregarás tu producto?</p>
-                <p class="text-xs mb-3" style="color:#9a3412;">Elige si envías el producto o si la otra parte lo retira en persona.</p>
+            <div class="w-full p-4 rounded-xl border" style="background:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fffbeb' : '#fff7ed' }};border-color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fde68a' : '#fed7aa' }};">
+                <p class="text-sm font-semibold mb-1" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#c2410c' }};">📦 ¿Cómo entregarás tu producto?</p>
+                <p class="text-xs mb-3" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#9a3412' }};">
+                    {{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? 'El sistema espera por una definición para el cálculo de Análisis de costos de envío. No puedes seleccionar envío hasta que se configure la tarifa.' : 'Elige si envías el producto o si la otra parte lo retira en persona.' }}
+                </p>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                     {{-- Enviar: abre modal de pago directamente --}}
-                    <button type="button"
-                            onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}', 'envio')"
-                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                        🚚 Enviar y pagar
-                    </button>
+                    @if($montoEnvio === 'MISSING_DELIVERY_TARIFF')
+                        <button type="button" disabled
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#cbd5e1;cursor:not-allowed;" title="Tarifa de envío no configurada">
+                            🚚 Enviar (Tarifa no calculable)
+                        </button>
+                    @else
+                        <button type="button"
+                                onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}', 'envio')"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                            🚚 Enviar y pagar
+                        </button>
+                    @endif
                     {{-- Retiro: POST directo sin pago --}}
                     <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
                         @csrf
@@ -308,21 +334,34 @@
 
             @elseif($soyDuenioProducto && $modoYaElegido)
             {{-- Dueño del producto ya eligió, mostrar estado --}}
-            <div class="w-full p-3 rounded-xl border" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <div class="w-full p-3 rounded-xl border" style="background:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fffbeb' : '#f0fdf4' }};border-color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#fde68a' : '#bbf7d0' }};">
                 @if($neg->modo_entrega === 'envio')
-                    <p class="text-sm" style="color:#166534;">🚚 Elegiste enviar el producto. Los administradores gestionarán el envío.</p>
+                    <p class="text-sm" style="color:{{ $montoEnvio === 'MISSING_DELIVERY_TARIFF' ? '#b45309' : '#166534' }};">🚚 Elegiste enviar el producto. Los administradores gestionarán el envío.</p>
                     @if(!$miPago)
-                    <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
-                        <p class="text-xs" style="color:#9a3412;margin:0;">Costo de envío: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
-                        <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
-                                style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;">🔄</button>
-                    </div>
-                    <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg mt-2" style="background:#f58634;">
-                        💳 Pagar envío
-                    </button>
+                        @if($montoEnvio === 'MISSING_DELIVERY_TARIFF')
+                            <p class="text-xs mb-3 mt-1" style="color:#b45309;">El sistema espera por una definición para el cálculo de Análisis de costos de envío. No se puede realizar el pago hasta que el administrador configure la tarifa.</p>
+                            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;margin-bottom:0.75rem;">
+                                <p class="text-xs" style="color:#b45309;margin:0;">Costo de envío: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;color:#e11d48;">No se pudo calcular el envío</span></p>
+                                <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
+                                        style="background:none;border:1px solid #fde68a;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#b45309;cursor:pointer;">🔄</button>
+                            </div>
+                            <button type="button" disabled
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#cbd5e1;cursor:not-allowed;">
+                                💳 Esperando por el administrador para el costo de envío
+                            </button>
+                        @else
+                            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
+                                <p class="text-xs" style="color:#9a3412;margin:0;">Costo de envío: <span id="monto-envio-{{ $neg->id_negociacion }}" style="font-weight:800;">RD$ {{ number_format($montoEnvio, 2) }}</span></p>
+                                <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
+                                        style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;">🔄</button>
+                            </div>
+                            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg mt-2" style="background:#f58634;">
+                                💳 Pagar envío
+                            </button>
+                        @endif
                     @else
-                    <p class="text-xs mt-1" style="color:#166534;">✅ Pago de envío registrado.</p>
+                        <p class="text-xs mt-1" style="color:#166534;">✅ Pago de envío registrado.</p>
                     @endif
                 @else
                     <p class="text-sm" style="color:#166534;">🤝 Elegiste retiro en persona. Coordina con la otra parte para el retiro.</p>
