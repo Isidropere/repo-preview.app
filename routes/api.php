@@ -138,6 +138,81 @@ Route::middleware('auth:sanctum')->group(function () {
             ->orderByDesc('fecha')
             ->get();
 
+        $talentoCol = \App\Models\PagoRegistroTalento::where('id_user', $userId)
+            ->where('estatus', 'aprobado')
+            ->with(['item'])
+            ->get();
+
+        $mappedTalentos = $talentoCol->map(function ($talento) {
+            $authCode = null;
+            $cardNumber = null;
+            $brand = null;
+
+            // Fetch logs_pagos payload
+            $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
+                ->where('transaction_type', 'talento_approved')
+                ->where('is_success', true)
+                ->where(function($q) use ($talento) {
+                    $q->where('custom_order_id', 'like', 'TAL-' . $talento->id_item . '-%')
+                      ->orWhere('custom_order_id', 'like', '%' . $talento->transaction_id . '%')
+                      ->orWhere('response_payload', 'like', '%' . $talento->transaction_id . '%');
+                })
+                ->first();
+
+            if ($log && !empty($log->response_payload)) {
+                $payload = json_decode($log->response_payload, true);
+                if (is_array($payload)) {
+                    $cardNumber = $payload['CardNumber'] ?? null;
+                    $brand = $payload['DataVaultBrand'] ?? null;
+                    $authCode = $payload['AuthorizationCode'] ?? null;
+                }
+            } else {
+                if (!empty($talento->notas) && preg_match('/Código Autorización:\s*([A-Za-z0-9]+)/i', $talento->notas, $matches)) {
+                    $authCode = $matches[1];
+                    $cardNumber = 'xxxx';
+                    $brand = 'Tarjeta';
+                }
+            }
+
+            $tarjeta = null;
+            if ($brand || $cardNumber) {
+                $tarjeta = [
+                    'tipo_tarjeta' => $brand ?? 'Tarjeta',
+                    'last4'        => $cardNumber ? substr($cardNumber, -4) : 'xxxx',
+                    'nombre_titular' => auth()->user()->nombres ?? 'Cliente',
+                ];
+            }
+
+            return [
+                'id_pago_compra'      => 'TAL-' . $talento->id_item . '-' . $talento->id,
+                'estatus'             => 'aprobado',
+                'total'               => (float) $talento->monto_pagado,
+                'fecha'               => $talento->created_at ? $talento->created_at->toDateTimeString() : null,
+                'is_talent_registration' => true,
+                'pago_items'          => [
+                    [
+                        'nombre_item' => 'Registro de Talento-Servicio: ' . ($talento->item?->item ?? 'Talento'),
+                        'cantidad'    => 1,
+                    ]
+                ],
+                'tarjeta'             => $tarjeta,
+                'autorizacion_pago'   => $authCode,
+                'transaction_id'      => $talento->transaction_id,
+                'trazabilidad'        => [],
+            ];
+        });
+
+        // Convert $compras to arrays to merge with mapped arrays
+        $comprasArr = $compras->map(function ($compra) {
+            $arr = $compra->toArray();
+            $arr['fecha'] = $compra->fecha ? $compra->fecha->toDateTimeString() : null;
+            return $arr;
+        });
+
+        $mergedCompras = $comprasArr->concat($mappedTalentos)->sortByDesc(function ($item) {
+            return $item['fecha'] ? strtotime($item['fecha']) : 0;
+        })->values()->all();
+
         $ventas = \App\Models\ItemIntencionCompra::whereHas('item', fn($q) => $q->where('id_user', $userId))
             ->with(['item'])
             ->orderByDesc('id_item_intencion_compra')
@@ -152,7 +227,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $motivos = \App\Models\MotivoDevolucion::where('activo', true)->get();
 
         return response()->json([
-            'compras'      => $compras,
+            'compras'      => $mergedCompras,
             'ventas'       => $ventas,
             'intercambios' => $intercambios,
             'motivos'      => $motivos,
