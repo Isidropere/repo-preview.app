@@ -1989,10 +1989,13 @@ class ItemController extends Controller
                 return response()->json(['error' => 'Usuario no autenticado'], 401);
             }
 
-            // Traer los items de ese usuario "” solo intercambiables (tipo_trans 2 o 3)
+            // Traer los items de ese usuario "” solo intercambiables (tipo_trans 2 o 3) y con stock disponible
             $items = Item::where('id_user', $user->id)
                 ->whereIn('tipo_trans', [2, 3])
                 ->where('estatus', 1)
+                ->whereHas('inventarios', function ($q) {
+                    $q->where('cantidad', '>', 0);
+                })
                 ->get(['id_item', 'item', 'valor', 'tipo_trans', 'condicion']);
 
             Log::info('Items del usuario obtenidos correctamente', [

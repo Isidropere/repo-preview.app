@@ -64,7 +64,7 @@ class NegociacionService
         // Validar stock — Reinstaurado para todos los ítems (incluyendo servicios) por lógica de cobro
         $stock = $receptorItem->inventarios?->cantidad ?? 0;
         if ($stock <= 0) {
-            return $this->error('Este artículo está agotado y no se puede negociar.');
+            return $this->error('El artículo "' . $receptorItem->item . '" está agotado y no se puede negociar.');
         }
 
         // Validar que no exista negociación activa del mismo emisor por el mismo item
@@ -219,7 +219,7 @@ class NegociacionService
         // 1. Validar y descontar stock del artículo solicitado (Receptor)
         $receptorItem = Item::with('inventarios')->find($neg->receptor_item_id);
         if (!$receptorItem || !$receptorItem->inventarios || $receptorItem->inventarios->cantidad <= 0) {
-            throw new \RuntimeException('El artículo solicitado ya no tiene stock disponible.');
+            throw new \RuntimeException('El artículo solicitado "' . $receptorItem->item . '" ya no tiene stock disponible.');
         }
 
         // 2. Validar stock de todos los artículos ofrecidos (Emisor)
@@ -229,7 +229,7 @@ class NegociacionService
             $emisorItems = Item::with('inventarios')->whereIn('id_item', $emisorItemsIds)->get();
             foreach ($emisorItems as $eItem) {
                 if ($eItem->inventarios && $eItem->inventarios->cantidad <= 0) {
-                    throw new \RuntimeException("El artículo ofrecido \"{$eItem->item}\" ya no tiene stock disponible.");
+                    throw new \RuntimeException("El artículo ofrecido \"{$eItem->item}\" está agotado y no se puede negociar.");
                 }
             }
         }
