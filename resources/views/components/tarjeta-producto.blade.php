@@ -57,7 +57,8 @@
         {{-- Contenedor de Badges Flotantes --}}
         <div class="absolute top-2 left-2 flex flex-col gap-1.5 z-10 pointer-events-none">
             @if($stock <= 0)
-                <span class="bg-red-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider">
+                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider border"
+                      style="background:#fee2e2; color:#ef4444; border-color:#fca5a5;">
                     Agotado
                 </span>
             @endif
