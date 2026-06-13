@@ -89,6 +89,11 @@ class AdminComprasService
     public function actualizarEstadoIntercambio(int $intercambioId, string $nuevoEstado): array
     {
         $intercambio = Negociacion::findOrFail($intercambioId);
+
+        if (in_array($nuevoEstado, ['cancelado', 'rechazado'])) {
+            app(\App\Services\NegociacionService::class)->restaurarStock($intercambio);
+        }
+
         $intercambio->update(['estado' => $nuevoEstado]);
 
         return ['success' => true, 'message' => 'Estado del intercambio actualizado.'];
