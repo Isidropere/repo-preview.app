@@ -18,7 +18,7 @@
             &quot;loadingClasses&quot;: &quot;opacity-0&quot;,
             &quot;isAutoPlay&quot;: &quot;true&quot;
             }" class="relative">
-                    <div class="hs-carousel relative overflow-hidden w-full h-[530px] bg-white">
+                    <div class="hs-carousel relative overflow-hidden w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[530px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 left-0 flex flex-nowrap transition-transform duration-700">
                             <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
                             <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
@@ -27,52 +27,51 @@
                     </div>
                 </div>
             </div>
-            <div class="absolute inset-0 z-20 flex flex-col justify-center items-center m-4">
-                <section class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] h-full max-h-full overflow-hidden flex flex-col">
-                    <div class="w-full h-full min-h-0 overflow-y-auto px-2 sm:px-4 pt-3 pb-10 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <div class="lg:absolute lg:inset-0 lg:z-20 lg:flex lg:flex-col lg:justify-center lg:items-center lg:m-4 relative flex flex-col items-center mt-4 mx-4">
+                <section class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] lg:h-full lg:max-h-full overflow-visible lg:overflow-hidden flex flex-col">
+                    <div class="w-full lg:h-full lg:min-h-0 lg:overflow-y-auto px-2 sm:px-4 pt-3 pb-4 lg:pb-10 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
                         <h1 class="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold my-1">
                             Categorías Populares
                         </h1>
-                        <div class="p-0 lg:p-2 rounded-2xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-full mt-4 justify-items-center mx-auto w-full">
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Damas</h2>
+                        <div class="p-0 lg:p-2 rounded-2xl grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 max-w-full mt-2 justify-items-center mx-auto w-full pb-4">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(26)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/women.svg" alt="Damas alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Damas</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Caballeros</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Caballeros</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Niños</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Niños</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Teléfonos</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Teléfonos</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Hogar</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(16)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/hogar.svg" alt="Hogar alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Hogar</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Gamer</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(4)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/consolas.svg" alt="Gamer alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Gamer</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Talentos-Servicios</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Talentos-Servicios</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/computacion.svg" alt="Tecnología alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Tecnología</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/computacion.svg" alt="Tecnología alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Tecnología</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(6)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> 
-                                <svg class="h-14 lg:h-24 lg:mb-2 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M8 16H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-8v8m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z"></path></svg>
-                                <h2 class="font-medium text-center">Vehículos</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(6)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> 
+                                <svg class="h-10 sm:h-12 lg:h-16 lg:mb-1 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M8 16H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-8v8m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Vehículos</h2>
                             </a>
-                            <a href="{{ route('transporte.create') }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> 
-                                <!-- Se usa un ícono genérico SVG o una imagen existente. Usaremos un icono de camión inline si no hay uno -->
-                                <svg class="h-14 lg:h-24 lg:mb-2 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path><path d="M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
-                                <h2 class="font-medium text-center leading-tight">Transporte y<br>Mudanza</h2>
+                            <a href="{{ route('transporte.create') }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> 
+                                <svg class="h-10 sm:h-12 lg:h-16 lg:mb-1 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path><path d="M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                <h2 class="font-medium text-center leading-tight text-xs sm:text-sm">Transporte y<br>Mudanza</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(2)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/electro.svg" alt="Electrodomésticos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center leading-tight">Electro<wbr>domésticos</h2>
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(2)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/electro.svg" alt="Electrodomésticos alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center leading-tight text-xs sm:text-sm">Electro<wbr>domésticos</h2>
                             </a>
-                            <a href="{{ route('categorias.otras') }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
-                                <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Otras categorías</h2>
+                            <a href="{{ route('categorias.otras') }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105">
+                                <img src="/imgs/icons/otros.svg" alt="Otras categorías alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                                <h2 class="font-medium text-center text-xs sm:text-sm">Otras categorías</h2>
                             </a>
                         </div>
                     </div>
