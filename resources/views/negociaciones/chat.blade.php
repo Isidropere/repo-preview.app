@@ -1,6 +1,28 @@
 @extends('layouts.app')
 @section('title', 'Chat de Intercambio - Cambialord')
 
+@push('head_styles')
+<style>
+    #btnEnviar {
+        background-color: #f58634 !important;
+        color: #ffffff !important;
+        border: none !important;
+        cursor: pointer;
+        min-width: 100px;
+        transition: background-color 0.2s ease-in-out;
+    }
+    #btnEnviar:hover {
+        background-color: #e27526 !important;
+    }
+    #btnEnviar:disabled {
+        background-color: #fdba74 !important;
+        color: #ffffff !important;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
     <div class="max-w-5xl mx-auto px-4">
@@ -152,10 +174,7 @@
                                           placeholder="Selecciona un mensaje predefinido arriba..."></textarea>
                             </div>
                             <button type="button" id="btnEnviar" onclick="enviarMensaje()" 
-                                    class="text-white rounded-xl px-5 py-3 text-sm font-bold shadow-md transition-all flex items-center gap-1.5 self-stretch justify-center"
-                                    style="background:#f58634;border:none;cursor:pointer;min-width:100px;"
-                                    onmouseover="this.style.background='#e27526'" 
-                                    onmouseout="this.style.background='#f58634'">
+                                    class="rounded-xl px-5 py-3 text-sm font-bold shadow-md flex items-center gap-1.5 self-stretch justify-center">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                                 </svg>
