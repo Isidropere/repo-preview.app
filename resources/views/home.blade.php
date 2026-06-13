@@ -106,12 +106,13 @@
 }
 @media (min-width: 1024px) {
     .slider-grid {
-        grid-template-columns: 1fr 3fr !important;
-        align-items: center !important;
-        gap: 3rem !important;
+        grid-template-columns: 1fr !important;
+        align-items: flex-start !important;
+        gap: 1.5rem !important;
     }
     .slider-header-text {
         text-align: left !important;
+        max-width: 100% !important;
     }
     .slider-nav-btn-left {
         position: absolute !important;
@@ -235,7 +236,7 @@
                 <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
                     <div class="slider-header-text max-w-xl text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-                            Productos de <br class="hidden lg:block"> intercambio
+                            Productos de intercambio
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Intercambia lo que tienes por algo que quieres
@@ -329,7 +330,7 @@
                     "(min-width: 1024px)": {
                         // Desktops
                         slides: {
-                            perView: 2.8,
+                            perView: 3.8,
                             spacing: 24,
                         },
                     },
@@ -376,7 +377,7 @@
                 <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
                     <div class="slider-header-text w-full text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-                            Productos de <br class="hidden lg:block"> venta
+                            Productos de venta
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Aquí puedes vender lo que quieras:
