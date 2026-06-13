@@ -113,9 +113,25 @@
     .slider-header-text {
         text-align: left !important;
     }
-    .slider-buttons-desktop {
+    .slider-nav-btn-left {
+        position: absolute !important;
+        top: 50% !important;
+        left: -26px !important;
+        transform: translateY(-50%) !important;
+        z-index: 30 !important;
         display: flex !important;
-        justify-content: flex-start !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .slider-nav-btn-right {
+        position: absolute !important;
+        top: 50% !important;
+        right: 24px !important;
+        transform: translateY(-50%) !important;
+        z-index: 30 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 }
 </style>
@@ -224,9 +240,11 @@
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Intercambia lo que tienes por algo que quieres
                         </p>
-                        <div class="slider-buttons-desktop hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class="lg:col-span-2 lg:mx-0 relative">
+                        <!-- Desktop Navigation Buttons -->
+                        <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="slider-nav-btn-left hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>
+                        <button aria-label="Next slide" id="keen-slider-next2-desktop" class="slider-nav-btn-right hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>
                         <div id="my-keen-slider" class="keen-slider">
                             @forelse($productosIntercambio as $prod)
                             <div class="keen-slider__slide">
@@ -363,9 +381,11 @@
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Aquí puedes vender lo que quieras:
                         </p>
-                        <div class="slider-buttons-desktop hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class=" lg:col-span-2 lg:mx-0 relative">
+                        <!-- Desktop Navigation Buttons -->
+                        <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="slider-nav-btn-left hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>
+                        <button aria-label="Next slide" id="keen-slider-next-desktop" class="slider-nav-btn-right hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>
                         <div id="keen-slider" class="keen-slider">
                             @forelse($productosVenta as $prod)
                             <div class="keen-slider__slide">
