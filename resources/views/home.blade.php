@@ -391,16 +391,16 @@
                 <div class="mt-8 flex justify-center gap-4 lg:hidden"> <button aria-label="Previous slide" id="keen-slider-previous" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
             </div>
         </section>
-        <section class="bg-primary px-2 py-16 flex flex-col sm:flex-row justify-center items-center md:gap-x-8">
-            <h1 class="text-3xl md:text-2xl lg:text-3xl font-normal text-center sm:text-left">
+        <section class="bg-primary px-4 py-8 flex flex-col sm:flex-row justify-center items-center" style="gap: 24px;">
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-normal text-center sm:text-left text-gray-950">
                 ¿Quieres intercambiar o vender un producto? <br> <span class="font-bold">¡Hazlo con nosotros!</span> </h1>
-            <div class="mt-6 sm:mt-0 flex gap-3">
+            <div class="mt-4 sm:mt-0 flex items-center" style="gap: 12px;">
                 @auth
-                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Vender</a>
-                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Cambiar</a>
+                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Vender</a>
+                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Cambiar</a>
                 @else
-                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Vender</a>
-                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Cambiar</a>
+                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Vender</a>
+                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Cambiar</a>
                 @endauth
             </div>
         </section>
