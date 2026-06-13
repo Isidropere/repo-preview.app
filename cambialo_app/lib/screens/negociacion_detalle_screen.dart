@@ -970,9 +970,8 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _msgCtrl,
-                    readOnly: true,
                     decoration: const InputDecoration(
-                      hintText: 'Selecciona un mensaje predefinido...',
+                      hintText: 'Escribe un mensaje o selecciona uno...',
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 10),
                     ),
