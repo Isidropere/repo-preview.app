@@ -133,8 +133,17 @@
                             @forelse($ventas as $pago)
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-6 py-4">
-                                        <p class="text-sm font-bold text-gray-800">#{{ Str::limit($pago->id_pago_compra, 8, '...') }}</p>
-                                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $pago->fecha ? $pago->fecha->format('d/m/Y h:i A') : '-' }}</p>
+                                        @if(!empty($pago->is_talent_registration))
+                                            <p class="text-sm font-bold text-gray-800">{{ $pago->id_pago_compra }}</p>
+                                            <p class="text-xs text-emerald-600 font-semibold mt-0.5">Registro de Talento-Servicio</p>
+                                            <p class="text-[11px] text-gray-400 mt-0.5">{{ $pago->fecha ? $pago->fecha->format('d/m/Y h:i A') : '-' }}</p>
+                                            <p class="text-xs font-semibold text-gray-700 mt-1 truncate max-w-[180px]" title="{{ $pago->talent_name }}">
+                                                Servicio: {{ $pago->talent_name }}
+                                            </p>
+                                        @else
+                                            <p class="text-sm font-bold text-gray-800">#{{ Str::limit($pago->id_pago_compra, 8, '...') }}</p>
+                                            <p class="text-[11px] text-gray-400 mt-0.5">{{ $pago->fecha ? $pago->fecha->format('d/m/Y h:i A') : '-' }}</p>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4">
                                         <p class="text-sm font-semibold text-gray-800">{{ $pago->carrito?->usuario?->nombres ?? 'Desconocido' }} {{ $pago->carrito?->usuario?->apellidos ?? '' }}</p>
@@ -217,15 +226,25 @@
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.compras.show', $pago->id_pago_compra) }}" 
-                                               class="text-emerald-600 hover:text-emerald-800 text-xs font-bold border border-emerald-100 hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-all">
-                                                Ver
-                                            </a>
-                                            <a href="{{ route('admin.compras.pdf', $pago->id_pago_compra) }}" 
-                                               class="text-gray-600 hover:text-gray-800 text-xs font-bold border border-gray-200 hover:bg-gray-50 px-2.5 py-1 rounded-lg transition-all"
-                                               title="Descargar hoja de envío">
-                                                Envío PDF
-                                            </a>
+                                            @if(!empty($pago->is_talent_registration))
+                                                <a href="{{ route('producto.detalle', $pago->talent_id) }}" target="_blank"
+                                                   class="text-emerald-600 hover:text-emerald-800 text-xs font-bold border border-emerald-100 hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-all">
+                                                    Ver Servicio
+                                                </a>
+                                                <span class="text-xs text-gray-400 font-semibold px-2.5 py-1 border border-gray-100 bg-gray-50 rounded-lg">
+                                                    N/A Envío
+                                                </span>
+                                            @else
+                                                <a href="{{ route('admin.compras.show', $pago->id_pago_compra) }}" 
+                                                   class="text-emerald-600 hover:text-emerald-800 text-xs font-bold border border-emerald-100 hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-all">
+                                                    Ver
+                                                </a>
+                                                <a href="{{ route('admin.compras.pdf', $pago->id_pago_compra) }}" 
+                                                   class="text-gray-600 hover:text-gray-800 text-xs font-bold border border-gray-200 hover:bg-gray-50 px-2.5 py-1 rounded-lg transition-all"
+                                                   title="Descargar hoja de envío">
+                                                    Envío PDF
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

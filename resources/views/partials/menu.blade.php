@@ -118,10 +118,10 @@
             <span class="text-sm font-medium group-hover:font-bold">Muebles</span>
         </a>
 
-        <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(22)) }}">
+        {{-- <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(22)) }}">
             <img src="/imgs/icons/side-bar-icons/niños.svg" alt="" class="w-6 h-6 flex-shrink-0 opacity-70 group-hover:opacity-100" loading="lazy" width="24" height="24">
             <span class="text-sm font-medium group-hover:font-bold">Niñas</span>
-        </a>
+        </a> --}}
 
         <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}">
             <img src="/imgs/icons/side-bar-icons/niños.svg" alt="" class="w-6 h-6 flex-shrink-0 opacity-70 group-hover:opacity-100" loading="lazy" width="24" height="24">

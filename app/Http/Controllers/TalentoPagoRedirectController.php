@@ -78,7 +78,11 @@ class TalentoPagoRedirectController extends Controller
         }
 
         $orderNumber = 'TAL-' . $item->id_item . '-' . time();
-        $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber);
+        $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
+            'approved_url' => route('talento.pago.aprobado'),
+            'declined_url' => route('talento.pago.declinado'),
+            'cancel_url'   => route('talento.pago.cancelado'),
+        ]);
 
         // Registrar log de pago
         DB::table('logs_pagos')->insert([
@@ -148,6 +152,20 @@ class TalentoPagoRedirectController extends Controller
                 // Generar Contabilidad (Asiento y Caja)
                 $this->erpService->procesarRegistroTalentoAprobado($pagoTalento);
 
+                // Registrar en logs_pagos
+                DB::table('logs_pagos')->insert([
+                    'id_user'          => $item->id_user,
+                    'custom_order_id'  => $request->input('OrderNumber'),
+                    'provider'         => 'azul_talento_redirect',
+                    'transaction_type' => 'talento_approved',
+                    'amount'           => $monto,
+                    'request_payload'  => json_encode([]),
+                    'response_payload' => json_encode($request->all()),
+                    'is_success'       => true,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+
                 // Invalidar caches
                 \Illuminate\Support\Facades\Cache::forget('home_intercambio');
                 \Illuminate\Support\Facades\Cache::forget('home_venta');
@@ -171,6 +189,30 @@ class TalentoPagoRedirectController extends Controller
             Log::critical('[Talento Redirect] Firma AuthHash inválida en pagoDeclinado');
             return $this->mostrarVistaResultado(false, 'Firma de seguridad inválida de la pasarela de pagos.');
         }
+
+        $orderNumber = $request->input('OrderNumber');
+        $parts = explode('-', $orderNumber);
+        $itemId = isset($parts[1]) ? (int)$parts[1] : null;
+        $item = Item::where('id_item', $itemId)->first();
+
+        $config = ConfigTarifaCategoria29::vigente();
+        $cantidad = $item ? (int)($item->inventarios?->cantidad ?? 1) : 1;
+        $monto = (float) $config->monto_registro * $cantidad;
+
+        // Registrar log de pago fallido
+        DB::table('logs_pagos')->insert([
+            'id_user'          => $item->id_user ?? auth()->id() ?? 0,
+            'custom_order_id'  => $orderNumber,
+            'provider'         => 'azul_talento_redirect',
+            'transaction_type' => 'talento_failed',
+            'amount'           => $monto,
+            'request_payload'  => json_encode([]),
+            'response_payload' => json_encode($request->all()),
+            'is_success'       => false,
+            'error_message'    => $request->input('ErrorDescription') ?? 'Pago declinado por el banco',
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
 
         $errorMsg = $request->input('ErrorDescription') ?? $request->input('ResponseMessage') ?? 'El pago fue declinado por el banco emisor.';
         return $this->mostrarVistaResultado(false, $errorMsg);

@@ -73,6 +73,68 @@
         padding-bottom: 2.5rem !important; /* 40px */
     }
 }
+
+/* Bottom Ad Carousel Height */
+#home-ad-carousel {
+    height: 150px !important;
+}
+@media (min-width: 640px) {
+    #home-ad-carousel {
+        height: 220px !important;
+    }
+}
+@media (min-width: 1024px) {
+    #home-ad-carousel {
+        height: 320px !important;
+    }
+}
+
+/* Custom slider layout improvements on desktop */
+@media (min-width: 1250px) {
+    .slider-section-container {
+        padding-left: calc((100vw - 1250px) / 2 + 2rem) !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+@media (min-width: 1024px) and (max-width: 1249px) {
+    .slider-section-container {
+        padding-left: 2rem !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+@media (min-width: 1024px) {
+    .slider-grid {
+        grid-template-columns: 1fr !important;
+        align-items: flex-start !important;
+        gap: 1.5rem !important;
+    }
+    .slider-header-text {
+        text-align: left !important;
+        max-width: 100% !important;
+    }
+    .slider-nav-btn-left {
+        position: absolute !important;
+        top: 50% !important;
+        left: -26px !important;
+        transform: translateY(-50%) !important;
+        z-index: 30 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .slider-nav-btn-right {
+        position: absolute !important;
+        top: 50% !important;
+        right: 24px !important;
+        transform: translateY(-50%) !important;
+        z-index: 30 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
 </style>
 @endpush
 
@@ -113,9 +175,9 @@
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Caballeros</h2>
                             </a>
-                            {{-- <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Niños</h2>
-                            </a> --}}
+                            </a>
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Teléfonos</h2>
                             </a>
@@ -151,12 +213,12 @@
                 </section>
             </div>
         </section>
-        <section class="section lg:mt-0 md:mt-12 mt-4 mb-24  mx-auto lg:max-w-[1250px] md:max-w-[750px] max-w-[325px] ">
-            <div class="flex flex-col text-center mt-12">
+        <section class="section lg:mt-0 md:mt-6 mt-4 mb-6 mx-auto lg:max-w-[1250px] md:max-w-[750px] max-w-[325px]">
+            <div class="flex flex-col text-center mt-4">
                 <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-gray-950">
                     Si no puedes venderlo
                     <span class="font-bold text-gradient">¡Cámbialo!</span> </h1>
-                <div class="my-6">
+                <div class="my-4">
                <!-- <a class="bg-secondary hover:bg-hoverSecondary px-6 py-1 rounded-md font-medium text-white text-4xl" href="/addProduct">Solicitar cambio</a>--> 
                        @auth
                     <a class="bg-secondary hover:bg-hoverSecondary px-6 py-1 rounded-md font-medium text-white text-xl sm:text-2xl md:text-4xl" 
@@ -170,18 +232,20 @@
         </section>
         {{-- keen-slider CSS ya cargado en layout --}}
         <section class="bg-[#EEEEEE] mb-12">
-            <div class="relative w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
-                    <div class="max-w-xl text-center ltr:sm:text-left rtl:sm:text-right">
-                        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <div class="slider-section-container relative w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
+                <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
+                    <div class="slider-header-text max-w-xl text-center lg:text-left">
+                        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                             Productos de intercambio
                         </h2>
-                        <p class="mt-4 text-2xl text-gray-700">
+                        <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Intercambia lo que tienes por algo que quieres
                         </p>
-                        <div class="hidden lg:mt-8 lg:flex justify-center lg:gap-4"> <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class="lg:col-span-2 lg:mx-0 relative">
+                        <!-- Desktop Navigation Buttons -->
+                        <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="slider-nav-btn-left hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>
+                        <button aria-label="Next slide" id="keen-slider-next2-desktop" class="slider-nav-btn-right hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>
                         <div id="my-keen-slider" class="keen-slider">
                             @forelse($productosIntercambio as $prod)
                             <div class="keen-slider__slide">
@@ -235,7 +299,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-center gap-4 lg:hidden"> <button aria-label="Previous slide" id="keen-slider-previous2" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next2" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
+                <div class="mt-8 flex justify-center lg:hidden" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous2" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next2" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
             </div>
         </section>
         {{-- keen-slider JS ya cargado en layout --}}
@@ -266,8 +330,8 @@
                     "(min-width: 1024px)": {
                         // Desktops
                         slides: {
-                            perView: 2.2,
-                            spacing: 32,
+                            perView: 3.8,
+                            spacing: 24,
                         },
                     },
                 },
@@ -296,12 +360,12 @@
         &quot;loadingClasses&quot;: &quot;opacity-0&quot;,
        &quot;isAutoPlay&quot;: &quot;true&quot;
       }" class="relative ">
-                    <div class="hs-carousel relative overflow-hidden w-full min-h-[250px] lg:min-h-[250px] bg-white ">
+                    <div id="home-ad-carousel" class="hs-carousel relative overflow-hidden w-full min-h-[250px] lg:min-h-[250px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 start-0 flex flex-nowrap transition-transform duration-700 opacity-0">
-                            <div class="hs-carousel-slide">
+                            <div class="hs-carousel-slide h-full">
                             <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Banner publicitario Cambialord" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Promociones Cambialord" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Descubre productos en Cambialord" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide h-full"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Promociones Cambialord" width="1200" height="530"> </div>
+                            <div class="hs-carousel-slide h-full"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Descubre productos en Cambialord" width="1200" height="530"> </div>
                         </div>
                     </div> <button type="button" class="hs-carousel-prev hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 start-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m15 18-6-6 6-6"></path> </svg> </span> <span class="sr-only">Previous</span> </button>                    <button type="button" class="hs-carousel-next hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 end-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="sr-only">Next</span> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m9 18 6-6-6-6"></path> </svg> </span> </button>
                     <div class="hs-carousel-pagination flex justify-center absolute bottom-3 start-0 end-0 space-x-2"> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>                        <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> </div>
@@ -309,18 +373,20 @@
             </div>
         </section>
         <section class="bg-[#EEEEEE] mb-12">
-            <div class="relative mx-auto w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
-                    <div class="w-full text-center ltr:sm:text-left rtl:sm:text-right">
-                        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <div class="slider-section-container relative mx-auto w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
+                <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
+                    <div class="slider-header-text w-full text-center lg:text-left">
+                        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                             Productos de venta
                         </h2>
-                        <p class="mt-4 text-2xl text-gray-700">
+                        <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Aquí puedes vender lo que quieras:
                         </p>
-                        <div class="hidden lg:mt-8 lg:flex justify-center lg:gap-4"> <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class=" lg:col-span-2 lg:mx-0 relative">
+                        <!-- Desktop Navigation Buttons -->
+                        <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="slider-nav-btn-left hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>
+                        <button aria-label="Next slide" id="keen-slider-next-desktop" class="slider-nav-btn-right hidden lg:flex rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white absolute"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>
                         <div id="keen-slider" class="keen-slider">
                             @forelse($productosVenta as $prod)
                             <div class="keen-slider__slide">
@@ -373,19 +439,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-center gap-4 lg:hidden"> <button aria-label="Previous slide" id="keen-slider-previous" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
+                <div class="mt-8 flex justify-center lg:hidden" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
             </div>
         </section>
-        <section class="bg-primary px-2 py-16 flex flex-col sm:flex-row justify-center items-center md:gap-x-8">
-            <h1 class="text-3xl md:text-2xl lg:text-3xl font-normal text-center sm:text-left">
+        <section class="bg-primary px-4 py-8 flex flex-col sm:flex-row justify-center items-center" style="gap: 24px;">
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-normal text-center sm:text-left text-gray-950">
                 ¿Quieres intercambiar o vender un producto? <br> <span class="font-bold">¡Hazlo con nosotros!</span> </h1>
-            <div class="mt-6 sm:mt-0 flex gap-3">
+            <div class="mt-4 sm:mt-0 flex items-center" style="gap: 12px;">
                 @auth
-                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Vender</a>
-                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Cambiar</a>
+                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Vender</a>
+                <a href="{{ route('items.create') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Cambiar</a>
                 @else
-                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Vender</a>
-                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-4 py-2 text-base md:text-2xl lg:text-3xl font-medium text-white rounded-lg">Cambiar</a>
+                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Vender</a>
+                <a href="{{ route('login') }}" class="bg-secondary hover:bg-hoverSecondary px-5 py-2 text-sm sm:text-base font-semibold text-white rounded-lg inline-block text-center transition-colors">Cambiar</a>
                 @endauth
             </div>
         </section>

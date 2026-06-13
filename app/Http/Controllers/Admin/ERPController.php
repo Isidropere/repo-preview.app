@@ -470,18 +470,25 @@ class ERPController extends Controller
 
         // Ventas completadas/procesadas (aprobado, enviado, entregado)
         $ventasQuery = PagoCompra::whereIn('estatus', ['aprobado', 'enviado', 'entregado'])
-            ->with(['pagoItems.item.imagenes', 'carrito.usuario', 'tarjeta'])
-            ->orderByDesc('fecha');
+            ->with(['pagoItems.item.imagenes', 'carrito.usuario', 'tarjeta']);
+
+        $talentoQuery = \App\Models\PagoRegistroTalento::where('estatus', 'aprobado')
+            ->with(['item.imagenes', 'user']);
 
         if ($request->filled('estatus')) {
             $ventasQuery->where('estatus', $estatus);
+            if ($estatus !== 'aprobado') {
+                $talentoQuery->where('estatus', 'non-existent');
+            }
         }
 
         if ($request->filled('fecha_desde')) {
             $ventasQuery->whereDate('fecha', '>=', $request->fecha_desde);
+            $talentoQuery->whereDate('created_at', '>=', $request->fecha_desde);
         }
         if ($request->filled('fecha_hasta')) {
             $ventasQuery->whereDate('fecha', '<=', $request->fecha_hasta);
+            $talentoQuery->whereDate('created_at', '<=', $request->fecha_hasta);
         }
 
         if ($tab === 'ventas' && $buscar) {
@@ -490,9 +497,87 @@ class ERPController extends Controller
                 ->orWhereHas('carrito.usuario', fn($q2) => $q2
                     ->where('nombres', 'like', "%$buscar%")
                     ->orWhere('email', 'like', "%$buscar%")));
+
+            $talentoQuery->where(fn($q) => $q
+                ->where('transaction_id', 'like', "%$buscar%")
+                ->orWhere('id_item', 'like', "%$buscar%")
+                ->orWhere('notas', 'like', "%$buscar%")
+                ->orWhereHas('user', fn($q2) => $q2
+                    ->where('nombres', 'like', "%$buscar%")
+                    ->orWhere('email', 'like', "%$buscar%"))
+                ->orWhereHas('item', fn($q2) => $q2
+                    ->where('item', 'like', "%$buscar%")));
         }
 
-        $ventas = $ventasQuery->paginate(15, ['*'], 'page_ventas')->withQueryString();
+        $ventasCol = $ventasQuery->get();
+        $talentoCol = $talentoQuery->get();
+
+        $mappedTalentos = $talentoCol->map(function ($talento) {
+            $virtualPago = new PagoCompra();
+            $virtualPago->id_pago_compra = 'TAL-' . $talento->id_item . '-' . $talento->id;
+            $virtualPago->estatus = 'aprobado';
+            $virtualPago->total = (float) $talento->monto_pagado;
+            $virtualPago->fecha = $talento->created_at;
+            $virtualPago->is_talent_registration = true;
+            $virtualPago->talent_name = $talento->item?->item ?? 'Talento-Servicio';
+            $virtualPago->talent_id = $talento->id_item;
+            $virtualPago->user = $talento->user;
+
+            // Mock relation 'carrito' so that $pago->carrito->usuario works in views
+            $carrito = new \App\Models\Carrito();
+            $carrito->setRelation('usuario', $talento->user);
+            $virtualPago->setRelation('carrito', $carrito);
+
+            // Fetch logs_pagos payload
+            $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
+                ->where('transaction_type', 'talento_approved')
+                ->where('is_success', true)
+                ->where(function($q) use ($talento) {
+                    $q->where('custom_order_id', 'like', 'TAL-' . $talento->id_item . '-%')
+                      ->orWhere('custom_order_id', 'like', '%' . $talento->transaction_id . '%')
+                      ->orWhere('response_payload', 'like', '%' . $talento->transaction_id . '%');
+                })
+                ->first();
+
+            if ($log && !empty($log->response_payload)) {
+                $payload = json_decode($log->response_payload, true);
+                if (is_array($payload)) {
+                    $virtualPago->azul_response_data = $payload;
+                }
+            } else {
+                if (!empty($talento->notas) && preg_match('/Código Autorización:\s*([A-Za-z0-9]+)/i', $talento->notas, $matches)) {
+                    $authCode = $matches[1];
+                    $virtualPago->azul_response_data = [
+                        'CardNumber' => 'xxxx-xxxx-xxxx-xxxx',
+                        'DataVaultBrand' => 'Tarjeta',
+                        'AuthorizationCode' => $authCode,
+                        'RRN' => $talento->transaction_id,
+                    ];
+                }
+            }
+
+            return $virtualPago;
+        });
+
+        $merged = $ventasCol->concat($mappedTalentos)->sortByDesc(function ($item) {
+            return $item->fecha ? $item->fecha->timestamp : 0;
+        });
+
+        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage('page_ventas');
+        $perPage = 15;
+        $currentPageItems = $merged->slice(($currentPage - 1) * $perPage, $perPage)->all();
+
+        $ventas = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentPageItems,
+            $merged->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page_ventas',
+            ]
+        );
+        $ventas->withQueryString();
 
         // Intercambios completados/procesados (aceptado, en_envio, completado)
         $intercambiosQuery = Negociacion::whereIn('estado', ['aceptado', 'en_envio', 'completado'])
@@ -546,17 +631,24 @@ class ERPController extends Controller
 
         if ($tab === 'ventas') {
             $query = PagoCompra::whereIn('estatus', ['aprobado', 'enviado', 'entregado'])
-                ->with(['pagoItems.item', 'carrito.usuario', 'tarjeta'])
-                ->orderByDesc('fecha');
+                ->with(['pagoItems.item', 'carrito.usuario', 'tarjeta']);
+
+            $talentoQuery = \App\Models\PagoRegistroTalento::where('estatus', 'aprobado')
+                ->with(['item', 'user']);
 
             if ($request->filled('estatus')) {
                 $query->where('estatus', $estatus);
+                if ($estatus !== 'aprobado') {
+                    $talentoQuery->where('estatus', 'non-existent');
+                }
             }
             if ($request->filled('fecha_desde')) {
                 $query->whereDate('fecha', '>=', $fecha_desde);
+                $talentoQuery->whereDate('created_at', '>=', $fecha_desde);
             }
             if ($request->filled('fecha_hasta')) {
                 $query->whereDate('fecha', '<=', $fecha_hasta);
+                $talentoQuery->whereDate('created_at', '<=', $fecha_hasta);
             }
             if ($buscar) {
                 $query->where(fn($q) => $q
@@ -564,8 +656,70 @@ class ERPController extends Controller
                     ->orWhereHas('carrito.usuario', fn($q2) => $q2
                         ->where('nombres', 'like', "%$buscar%")
                         ->orWhere('email', 'like', "%$buscar%")));
+
+                $talentoQuery->where(fn($q) => $q
+                    ->where('transaction_id', 'like', "%$buscar%")
+                    ->orWhere('id_item', 'like', "%$buscar%")
+                    ->orWhere('notas', 'like', "%$buscar%")
+                    ->orWhereHas('user', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
             }
-            $data = $query->get();
+
+            $ventasCol = $query->get();
+            $talentoCol = $talentoQuery->get();
+
+            $mappedTalentos = $talentoCol->map(function ($talento) {
+                $virtualPago = new PagoCompra();
+                $virtualPago->id_pago_compra = 'TAL-' . $talento->id_item . '-' . $talento->id;
+                $virtualPago->estatus = 'aprobado';
+                $virtualPago->total = (float) $talento->monto_pagado;
+                $virtualPago->fecha = $talento->created_at;
+                $virtualPago->is_talent_registration = true;
+                $virtualPago->talent_name = $talento->item?->item ?? 'Talento-Servicio';
+                $virtualPago->talent_id = $talento->id_item;
+                $virtualPago->user = $talento->user;
+
+                $carrito = new \App\Models\Carrito();
+                $carrito->setRelation('usuario', $talento->user);
+                $virtualPago->setRelation('carrito', $carrito);
+
+                // Fetch logs_pagos payload
+                $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
+                    ->where('transaction_type', 'talento_approved')
+                    ->where('is_success', true)
+                    ->where(function($q) use ($talento) {
+                        $q->where('custom_order_id', 'like', 'TAL-' . $talento->id_item . '-%')
+                          ->orWhere('custom_order_id', 'like', '%' . $talento->transaction_id . '%')
+                          ->orWhere('response_payload', 'like', '%' . $talento->transaction_id . '%');
+                    })
+                    ->first();
+
+                if ($log && !empty($log->response_payload)) {
+                    $payload = json_decode($log->response_payload, true);
+                    if (is_array($payload)) {
+                        $virtualPago->azul_response_data = $payload;
+                    }
+                } else {
+                    if (!empty($talento->notas) && preg_match('/Código Autorización:\s*([A-Za-z0-9]+)/i', $talento->notas, $matches)) {
+                        $authCode = $matches[1];
+                        $virtualPago->azul_response_data = [
+                            'CardNumber' => 'xxxx-xxxx-xxxx-xxxx',
+                            'DataVaultBrand' => 'Tarjeta',
+                            'AuthorizationCode' => $authCode,
+                            'RRN' => $talento->transaction_id,
+                        ];
+                    }
+                }
+
+                return $virtualPago;
+            });
+
+            $data = $ventasCol->concat($mappedTalentos)->sortByDesc(function ($item) {
+                return $item->fecha ? $item->fecha->timestamp : 0;
+            });
         } else {
             $query = Negociacion::whereIn('estado', ['aceptado', 'en_envio', 'completado'])
                 ->with(['item.imagenes', 'usuario', 'usuarioReceptor', 'pagoEnvios.tarjeta'])

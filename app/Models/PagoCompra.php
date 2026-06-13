@@ -71,6 +71,10 @@ class PagoCompra extends Model
      */
     public function getAzulResponseAttribute(): ?array
     {
+        if (isset($this->azul_response_data)) {
+            return $this->azul_response_data;
+        }
+
         $log = \Illuminate\Support\Facades\DB::table('logs_pagos')
             ->where('custom_order_id', $this->id_pago_compra)
             ->where('is_success', true)

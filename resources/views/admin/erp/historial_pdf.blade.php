@@ -199,14 +199,48 @@
                     @forelse($data as $pago)
                         @php $grandTotal += $pago->total; @endphp
                         <tr>
-                            <td class="font-mono">#{{ Str::limit($pago->id_pago_compra, 8, '') }}</td>
+                            <td class="font-mono">
+                                @if(!empty($pago->is_talent_registration))
+                                    {{ $pago->id_pago_compra }}
+                                    <div style="font-size: 7px; color: #059669; font-weight: bold; margin-top: 2px;">REG. TALENTO</div>
+                                @else
+                                    #{{ Str::limit($pago->id_pago_compra, 8, '') }}
+                                @endif
+                            </td>
                             <td>{{ $pago->fecha ? $pago->fecha->format('d/m/Y h:i A') : '-' }}</td>
                             <td>
-                                <strong>{{ $pago->carrito?->usuario?->nombres ?? 'Desconocido' }}</strong>
+                                <strong>{{ $pago->carrito?->usuario?->nombres ?? 'Desconocido' }} {{ $pago->carrito?->usuario?->apellidos ?? '' }}</strong>
                                 <div style="font-size: 8px; color: #64748b;">{{ $pago->carrito?->usuario?->email ?? '-' }}</div>
+                                @if(!empty($pago->is_talent_registration))
+                                    <div style="font-size: 8px; color: #0f766e; font-style: italic; margin-top: 2px;">Servicio: {{ $pago->talent_name }}</div>
+                                @endif
                             </td>
                             <td>
-                                @if($pago->tarjeta)
+                                @if($pago->azul_response)
+                                    @php
+                                        $azul = $pago->azul_response;
+                                        $cardNumber = $azul['CardNumber'] ?? '';
+                                        $brand = $azul['DataVaultBrand'] ?? '';
+                                        if (empty($brand) && !empty($cardNumber)) {
+                                            if (str_starts_with($cardNumber, '4')) {
+                                                $brand = 'VISA';
+                                            } elseif (str_starts_with($cardNumber, '5')) {
+                                                $brand = 'MASTERCARD';
+                                            } elseif (str_starts_with($cardNumber, '3')) {
+                                                $brand = 'AMEX';
+                                            }
+                                        }
+                                    @endphp
+                                    @if($brand)
+                                        <span style="font-weight: bold; color: #1e3a8a;">{{ strtoupper($brand) }}</span>
+                                    @endif
+                                    @if($cardNumber)
+                                        <span class="font-mono">{{ $cardNumber }}</span>
+                                    @endif
+                                    @if(!empty($azul['AuthorizationCode']))
+                                        <div style="font-size: 8px; color: #059669;">Aut: {{ $azul['AuthorizationCode'] }}</div>
+                                    @endif
+                                @elseif($pago->tarjeta)
                                     <span style="text-transform: capitalize;">{{ $pago->tarjeta->tipo_tarjeta }}</span> terminada en {{ $pago->tarjeta->last4 }}
                                 @else
                                     N/A

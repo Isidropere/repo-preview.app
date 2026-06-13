@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 slides: { perView: 2, spacing: 16 },
             },
             "(min-width: 1024px)": {
-                slides: { perView: 2.5, spacing: 32 },
+                slides: { perView: 3.8, spacing: 24 },
             },
         },
     });

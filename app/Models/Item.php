@@ -242,4 +242,28 @@ class Item extends Model
     {
         return 'id_item';
     }
+
+    /**
+     * Override searchable to make it fail-safe.
+     */
+    public function searchable()
+    {
+        try {
+            $this->newCollection([$this])->searchable();
+        } catch (\Throwable $e) {
+            \Log::warning('Scout searchable() failed for Item ID ' . $this->id_item . ': ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Override unsearchable to make it fail-safe.
+     */
+    public function unsearchable()
+    {
+        try {
+            $this->newCollection([$this])->unsearchable();
+        } catch (\Throwable $e) {
+            \Log::warning('Scout unsearchable() failed for Item ID ' . $this->id_item . ': ' . $e->getMessage());
+        }
+    }
 }
