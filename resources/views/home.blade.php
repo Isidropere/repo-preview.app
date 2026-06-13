@@ -53,7 +53,7 @@
                                 <h2 class="font-medium text-center">Gamer</h2>
                             </a>
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/antiguedades.svg" alt="Talentos alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
-                                <h2 class="font-medium text-center">Talentos</h2>
+                                <h2 class="font-medium text-center">Talentos-Servicios</h2>
                             </a>
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}" class="w-full max-w-[260px] rounded-3xl flex flex-col items-center p-3 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/computacion.svg" alt="Tecnología alt" class="h-14 lg:h-24 lg:mb-2" width="56" height="56">
                                 <h2 class="font-medium text-center">Tecnología</h2>
