@@ -169,9 +169,9 @@
                         {{-- Textarea de previsualización y botón enviar --}}
                         <div class="flex gap-3 items-end">
                             <div class="flex-1">
-                                <textarea id="chatInput" rows="2" readonly 
+                                <textarea id="chatInput" rows="2" 
                                           style="width:100%;border:2px solid #fed7aa;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fcf8f2;outline:none;resize:none;box-sizing:border-box;" 
-                                          placeholder="Selecciona un mensaje predefinido arriba..."></textarea>
+                                          placeholder="Escribe un mensaje aquí o selecciona uno predefinido arriba..."></textarea>
                             </div>
                             <button type="button" id="btnEnviar" onclick="enviarMensaje()" 
                                     class="rounded-xl px-5 py-3 text-sm font-bold shadow-md flex items-center gap-1.5 self-stretch justify-center">
@@ -200,11 +200,14 @@
     var _receptorId = "{{ $negociacion->usuario_receptor_id }}";
     var _rol = "{{ $rol }}";
 
-    // Hacer scroll al final al cargar la página
+    // Hacer scroll al final al cargar la página y precargar mensajes predefinidos
     document.addEventListener("DOMContentLoaded", function() {
         var container = document.getElementById('chatMessages');
         container.scrollTop = container.scrollHeight;
         
+        // Precargar todos los mensajes predefinidos aplicables al rol
+        filtrarMensajes();
+
         // Auto actualizar chat cada 5 segundos
         setInterval(refrescarMensajes, 5000);
     });
@@ -223,7 +226,7 @@
 
         var tipoSeleccionado = tipoSelect.value;
         msgSelect.innerHTML = '<option value="">-- Mensaje predefinido --</option>';
-        if (preview) preview.value = '';
+        if (preview && tipoSeleccionado) preview.value = '';
 
         _allPredefinedMessages.forEach(function(pm) {
             var matchTipo = !tipoSeleccionado || pm.tipo === tipoSeleccionado;
@@ -232,6 +235,7 @@
                 var opt = document.createElement('option');
                 opt.value = pm.mensaje;
                 opt.textContent = pm.titulo;
+                opt.setAttribute('data-tipo', pm.tipo || '');
                 msgSelect.appendChild(opt);
             }
         });
@@ -240,8 +244,21 @@
     function previsualizarMensaje() {
         var msgSelect = document.getElementById('msgPredefinido');
         var preview = document.getElementById('chatInput');
+        var tipoSelect = document.getElementById('tipoAccion');
         if (!msgSelect || !preview) return;
-        preview.value = msgSelect.value;
+        
+        if (msgSelect.value) {
+            preview.value = msgSelect.value;
+            
+            // Si el usuario selecciona una pregunta directa, auto-sincronizar el filtro de acción
+            var selectedOpt = msgSelect.options[msgSelect.selectedIndex];
+            if (selectedOpt) {
+                var tipo = selectedOpt.getAttribute('data-tipo');
+                if (tipo && tipoSelect && !tipoSelect.value) {
+                    tipoSelect.value = tipo;
+                }
+            }
+        }
     }
 
     function enviarMensaje() {
@@ -284,10 +301,14 @@
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
 
-                // Reset form
+                // Reset form completely
                 input.value = '';
                 var msgSelect = document.getElementById('msgPredefinido');
                 if (msgSelect) msgSelect.value = '';
+                if (tipoSelect) {
+                    tipoSelect.value = '';
+                    filtrarMensajes(); // Repopular todo
+                }
             } else {
                 alert(data.message || 'Error al enviar mensaje.');
             }
