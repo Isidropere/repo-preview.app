@@ -78,7 +78,11 @@ class TalentoPagoRedirectController extends Controller
         }
 
         $orderNumber = 'TAL-' . $item->id_item . '-' . time();
-        $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber);
+        $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
+            'approved_url' => route('talento.pago.aprobado'),
+            'declined_url' => route('talento.pago.declinado'),
+            'cancel_url'   => route('talento.pago.cancelado'),
+        ]);
 
         // Registrar log de pago
         DB::table('logs_pagos')->insert([

@@ -126,7 +126,11 @@ class NegociacionPagoRedirectController extends Controller
         ]);
 
         $orderNumber = 'INT-' . $pagoEnvio->id . '-' . time();
-        $azulData = $this->azulProvider->generarCamposFormulario($montoACobrar, $orderNumber);
+        $azulData = $this->azulProvider->generarCamposFormulario($montoACobrar, $orderNumber, [
+            'approved_url' => route('negociaciones.pago.aprobado'),
+            'declined_url' => route('negociaciones.pago.declinado'),
+            'cancel_url'   => route('negociaciones.pago.cancelado'),
+        ]);
 
         // Registrar log de pago
         DB::table('logs_pagos')->insert([
