@@ -88,6 +88,36 @@
         height: 320px !important;
     }
 }
+
+/* Custom slider layout improvements on desktop */
+@media (min-width: 1250px) {
+    .slider-section-container {
+        padding-left: calc((100vw - 1250px) / 2 + 2rem) !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+@media (min-width: 1024px) and (max-width: 1249px) {
+    .slider-section-container {
+        padding-left: 2rem !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+@media (min-width: 1024px) {
+    .slider-grid {
+        grid-template-columns: 1fr 3fr !important;
+        align-items: center !important;
+        gap: 3rem !important;
+    }
+    .slider-header-text {
+        text-align: left !important;
+    }
+    .slider-buttons-desktop {
+        display: flex !important;
+        justify-content: flex-start !important;
+    }
+}
 </style>
 @endpush
 
@@ -185,16 +215,16 @@
         </section>
         {{-- keen-slider CSS ya cargado en layout --}}
         <section class="bg-[#EEEEEE] mb-12">
-            <div class="relative w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
-                    <div class="max-w-xl text-center lg:text-left">
+            <div class="slider-section-container relative w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
+                <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
+                    <div class="slider-header-text max-w-xl text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                             Productos de intercambio
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Intercambia lo que tienes por algo que quieres
                         </p>
-                        <div class="hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
+                        <div class="slider-buttons-desktop hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next2-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class="lg:col-span-2 lg:mx-0 relative">
                         <div id="my-keen-slider" class="keen-slider">
@@ -281,8 +311,8 @@
                     "(min-width: 1024px)": {
                         // Desktops
                         slides: {
-                            perView: 2.2,
-                            spacing: 32,
+                            perView: 2.8,
+                            spacing: 24,
                         },
                     },
                 },
@@ -324,16 +354,16 @@
             </div>
         </section>
         <section class="bg-[#EEEEEE] mb-12">
-            <div class="relative mx-auto w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
-                    <div class="w-full text-center lg:text-left">
+            <div class="slider-section-container relative mx-auto w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
+                <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
+                    <div class="slider-header-text w-full text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                             Productos de venta
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Aquí puedes vender lo que quieras:
                         </p>
-                        <div class="hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
+                        <div class="slider-buttons-desktop hidden lg:mt-6 lg:flex lg:justify-start" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 rtl:rotate-180"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path> </svg> </button>                            <button aria-label="Next slide" id="keen-slider-next-desktop" class="rounded-full border bg-secondary border-secondary p-4 text-white transition hover:bg-hoverSecondary hover:text-white"> <svg class="size-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                            </div>
                     </div>
                     <div class=" lg:col-span-2 lg:mx-0 relative">
                         <div id="keen-slider" class="keen-slider">
