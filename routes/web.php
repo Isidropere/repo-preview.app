@@ -121,12 +121,24 @@ Route::get('/deploy-migrate', function (\Illuminate\Http\Request $request) {
     return '<pre>' . implode("\n", $output) . '</pre>';
 });
 
-Route::get('/storage-link', function () {
+Route::get('/storage-link', function (\Illuminate\Http\Request $request) {
     $target = storage_path('app/public');
     $link   = public_path('storage');
 
-    if (file_exists($link)) {
-        return 'El enlace /public/storage ya existe.';
+    if (file_exists($link) || is_link($link)) {
+        if ($request->query('force') === 'true') {
+            try {
+                if (is_link($link) || !is_dir($link)) {
+                    unlink($link);
+                } else {
+                    \Illuminate\Support\Facades\File::deleteDirectory($link);
+                }
+            } catch (\Throwable $e) {
+                return 'No se pudo eliminar el enlace existente: ' . $e->getMessage() . '. Intenta borrarlo manualmente o usa ?force=true.';
+            }
+        } else {
+            return 'El enlace /public/storage ya existe. Visita /storage-link?force=true para forzar la recreación.';
+        }
     }
 
     if (function_exists('symlink')) {
@@ -138,8 +150,12 @@ Route::get('/storage-link', function () {
         }
     }
 
-    \Illuminate\Support\Facades\File::copyDirectory($target, $link);
-    return 'Directorio copiado (symlink no disponible).';
+    try {
+        \Illuminate\Support\Facades\File::copyDirectory($target, $link);
+        return 'Directorio copiado (symlink no disponible en este hosting).';
+    } catch (\Throwable $e) {
+        return 'Error al copiar el directorio: ' . $e->getMessage();
+    }
 });
 
 // Migrar imágenes de storage/app/public/ a public/ (ejecutar una vez en MochaHost)
