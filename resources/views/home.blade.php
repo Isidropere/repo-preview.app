@@ -235,7 +235,7 @@
                 <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
                     <div class="slider-header-text max-w-xl text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-                            Productos de intercambio
+                            Productos de <br class="hidden lg:block"> intercambio
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Intercambia lo que tienes por algo que quieres
@@ -376,7 +376,7 @@
                 <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
                     <div class="slider-header-text w-full text-center lg:text-left">
                         <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-                            Productos de venta
+                            Productos de <br class="hidden lg:block"> venta
                         </h2>
                         <p class="mt-2 text-base sm:text-lg text-gray-600">
                             Aquí puedes vender lo que quieras:
