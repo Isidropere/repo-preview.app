@@ -617,7 +617,16 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(_existingMainImageUrl!, width: double.infinity, height: 180, fit: BoxFit.cover),
+                                child: Image.network(
+                                  _existingMainImageUrl!,
+                                  width: double.infinity,
+                                  height: 180,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.grey.shade100,
+                                    child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                                  ),
+                                ),
                               ),
                               Container(
                                 decoration: BoxDecoration(
@@ -721,7 +730,16 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: imgUrl != null 
-                                        ? Image.network(imgUrl, width: 80, height: 80, fit: BoxFit.cover)
+                                        ? Image.network(
+                                            imgUrl,
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              color: Colors.grey.shade100,
+                                              child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
+                                            ),
+                                          )
                                         : Container(color: Colors.grey.shade200, child: const Icon(Icons.image)),
                                   ),
                                   Positioned(

@@ -24,10 +24,15 @@ class ItemImage extends StatelessWidget {
     
     // Si no tiene imagen original o devuelve un default
     final isPlaceholder = rawUrl == null || 
-                          rawUrl.isEmpty || 
+                          rawUrl.trim().isEmpty || 
                           imgUrl == 'https://via.placeholder.com/150' ||
+                          imgUrl.contains('via.placeholder.com') ||
+                          imgUrl.contains('producto_default') ||
                           imgUrl.contains('producto_defaul') ||
-                          imgUrl.contains('no-product');
+                          imgUrl.contains('servicio_default') ||
+                          imgUrl.contains('.svg') ||
+                          imgUrl.contains('no-product') ||
+                          imgUrl.contains('default-avatar');
     
     if (!isPlaceholder) {
       return Image.network(

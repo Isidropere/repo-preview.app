@@ -594,7 +594,16 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.network(_existingMainImageUrl!, width: double.infinity, height: 180, fit: BoxFit.cover),
+                              child: Image.network(
+                                _existingMainImageUrl!,
+                                width: double.infinity,
+                                height: 180,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: Colors.grey.shade100,
+                                  child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                                ),
+                              ),
                             ),
                             Container(
                               decoration: BoxDecoration(
@@ -691,7 +700,16 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(img['image_url'], width: 80, height: 80, fit: BoxFit.cover),
+                          child: Image.network(
+                            img['image_url'],
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey.shade100,
+                              child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
+                            ),
+                          ),
                         ),
                         Positioned(
                           right: 2,

@@ -240,10 +240,30 @@ class _CuentaScreenState extends State<CuentaScreen> {
                 child: Row(children: [
                   // Foto con botón de cámara encima
                   Stack(children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: kPrimary,
-                      backgroundImage: NetworkImage(ApiClient.fixImageUrl(_user!['profile_photo_url'])),
+                    Builder(
+                      builder: (context) {
+                        final photoUrl = _user?['profile_photo_url']?.toString();
+                        final isPlaceholder = photoUrl == null ||
+                                              photoUrl.trim().isEmpty ||
+                                              photoUrl.contains('default') ||
+                                              photoUrl.contains('.svg') ||
+                                              photoUrl.contains('via.placeholder.com');
+                        return CircleAvatar(
+                          radius: 32,
+                          backgroundColor: kPrimary,
+                          child: ClipOval(
+                            child: isPlaceholder
+                                ? const Icon(Icons.person, size: 36, color: Colors.white)
+                                : Image.network(
+                                    ApiClient.fixImageUrl(photoUrl),
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 36, color: Colors.white),
+                                  ),
+                          ),
+                        );
+                      }
                     ),
                     Positioned(
                       bottom: 0, right: 0,

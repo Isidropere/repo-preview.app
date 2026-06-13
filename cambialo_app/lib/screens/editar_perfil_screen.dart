@@ -311,18 +311,32 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                       child: CircleAvatar(
                         radius: 50,
                         backgroundColor: kPrimary,
-                        backgroundImage: _localPhoto != null
-                            ? (kIsWeb
-                                ? NetworkImage(_localPhoto!.path)
-                                : FileImage(File(_localPhoto!.path)) as ImageProvider)
-                            : (_urlPhoto != null && _urlPhoto!.isNotEmpty
-                                ? NetworkImage(_urlPhoto!)
-                                : (widget.user['profile_photo_url'] != null && widget.user['profile_photo_url'].isNotEmpty
-                                    ? NetworkImage(ApiClient.fixImageUrl(widget.user['profile_photo_url']))
-                                    : null)),
-                        child: _localPhoto == null && _urlPhoto == null && (widget.user['profile_photo_url'] == null || widget.user['profile_photo_url'].isEmpty)
-                            ? const Icon(Icons.person, size: 50, color: Colors.white)
-                            : null,
+                        child: ClipOval(
+                          child: _localPhoto != null
+                              ? (kIsWeb
+                                  ? Image.network(_localPhoto!.path, width: 100, height: 100, fit: BoxFit.cover)
+                                  : Image.file(File(_localPhoto!.path), width: 100, height: 100, fit: BoxFit.cover))
+                              : _urlPhoto != null && _urlPhoto!.isNotEmpty
+                                  ? Image.network(
+                                      _urlPhoto!,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.white),
+                                    )
+                                  : (widget.user['profile_photo_url'] != null &&
+                                          widget.user['profile_photo_url'].toString().isNotEmpty &&
+                                          !widget.user['profile_photo_url'].toString().contains('default') &&
+                                          !widget.user['profile_photo_url'].toString().contains('.svg')
+                                      ? Image.network(
+                                          ApiClient.fixImageUrl(widget.user['profile_photo_url']),
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.person, size: 50, color: Colors.white)),
+                        ),
                       ),
                     ),
                     Positioned(
