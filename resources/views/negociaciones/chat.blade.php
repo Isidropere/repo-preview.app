@@ -20,19 +20,53 @@
         cursor: not-allowed;
         opacity: 0.8;
     }
+
+    /* Estilos para ajustar a una sola página (sin scroll vertical en desktop) */
+    @media (min-width: 768px) {
+        .chat-outer-wrapper {
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+            min-height: auto !important;
+            height: calc(100vh - 80px) !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .chat-outer-wrapper > div {
+            width: 100%;
+        }
+        .chat-grid-container {
+            margin-top: 0.5rem !important;
+            align-items: stretch;
+        }
+        .left-panel-fixed, .chat-panel-height {
+            height: calc(100vh - 180px) !important;
+            min-height: 380px !important;
+            max-height: 560px !important;
+        }
+        .left-panel-fixed {
+            overflow-y: auto;
+        }
+        body {
+            overflow: hidden !important;
+        }
+        footer {
+            display: none !important;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-6">
+<div class="min-h-screen bg-gray-50 py-6 chat-outer-wrapper">
     <div class="max-w-5xl mx-auto px-4">
 
         @include('components.btn-volver', ['backUrl' => route('negociaciones.mis')])
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 chat-grid-container">
             
             {{-- Panel Izquierdo: Información del Intercambio --}}
-            <div class="md:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col h-fit">
+            <div class="md:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col left-panel-fixed">
                 <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Detalle del Intercambio</h3>
                 
                 @php
@@ -107,7 +141,7 @@
             </div>
 
             {{-- Panel Derecho: Chat Principal --}}
-            <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden" style="height: 600px;">
+            <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden chat-panel-height" style="height: 600px;">
                 
                 {{-- Header del Chat --}}
                 <div class="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
