@@ -21,7 +21,7 @@
                     <img src="{{ $imgSrc }}" alt="{{ $negociacion->item?->item }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100 flex-shrink-0" loading="lazy">
                     <div>
                         <h4 class="font-bold text-gray-800 text-sm leading-snug">{{ $negociacion->item?->item ?? 'Producto eliminado' }}</h4>
-                        <p class="text-xs text-orange-600 font-bold mt-0.5">
+                        <p class="text-xs font-bold mt-0.5" style="color: #ea580c;">
                             @if($negociacion->item?->valor) RD$ {{ number_format($negociacion->item->valor, 2) }} @else Solo intercambio @endif
                         </p>
                     </div>
@@ -90,7 +90,7 @@
                 {{-- Header del Chat --}}
                 <div class="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-extrabold text-sm uppercase">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm uppercase" style="background: #ffedd5; color: #ea580c;">
                             {{ substr($otroUsuario?->nombres ?? 'O', 0, 1) }}{{ substr($otroUsuario?->apellidos ?? 'U', 0, 1) }}
                         </div>
                         <div>
@@ -126,7 +126,9 @@
                         {{-- Selectores de mensajes predefinidos --}}
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <select id="tipoAccion" onchange="filtrarMensajes()" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-700 bg-white outline-none focus:border-orange-500">
+                                <select id="tipoAccion" onchange="filtrarMensajes()" 
+                                        style="width:100%;border:2px solid #fed7aa;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.78rem;background:#fff7ed;outline:none;"
+                                        onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'">
                                     <option value="">-- Acción / Filtro --</option>
                                     @foreach($accionesPredefinidas as $tipo)
                                     <option value="{{ $tipo }}">{{ ucfirst($tipo) }}</option>
@@ -134,7 +136,9 @@
                                 </select>
                             </div>
                             <div>
-                                <select id="msgPredefinido" onchange="previsualizarMensaje()" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-700 bg-white outline-none focus:border-orange-500">
+                                <select id="msgPredefinido" onchange="previsualizarMensaje()" 
+                                        style="width:100%;border:2px solid #fed7aa;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.78rem;background:#fff7ed;outline:none;"
+                                        onfocus="this.style.borderColor='#f58634'" onblur="this.style.borderColor='#fed7aa'">
                                     <option value="">-- Mensaje predefinido --</option>
                                 </select>
                             </div>
@@ -143,9 +147,15 @@
                         {{-- Textarea de previsualización y botón enviar --}}
                         <div class="flex gap-3 items-end">
                             <div class="flex-1">
-                                <textarea id="chatInput" rows="2" readonly class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-gray-50 outline-none resize-none" placeholder="Selecciona un mensaje predefinido arriba..."></textarea>
+                                <textarea id="chatInput" rows="2" readonly 
+                                          style="width:100%;border:2px solid #fed7aa;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.85rem;background:#fcf8f2;outline:none;resize:none;box-sizing:border-box;" 
+                                          placeholder="Selecciona un mensaje predefinido arriba..."></textarea>
                             </div>
-                            <button type="button" id="btnEnviar" onclick="enviarMensaje()" class="bg-orange-600 hover:bg-orange-700 text-white rounded-xl px-5 py-3 text-sm font-bold shadow-md transition-colors flex items-center gap-1.5 self-stretch justify-center">
+                            <button type="button" id="btnEnviar" onclick="enviarMensaje()" 
+                                    class="text-white rounded-xl px-5 py-3 text-sm font-bold shadow-md transition-all flex items-center gap-1.5 self-stretch justify-center"
+                                    style="background:#f58634;border:none;cursor:pointer;min-width:100px;"
+                                    onmouseover="this.style.background='#e27526'" 
+                                    onmouseout="this.style.background='#f58634'">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                                 </svg>
