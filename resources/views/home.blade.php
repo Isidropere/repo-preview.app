@@ -113,9 +113,9 @@
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(27)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/ropa.svg" alt="Caballeros alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Caballeros</h2>
                             </a>
-                            <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
+                            {{-- <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(20)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/juegos.svg" alt="Niños alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Niños</h2>
-                            </a>
+                            </a> --}}
                             <a href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(19)) }}" class="w-full max-w-[170px] rounded-2xl flex flex-col items-center p-2 transition-all duration-300 hover:bg-primary/80 hover:shadow-lg hover:scale-105"> <img src="/imgs/icons/celulares.svg" alt="Teléfonos alt" class="h-10 sm:h-12 lg:h-16 lg:mb-1" width="48" height="48">
                                 <h2 class="font-medium text-center text-xs sm:text-sm">Teléfonos</h2>
                             </a>
