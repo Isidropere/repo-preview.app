@@ -62,12 +62,15 @@
                 </span>
             @endif
             @if($enNegociacion)
-                <span class="bg-indigo-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1">
+                @php
+                    $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
+                @endphp
+                <a href="{{ route('negociaciones.verChat', $idNeg) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
                     En Negociación
-                </span>
+                </a>
             @endif
         </div>
 
@@ -116,19 +119,36 @@
                 </button>
                 @endif
 
-                {{-- Botón intercambio --}}
+                {{-- Botón intercambio o Ver chat --}}
                 @if($esIntercambio && !$esMio)
-                <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
-                        class="flex items-center gap-1 border border-orange-300 text-orange-700 rounded-lg transition-colors flex-shrink-0"
-                        style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#fff7ed;"
-                        onmouseover="this.style.background='#fed7aa'"
-                        onmouseout="this.style.background='#fff7ed'"
-                        title="Proponer intercambio">
-                    <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                    </svg>
-                    Intercambio
-                </button>
+                    @if($enNegociacion)
+                        @php
+                            $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
+                        @endphp
+                        <a href="{{ route('negociaciones.verChat', $idNeg) }}"
+                           class="flex items-center gap-1 border border-indigo-300 text-indigo-700 rounded-lg transition-colors flex-shrink-0"
+                           style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#f5f3ff;"
+                           onmouseover="this.style.background='#ede9fe'"
+                           onmouseout="this.style.background='#f5f3ff'"
+                           title="Ir a la negociación activa">
+                            <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Ver Chat
+                        </a>
+                    @else
+                        <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
+                                class="flex items-center gap-1 border border-orange-300 text-orange-700 rounded-lg transition-colors flex-shrink-0"
+                                style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#fff7ed;"
+                                onmouseover="this.style.background='#fed7aa'"
+                                onmouseout="this.style.background='#fff7ed'"
+                                title="Proponer intercambio">
+                            <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                            Intercambio
+                        </button>
+                    @endif
                 @endif
             @endif
 
