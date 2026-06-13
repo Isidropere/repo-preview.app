@@ -138,10 +138,12 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     }
 
     // Obtener tipos/categorías únicos
-    final List<String> types = roleMessages
-        .map((m) => m['tipo']?.toString() ?? 'General')
-        .toSet()
-        .toList();
+    final List<String> types = [
+      'Todos',
+      ...roleMessages
+          .map((m) => m['tipo']?.toString() ?? 'General')
+          .toSet()
+    ];
 
     showModalBottomSheet(
       context: context,
@@ -149,11 +151,12 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        String selectedType = types.first;
+        String selectedType = 'Todos';
 
         return StatefulBuilder(
           builder: (context, setStateSheet) {
             final filtered = roleMessages.where((m) {
+              if (selectedType == 'Todos') return true;
               final String t = m['tipo']?.toString() ?? 'General';
               return t == selectedType;
             }).toList();
