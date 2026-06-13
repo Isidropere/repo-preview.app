@@ -490,6 +490,7 @@ class NegociacionService
             // Si la columna no existe aún (migración pendiente), permitir continuar
             if (!\Illuminate\Support\Facades\Schema::hasColumn('negociaciones', 'modo_entrega')) {
                 $neg->update(['entrega_confirmada' => true, 'estado' => 'completado']);
+                $this->erpService->registrarSalidaIntercambio($neg);
                 $otroId = $userId == $neg->usuario_emisor_id ? $neg->usuario_receptor_id : $neg->usuario_emisor_id;
                 $this->notificar($otroId, "[Intercambio] ✅ Intercambio #{$neg->id_negociacion} completado.");
                 return $this->ok('Entrega confirmada. El intercambio está completado.');

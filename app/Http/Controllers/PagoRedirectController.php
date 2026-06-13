@@ -111,6 +111,8 @@ class PagoRedirectController extends Controller
 
         // 6. Transacción en base de datos para reservar stock y crear orden 'pendiente'
         try {
+            PagoCompra::liberarOrdenesPendientes($carrito->id_carrito);
+
             $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $userId) {
                 // Evitar compras duplicadas simultáneas
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();

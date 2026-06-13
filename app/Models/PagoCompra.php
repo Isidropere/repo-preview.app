@@ -138,4 +138,42 @@ class PagoCompra extends Model
     {
         return $this->belongsTo(MotivoDevolucion::class, 'id_motivo_devolucion');
     }
+
+    /**
+     * Libera cualquier orden pendiente asociada a un carrito y restaura su stock.
+     */
+    public static function liberarOrdenesPendientes($id_carrito): void
+    {
+        $ordenesPendientes = self::where('id_carrito', $id_carrito)
+            ->where('estatus', 'pendiente')
+            ->get();
+
+        foreach ($ordenesPendientes as $pagoCompra) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($pagoCompra) {
+                $pagoCompra->estatus = 'cancelado';
+                $pagoCompra->save();
+
+                // Registrar trazabilidad
+                CompraTrazabilidad::create([
+                    'id_pago_compra'  => $pagoCompra->id_pago_compra,
+                    'estado_anterior' => 'pendiente',
+                    'estado_nuevo'    => 'cancelado',
+                    'nota'            => 'Liberado por inicio de nueva sesión o recarga de checkout',
+                    'id_admin'        => null,
+                ]);
+
+                // Devolver el inventario reservado
+                $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
+                foreach ($pagoItems as $pagoItem) {
+                    $itemModel = Item::find($pagoItem->id_item);
+                    if ($itemModel && $itemModel->inventarios) {
+                        $inventario = $itemModel->inventarios;
+                        $inventario->cantidad += $pagoItem->cantidad;
+                        $inventario->save();
+                    }
+                }
+            });
+        }
+    }
 }
+

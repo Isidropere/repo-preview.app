@@ -245,23 +245,36 @@ class ERPService
                 ]);
 
                 // 2. Salida de los items ofrecidos (los del emisor)
+                $itemsADebitar = [];
                 if (!empty($neg->items_ofrecidos)) {
                     foreach ($neg->items_ofrecidos as $idItem) {
-                        InventarioMovimiento::create([
-                            'id_item'         => $idItem,
-                            'id_almacen'      => $almacen->id,
-                            'tipo'            => 'salida',
-                            'cantidad'        => 1,
-                            'motivo'          => "Salida por intercambio (Trueque) #{$neg->id_negociacion}",
-                            'referencia_tipo' => 'negociacion',
-                            'referencia_id'   => $neg->id_negociacion,
-                        ]);
-                        
-                        // También debemos debitar el Inventario real de estos items ofrecidos
-                        $inv = \App\Models\Inventario::where('id_item', $idItem)->first();
-                        if ($inv && $inv->cantidad > 0) {
-                            $inv->decrement('cantidad');
+                        $itemsADebitar[] = $idItem;
+                    }
+                }
+                if (!empty($neg->emisor_paquete_id)) {
+                    $itemsPaquete = \App\Models\ItemOferta::where('id_paquete', $neg->emisor_paquete_id)->pluck('id_item')->toArray();
+                    foreach ($itemsPaquete as $idItem) {
+                        if (!in_array($idItem, $itemsADebitar)) {
+                            $itemsADebitar[] = $idItem;
                         }
+                    }
+                }
+
+                foreach ($itemsADebitar as $idItem) {
+                    InventarioMovimiento::create([
+                        'id_item'         => $idItem,
+                        'id_almacen'      => $almacen->id,
+                        'tipo'            => 'salida',
+                        'cantidad'        => 1,
+                        'motivo'          => "Salida por intercambio (Trueque) #{$neg->id_negociacion}",
+                        'referencia_tipo' => 'negociacion',
+                        'referencia_id'   => $neg->id_negociacion,
+                    ]);
+                    
+                    // También debemos debitar el Inventario real de estos items ofrecidos
+                    $inv = \App\Models\Inventario::where('id_item', $idItem)->first();
+                    if ($inv && $inv->cantidad > 0) {
+                        $inv->decrement('cantidad');
                     }
                 }
             });
