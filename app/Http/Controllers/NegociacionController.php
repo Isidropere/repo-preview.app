@@ -314,8 +314,26 @@ class NegociacionController extends Controller
 
     public function verChat($id)
     {
-        $negociacion = Negociacion::with(['usuario', 'usuarioReceptor'])->findOrFail($id);
-        return view('negociaciones', compact('negociacion'));
+        $negociacion = Negociacion::with(['usuario', 'usuarioReceptor', 'item.imagenes'])->findOrFail($id);
+        
+        $userId = auth()->id();
+        if ($userId != $negociacion->usuario_emisor_id && $userId != $negociacion->usuario_receptor_id) {
+            abort(403, 'No tienes permiso para ver esta negociación.');
+        }
+
+        $rol = $userId == $negociacion->usuario_emisor_id ? 'emisor' : 'receptor';
+        $otroUsuario = $rol === 'receptor' ? $negociacion->usuario : $negociacion->usuarioReceptor;
+
+        // Cargar mensajes predefinidos
+        $mensajesPredefinidos = \App\Models\PredefinedMessage::where('activo', true)->get();
+        $accionesPredefinidas = \App\Models\PredefinedMessage::select('tipo')->distinct()->pluck('tipo');
+
+        // Cargar mensajes existentes
+        $negService = app(NegociacionService::class);
+        $mensajesData = $negService->obtenerMensajes($userId, $negociacion->usuario_emisor_id, $negociacion->usuario_receptor_id);
+        $mensajes = $mensajesData['mensajes'] ?? [];
+
+        return view('negociaciones.chat', compact('negociacion', 'rol', 'otroUsuario', 'mensajesPredefinidos', 'accionesPredefinidas', 'mensajes'));
     }
 
     public function mostrarPago($id)
