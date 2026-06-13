@@ -312,8 +312,12 @@ class NegociacionController extends Controller
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
-    public function verChat($id)
+    public function verChat($hash)
     {
+        $id = \App\Helpers\HashIdHelper::decode($hash);
+        if (!$id) {
+            abort(404, 'Negociación no encontrada.');
+        }
         $negociacion = Negociacion::with(['usuario', 'usuarioReceptor', 'item.imagenes'])->findOrFail($id);
         
         $userId = auth()->id();
