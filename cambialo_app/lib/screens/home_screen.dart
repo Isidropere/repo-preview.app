@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {'id': 19, 'label': 'Teléfonos',   'icon': Icons.phone_android},
     {'id': 16, 'label': 'Hogar',       'icon': Icons.home_outlined},
     {'id': 4,  'label': 'Gamer',       'icon': Icons.sports_esports_outlined},
-    {'id': 29, 'label': 'Talentos',    'icon': Icons.star_outline},
+    {'id': 29, 'label': 'Talentos-Servicios', 'icon': Icons.star_outline},
     {'id': 24, 'label': 'Tecnología',  'icon': Icons.computer_outlined},
     {'id': 6,  'label': 'Vehículos',   'icon': Icons.directions_car_outlined},
     {'id': 2,  'label': 'Electrodom.', 'icon': Icons.kitchen_outlined},

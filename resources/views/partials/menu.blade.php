@@ -135,7 +135,7 @@
 
         <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(29)) }}">
             <img src="/imgs/icons/side-bar-icons/talentos.svg" alt="" class="w-6 h-6 flex-shrink-0 opacity-70 group-hover:opacity-100" loading="lazy" width="24" height="24">
-            <span class="text-sm font-medium group-hover:font-bold">Talentos</span>
+            <span class="text-sm font-medium group-hover:font-bold">Talentos-Servicios</span>
         </a>
 
         <a class="cat-item group flex items-center gap-3 text-gray-700 rounded-xl p-3 mb-1 transition-all hover:bg-orange-50 hover:text-primary" href="{{ route('categorias.show', \App\Helpers\HashIdHelper::encode(24)) }}">

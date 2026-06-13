@@ -396,8 +396,8 @@
 
     /* Hero home responsive */
     @media (max-width: 640px) {
-        .hs-carousel .h-\[530px\] {
-            height: 420px;
+        .hs-carousel.h-\[530px\] {
+            height: 250px !important;
         }
     }
 
