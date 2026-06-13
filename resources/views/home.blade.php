@@ -28,8 +28,8 @@
                 </div>
             </div>
             <div class="absolute inset-0 z-20 flex flex-col justify-center items-center m-4">
-                <section class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] h-full min-h-[520px] lg:min-h-[420px] overflow-hidden flex flex-col">
-                    <div class="w-full h-full min-h-0 overflow-y-auto px-2 sm:px-4 py-3 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
+                <section class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] h-full max-h-full overflow-hidden flex flex-col">
+                    <div class="w-full h-full min-h-0 overflow-y-auto px-2 sm:px-4 pt-3 pb-10 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
                         <h1 class="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold my-1">
                             Categorías Populares
                         </h1>
