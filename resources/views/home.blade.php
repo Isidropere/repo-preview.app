@@ -151,12 +151,12 @@
                 </section>
             </div>
         </section>
-        <section class="section lg:mt-0 md:mt-12 mt-4 mb-24  mx-auto lg:max-w-[1250px] md:max-w-[750px] max-w-[325px] ">
-            <div class="flex flex-col text-center mt-12">
+        <section class="section lg:mt-0 md:mt-6 mt-4 mb-6 mx-auto lg:max-w-[1250px] md:max-w-[750px] max-w-[325px]">
+            <div class="flex flex-col text-center mt-4">
                 <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-gray-950">
                     Si no puedes venderlo
                     <span class="font-bold text-gradient">¡Cámbialo!</span> </h1>
-                <div class="my-6">
+                <div class="my-4">
                <!-- <a class="bg-secondary hover:bg-hoverSecondary px-6 py-1 rounded-md font-medium text-white text-4xl" href="/addProduct">Solicitar cambio</a>--> 
                        @auth
                     <a class="bg-secondary hover:bg-hoverSecondary px-6 py-1 rounded-md font-medium text-white text-xl sm:text-2xl md:text-4xl" 
