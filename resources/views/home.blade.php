@@ -3,6 +3,79 @@
 
 @section('title', 'Página de Inicio')
 
+@push('head_styles')
+<style>
+/* Hero Carousel Height */
+#home-hero-carousel {
+    height: 250px !important;
+}
+@media (min-width: 640px) {
+    #home-hero-carousel {
+        height: 350px !important;
+    }
+}
+@media (min-width: 768px) {
+    #home-hero-carousel {
+        height: 450px !important;
+    }
+}
+@media (min-width: 1024px) {
+    #home-hero-carousel {
+        height: 530px !important;
+    }
+}
+
+/* Mobile & Tablet Styles */
+@media (max-width: 1023px) {
+    #home-categories-overlay {
+        position: relative !important;
+        inset: auto !important;
+        margin: 1rem 1rem 0 1rem !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    #home-categories-section {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    #home-categories-scroll {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow-y: visible !important;
+        padding-bottom: 1rem !important;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+    #home-categories-overlay {
+        position: absolute !important;
+        inset: 0 !important;
+        margin: 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    #home-categories-section {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+    }
+    #home-categories-scroll {
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding-bottom: 2.5rem !important; /* 40px */
+    }
+}
+</style>
+@endpush
+
 @section('content')
 
 <main class="min-h-screen">
@@ -18,7 +91,7 @@
             &quot;loadingClasses&quot;: &quot;opacity-0&quot;,
             &quot;isAutoPlay&quot;: &quot;true&quot;
             }" class="relative">
-                    <div class="hs-carousel relative overflow-hidden w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[530px] bg-white">
+                    <div id="home-hero-carousel" class="hs-carousel relative overflow-hidden w-full h-[530px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 left-0 flex flex-nowrap transition-transform duration-700">
                             <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
                             <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
@@ -27,9 +100,9 @@
                     </div>
                 </div>
             </div>
-            <div class="lg:absolute lg:inset-0 lg:z-20 lg:flex lg:flex-col lg:justify-center lg:items-center lg:m-4 relative flex flex-col items-center mt-4 mx-4">
-                <section class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] lg:h-full lg:max-h-full overflow-visible lg:overflow-hidden flex flex-col">
-                    <div class="w-full lg:h-full lg:min-h-0 lg:overflow-y-auto px-2 sm:px-4 pt-3 pb-4 lg:pb-10 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <div id="home-categories-overlay" class="absolute inset-0 z-20 flex flex-col justify-center items-center m-4">
+                <section id="home-categories-section" class="text-center bg-orange-200/65 p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[1300px] h-full max-h-full overflow-hidden flex flex-col">
+                    <div id="home-categories-scroll" class="w-full h-full min-h-0 overflow-y-auto px-2 sm:px-4 pt-3 pb-10 [&::-webkit-scrollbar]:hidden" style="scrollbar-width: none; -ms-overflow-style: none;">
                         <h1 class="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold my-1">
                             Categorías Populares
                         </h1>
