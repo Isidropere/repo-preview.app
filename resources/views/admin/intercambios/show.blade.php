@@ -2,11 +2,29 @@
 
 @section('title', 'Detalle de Intercambio #' . $intercambio->id_negociacion)
 
+{{-- Macro: botón copiar pequeño --}}
+@php
+function btnCopiar(string $id, string $label = ''): string {
+    return '<button type="button" onclick="copiarSeccion(\''.$id.'\')"
+        title="Copiar '.$label.'"
+        style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:11px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;color:#6b7280;cursor:pointer;transition:all .15s"
+        onmouseover="this.style.background=\'#f3f4f6\';this.style.color=\'#374151\'"
+        onmouseout="this.style.background=\'#f9fafb\';this.style.color=\'#6b7280\'"
+        id="btn-'.$id.'">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        Copiar
+    </button>';
+}
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        @include('components.btn-volver', ['backUrl' => route('admin.index')])
+        @include('components.btn-volver', ['backUrl' => route('admin.index', ['tab' => 'intercambios'])])
 
         {{-- Spinner --}}
         <div id="pageLoader" class="flex flex-col items-center justify-center py-16 gap-3">
@@ -46,16 +64,83 @@
                     'cancelado'    => 'bg-gray-100 text-gray-600',
                     default        => 'bg-gray-100 text-gray-600',
                 };
+                
+                $emisor = $intercambio->usuario;
+                $receptor = $intercambio->usuarioReceptor;
+                $itemSolicitado = $intercambio->item;
+
+                $txtIntercambio  = "Detalle de Intercambio #{$intercambio->id_negociacion}\n";
+                $txtIntercambio .= "Emisor: " . ($emisor?->nombres ?? '') . " " . ($emisor?->apellidos ?? '') . " (" . ($emisor?->email ?? 'N/A') . ")\n";
+                $txtIntercambio .= "Receptor: " . ($receptor?->nombres ?? '') . " " . ($receptor?->apellidos ?? '') . " (" . ($receptor?->email ?? 'N/A') . ")\n";
+                $txtIntercambio .= "Fecha de creación: " . ($intercambio->fecha_creacion ? \Carbon\Carbon::parse($intercambio->fecha_creacion)->format('d/m/Y H:i') : 'N/A') . "\n";
+                $txtIntercambio .= "Estado: " . ucfirst($intercambio->estado ?? '') . "\n";
+                $txtIntercambio .= "Modo de Entrega: " . ucfirst($intercambio->modo_entrega ?? 'No seleccionado') . "\n";
+                
+                $txtIntercambio .= "\n--- FLUJO DE INTERCAMBIO ---\n";
+                $txtIntercambio .= "Artículo/Servicio Solicitado: " . ($itemSolicitado?->item ?? 'Eliminado') . " | Valor: RD$ " . number_format($itemSolicitado?->valor ?? 0, 2) . "\n";
+                $txtIntercambio .= "Ofrecido por el Emisor:\n";
+                if ($itemsOfrecidos->count()) {
+                    foreach ($itemsOfrecidos as $io) {
+                        $txtIntercambio .= "- {$io->item} | Valor: RD$ " . number_format($io->valor ?? 0, 2) . "\n";
+                    }
+                } else {
+                    $txtIntercambio .= "- Solo oferta económica\n";
+                }
+                $txtIntercambio .= "Monto de oferta: RD$ " . number_format($intercambio->monto_oferta ?? 0, 2) . "\n";
+                if ($intercambio->monto_contra_oferta) {
+                    $txtIntercambio .= "Monto de contraoferta: RD$ " . number_format($intercambio->monto_contra_oferta ?? 0, 2) . "\n";
+                }
+
+                // Direcciones
+                $dirEmisor = $emisor?->direcciones->firstWhere('es_predeterminada', 1) ?? $emisor?->direcciones->first();
+                $dirReceptor = $receptor?->direcciones->firstWhere('es_predeterminada', 1) ?? $receptor?->direcciones->first();
+                
+                if ($dirEmisor) {
+                    $txtIntercambio .= "\nDirección de Envío Emisor (Recibe el artículo solicitado):\n";
+                    $txtIntercambio .= "Calle: {$dirEmisor->calle}";
+                    $txtIntercambio .= $dirEmisor->N_casa_edificio ? " #{$dirEmisor->N_casa_edificio}" : '';
+                    $txtIntercambio .= $dirEmisor->apto ? ", Apto {$dirEmisor->apto}" : '';
+                    $txtIntercambio .= "\n";
+                    $txtIntercambio .= $dirEmisor->sector ? "Sector: {$dirEmisor->sector}\n" : '';
+                    $txtIntercambio .= $dirEmisor->municipio ? "Municipio: " . ($dirEmisor->municipio->municipio ?? $dirEmisor->id_municipio) . "\n" : '';
+                    $txtIntercambio .= $dirEmisor->provincia ? "Provincia: " . ($dirEmisor->provincia->provincia ?? $dirEmisor->id_provincia) . "\n" : '';
+                    $txtIntercambio .= $dirEmisor->telefono_contacto ? "Tel. contacto: {$dirEmisor->telefono_contacto}\n" : '';
+                }
+
+                if ($dirReceptor) {
+                    $txtIntercambio .= "\nDirección de Envío Receptor (Recibe los artículos ofrecidos):\n";
+                    $txtIntercambio .= "Calle: {$dirReceptor->calle}";
+                    $txtIntercambio .= $dirReceptor->N_casa_edificio ? " #{$dirReceptor->N_casa_edificio}" : '';
+                    $txtIntercambio .= $dirReceptor->apto ? ", Apto {$dirReceptor->apto}" : '';
+                    $txtIntercambio .= "\n";
+                    $txtIntercambio .= $dirReceptor->sector ? "Sector: {$dirReceptor->sector}\n" : '';
+                    $txtIntercambio .= $dirReceptor->municipio ? "Municipio: " . ($dirReceptor->municipio->municipio ?? $dirReceptor->id_municipio) . "\n" : '';
+                    $txtIntercambio .= $dirReceptor->provincia ? "Provincia: " . ($dirReceptor->provincia->provincia ?? $dirReceptor->id_provincia) . "\n" : '';
+                    $txtIntercambio .= $dirReceptor->telefono_contacto ? "Tel. contacto: {$dirReceptor->telefono_contacto}\n" : '';
+                }
+
+                $emailSubject = "Detalle de Intercambio #{$intercambio->id_negociacion}";
+                $mailtoUrl = "mailto:?subject=" . rawurlencode($emailSubject) . "&body=" . rawurlencode($txtIntercambio);
             @endphp
 
             {{-- Encabezado --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
+            <div id="sec-intercambio" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-900">
-                            Intercambio <span class="font-mono">#{{ $intercambio->id_negociacion }}</span>
-                        </h1>
-                        <p class="text-sm text-gray-500 mt-1">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl font-bold text-gray-950 text-lg sm:text-xl">
+                                Intercambio <span class="font-mono text-base">#{{ $intercambio->id_negociacion }}</span>
+                            </h1>
+                            <a href="{!! $mailtoUrl !!}"
+                               class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Enviar por Email
+                            </a>
+                            {!! btnCopiar('intercambio', 'intercambio') !!}
+                        </div>
+                        <p class="text-sm text-gray-500">
                             {{ $intercambio->usuario?->nombres }} &rarr; {{ $intercambio->usuarioReceptor?->nombres ?? 'Sin receptor' }}
                         </p>
                     </div>
@@ -64,6 +149,9 @@
                     </span>
                 </div>
             </div>
+
+            {{-- Datos ocultos para copiar --}}
+            <div id="data-intercambio" style="display:none">{{ $txtIntercambio }}</div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -181,6 +269,260 @@
                         <h2 class="font-semibold text-gray-800 mb-2">Mensaje inicial</h2>
                         <p class="text-sm text-gray-600 italic">"{{ $intercambio->mensaje_inicial }}"</p>
                     </div>
+                    @endif
+
+                    {{-- Direcciones de Envío --}}
+                    @if($dirEmisor || $dirReceptor)
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <h2 class="font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Direcciones de Envío
+                            </h2>
+                            {!! btnCopiar('direcciones', 'direcciones de envío') !!}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Emisor --}}
+                            <div class="bg-orange-50/10 border border-orange-100/50 rounded-xl p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 mb-3 inline-block">Emisor (Recibe Solicitado)</span>
+                                @if($dirEmisor)
+                                    <dl class="space-y-2 text-xs text-gray-700">
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Calle / Dirección</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirEmisor->calle }}@if($dirEmisor->N_casa_edificio) #{{ $dirEmisor->N_casa_edificio }}@endif @if($dirEmisor->apto), Apto {{ $dirEmisor->apto }}@endif</dd>
+                                        </div>
+                                        @if($dirEmisor->sector)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Sector</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirEmisor->sector }}</dd>
+                                        </div>
+                                        @endif
+                                        <div class="grid grid-cols-2 gap-2">
+                                            @if($dirEmisor->municipio)
+                                            <div>
+                                                <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Municipio</dt>
+                                                <dd class="font-medium mt-0.5 text-gray-900">{{ $dirEmisor->municipio->municipio ?? $dirEmisor->id_municipio }}</dd>
+                                            </div>
+                                            @endif
+                                            @if($dirEmisor->provincia)
+                                            <div>
+                                                <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Provincia</dt>
+                                                <dd class="font-medium mt-0.5 text-gray-900">{{ $dirEmisor->provincia->provincia ?? $dirEmisor->id_provincia }}</dd>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @if($dirEmisor->telefono_contacto)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Teléfono de contacto</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirEmisor->telefono_contacto }}</dd>
+                                        </div>
+                                        @endif
+                                    </dl>
+                                @else
+                                    <p class="text-xs text-gray-400">Sin dirección registrada</p>
+                                @endif
+                            </div>
+
+                            {{-- Receptor --}}
+                            <div class="bg-purple-50/10 border border-purple-100/50 rounded-xl p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 mb-3 inline-block">Receptor (Recibe Ofrecidos)</span>
+                                @if($dirReceptor)
+                                    <dl class="space-y-2 text-xs text-gray-700">
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Calle / Dirección</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirReceptor->calle }}@if($dirReceptor->N_casa_edificio) #{{ $dirReceptor->N_casa_edificio }}@endif @if($dirReceptor->apto), Apto {{ $dirReceptor->apto }}@endif</dd>
+                                        </div>
+                                        @if($dirReceptor->sector)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Sector</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirReceptor->sector }}</dd>
+                                        </div>
+                                        @endif
+                                        <div class="grid grid-cols-2 gap-2">
+                                            @if($dirReceptor->municipio)
+                                            <div>
+                                                <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Municipio</dt>
+                                                <dd class="font-medium mt-0.5 text-gray-900">{{ $dirReceptor->municipio->municipio ?? $dirReceptor->id_municipio }}</dd>
+                                            </div>
+                                            @endif
+                                            @if($dirReceptor->provincia)
+                                            <div>
+                                                <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Provincia</dt>
+                                                <dd class="font-medium mt-0.5 text-gray-900">{{ $dirReceptor->provincia->provincia ?? $dirReceptor->id_provincia }}</dd>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @if($dirReceptor->telefono_contacto)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Teléfono de contacto</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-900">{{ $dirReceptor->telefono_contacto }}</dd>
+                                        </div>
+                                        @endif
+                                    </dl>
+                                @else
+                                    <p class="text-xs text-gray-400">Sin dirección registrada</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @php
+                        $txtDirecciones  = "Direcciones de Envío — Intercambio #{$intercambio->id_negociacion}\n\n";
+                        if ($dirEmisor) {
+                            $txtDirecciones .= "[Emisor (Recibe Solicitado)]\n";
+                            $txtDirecciones .= "Calle: {$dirEmisor->calle}" . ($dirEmisor->N_casa_edificio ? " #{$dirEmisor->N_casa_edificio}" : '') . ($dirEmisor->apto ? ", Apto {$dirEmisor->apto}" : '') . "\n";
+                            $txtDirecciones .= "Sector: " . ($dirEmisor->sector ?? 'N/A') . "\n";
+                            $txtDirecciones .= "Municipio: " . ($dirEmisor->municipio->municipio ?? $dirEmisor->id_municipio) . "\n";
+                            $txtDirecciones .= "Provincia: " . ($dirEmisor->provincia->provincia ?? $dirEmisor->id_provincia) . "\n";
+                            $txtDirecciones .= "Tel. contacto: " . ($dirEmisor->telefono_contacto ?? 'N/A') . "\n\n";
+                        }
+                        if ($dirReceptor) {
+                            $txtDirecciones .= "[Receptor (Recibe Ofrecidos)]\n";
+                            $txtDirecciones .= "Calle: {$dirReceptor->calle}" . ($dirReceptor->N_casa_edificio ? " #{$dirReceptor->N_casa_edificio}" : '') . ($dirReceptor->apto ? ", Apto {$dirReceptor->apto}" : '') . "\n";
+                            $txtDirecciones .= "Sector: " . ($dirReceptor->sector ?? 'N/A') . "\n";
+                            $txtDirecciones .= "Municipio: " . ($dirReceptor->municipio->municipio ?? $dirReceptor->id_municipio) . "\n";
+                            $txtDirecciones .= "Provincia: " . ($dirReceptor->provincia->provincia ?? $dirReceptor->id_provincia) . "\n";
+                            $txtDirecciones .= "Tel. contacto: " . ($dirReceptor->telefono_contacto ?? 'N/A') . "\n";
+                        }
+                    @endphp
+                    <div id="data-direcciones" style="display:none">{{ $txtDirecciones }}</div>
+                    @endif
+
+                    {{-- Información de Pago de Envíos --}}
+                    @php
+                        $pagoEmisorObj = $intercambio->pagoEnvios->firstWhere('id_user', $intercambio->usuario_emisor_id);
+                        $pagoReceptorObj = $intercambio->pagoEnvios->firstWhere('id_user', $intercambio->usuario_receptor_id);
+                    @endphp
+                    @if($pagoEmisorObj || $pagoReceptorObj)
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <h2 class="font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                Información de Pago de Envíos
+                            </h2>
+                            {!! btnCopiar('pagos_envio', 'información de pagos') !!}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Emisor Pago --}}
+                            <div class="bg-orange-50/10 border border-orange-100/50 rounded-xl p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 mb-3 inline-block">Pago del Emisor</span>
+                                @if($pagoEmisorObj)
+                                    <dl class="space-y-2 text-xs text-gray-700">
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Estado</dt>
+                                            <dd class="font-semibold mt-0.5">
+                                                <span class="inline-flex px-2 py-0.5 rounded text-[10px] {{ $pagoEmisorObj->estado === 'pagado' || $pagoEmisorObj->estado === 'pagado_pull' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                                    {{ ucfirst($pagoEmisorObj->estado) }}
+                                                </span>
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Monto</dt>
+                                            <dd class="font-semibold mt-0.5 text-gray-900 font-bold">RD$ {{ number_format($pagoEmisorObj->monto, 2) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Método / Canal</dt>
+                                            <dd class="font-medium mt-0.5 uppercase text-gray-800">{{ $pagoEmisorObj->tipo_pago === 'pull' ? 'Descuento de Pull (Servicios)' : 'Tarjeta de Crédito' }}</dd>
+                                        </div>
+                                        @if($pagoEmisorObj->transaction_id)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">ID Transacción</dt>
+                                            <dd class="font-mono mt-0.5 text-gray-600 break-all">{{ $pagoEmisorObj->transaction_id }}</dd>
+                                        </div>
+                                        @endif
+                                        @if($pagoEmisorObj->approval_code)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Autorización</dt>
+                                            <dd class="font-mono font-medium mt-0.5 text-gray-800">{{ $pagoEmisorObj->approval_code }}</dd>
+                                        </div>
+                                        @endif
+                                        @if($pagoEmisorObj->tarjeta)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Tarjeta</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-800">**** {{ $pagoEmisorObj->tarjeta->last4 }} ({{ strtoupper($pagoEmisorObj->tarjeta->tipo_tarjeta) }})</dd>
+                                        </div>
+                                        @endif
+                                    </dl>
+                                @else
+                                    <p class="text-xs text-gray-400">Pago pendiente / No registrado</p>
+                                @endif
+                            </div>
+
+                            {{-- Receptor Pago --}}
+                            <div class="bg-purple-50/10 border border-purple-100/50 rounded-xl p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 mb-3 inline-block">Pago del Receptor</span>
+                                @if($pagoReceptorObj)
+                                    <dl class="space-y-2 text-xs text-gray-700">
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Estado</dt>
+                                            <dd class="font-semibold mt-0.5">
+                                                <span class="inline-flex px-2 py-0.5 rounded text-[10px] {{ $pagoReceptorObj->estado === 'pagado' || $pagoReceptorObj->estado === 'pagado_pull' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                                    {{ ucfirst($pagoReceptorObj->estado) }}
+                                                </span>
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Monto</dt>
+                                            <dd class="font-semibold mt-0.5 text-gray-900 font-bold">RD$ {{ number_format($pagoReceptorObj->monto, 2) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Método / Canal</dt>
+                                            <dd class="font-medium mt-0.5 uppercase text-gray-800">{{ $pagoReceptorObj->tipo_pago === 'pull' ? 'Descuento de Pull (Servicios)' : 'Tarjeta de Crédito' }}</dd>
+                                        </div>
+                                        @if($pagoReceptorObj->transaction_id)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">ID Transacción</dt>
+                                            <dd class="font-mono mt-0.5 text-gray-600 break-all">{{ $pagoReceptorObj->transaction_id }}</dd>
+                                        </div>
+                                        @endif
+                                        @if($pagoReceptorObj->approval_code)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Autorización</dt>
+                                            <dd class="font-mono font-medium mt-0.5 text-gray-800">{{ $pagoReceptorObj->approval_code }}</dd>
+                                        </div>
+                                        @endif
+                                        @if($pagoReceptorObj->tarjeta)
+                                        <div>
+                                            <dt class="text-[10px] text-gray-400 uppercase tracking-wide">Tarjeta</dt>
+                                            <dd class="font-medium mt-0.5 text-gray-800">**** {{ $pagoReceptorObj->tarjeta->last4 }} ({{ strtoupper($pagoReceptorObj->tarjeta->tipo_tarjeta) }})</dd>
+                                        </div>
+                                        @endif
+                                    </dl>
+                                @else
+                                    <p class="text-xs text-gray-400">Pago pendiente / No registrado</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @php
+                        $txtPagos  = "Información de Pagos — Intercambio #{$intercambio->id_negociacion}\n\n";
+                        if ($pagoEmisorObj) {
+                            $txtPagos .= "[Pago Emisor]\n";
+                            $txtPagos .= "Estado: " . ucfirst($pagoEmisorObj->estado) . "\n";
+                            $txtPagos .= "Monto: RD$ " . number_format($pagoEmisorObj->monto, 2) . "\n";
+                            $txtPagos .= "Canal: " . ($pagoEmisorObj->tipo_pago === 'pull' ? 'Descuento de Pull' : 'Tarjeta') . "\n";
+                            if ($pagoEmisorObj->transaction_id) $txtPagos .= "Transacción ID: {$pagoEmisorObj->transaction_id}\n";
+                            if ($pagoEmisorObj->approval_code) $txtPagos .= "Autorización: {$pagoEmisorObj->approval_code}\n";
+                            $txtPagos .= "\n";
+                        }
+                        if ($pagoReceptorObj) {
+                            $txtPagos .= "[Pago Receptor]\n";
+                            $txtPagos .= "Estado: " . ucfirst($pagoReceptorObj->estado) . "\n";
+                            $txtPagos .= "Monto: RD$ " . number_format($pagoReceptorObj->monto, 2) . "\n";
+                            $txtPagos .= "Canal: " . ($pagoReceptorObj->tipo_pago === 'pull' ? 'Descuento de Pull' : 'Tarjeta') . "\n";
+                            if ($pagoReceptorObj->transaction_id) $txtPagos .= "Transacción ID: {$pagoReceptorObj->transaction_id}\n";
+                            if ($pagoReceptorObj->approval_code) $txtPagos .= "Autorización: {$pagoReceptorObj->approval_code}\n";
+                        }
+                    @endphp
+                    <div id="data-pagos_envio" style="display:none">{{ $txtPagos }}</div>
                     @endif
 
                 </div>
@@ -505,6 +847,10 @@
     </div>
 </div>
 
+<div id="copyToast" style="display:none;position:fixed;bottom:24px;right:24px;background:#1f2937;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)">
+    ✓ Copiado al portapapeles
+</div>
+
 @endsection
 
 @push('scripts')
@@ -541,5 +887,48 @@
             if (e.target === this) this.classList.add('hidden');
         });
     });
+
+    function copiarSeccion(id) {
+        const el = document.getElementById('data-' + id);
+        if (!el) return;
+
+        const texto = el.innerText.trim();
+
+        navigator.clipboard.writeText(texto).then(function () {
+            mostrarToast();
+            // Feedback visual en el botón
+            const btn = document.getElementById('btn-' + id);
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Copiado';
+                btn.style.color = '#16a34a';
+                btn.style.borderColor = '#bbf7d0';
+                btn.style.background = '#f0fdf4';
+                setTimeout(function () {
+                    btn.innerHTML = orig;
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                }, 2000);
+            }
+        }).catch(function () {
+            // Fallback para navegadores sin clipboard API
+            const ta = document.createElement('textarea');
+            ta.value = texto;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            mostrarToast();
+        });
+    }
+
+    function mostrarToast() {
+        const toast = document.getElementById('copyToast');
+        toast.style.display = 'block';
+        setTimeout(function () { toast.style.display = 'none'; }, 2000);
+    }
 </script>
 @endpush

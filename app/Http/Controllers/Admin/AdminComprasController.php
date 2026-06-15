@@ -189,9 +189,13 @@ class AdminComprasController extends Controller
         $intercambio = Negociacion::with([
             'item.imagenes',
             'item.usuario',
-            'usuario',
-            'usuarioReceptor',
+            'usuario.direcciones.provincia',
+            'usuario.direcciones.municipio',
+            'usuarioReceptor.direcciones.provincia',
+            'usuarioReceptor.direcciones.municipio',
             'trazabilidad.admin',
+            'pagoEnvios.tarjeta',
+            'pagoEnvios.usuario',
         ])->findOrFail($id);
 
         $itemsOfrecidos = collect();
