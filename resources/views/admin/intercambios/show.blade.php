@@ -70,13 +70,13 @@
                 {{-- Columna izquierda --}}
                 <div class="lg:col-span-2 space-y-5">
 
-                    {{-- Flujo de Intercambio (Items vs Items) --}}
+                    {{-- Flujo de Intercambio (Artículos / Servicios) --}}
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h2 class="font-bold text-gray-950 text-base mb-6 flex items-center gap-2">
                             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                             </svg>
-                            Flujo de Intercambio (Items vs Items)
+                            Flujo de Intercambio (Artículos / Servicios)
                         </h2>
                         
                         <div class="flex flex-col md:flex-row items-stretch gap-6 justify-between">
@@ -87,7 +87,9 @@
                                 $imgSol = $itemSolicitado?->imagenes?->first();
                             @endphp
                             <div class="w-full md:w-[45%] bg-purple-50/20 border border-purple-100 rounded-xl p-4 flex flex-col items-center text-center shadow-sm">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 mb-3">Artículo Solicitado</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 mb-3">
+                                    {{ $itemSolicitado && $itemSolicitado->id_categoria_item == 29 ? 'Servicio Solicitado' : 'Artículo Solicitado' }}
+                                </span>
                                 <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 mb-3 shadow-sm flex-shrink-0">
                                     @if($imgSol)
                                         <img src="{{ \App\Helpers\ImageHelper::urlMedia($imgSol->ruta, $imgSol->nombre) }}"
@@ -102,7 +104,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <h3 class="font-bold text-gray-950 text-sm line-clamp-2 min-h-[40px]">{{ $itemSolicitado?->item ?? 'Artículo eliminado' }}</h3>
+                                <h3 class="font-bold text-gray-950 text-sm line-clamp-2 min-h-[40px]">{{ $itemSolicitado?->item ?? 'Artículo/Servicio eliminado' }}</h3>
                                 <div class="text-[11px] text-gray-500 mt-2 space-y-0.5 text-left w-full border-t border-purple-100/50 pt-2">
                                     <p>Dueño: <span class="font-medium text-gray-700">{{ $intercambio->usuarioReceptor?->nombres ?? 'N/A' }}</span></p>
                                     <p>Categoría: <span class="font-medium text-gray-700">{{ $itemSolicitado?->categoria?->categoria ?? 'N/A' }}</span></p>
@@ -122,7 +124,13 @@
 
                             {{-- LADO EMISOR (Artículos Ofrecidos) --}}
                             <div class="w-full md:w-[45%] bg-orange-50/20 border border-orange-100 rounded-xl p-4 flex flex-col items-center text-center shadow-sm">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 mb-3">Artículos Ofrecidos</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 mb-3">
+                                    @if($itemsOfrecidos->count() > 1)
+                                        {{ $itemsOfrecidos->contains('id_categoria_item', 29) ? 'Servicios Ofrecidos' : 'Artículos Ofrecidos' }}
+                                    @else
+                                        {{ $itemsOfrecidos->contains('id_categoria_item', 29) ? 'Servicio Ofrecido' : 'Artículo Ofrecido' }}
+                                    @endif
+                                </span>
                                 @if($itemsOfrecidos->isEmpty())
                                     <div class="flex flex-col items-center justify-center h-full py-8 text-gray-400">
                                         <svg class="w-10 h-10 mb-2 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,11 +139,11 @@
                                         <p class="text-xs">Solo oferta económica</p>
                                     </div>
                                 @else
-                                    <div class="w-full space-y-4">
+                                    <div class="w-full space-y-6">
                                         @foreach($itemsOfrecidos as $io)
                                             @php $imgIo = $io->imagenes?->first(); @endphp
-                                            <div class="flex items-center gap-3 border-b border-orange-100/30 pb-3 last:border-b-0 last:pb-0 text-left">
-                                                <div class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+                                            <div class="flex flex-col items-center text-center w-full">
+                                                <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 mb-3 shadow-sm flex-shrink-0">
                                                     @if($imgIo)
                                                         <img src="{{ \App\Helpers\ImageHelper::urlMedia($imgIo->ruta, $imgIo->nombre) }}"
                                                              alt="{{ $io->item }}"
@@ -143,18 +151,22 @@
                                                              onerror="this.onerror=null;this.src='/imgs/defaults/producto_default.svg'">
                                                     @else
                                                         <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                             </svg>
                                                         </div>
                                                     @endif
                                                 </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <h4 class="font-bold text-gray-950 text-xs truncate">{{ $io->item }}</h4>
-                                                    <p class="text-[10px] text-gray-500">Dueño: <span class="font-medium text-gray-700">{{ $intercambio->usuario?->nombres ?? 'N/A' }}</span></p>
-                                                    <p class="text-[11px] font-bold text-primary mt-0.5">RD$ {{ number_format($io->valor ?? 0, 2) }}</p>
+                                                <h3 class="font-bold text-gray-950 text-sm line-clamp-2 min-h-[40px]">{{ $io->item }}</h3>
+                                                <div class="text-[11px] text-gray-500 mt-2 space-y-0.5 text-left w-full border-t border-orange-100/50 pt-2">
+                                                    <p>Dueño: <span class="font-medium text-gray-700">{{ $intercambio->usuario?->nombres ?? 'N/A' }}</span></p>
+                                                    <p>Categoría: <span class="font-medium text-gray-700">{{ $io->categoria?->categoria ?? 'N/A' }}</span></p>
                                                 </div>
+                                                <p class="text-sm font-extrabold text-primary mt-3">RD$ {{ number_format($io->valor ?? 0, 2) }}</p>
                                             </div>
+                                            @if(!$loop->last)
+                                                <div class="border-t border-orange-100/30 my-4 w-full"></div>
+                                            @endif
                                         @endforeach
                                     </div>
                                 @endif
