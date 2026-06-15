@@ -32,7 +32,7 @@
                 };
             @endphp
             <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 font-mono text-xs text-gray-700">#{{ $neg->id_negociacion }}</td>
+                <td class="px-4 py-3 font-mono text-xs text-gray-700">#{{ \App\Helpers\HashIdHelper::encode($neg->id_negociacion) }}</td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
@@ -77,7 +77,7 @@
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <a href="{{ route('admin.intercambios.show', $neg->id_negociacion) }}"
+                    <a href="{{ route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
                        class="inline-flex items-center gap-1 text-primary hover:text-hoverPrimary text-xs font-medium transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

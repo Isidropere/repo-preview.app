@@ -186,6 +186,16 @@ class AdminComprasController extends Controller
 
     public function showIntercambio($id)
     {
+        if (is_numeric($id)) {
+            $hashed = \App\Helpers\HashIdHelper::encode((int)$id);
+            return redirect()->route('admin.intercambios.show', $hashed);
+        }
+
+        $realId = \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
         $intercambio = Negociacion::with([
             'item.imagenes',
             'item.usuario',
@@ -196,7 +206,7 @@ class AdminComprasController extends Controller
             'trazabilidad.admin',
             'pagoEnvios.tarjeta',
             'pagoEnvios.usuario',
-        ])->findOrFail($id);
+        ])->findOrFail($realId);
 
         $itemsOfrecidos = collect();
         if (!empty($intercambio->items_ofrecidos)) {
@@ -217,7 +227,12 @@ class AdminComprasController extends Controller
             'tracking_code' => 'required|string|max:100',
         ]);
 
-        $intercambio = Negociacion::findOrFail($id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
+        $intercambio = Negociacion::findOrFail($realId);
 
         // Construir URL de rastreo
         $baseUrl = rtrim(env('TRACKING_BASE_URL', 'https://tracking.transporteblanco.do/rastreo'), '/');
@@ -250,7 +265,7 @@ class AdminComprasController extends Controller
             event(new NuevaNotificacion($texto, $receptor->id));
         }
 
-        return redirect()->route('admin.intercambios.show', $id)
+        return redirect()->route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($realId))
             ->with('success', 'Tracking del intercambio enviado correctamente.');
     }
 
@@ -261,11 +276,16 @@ class AdminComprasController extends Controller
             'nota'   => 'nullable|string|max:500',
         ]);
 
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
         $this->adminComprasService->actualizarEstadoIntercambio(
-            $id, $request->estado, $request->nota, auth()->id()
+            $realId, $request->estado, $request->nota, auth()->id()
         );
 
-        return redirect()->route('admin.intercambios.show', $id)
+        return redirect()->route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($realId))
             ->with('success', 'Estado del intercambio actualizado.');
     }
 

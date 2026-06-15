@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Detalle de Intercambio #' . $intercambio->id_negociacion)
+@section('title', 'Detalle de Intercambio #' . \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion))
 
 {{-- Macro: botón copiar pequeño --}}
 @php
@@ -68,8 +68,8 @@ function btnCopiar(string $id, string $label = ''): string {
                 $emisor = $intercambio->usuario;
                 $receptor = $intercambio->usuarioReceptor;
                 $itemSolicitado = $intercambio->item;
-
-                $txtIntercambio  = "Detalle de Intercambio #{$intercambio->id_negociacion}\n";
+                $hashedId = \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion);
+                $txtIntercambio  = "Detalle de Intercambio #{$hashedId}\n";
                 $txtIntercambio .= "Emisor: " . ($emisor?->nombres ?? '') . " " . ($emisor?->apellidos ?? '') . " (" . ($emisor?->email ?? 'N/A') . ")\n";
                 $txtIntercambio .= "Receptor: " . ($receptor?->nombres ?? '') . " " . ($receptor?->apellidos ?? '') . " (" . ($receptor?->email ?? 'N/A') . ")\n";
                 $txtIntercambio .= "Fecha de creación: " . ($intercambio->fecha_creacion ? \Carbon\Carbon::parse($intercambio->fecha_creacion)->format('d/m/Y H:i') : 'N/A') . "\n";
@@ -119,7 +119,7 @@ function btnCopiar(string $id, string $label = ''): string {
                     $txtIntercambio .= $dirReceptor->telefono_contacto ? "Tel. contacto: {$dirReceptor->telefono_contacto}\n" : '';
                 }
 
-                $emailSubject = "Detalle de Intercambio #{$intercambio->id_negociacion}";
+                $emailSubject = "Detalle de Intercambio #{$hashedId}";
                 $mailtoUrl = "mailto:?subject=" . rawurlencode($emailSubject) . "&body=" . rawurlencode($txtIntercambio);
             @endphp
 
@@ -129,7 +129,7 @@ function btnCopiar(string $id, string $label = ''): string {
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
                             <h1 class="text-xl font-bold text-gray-950 text-lg sm:text-xl">
-                                Intercambio <span class="font-mono text-base">#{{ $intercambio->id_negociacion }}</span>
+                                Intercambio <span class="font-mono text-base">#{{ $hashedId }}</span>
                             </h1>
                             <a href="{!! $mailtoUrl !!}"
                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
@@ -288,7 +288,10 @@ function btnCopiar(string $id, string $label = ''): string {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {{-- Emisor --}}
                             <div class="bg-orange-50/10 border border-orange-100/50 rounded-xl p-4">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 mb-3 inline-block">Emisor (Recibe Solicitado)</span>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700">Emisor (Recibe Solicitado)</span>
+                                    {!! btnCopiar('dir_emisor', 'dirección emisor') !!}
+                                </div>
                                 @if($dirEmisor)
                                     <dl class="space-y-2 text-xs text-gray-700">
                                         <div>
@@ -329,7 +332,10 @@ function btnCopiar(string $id, string $label = ''): string {
 
                             {{-- Receptor --}}
                             <div class="bg-purple-50/10 border border-purple-100/50 rounded-xl p-4">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 mb-3 inline-block">Receptor (Recibe Ofrecidos)</span>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700">Receptor (Recibe Ofrecidos)</span>
+                                    {!! btnCopiar('dir_receptor', 'dirección receptor') !!}
+                                </div>
                                 @if($dirReceptor)
                                     <dl class="space-y-2 text-xs text-gray-700">
                                         <div>
@@ -371,25 +377,36 @@ function btnCopiar(string $id, string $label = ''): string {
                     </div>
                     
                     @php
-                        $txtDirecciones  = "Direcciones de Envío — Intercambio #{$intercambio->id_negociacion}\n\n";
+                        $hashedId = \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion);
+                        $txtDirecciones  = "Direcciones de Envío — Intercambio #{$hashedId}\n\n";
+                        
+                        $txtDirEmisor = "";
                         if ($dirEmisor) {
-                            $txtDirecciones .= "[Emisor (Recibe Solicitado)]\n";
-                            $txtDirecciones .= "Calle: {$dirEmisor->calle}" . ($dirEmisor->N_casa_edificio ? " #{$dirEmisor->N_casa_edificio}" : '') . ($dirEmisor->apto ? ", Apto {$dirEmisor->apto}" : '') . "\n";
-                            $txtDirecciones .= "Sector: " . ($dirEmisor->sector ?? 'N/A') . "\n";
-                            $txtDirecciones .= "Municipio: " . ($dirEmisor->municipio->municipio ?? $dirEmisor->id_municipio) . "\n";
-                            $txtDirecciones .= "Provincia: " . ($dirEmisor->provincia->provincia ?? $dirEmisor->id_provincia) . "\n";
-                            $txtDirecciones .= "Tel. contacto: " . ($dirEmisor->telefono_contacto ?? 'N/A') . "\n\n";
+                            $txtDirEmisor .= "[Emisor (Recibe Solicitado)]\n";
+                            $txtDirEmisor .= "Calle: {$dirEmisor->calle}" . ($dirEmisor->N_casa_edificio ? " #{$dirEmisor->N_casa_edificio}" : '') . ($dirEmisor->apto ? ", Apto {$dirEmisor->apto}" : '') . "\n";
+                            $txtDirEmisor .= "Sector: " . ($dirEmisor->sector ?? 'N/A') . "\n";
+                            $txtDirEmisor .= "Municipio: " . ($dirEmisor->municipio->municipio ?? $dirEmisor->id_municipio) . "\n";
+                            $txtDirEmisor .= "Provincia: " . ($dirEmisor->provincia->provincia ?? $dirEmisor->id_provincia) . "\n";
+                            $txtDirEmisor .= "Tel. contacto: " . ($dirEmisor->telefono_contacto ?? 'N/A');
+                            
+                            $txtDirecciones .= $txtDirEmisor . "\n\n";
                         }
+                        
+                        $txtDirReceptor = "";
                         if ($dirReceptor) {
-                            $txtDirecciones .= "[Receptor (Recibe Ofrecidos)]\n";
-                            $txtDirecciones .= "Calle: {$dirReceptor->calle}" . ($dirReceptor->N_casa_edificio ? " #{$dirReceptor->N_casa_edificio}" : '') . ($dirReceptor->apto ? ", Apto {$dirReceptor->apto}" : '') . "\n";
-                            $txtDirecciones .= "Sector: " . ($dirReceptor->sector ?? 'N/A') . "\n";
-                            $txtDirecciones .= "Municipio: " . ($dirReceptor->municipio->municipio ?? $dirReceptor->id_municipio) . "\n";
-                            $txtDirecciones .= "Provincia: " . ($dirReceptor->provincia->provincia ?? $dirReceptor->id_provincia) . "\n";
-                            $txtDirecciones .= "Tel. contacto: " . ($dirReceptor->telefono_contacto ?? 'N/A') . "\n";
+                            $txtDirReceptor .= "[Receptor (Recibe Ofrecidos)]\n";
+                            $txtDirReceptor .= "Calle: {$dirReceptor->calle}" . ($dirReceptor->N_casa_edificio ? " #{$dirReceptor->N_casa_edificio}" : '') . ($dirReceptor->apto ? ", Apto {$dirReceptor->apto}" : '') . "\n";
+                            $txtDirReceptor .= "Sector: " . ($dirReceptor->sector ?? 'N/A') . "\n";
+                            $txtDirReceptor .= "Municipio: " . ($dirReceptor->municipio->municipio ?? $dirReceptor->id_municipio) . "\n";
+                            $txtDirReceptor .= "Provincia: " . ($dirReceptor->provincia->provincia ?? $dirReceptor->id_provincia) . "\n";
+                            $txtDirReceptor .= "Tel. contacto: " . ($dirReceptor->telefono_contacto ?? 'N/A');
+                            
+                            $txtDirecciones .= $txtDirReceptor . "\n";
                         }
                     @endphp
                     <div id="data-direcciones" style="display:none">{{ $txtDirecciones }}</div>
+                    <div id="data-dir_emisor" style="display:none">{{ $txtDirEmisor }}</div>
+                    <div id="data-dir_receptor" style="display:none">{{ $txtDirReceptor }}</div>
                     @endif
 
                     {{-- Información de Pago de Envíos --}}
@@ -503,7 +520,8 @@ function btnCopiar(string $id, string $label = ''): string {
                     </div>
                     
                     @php
-                        $txtPagos  = "Información de Pagos — Intercambio #{$intercambio->id_negociacion}\n\n";
+                        $hashedId = \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion);
+                        $txtPagos  = "Información de Pagos — Intercambio #{$hashedId}\n\n";
                         if ($pagoEmisorObj) {
                             $txtPagos .= "[Pago Emisor]\n";
                             $txtPagos .= "Estado: " . ucfirst($pagoEmisorObj->estado) . "\n";
@@ -575,7 +593,7 @@ function btnCopiar(string $id, string $label = ''): string {
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <h2 class="font-semibold text-gray-800 mb-4">Actualizar Estado</h2>
                         <form id="formEstado" method="POST"
-                              action="{{ route('admin.intercambios.estado', $intercambio->id_negociacion) }}">
+                              action="{{ route('admin.intercambios.estado', \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion)) }}">
                             @csrf
                             <div class="space-y-3">
                                 <div>
@@ -716,7 +734,7 @@ function btnCopiar(string $id, string $label = ''): string {
                 </svg>
             </button>
         </div>
-        <form method="POST" action="{{ route('admin.intercambios.tracking', $intercambio->id_negociacion) }}"
+        <form method="POST" action="{{ route('admin.intercambios.tracking', \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion)) }}"
               id="formTracking">
             @csrf
             <div class="px-6 py-5 space-y-4">
