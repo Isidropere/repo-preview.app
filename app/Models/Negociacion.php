@@ -17,7 +17,7 @@ class Negociacion extends Model
         'receptor_item_id', 'emisor_paquete_id', 'usuario_emisor_id', 'usuario_receptor_id',
         'mensaje_inicial', 'monto_oferta', 'monto_contra_oferta', 'estado', 'fecha_creacion',
         'emisor_confirmado', 'receptor_confirmado', 'items_ofrecidos', 'pago_emisor', 'pago_receptor',
-        'modo_entrega', 'entrega_confirmada', 'id_color',
+        'modo_entrega', 'entrega_confirmada', 'id_color', 'tracking_code', 'tracking_url',
     ];
 
     protected $casts = [
@@ -50,5 +50,11 @@ class Negociacion extends Model
     public function pagoEnvios()
     {
         return $this->hasMany(PagoEnvioIntercambio::class, 'id_negociacion', 'id_negociacion');
+    }
+
+    public function trazabilidad()
+    {
+        return $this->hasMany(NegociacionTrazabilidad::class, 'id_negociacion', 'id_negociacion')
+            ->orderBy('created_at', 'asc');
     }
 }

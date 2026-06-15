@@ -86,10 +86,25 @@ class AdminComprasService
     /**
      * Actualiza el estado de un intercambio.
      */
-    public function actualizarEstadoIntercambio(int $intercambioId, string $nuevoEstado): array
+    public function actualizarEstadoIntercambio(int $intercambioId, string $nuevoEstado, ?string $nota = null, ?int $adminId = null): array
     {
         $intercambio = Negociacion::findOrFail($intercambioId);
+        $estadoAnterior = $intercambio->estado;
+
+        if (in_array($nuevoEstado, ['cancelado', 'rechazado'])) {
+            app(\App\Services\NegociacionService::class)->restaurarStock($intercambio);
+        }
+
         $intercambio->update(['estado' => $nuevoEstado]);
+
+        // Registrar trazabilidad
+        \App\Models\NegociacionTrazabilidad::create([
+            'id_negociacion'  => $intercambioId,
+            'estado_anterior' => $estadoAnterior,
+            'estado_nuevo'    => $nuevoEstado,
+            'nota'            => $nota,
+            'id_admin'        => $adminId,
+        ]);
 
         return ['success' => true, 'message' => 'Estado del intercambio actualizado.'];
     }

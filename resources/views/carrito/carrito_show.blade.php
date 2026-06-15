@@ -92,7 +92,7 @@
                      alt="{{ $item->item->item }}" 
                      class="w-full h-full object-cover rounded-xl border" loading="lazy" width="128" height="128">
             @else
-                <img src="{{ asset('storage/imgs/producto_defaul.png') }}" 
+                <img src="{{ asset('imgs/defaults/producto_default.svg') }}" 
                      alt="Sin imagen" 
                      class="w-full h-full object-cover rounded-xl border" loading="lazy" width="128" height="128">
             @endif

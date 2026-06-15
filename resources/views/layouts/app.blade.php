@@ -775,6 +775,31 @@
 
     </script>
 
+<script>
+    // Global image error handler using capturing phase to catch errors on any <img> tag
+    window.addEventListener('error', function (event) {
+        var target = event.target;
+        if (target && target.tagName && target.tagName.toLowerCase() === 'img') {
+            if (!target.getAttribute('data-fallback-tried')) {
+                target.setAttribute('data-fallback-tried', 'true');
+                
+                var fallback = '/imgs/defaults/producto_default.svg';
+                var src = target.src || '';
+                var className = target.className || '';
+                
+                // profile / avatar / rounded-full
+                if (src.includes('perfil') || src.includes('profile') || src.includes('avatar') || className.includes('perfil') || className.includes('avatar') || className.includes('rounded-full')) {
+                    fallback = '/imgs/defaults/profile_default.svg';
+                } else if (src.includes('talento') || src.includes('servicio') || className.includes('talento') || className.includes('servicio')) {
+                    fallback = '/imgs/defaults/servicio_default.svg';
+                }
+                
+                target.src = fallback;
+            }
+        }
+    }, true); // capturing phase is crucial as error events do not bubble
+</script>
+
 @include('legal.partials.modal')
 
 @stack('scripts')

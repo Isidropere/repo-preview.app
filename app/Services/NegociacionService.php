@@ -64,7 +64,7 @@ class NegociacionService
         // Validar stock — Reinstaurado para todos los ítems (incluyendo servicios) por lógica de cobro
         $stock = $receptorItem->inventarios?->cantidad ?? 0;
         if ($stock <= 0) {
-            return $this->error('Este artículo está agotado y no se puede negociar.');
+            return $this->error('El artículo "' . $receptorItem->item . '" está agotado y no se puede negociar.');
         }
 
         // Validar que no exista negociación activa del mismo emisor por el mismo item
@@ -153,26 +153,12 @@ class NegociacionService
                     ->first();
 
                 if (!in_array($neg->estado, self::ESTADOS_ACEPTAR)) {
-                    throw new \RuntimeException('Estado ya cambió.');
+                     throw new \RuntimeException('Estado ya cambió.');
                 }
 
                 $neg->update(['estado' => 'aceptado']);
 
-                // Descontar inventario (Reinstaurado para todos los ítems por lógica de cobro)
-                $item = Item::with('inventarios')->find($neg->receptor_item_id);
-
-                if ($item && $item->inventarios && $item->inventarios->cantidad > 0) {
-                    $item->inventarios->cantidad -= 1;
-                    $item->inventarios->save();
-
-                    // Si el stock llegó a 0, cancelar otras negociaciones activas por este item
-                    if ($item->inventarios->cantidad <= 0) {
-                        Negociacion::where('receptor_item_id', $item->id_item)
-                            ->where('id_negociacion', '!=', $neg->id_negociacion)
-                            ->whereIn('estado', ['Inicial', 'contraoferta'])
-                            ->update(['estado' => 'cancelado']);
-                    }
-                }
+                $this->procesarReservaInventario($neg);
             });
 
             // Notificar al emisor que fue aceptado
@@ -210,17 +196,7 @@ class NegociacionService
                 if ($neg->estado !== 'contraoferta') throw new \RuntimeException('Estado ya cambió.');
                 $neg->update(['estado' => 'aceptado']);
 
-                $item = Item::with('inventarios')->find($neg->receptor_item_id);
-                if ($item && $item->inventarios && $item->inventarios->cantidad > 0) {
-                    $item->inventarios->cantidad -= 1;
-                    $item->inventarios->save();
-                    if ($item->inventarios->cantidad <= 0) {
-                        Negociacion::where('receptor_item_id', $item->id_item)
-                            ->where('id_negociacion', '!=', $neg->id_negociacion)
-                            ->whereIn('estado', ['Inicial', 'contraoferta'])
-                            ->update(['estado' => 'cancelado']);
-                    }
-                }
+                $this->procesarReservaInventario($neg);
             });
 
             $this->notificar($neg->usuario_receptor_id, "[Intercambio] El emisor aceptó tu contraoferta en el intercambio #{$neg->id_negociacion}. Confirma para continuar.");
@@ -231,6 +207,56 @@ class NegociacionService
         } catch (\Throwable $e) {
             Log::error('Error al aceptar contraoferta', ['id' => $negociacionId, 'error' => $e->getMessage()]);
             return $this->error('Error al procesar la aceptación.');
+        }
+    }
+
+    /**
+     * Valida y descuenta el inventario de todos los artículos involucrados en la negociación.
+     * Debe llamarse dentro de una transacción de base de datos.
+     */
+    private function procesarReservaInventario(Negociacion $neg): void
+    {
+        // 1. Validar y descontar stock del artículo solicitado (Receptor)
+        $receptorItem = Item::with('inventarios')->find($neg->receptor_item_id);
+        if (!$receptorItem || !$receptorItem->inventarios || $receptorItem->inventarios->cantidad <= 0) {
+            throw new \RuntimeException('El artículo solicitado "' . $receptorItem->item . '" ya no tiene stock disponible.');
+        }
+
+        // 2. Validar stock de todos los artículos ofrecidos (Emisor)
+        $emisorItemsIds = $this->obtenerItemsOfrecidosIds($neg);
+        $emisorItems = [];
+        if (!empty($emisorItemsIds)) {
+            $emisorItems = Item::with('inventarios')->whereIn('id_item', $emisorItemsIds)->get();
+            foreach ($emisorItems as $eItem) {
+                if ($eItem->inventarios && $eItem->inventarios->cantidad <= 0) {
+                    throw new \RuntimeException("El artículo ofrecido \"{$eItem->item}\" está agotado y no se puede negociar.");
+                }
+            }
+        }
+
+        // 3. Descontar stock del artículo solicitado
+        $receptorItem->inventarios->cantidad -= 1;
+        $receptorItem->inventarios->save();
+
+        if ($receptorItem->inventarios->cantidad <= 0) {
+            Negociacion::where('receptor_item_id', $receptorItem->id_item)
+                ->where('id_negociacion', '!=', $neg->id_negociacion)
+                ->whereIn('estado', ['Inicial', 'contraoferta'])
+                ->update(['estado' => 'cancelado']);
+        }
+
+        // 4. Descontar stock de los artículos ofrecidos
+        foreach ($emisorItems as $eItem) {
+            if ($eItem->inventarios) {
+                $eItem->inventarios->cantidad -= 1;
+                $eItem->inventarios->save();
+
+                if ($eItem->inventarios->cantidad <= 0) {
+                    Negociacion::where('receptor_item_id', $eItem->id_item)
+                        ->whereIn('estado', ['Inicial', 'contraoferta'])
+                        ->update(['estado' => 'cancelado']);
+                }
+            }
         }
     }
 
@@ -748,8 +774,58 @@ class NegociacionService
     }
 
     // ───────────────────────────────────────────────────────
-    // Helpers privados
+    // Helpers privados y públicos
     // ───────────────────────────────────────────────────────
+
+    /**
+     * Obtiene todos los IDs de artículos ofrecidos por el emisor.
+     */
+    public function obtenerItemsOfrecidosIds(Negociacion $neg): array
+    {
+        $ids = [];
+        if (!empty($neg->items_ofrecidos) && is_array($neg->items_ofrecidos)) {
+            $ids = array_merge($ids, $neg->items_ofrecidos);
+        }
+        if ($neg->emisor_paquete_id) {
+            $packageItemIds = \App\Models\ItemOferta::where('id_paquete', $neg->emisor_paquete_id)
+                ->pluck('id_item')
+                ->toArray();
+            $ids = array_merge($ids, $packageItemIds);
+        }
+        return array_unique(array_filter($ids));
+    }
+
+    /**
+     * Restaura el stock de los artículos del Receptor y del Emisor cuando
+     * un intercambio es cancelado o rechazado y estaba en un estado que descontó stock.
+     */
+    public function restaurarStock(Negociacion $neg): void
+    {
+        if (!in_array($neg->estado, ['aceptado', 'en_envio'])) {
+            return;
+        }
+
+        DB::transaction(function () use ($neg) {
+            // Restaurar artículo solicitado (Receptor)
+            $receptorItem = Item::with('inventarios')->find($neg->receptor_item_id);
+            if ($receptorItem && $receptorItem->inventarios) {
+                $receptorItem->inventarios->cantidad += 1;
+                $receptorItem->inventarios->save();
+            }
+
+            // Restaurar artículos ofrecidos (Emisor)
+            $emisorItemsIds = $this->obtenerItemsOfrecidosIds($neg);
+            if (!empty($emisorItemsIds)) {
+                $emisorItems = Item::with('inventarios')->whereIn('id_item', $emisorItemsIds)->get();
+                foreach ($emisorItems as $eItem) {
+                    if ($eItem->inventarios) {
+                        $eItem->inventarios->cantidad += 1;
+                        $eItem->inventarios->save();
+                    }
+                }
+            }
+        });
+    }
 
     public function crearMensaje(int $emisorId, int $receptorId, ?int $itemId, ?int $paqueteId, string $texto): void
     {

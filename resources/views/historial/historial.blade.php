@@ -130,7 +130,7 @@
                         <div class="divide-y divide-gray-50">
                             @forelse($pago->pagoItems as $pi)
                             <div class="px-5 py-3 flex items-center gap-4">                            @php
-                                    $imgSrc = asset('imgs/producto_defaul.png');
+                                    $imgSrc = asset('imgs/defaults/producto_default.svg');
                                     if ($pi->imagen_url) {
                                         if (str_starts_with($pi->imagen_url, 'http')) {
                                             $imgSrc = $pi->imagen_url;

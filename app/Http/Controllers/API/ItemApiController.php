@@ -187,7 +187,7 @@ class ItemApiController extends Controller
     /** GET /api/mis-items — artículos del usuario autenticado */
     public function userItems(Request $request)
     {
-        $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+        $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios:id_item,cantidad'])
             ->withCount('views')
             ->where('id_user', $request->user()->id)
             ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item')

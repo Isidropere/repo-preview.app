@@ -22,12 +22,16 @@ class NegociacionPagoRedirectController extends Controller
     /**
      * Inicia el flujo de redirección a AZUL para pagar el envío de una negociación desde la Web.
      */
-    public function iniciarPagoWeb(int $id_negociacion)
+    public function iniciarPagoWeb($id_negociacion)
     {
         $userId = auth()->id();
-        Log::info('[Negociacion Redirect Web] Iniciando pago de envío', ['user_id' => $userId, 'id_negociacion' => $id_negociacion]);
+        $realId = is_numeric($id_negociacion) ? (int)$id_negociacion : \App\Helpers\HashIdHelper::decode($id_negociacion);
+        if (!$realId) {
+            return redirect()->route('negociaciones.mis')->with('error', 'No se encontró la negociación especificada.');
+        }
+        Log::info('[Negociacion Redirect Web] Iniciando pago de envío', ['user_id' => $userId, 'id_negociacion' => $realId]);
 
-        $neg = Negociacion::with(['item'])->find($id_negociacion);
+        $neg = Negociacion::with(['item'])->find($realId);
         if (!$neg) {
             return redirect()->route('negociaciones.mis')->with('error', 'No se encontró la negociación especificada.');
         }
@@ -42,11 +46,15 @@ class NegociacionPagoRedirectController extends Controller
     /**
      * Inicia el flujo de redirección a AZUL para pagar el envío desde la App Móvil (sin requerir sesión activa).
      */
-    public function iniciarPagoMovil(int $id_negociacion, Request $request)
+    public function iniciarPagoMovil($id_negociacion, Request $request)
     {
-        Log::info('[Negociacion Redirect Móvil] Iniciando pago de envío móvil', ['id_negociacion' => $id_negociacion]);
+        $realId = is_numeric($id_negociacion) ? (int)$id_negociacion : \App\Helpers\HashIdHelper::decode($id_negociacion);
+        if (!$realId) {
+            return response('Negociación no encontrada.', 404);
+        }
+        Log::info('[Negociacion Redirect Móvil] Iniciando pago de envío móvil', ['id_negociacion' => $realId]);
 
-        $neg = Negociacion::with(['item'])->find($id_negociacion);
+        $neg = Negociacion::with(['item'])->find($realId);
         if (!$neg) {
             return response('Negociación no encontrada.', 404);
         }
@@ -81,7 +89,7 @@ class NegociacionPagoRedirectController extends Controller
         // 1. Obtener dirección
         $direccion = \App\Models\Direcciones::where('id_user', $userId)->with('municipio')->first();
         if (!$direccion) {
-            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', $neg->id_negociacion)))
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', \App\Helpers\HashIdHelper::encode($neg->id_negociacion))))
                 ->with('error', 'Debes registrar una dirección de envío antes de pagar.');
         }
 

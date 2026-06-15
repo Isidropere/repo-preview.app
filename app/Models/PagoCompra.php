@@ -123,6 +123,14 @@ class PagoCompra extends Model
         return $this->carrito?->usuario;
     }
 
+    /**
+     * Obtiene el primer artículo asociado al pago para compatibilidad con la vista de detalle de ventas.
+     */
+    public function getItemAttribute()
+    {
+        return $this->pagoItems->first()?->item;
+    }
+
     public function items()
     {
         return $this->hasMany(ItemIntencionCompra::class, 'id_carrito', 'id_carrito');

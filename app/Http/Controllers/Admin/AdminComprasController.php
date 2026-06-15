@@ -186,16 +186,87 @@ class AdminComprasController extends Controller
 
     public function showIntercambio($id)
     {
+        if (is_numeric($id)) {
+            $hashed = \App\Helpers\HashIdHelper::encode((int)$id);
+            return redirect()->route('admin.intercambios.show', $hashed);
+        }
+
+        $realId = \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
         $intercambio = Negociacion::with([
             'item.imagenes',
             'item.usuario',
-            'usuario',
-            'usuarioReceptor',
-        ])->findOrFail($id);
+            'usuario.direcciones.provincia',
+            'usuario.direcciones.municipio',
+            'usuarioReceptor.direcciones.provincia',
+            'usuarioReceptor.direcciones.municipio',
+            'trazabilidad.admin',
+            'pagoEnvios.tarjeta',
+            'pagoEnvios.usuario',
+        ])->findOrFail($realId);
+
+        $itemsOfrecidos = collect();
+        if (!empty($intercambio->items_ofrecidos)) {
+            $itemsOfrecidos = \App\Models\Item::whereIn('id_item', $intercambio->items_ofrecidos)
+                ->with('imagenes')
+                ->get();
+        }
 
         $estados = AdminComprasService::ESTADOS_INTERCAMBIO;
 
-        return view('admin.intercambios.show', compact('intercambio', 'estados'));
+        return view('admin.intercambios.show', compact('intercambio', 'itemsOfrecidos', 'estados'));
+    }
+
+    public function enviarTrackingIntercambio(Request $request, $id)
+    {
+        $request->validate([
+            'estado'        => 'required|in:' . implode(',', AdminComprasService::ESTADOS_INTERCAMBIO),
+            'tracking_code' => 'required|string|max:100',
+        ]);
+
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
+        $intercambio = Negociacion::findOrFail($realId);
+
+        // Construir URL de rastreo
+        $baseUrl = rtrim(env('TRACKING_BASE_URL', 'https://tracking.transporteblanco.do/rastreo'), '/');
+        $trackingUrl = $baseUrl . '/' . $request->tracking_code;
+
+        // Actualizar estado + trazabilidad
+        $this->adminComprasService->actualizarEstadoIntercambio(
+            $intercambio->id_negociacion,
+            $request->estado,
+            'Tracking enviado: ' . $request->tracking_code,
+            auth()->id()
+        );
+
+        // Guardar tracking en el intercambio
+        $intercambio->update([
+            'tracking_code' => $request->tracking_code,
+            'tracking_url'  => $trackingUrl,
+        ]);
+
+        // Notificar a ambos usuarios (emisor y receptor) vía evento
+        $emisor = $intercambio->usuario;
+        $receptor = $intercambio->usuarioReceptor;
+        
+        $texto = "El envío de tu intercambio #{$intercambio->id_negociacion} fue actualizado a \"" . ucfirst($request->estado) . "\". Rastreo: {$trackingUrl}";
+        
+        if ($emisor) {
+            event(new NuevaNotificacion($texto, $emisor->id));
+        }
+        if ($receptor) {
+            event(new NuevaNotificacion($texto, $receptor->id));
+        }
+
+        return redirect()->route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($realId))
+            ->with('success', 'Tracking del intercambio enviado correctamente.');
     }
 
     public function actualizarEstadoIntercambio(Request $request, $id)
@@ -205,9 +276,16 @@ class AdminComprasController extends Controller
             'nota'   => 'nullable|string|max:500',
         ]);
 
-        $this->adminComprasService->actualizarEstadoIntercambio($id, $request->estado);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
 
-        return redirect()->route('admin.intercambios.show', $id)
+        $this->adminComprasService->actualizarEstadoIntercambio(
+            $realId, $request->estado, $request->nota, auth()->id()
+        );
+
+        return redirect()->route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($realId))
             ->with('success', 'Estado del intercambio actualizado.');
     }
 
@@ -223,5 +301,38 @@ class AdminComprasController extends Controller
         $pdf = Pdf::loadView('admin.compras.pdf', compact('compra'));
         
         return $pdf->download("envio-orden-{$id}.pdf");
+    }
+
+    public function descargarIntercambioPdf($id)
+    {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
+        $intercambio = Negociacion::with([
+            'item.imagenes',
+            'item.usuario',
+            'usuario.direcciones.provincia',
+            'usuario.direcciones.municipio',
+            'usuarioReceptor.direcciones.provincia',
+            'usuarioReceptor.direcciones.municipio',
+            'trazabilidad.admin',
+            'pagoEnvios.tarjeta',
+            'pagoEnvios.usuario',
+        ])->findOrFail($realId);
+
+        $itemsOfrecidos = collect();
+        if (!empty($intercambio->items_ofrecidos)) {
+            $itemsOfrecidos = \App\Models\Item::whereIn('id_item', $intercambio->items_ofrecidos)
+                ->with('imagenes')
+                ->get();
+        }
+
+        $hashedId = \App\Helpers\HashIdHelper::encode($realId);
+
+        $pdf = Pdf::loadView('admin.intercambios.pdf', compact('intercambio', 'itemsOfrecidos', 'hashedId'));
+        
+        return $pdf->download("detalle-intercambio-{$hashedId}.pdf");
     }
 }

@@ -833,7 +833,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         // Intercambios
         Route::get('/intercambios/{id}', [AdminComprasController::class, 'showIntercambio'])->name('intercambios.show');
+        Route::get('/intercambios/{id}/pdf', [AdminComprasController::class, 'descargarIntercambioPdf'])->name('intercambios.pdf');
         Route::post('/intercambios/{id}/estado', [AdminComprasController::class, 'actualizarEstadoIntercambio'])->name('intercambios.estado');
+        Route::post('/intercambios/{id}/tracking', [AdminComprasController::class, 'enviarTrackingIntercambio'])->name('intercambios.tracking');
 
         // Mensajes predefinidos — solo lectura para admin normal
         Route::get('/mensajes-predefinidos', [\App\Http\Controllers\Admin\AdminMensajesController::class, 'index'])->name('mensajes.index');

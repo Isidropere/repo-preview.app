@@ -203,7 +203,7 @@
                                     <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $displayImage->nombre) }}" 
                                          alt="{{ $relatedItem->item }}" 
                                          class="h-full w-full object-cover object-center lg:h-full lg:w-full"
-                                         onerror="this.onerror=null;this.src='{{ asset('storage/images/default-image.jpg') }}'">
+                                         onerror="this.onerror=null;this.src='{{ asset('imgs/defaults/producto_default.svg') }}'">
                                 </div>
                             @else
                                 <div class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80 flex items-center justify-center">

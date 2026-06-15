@@ -283,7 +283,7 @@
                             @forelse($intercambios as $neg)
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-6 py-4">
-                                        <p class="text-sm font-bold text-gray-800">#{{ $neg->id_negociacion }}</p>
+                                        <p class="text-sm font-bold text-gray-800">#{{ \App\Helpers\HashIdHelper::encode($neg->id_negociacion) }}</p>
                                         <p class="text-[11px] text-gray-400 mt-0.5">{{ $neg->fecha_creacion ? $neg->fecha_creacion->format('d/m/Y h:i A') : '-' }}</p>
                                         <p class="text-xs font-medium text-gray-700 mt-1 truncate max-w-[180px]" title="{{ $neg->item->item ?? '' }}">
                                             Item: {{ $neg->item->item ?? 'Eliminado' }}
@@ -437,10 +437,17 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <a href="{{ route('admin.intercambios.show', $neg->id_negociacion) }}" 
-                                           class="text-emerald-600 hover:text-emerald-800 text-xs font-bold border border-emerald-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-all inline-block">
-                                            Detalle
-                                        </a>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}" 
+                                               class="text-emerald-600 hover:text-emerald-800 text-xs font-bold border border-emerald-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg transition-all inline-block">
+                                                Detalle
+                                            </a>
+                                            <a href="{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}" 
+                                               class="text-gray-600 hover:text-gray-800 text-xs font-bold border border-gray-200 hover:bg-gray-50 px-2.5 py-1.5 rounded-lg transition-all"
+                                               title="Descargar detalle en PDF">
+                                                PDF
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

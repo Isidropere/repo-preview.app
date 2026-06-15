@@ -259,7 +259,7 @@
                                     <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}"
                                          alt="{{ $item->item->item }}" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @else
-                                    <img src="{{ asset('storage/imgs/producto_defaul.png') }}"
+                                    <img src="{{ asset('imgs/defaults/producto_default.svg') }}"
                                          alt="Sin imagen" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @endif
                             </div>
@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function () {
             div.innerHTML = `
                 <div style="width:38px;height:38px;border-radius:0.4rem;overflow:hidden;flex-shrink:0;background:#f3f4f6;border:1px solid #f1f5f9;">
                     ${imgSrc
-                        ? `<img src="${imgSrc}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/imgs/producto_defaul.png'">`
+                        ? `<img src="${imgSrc}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/imgs/defaults/producto_default.svg'">`
                         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg style="width:1rem;height:1rem;color:#d1d5db;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
                     }
                 </div>

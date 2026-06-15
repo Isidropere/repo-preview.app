@@ -48,11 +48,19 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
     final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
     if (res.statusCode == 200) {
       setState(() {
-        // Solo artículos disponibles para intercambio (tipo_trans 2 o 3)
+        // Solo artículos disponibles para intercambio (tipo_trans 2 o 3) y con stock disponible (> 0)
         _misItems = (jsonDecode(res.body) as List)
             .where((i) {
               final tt = ApiClient.parseInt(i['tipo_trans']);
-              return tt == 2 || tt == 3;
+              final hasExchangeType = (tt == 2 || tt == 3);
+
+              final inventario = i['inventarios'];
+              int stock = 0;
+              if (inventario != null && inventario['cantidad'] != null) {
+                stock = ApiClient.parseInt(inventario['cantidad']) ?? 0;
+              }
+
+              return hasExchangeType && stock > 0;
             })
             .toList();
         _loading = false;

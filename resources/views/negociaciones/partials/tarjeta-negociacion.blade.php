@@ -187,6 +187,15 @@
     {{-- ACCIONES --}}
     <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
 
+        {{-- Botón de Chat para todos los estados --}}
+        @if(auth()->check())
+        <a href="{{ route('negociaciones.verChat', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
+           class="inline-flex items-center gap-1 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-xs font-bold transition-colors"
+           style="text-decoration:none;">
+            💬 Mensajes
+        </a>
+        @endif
+
         {{-- RECEPTOR: aceptar / rechazar (estado Inicial o contraoferta) --}}
         @if($rol === 'receptor' && in_array($neg->estado, ['Inicial','contraoferta']))
         <form action="{{ route('negociaciones.aceptar', $neg->id_negociacion) }}" method="POST">

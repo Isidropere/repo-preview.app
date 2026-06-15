@@ -312,15 +312,41 @@ class NegociacionController extends Controller
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 
-    public function verChat($id)
+    public function verChat($hash)
     {
-        $negociacion = Negociacion::with(['usuario', 'usuarioReceptor'])->findOrFail($id);
-        return view('negociaciones', compact('negociacion'));
+        $id = \App\Helpers\HashIdHelper::decode($hash);
+        if (!$id) {
+            abort(404, 'Negociación no encontrada.');
+        }
+        $negociacion = Negociacion::with(['usuario', 'usuarioReceptor', 'item.imagenes'])->findOrFail($id);
+        
+        $userId = auth()->id();
+        if ($userId != $negociacion->usuario_emisor_id && $userId != $negociacion->usuario_receptor_id) {
+            abort(403, 'No tienes permiso para ver esta negociación.');
+        }
+
+        $rol = $userId == $negociacion->usuario_emisor_id ? 'emisor' : 'receptor';
+        $otroUsuario = $rol === 'receptor' ? $negociacion->usuario : $negociacion->usuarioReceptor;
+
+        // Cargar mensajes predefinidos
+        $mensajesPredefinidos = \App\Models\PredefinedMessage::where('activo', true)->get();
+        $accionesPredefinidas = \App\Models\PredefinedMessage::select('tipo')->distinct()->pluck('tipo');
+
+        // Cargar mensajes existentes
+        $negService = app(NegociacionService::class);
+        $mensajesData = $negService->obtenerMensajes($userId, $negociacion->usuario_emisor_id, $negociacion->usuario_receptor_id);
+        $mensajes = $mensajesData['mensajes'] ?? [];
+
+        return view('negociaciones.chat', compact('negociacion', 'rol', 'otroUsuario', 'mensajesPredefinidos', 'accionesPredefinidas', 'mensajes'));
     }
 
     public function mostrarPago($id)
     {
-        $neg = Negociacion::with(['item', 'usuario', 'usuarioReceptor'])->findOrFail($id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404, 'Negociación no encontrada.');
+        }
+        $neg = Negociacion::with(['item', 'usuario', 'usuarioReceptor'])->findOrFail($realId);
         $userId = auth()->id();
 
         if ($userId != $neg->usuario_emisor_id && $userId != $neg->usuario_receptor_id) {
@@ -340,7 +366,12 @@ class NegociacionController extends Controller
 
     public function procesarPago(\Illuminate\Http\Request $request, $id)
     {
-        $neg    = Negociacion::findOrFail($id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Negociación no encontrada.'], 404);
+            abort(404, 'Negociación no encontrada.');
+        }
+        $neg    = Negociacion::findOrFail($realId);
         $userId = auth()->id();
 
         if ($userId != $neg->usuario_emisor_id && $userId != $neg->usuario_receptor_id) {
@@ -403,25 +434,30 @@ class NegociacionController extends Controller
         if (!$tieneDireccion) {
             $msg = 'Debes registrar una dirección de envío antes de pagar.';
             if ($request->wantsJson()) {
-                $redirUrl = route('direcciones.index', ['return_url' => route('negociaciones.pago', $neg->id_negociacion)]);
+                $redirUrl = route('direcciones.index', ['return_url' => route('negociaciones.pago', \App\Helpers\HashIdHelper::encode($neg->id_negociacion))]);
                 return response()->json(['success' => false, 'message' => $msg, 'redirect' => $redirUrl], 422);
             }
-            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', $neg->id_negociacion)))
+            return redirect()->to(route('direcciones.index') . '?return_url=' . urlencode(route('negociaciones.pago', \App\Helpers\HashIdHelper::encode($neg->id_negociacion))))
                 ->with('error', $msg);
         }
 
         // Redirigir al flujo de pago seguro de AZUL
         if ($request->wantsJson()) {
-            $url = route('negociaciones.pago.iniciar-movil', [
-                'id_negociacion' => $neg->id_negociacion,
-                'user_id' => $userId
-            ]);
+            $isApi = $request->is('api/*');
+            $url = $isApi
+                ? route('negociaciones.pago.iniciar-movil', [
+                    'id_negociacion' => \App\Helpers\HashIdHelper::encode($neg->id_negociacion),
+                    'user_id' => $userId
+                ])
+                : route('negociaciones.pago.iniciar', [
+                    'id_negociacion' => \App\Helpers\HashIdHelper::encode($neg->id_negociacion)
+                ]);
             return response()->json([
                 'success' => true,
                 'redirect' => $url,
                 'redirect_url' => $url
             ]);
         }
-        return redirect()->route('negociaciones.pago.iniciar', $neg->id_negociacion);
+        return redirect()->route('negociaciones.pago.iniciar', \App\Helpers\HashIdHelper::encode($neg->id_negociacion));
     }
 }

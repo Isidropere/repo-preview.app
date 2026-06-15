@@ -396,11 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 4),
             child: GestureDetector(
               onTap: () => _showUserMenu(),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: kPrimary,
-                backgroundImage: NetworkImage(ApiClient.fixImageUrl(_user!['profile_photo_url'])),
-              ),
+              child: _buildAvatarWidget(18),
             ),
           )
         else
@@ -418,6 +414,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildAvatarWidget(double radius) {
+    final photoUrl = _user?['profile_photo_url']?.toString();
+    final isPlaceholder = photoUrl == null ||
+                          photoUrl.trim().isEmpty ||
+                          photoUrl.contains('default') ||
+                          photoUrl.contains('.svg') ||
+                          photoUrl.contains('via.placeholder.com');
+
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: kPrimary,
+      child: ClipOval(
+        child: isPlaceholder
+            ? Icon(Icons.person, size: radius * 1.1, color: Colors.white)
+            : Image.network(
+                ApiClient.fixImageUrl(photoUrl),
+                width: radius * 2,
+                height: radius * 2,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(Icons.person, size: radius * 1.1, color: Colors.white),
+              ),
+      ),
+    );
+  }
+
   void _showUserMenu() {
     showModalBottomSheet(
       context: context,
@@ -425,8 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          CircleAvatar(radius: 28, backgroundColor: kPrimary,
-              backgroundImage: NetworkImage(ApiClient.fixImageUrl(_user!['profile_photo_url']))),
+          _buildAvatarWidget(28),
           const SizedBox(height: 8),
           Text('${_user!['nombres']} ${_user!['apellidos']}',
               style: const TextStyle(fontWeight: FontWeight.w600)),
