@@ -191,6 +191,7 @@ class AdminComprasController extends Controller
             'item.usuario',
             'usuario',
             'usuarioReceptor',
+            'trazabilidad.admin',
         ])->findOrFail($id);
 
         $estados = AdminComprasService::ESTADOS_INTERCAMBIO;
@@ -205,7 +206,9 @@ class AdminComprasController extends Controller
             'nota'   => 'nullable|string|max:500',
         ]);
 
-        $this->adminComprasService->actualizarEstadoIntercambio($id, $request->estado);
+        $this->adminComprasService->actualizarEstadoIntercambio(
+            $id, $request->estado, $request->nota, auth()->id()
+        );
 
         return redirect()->route('admin.intercambios.show', $id)
             ->with('success', 'Estado del intercambio actualizado.');

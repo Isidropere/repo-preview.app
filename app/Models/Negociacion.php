@@ -51,4 +51,10 @@ class Negociacion extends Model
     {
         return $this->hasMany(PagoEnvioIntercambio::class, 'id_negociacion', 'id_negociacion');
     }
+
+    public function trazabilidad()
+    {
+        return $this->hasMany(NegociacionTrazabilidad::class, 'id_negociacion', 'id_negociacion')
+            ->orderBy('created_at', 'asc');
+    }
 }

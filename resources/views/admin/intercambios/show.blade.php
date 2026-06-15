@@ -156,7 +156,7 @@
                         </dl>
                     </div>
 
-                    {{-- Actualizar estado --}}
+                                    {{-- Actualizar estado --}}
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <h2 class="font-semibold text-gray-800 mb-4">Actualizar Estado</h2>
                         <form id="formEstado" method="POST"
@@ -193,6 +193,50 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    {{-- Timeline de trazabilidad --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mt-5">
+                        <h2 class="font-semibold text-gray-800 mb-4">Historial de cambios</h2>
+                        @if($intercambio->trazabilidad->isEmpty())
+                        <p class="text-sm text-gray-400 text-center py-4">Sin cambios registrados aún.</p>
+                        @else
+                        <ol class="relative border-l border-gray-200 ml-2 space-y-5">
+                            @foreach($intercambio->trazabilidad as $traza)
+                            @php
+                                $dot = match($traza->estado_nuevo) {
+                                    'pendiente'    => 'bg-yellow-400',
+                                    'aceptado'     => 'bg-green-500',
+                                    'rechazado'    => 'bg-red-500',
+                                    'contraoferta' => 'bg-orange-400',
+                                    'en_envio'     => 'bg-blue-500',
+                                    'completado'   => 'bg-emerald-500',
+                                    'cancelado'    => 'bg-gray-400',
+                                    default        => 'bg-gray-300',
+                                };
+                            @endphp
+                            <li class="ml-4">
+                                <span class="absolute -left-1.5 mt-1 w-3 h-3 rounded-full border-2 border-white {{ $dot }}"></span>
+                                <div class="text-xs text-gray-400 mb-0.5">
+                                    {{ $traza->created_at?->format('d/m/Y H:i') ?? '—' }}
+                                    @if($traza->admin)
+                                    &bull; <span class="font-medium text-gray-500">{{ $traza->admin->nombres }}</span>
+                                    @endif
+                                </div>
+                                <p class="text-sm text-gray-700">
+                                    @if($traza->estado_anterior && $traza->estado_anterior !== $traza->estado_nuevo)
+                                    <span class="text-gray-400">{{ ucfirst($traza->estado_anterior) }}</span>
+                                    <span class="text-gray-300 mx-1">→</span>
+                                    @endif
+                                    <span class="font-semibold">{{ ucfirst($traza->estado_nuevo) }}</span>
+                                </p>
+                                @if($traza->nota)
+                                <p class="text-xs text-gray-500 mt-1 italic">"{{ $traza->nota }}"</p>
+                                @endif
+                            </li>
+                            @endforeach
+                        </ol>
+                        @endif
                     </div>
 
                 </div>
