@@ -299,6 +299,10 @@ async function procesarPagoIntercambio() {
         });
         var data = await resp.json();
         if (data.success || resp.ok) {
+            if (data.redirect || data.redirect_url) {
+                window.location.href = data.redirect || data.redirect_url;
+                return;
+            }
             btn.textContent = '✅ Pago registrado';
             btn.style.background = '#16a34a';
             setTimeout(function() { window.location.reload(); }, 1200);

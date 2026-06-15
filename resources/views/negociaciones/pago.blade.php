@@ -16,7 +16,7 @@
             </div>
             <div>
                 <h2 class="font-bold text-gray-800">Pago de intercambio</h2>
-                <p class="text-xs text-gray-400">Intercambio #{{ $neg->id_negociacion }} · {{ $neg->item?->item }}</p>
+                <p class="text-xs text-gray-400">Intercambio #{{ \App\Helpers\HashIdHelper::encode($neg->id_negociacion) }} · {{ $neg->item?->item }}</p>
             </div>
         </div>
 
@@ -37,7 +37,7 @@
             <span class="text-xl font-bold text-blue-700">RD$ {{ number_format($monto, 2) }}</span>
         </div>
 
-        <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
+        <form action="{{ route('negociaciones.pago.procesar', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}" method="POST">
             @csrf
             <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mb-5 text-center">
                 <p class="text-sm text-gray-600">Serás redirigido a la página de pago seguro de AZUL para realizar la transacción.</p>
@@ -47,7 +47,7 @@
             </button>
         </form>
         @else
-        <form action="{{ route('negociaciones.pago.procesar', $neg->id_negociacion) }}" method="POST">
+        <form action="{{ route('negociaciones.pago.procesar', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}" method="POST">
             @csrf
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 text-center">
                 <p class="text-emerald-700 font-semibold">Este intercambio no requiere pago monetario.</p>

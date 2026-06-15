@@ -43,8 +43,11 @@ class NegociacionApiController extends Controller
     }
 
     /** GET /api/negociaciones/{id} — detalle */
-    public function show(Request $request, int $id)
+    public function show(Request $request, $id)
     {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+
         $userId = $request->user()->id;
 
         $negociacion = Negociacion::with([
@@ -52,7 +55,7 @@ class NegociacionApiController extends Controller
             'usuario:id,nombres,apellidos,profile_photo_path',
             'usuarioReceptor:id,nombres,apellidos,profile_photo_path',
         ])
-            ->where('id_negociacion', $id)
+            ->where('id_negociacion', $realId)
             ->where(fn($q) => $q->where('usuario_emisor_id', $userId)
                 ->orWhere('usuario_receptor_id', $userId))
             ->firstOrFail();
@@ -87,85 +90,107 @@ class NegociacionApiController extends Controller
     }
 
     /** POST /api/negociaciones/{id}/aceptar */
-    public function aceptar(Request $request, int $id)
+    public function aceptar(Request $request, $id)
     {
-        $resultado = $this->negociacionService->aceptar($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->aceptar($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/rechazar */
-    public function rechazar(Request $request, int $id)
+    public function rechazar(Request $request, $id)
     {
-        $resultado = $this->negociacionService->rechazar($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->rechazar($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/contraoferta */
-    public function contraoferta(Request $request, int $id)
+    public function contraoferta(Request $request, $id)
     {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
         $validated = $request->validate([
             'monto_contra_oferta' => 'nullable|numeric|min:0',
             'mensaje'             => 'nullable|string|max:500',
         ]);
 
-        $resultado = $this->negociacionService->contraoferta($request->user()->id, $id, $validated);
+        $resultado = $this->negociacionService->contraoferta($request->user()->id, $realId, $validated);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/cancelar */
-    public function cancelar(Request $request, int $id)
+    public function cancelar(Request $request, $id)
     {
-        $resultado = $this->negociacionService->cancelar($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->cancelar($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/confirmar-emisor */
-    public function confirmarEmisor(Request $request, int $id)
+    public function confirmarEmisor(Request $request, $id)
     {
-        $resultado = $this->negociacionService->confirmarEmisor($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->confirmarEmisor($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/confirmar-receptor */
-    public function confirmarReceptor(Request $request, int $id)
+    public function confirmarReceptor(Request $request, $id)
     {
-        $resultado = $this->negociacionService->confirmarReceptor($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->confirmarReceptor($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/aceptar-como-emisor */
-    public function aceptarComoEmisor(Request $request, int $id)
+    public function aceptarComoEmisor(Request $request, $id)
     {
-        $resultado = $this->negociacionService->aceptarComoEmisor($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->aceptarComoEmisor($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/modo-entrega */
-    public function seleccionarModoEntrega(Request $request, int $id)
+    public function seleccionarModoEntrega(Request $request, $id)
     {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
         $request->validate(['modo' => 'required|in:envio,retiro']);
-        $resultado = $this->negociacionService->seleccionarModoEntrega($request->user()->id, $id, $request->modo);
+        $resultado = $this->negociacionService->seleccionarModoEntrega($request->user()->id, $realId, $request->modo);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/confirmar-entrega */
-    public function confirmarEntrega(Request $request, int $id)
+    public function confirmarEntrega(Request $request, $id)
     {
-        $resultado = $this->negociacionService->confirmarEntrega($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->confirmarEntrega($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** POST /api/negociaciones/{id}/completar */
-    public function completar(Request $request, int $id)
+    public function completar(Request $request, $id)
     {
-        $resultado = $this->negociacionService->completar($request->user()->id, $id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $resultado = $this->negociacionService->completar($request->user()->id, $realId);
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 
     /** GET /api/negociaciones/{id}/mensajes */
-    public function mensajes(Request $request, int $id)
+    public function mensajes(Request $request, $id)
     {
-        $negociacion = Negociacion::findOrFail($id);
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
+        $negociacion = Negociacion::findOrFail($realId);
         $userId = $request->user()->id;
 
         if ($userId != $negociacion->usuario_emisor_id && $userId != $negociacion->usuario_receptor_id) {
@@ -177,13 +202,15 @@ class NegociacionApiController extends Controller
     }
 
     /** POST /api/negociaciones/{id}/mensajes */
-    public function enviarMensaje(Request $request, int $id)
+    public function enviarMensaje(Request $request, $id)
     {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
         $request->validate([
             'mensaje' => 'required|string|max:500',
         ]);
 
-        $negociacion = Negociacion::findOrFail($id);
+        $negociacion = Negociacion::findOrFail($realId);
         $userId = $request->user()->id;
 
         if ($userId != $negociacion->usuario_emisor_id && $userId != $negociacion->usuario_receptor_id) {
