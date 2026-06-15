@@ -194,9 +194,60 @@ class AdminComprasController extends Controller
             'trazabilidad.admin',
         ])->findOrFail($id);
 
+        $itemsOfrecidos = collect();
+        if (!empty($intercambio->items_ofrecidos)) {
+            $itemsOfrecidos = \App\Models\Item::whereIn('id_item', $intercambio->items_ofrecidos)
+                ->with('imagenes')
+                ->get();
+        }
+
         $estados = AdminComprasService::ESTADOS_INTERCAMBIO;
 
-        return view('admin.intercambios.show', compact('intercambio', 'estados'));
+        return view('admin.intercambios.show', compact('intercambio', 'itemsOfrecidos', 'estados'));
+    }
+
+    public function enviarTrackingIntercambio(Request $request, $id)
+    {
+        $request->validate([
+            'estado'        => 'required|in:' . implode(',', AdminComprasService::ESTADOS_INTERCAMBIO),
+            'tracking_code' => 'required|string|max:100',
+        ]);
+
+        $intercambio = Negociacion::findOrFail($id);
+
+        // Construir URL de rastreo
+        $baseUrl = rtrim(env('TRACKING_BASE_URL', 'https://tracking.transporteblanco.do/rastreo'), '/');
+        $trackingUrl = $baseUrl . '/' . $request->tracking_code;
+
+        // Actualizar estado + trazabilidad
+        $this->adminComprasService->actualizarEstadoIntercambio(
+            $intercambio->id_negociacion,
+            $request->estado,
+            'Tracking enviado: ' . $request->tracking_code,
+            auth()->id()
+        );
+
+        // Guardar tracking en el intercambio
+        $intercambio->update([
+            'tracking_code' => $request->tracking_code,
+            'tracking_url'  => $trackingUrl,
+        ]);
+
+        // Notificar a ambos usuarios (emisor y receptor) vía evento
+        $emisor = $intercambio->usuario;
+        $receptor = $intercambio->usuarioReceptor;
+        
+        $texto = "El envío de tu intercambio #{$intercambio->id_negociacion} fue actualizado a \"" . ucfirst($request->estado) . "\". Rastreo: {$trackingUrl}";
+        
+        if ($emisor) {
+            event(new NuevaNotificacion($texto, $emisor->id));
+        }
+        if ($receptor) {
+            event(new NuevaNotificacion($texto, $receptor->id));
+        }
+
+        return redirect()->route('admin.intercambios.show', $id)
+            ->with('success', 'Tracking del intercambio enviado correctamente.');
     }
 
     public function actualizarEstadoIntercambio(Request $request, $id)
