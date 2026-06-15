@@ -302,4 +302,37 @@ class AdminComprasController extends Controller
         
         return $pdf->download("envio-orden-{$id}.pdf");
     }
+
+    public function descargarIntercambioPdf($id)
+    {
+        $realId = is_numeric($id) ? (int)$id : \App\Helpers\HashIdHelper::decode($id);
+        if (!$realId) {
+            abort(404);
+        }
+
+        $intercambio = Negociacion::with([
+            'item.imagenes',
+            'item.usuario',
+            'usuario.direcciones.provincia',
+            'usuario.direcciones.municipio',
+            'usuarioReceptor.direcciones.provincia',
+            'usuarioReceptor.direcciones.municipio',
+            'trazabilidad.admin',
+            'pagoEnvios.tarjeta',
+            'pagoEnvios.usuario',
+        ])->findOrFail($realId);
+
+        $itemsOfrecidos = collect();
+        if (!empty($intercambio->items_ofrecidos)) {
+            $itemsOfrecidos = \App\Models\Item::whereIn('id_item', $intercambio->items_ofrecidos)
+                ->with('imagenes')
+                ->get();
+        }
+
+        $hashedId = \App\Helpers\HashIdHelper::encode($realId);
+
+        $pdf = Pdf::loadView('admin.intercambios.pdf', compact('intercambio', 'itemsOfrecidos', 'hashedId'));
+        
+        return $pdf->download("detalle-intercambio-{$hashedId}.pdf");
+    }
 }
