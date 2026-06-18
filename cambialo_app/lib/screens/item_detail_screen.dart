@@ -109,8 +109,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           .toList();
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => FullScreenImageViewer(
+                        PageRouteBuilder(
+                          opaque: false,
+                          barrierDismissible: true,
+                          barrierColor: Colors.black.withOpacity(0.5),
+                          pageBuilder: (context, _, __) => FullScreenImageViewer(
                             imageUrls: urls,
                             initialIndex: _imgIndex,
                           ),

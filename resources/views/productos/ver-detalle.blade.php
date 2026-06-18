@@ -254,21 +254,32 @@
     </div>
 
     {{-- MODAL ZOOM --}}
-    <div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:flex-start;cursor:zoom-out;user-select:none;scroll-snap-type:x mandatory;">
-        <button onclick="closeZoom()" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s;outline:none;" onmouseover="this.style.backgroundColor='rgba(255,255,255,.4)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,.2)'">✕</button>
+    <div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:9999;align-items:center;justify-content:center;user-select:none;">
+        
+        {{-- Scrolling container --}}
+        <div id="zoomScrollContainer" style="position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;display:flex;align-items:center;justify-content:flex-start;scroll-snap-type:x mandatory;">
+            <div id="zoomTrack" style="display:inline-flex;align-items:center;height:100%;" onclick="event.stopPropagation()">
+                @foreach($imgsToShow as $imagen)
+                    <div class="zoom-slide" style="width:100vw;height:100vh;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;scroll-snap-align:center;overflow:hidden;position:relative;">
+                        <img class="zoom-img-el" src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" alt="Zoom" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:0.5rem;cursor:zoom-in;transition:transform 0.25s ease, max-width 0.25s ease, max-height 0.25s ease;" onclick="toggleZoom(event, this)">
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Fixed buttons --}}
+        <button onclick="closeZoom()" style="position:fixed;top:1.25rem;right:1.25rem;background:rgba(15,23,42,0.6);border:none;color:#fff;cursor:pointer;width:2.75rem;height:2.75rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s, transform .2s;outline:none;backdrop-filter:blur(4px);" onmouseover="this.style.backgroundColor='rgba(15,23,42,0.8)'; this.style.transform='scale(1.1)';" onmouseout="this.style.backgroundColor='rgba(15,23,42,0.6)'; this.style.transform='scale(1)';">
+            <svg style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
         
         @if($imgsToShow->count() > 1)
-        <button onclick="prevZoomImage(event)" id="btnZoomPrev" style="position:fixed;left:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">‹</button>
-        <button onclick="nextZoomImage(event)" id="btnZoomNext" style="position:fixed;right:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">›</button>
+        <button onclick="prevZoomImage(event)" id="btnZoomPrev" style="position:fixed;left:1.25rem;top:50%;transform:translateY(-50%);background:rgba(15,23,42,0.6);border:none;color:#fff;cursor:pointer;width:3rem;height:3rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s, transform .2s;outline:none;backdrop-filter:blur(4px);" onmouseover="this.style.backgroundColor='rgba(15,23,42,0.8)'; this.style.transform='translateY(-50%) scale(1.1)';" onmouseout="this.style.backgroundColor='rgba(15,23,42,0.6)'; this.style.transform='translateY(-50%) scale(1)';">
+            <svg style="width:1.5rem;height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button onclick="nextZoomImage(event)" id="btnZoomNext" style="position:fixed;right:1.25rem;top:50%;transform:translateY(-50%);background:rgba(15,23,42,0.6);border:none;color:#fff;cursor:pointer;width:3rem;height:3rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s, transform .2s;outline:none;backdrop-filter:blur(4px);" onmouseover="this.style.backgroundColor='rgba(15,23,42,0.8)'; this.style.transform='translateY(-50%) scale(1.1)';" onmouseout="this.style.backgroundColor='rgba(15,23,42,0.6)'; this.style.transform='translateY(-50%) scale(1)';">
+            <svg style="width:1.5rem;height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
         @endif
-
-        <div id="zoomTrack" style="display:inline-flex;align-items:center;height:100%;" onclick="event.stopPropagation()">
-            @foreach($imgsToShow as $imagen)
-                <div class="zoom-slide" style="width:100vw;height:100vh;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;scroll-snap-align:center;overflow:hidden;position:relative;">
-                    <img class="zoom-img-el" src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" alt="Zoom" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:0.5rem;cursor:zoom-in;transition:transform 0.25s ease, max-width 0.25s ease, max-height 0.25s ease;" onclick="toggleZoom(event, this)">
-                </div>
-            @endforeach
-        </div>
     </div>
 </main>
 @endsection
@@ -409,13 +420,14 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('zoomModal');
-        if (!modal) return;
+        const scrollContainer = document.getElementById('zoomScrollContainer');
+        if (!modal || !scrollContainer) return;
         
-        modal.addEventListener('scroll', function() {
-            const width = modal.clientWidth;
+        scrollContainer.addEventListener('scroll', function() {
+            const width = scrollContainer.clientWidth;
             if (width === 0) return;
-            const slides = modal.querySelectorAll('.zoom-slide');
-            const index = Math.round(modal.scrollLeft / width);
+            const slides = scrollContainer.querySelectorAll('.zoom-slide');
+            const index = Math.round(scrollContainer.scrollLeft / width);
             if (index !== currentZoomIndex && index >= 0 && index < slides.length) {
                 currentZoomIndex = index;
                 updateZoomButtons();
