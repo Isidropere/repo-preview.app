@@ -43,12 +43,19 @@
                         $hasApproved = $item && $item->imagenes && $item->imagenes->where('estado', 'aprobado')->isNotEmpty();
                         $imgsToShow = $hasApproved ? $item->imagenes->where('estado', 'aprobado') : ($item->imagenes ?? collect());
                     @endphp
-                    <div style="position:relative;background:#f8fafc;border-radius:1rem;overflow:hidden;min-height:300px;display:flex;align-items:center;justify-content:center;">
+                    <div style="position:relative;background:#f8fafc;border-radius:1rem;overflow:hidden;min-height:300px;display:flex;align-items:center;justify-content:center;border:1px solid #f1f5f9;">
                         @if($imgsToShow->isNotEmpty())
                             @php $firstImg = $imgsToShow->first(); @endphp
-                                <img id="imagen-principal-{{ $item->id_item }}"
+                                <img id="mainImage"
                                      src="{{ \App\Helpers\ImageHelper::urlMedia($firstImg->ruta, $firstImg->nombre) }}"
-                                     alt="{{ $item->item }}" class="w-full h-full object-contain">
+                                     alt="{{ $item->item }}" class="w-full h-full object-contain"
+                                     style="cursor:zoom-in;"
+                                     onclick="openZoom(currentMainImageIndex)">
+                                
+                                <button onclick="openZoom(currentMainImageIndex)"
+                                        style="position:absolute;bottom:0.6rem;right:0.6rem;background:rgba(255,255,255,.92);border:none;border-radius:9999px;padding:0.35rem;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12);z-index:10;">
+                                    <svg style="width:0.85rem;height:0.85rem;" fill="none" stroke="#64748b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </button>
                         @else
                             <div class="w-full h-full flex items-center justify-center bg-gray-300">
                                 <span class="text-gray-500">Imagen en espera de aprobación</span>
@@ -60,32 +67,6 @@
                 @if($imgsToShow->count() > 0)
                 <div style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:none;-ms-overflow-style:none;">
                     @foreach($imgsToShow as $index => $imagen)
-            @if($index === 0 || $index === 1 )
-                <!-- Dos imágenes pequeñas arriba -->
-                <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
-                         onclick="changeMainImage(this)" 
-                         class="w-full h-16 object-contain w-1/2 h-16 object-cover" loading="lazy" width="150" height="64">
-                </div>
-               @elseif($index === 2|| $index === 3)
-                <!-- Dos imágenes pequeñas arriba -->
-                <div class="cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
-                         onclick="changeMainImage(this)" 
-                         class="w-full h-16 object-contain w-1/2 h-16 object-cover" loading="lazy" width="150" height="64">
-                </div>
-            @elseif($index === 4)
-                <!-- Imagen más grande que abarca dos columnas -->
-                <div class="col-span-2 cursor-pointer border border-gray-300 hover:border-primary rounded overflow-hidden">
-                    <img  src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
-                         onclick="changeMainImage(this)" 
-                         class="w-full h-16  object-contain  w-1/2 h-16 object-cover" loading="lazy" width="300" height="64">
-                </div>
-            @endif
-        @endforeach
-    </div>
-@endif
-
 
 
                 </div>
@@ -271,13 +252,35 @@
             </form>
         </div>
     </div>
+
+    {{-- MODAL ZOOM --}}
+    <div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:flex-start;cursor:zoom-out;user-select:none;scroll-snap-type:x mandatory;">
+        <button onclick="closeZoom()" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s;outline:none;" onmouseover="this.style.backgroundColor='rgba(255,255,255,.4)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,.2)'">✕</button>
+        
+        @if($imgsToShow->count() > 1)
+        <button onclick="prevZoomImage(event)" id="btnZoomPrev" style="position:fixed;left:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">‹</button>
+        <button onclick="nextZoomImage(event)" id="btnZoomNext" style="position:fixed;right:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">›</button>
+        @endif
+
+        <div id="zoomTrack" style="display:inline-flex;align-items:center;height:100%;" onclick="event.stopPropagation()">
+            @foreach($imgsToShow as $imagen)
+                <div class="zoom-slide" style="width:100vw;height:100vh;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;scroll-snap-align:center;overflow:hidden;position:relative;">
+                    <img class="zoom-img-el" src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" alt="Zoom" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:0.5rem;cursor:zoom-in;transition:transform 0.25s ease, max-width 0.25s ease, max-height 0.25s ease;" onclick="toggleZoom(event, this)">
+                </div>
+            @endforeach
+        </div>
+    </div>
 </main>
 @endsection
 
 @push('scripts')
 <script>
-    function changeMainImage(element) {
+    let currentMainImageIndex = 0;
+    function changeMainImage(element, index) {
         document.getElementById('mainImage').src = element.src;
+        if (index !== undefined) {
+            currentMainImageIndex = index;
+        }
     }
 
     function openContactModal() {
@@ -299,16 +302,175 @@
         }
     });
 
-  
-   document.addEventListener('DOMContentLoaded', function () {
-        const img = document.getElementById('mainImage');
-        if (img) {
-            img.style.width = '400px';
-            img.style.height = '400px';
-            img.style.objectFit = 'cover';
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+         const img = document.getElementById('mainImage');
+         if (img) {
+             img.style.width = '400px';
+             img.style.height = '400px';
+             img.style.objectFit = 'cover';
+         }
     });
 
+    let isZoomed = false;
+    let currentZoomIndex = 0;
+
+    function openZoom(index) {
+        const m = document.getElementById('zoomModal');
+        currentZoomIndex = index || 0;
+        
+        isZoomed = false;
+        m.querySelectorAll('.zoom-slide').forEach(slide => {
+            slide.style.overflow = 'hidden';
+            slide.scrollLeft = 0;
+            slide.scrollTop = 0;
+            const img = slide.querySelector('.zoom-img-el');
+            if (img) {
+                img.style.maxWidth = '90vw';
+                img.style.maxHeight = '90vh';
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.cursor = 'zoom-in';
+            }
+        });
+
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        setTimeout(() => {
+            const slides = m.querySelectorAll('.zoom-slide');
+            if (slides[currentZoomIndex]) {
+                slides[currentZoomIndex].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'start' });
+            }
+            updateZoomButtons();
+        }, 50);
+    }
+
+    function closeZoom() {
+        document.getElementById('zoomModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function updateZoomButtons() {
+        const m = document.getElementById('zoomModal');
+        const slides = m.querySelectorAll('.zoom-slide');
+        const prev = document.getElementById('btnZoomPrev');
+        const next = document.getElementById('btnZoomNext');
+        if (prev) prev.style.display = currentZoomIndex > 0 ? 'flex' : 'none';
+        if (next) next.style.display = currentZoomIndex < slides.length - 1 ? 'flex' : 'none';
+    }
+
+    function prevZoomImage(e) {
+        e.stopPropagation();
+        if (currentZoomIndex > 0) {
+            currentZoomIndex--;
+            const m = document.getElementById('zoomModal');
+            const slides = m.querySelectorAll('.zoom-slide');
+            slides[currentZoomIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            updateZoomButtons();
+        }
+    }
+
+    // Corregido el nombre a nextZoomImage
+    function nextZoomImage(e) {
+        e.stopPropagation();
+        const m = document.getElementById('zoomModal');
+        const slides = m.querySelectorAll('.zoom-slide');
+        if (currentZoomIndex < slides.length - 1) {
+            currentZoomIndex++;
+            slides[currentZoomIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            updateZoomButtons();
+        }
+    }
+
+    function toggleZoom(e, img) {
+        if (e) e.stopPropagation();
+        const slide = img.parentElement;
+        
+        if (!isZoomed) {
+            img.style.maxWidth = 'none';
+            img.style.maxHeight = 'none';
+            img.style.width = '180%';
+            img.style.height = 'auto';
+            img.style.cursor = 'zoom-out';
+            slide.style.overflow = 'auto';
+            isZoomed = true;
+        } else {
+            img.style.maxWidth = '90vw';
+            img.style.maxHeight = '90vh';
+            img.style.width = 'auto';
+            img.style.height = 'auto';
+            img.style.cursor = 'zoom-in';
+            slide.style.overflow = 'hidden';
+            slide.scrollLeft = 0;
+            slide.scrollTop = 0;
+            isZoomed = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('zoomModal');
+        if (!modal) return;
+        
+        modal.addEventListener('scroll', function() {
+            const width = modal.clientWidth;
+            if (width === 0) return;
+            const slides = modal.querySelectorAll('.zoom-slide');
+            const index = Math.round(modal.scrollLeft / width);
+            if (index !== currentZoomIndex && index >= 0 && index < slides.length) {
+                currentZoomIndex = index;
+                updateZoomButtons();
+            }
+        });
+
+        let isDragging = false;
+        let startX, startY;
+        let scrollLeft, scrollTop;
+        
+        modal.addEventListener('mousedown', function(e) {
+            if (!isZoomed || e.target.tagName === 'BUTTON') return;
+            const img = e.target;
+            if (!img.classList.contains('zoom-img-el')) return;
+            const slide = img.parentElement;
+            
+            isDragging = true;
+            startX = e.pageX - slide.offsetLeft;
+            startY = e.pageY - slide.offsetTop;
+            scrollLeft = slide.scrollLeft;
+            scrollTop = slide.scrollTop;
+            img.style.cursor = 'grabbing';
+        });
+        
+        modal.addEventListener('mouseleave', function() {
+            if (isDragging) {
+                isDragging = false;
+                const img = modal.querySelector('.zoom-img-el');
+                if (img) img.style.cursor = 'zoom-out';
+            }
+        });
+        
+        modal.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                const img = modal.querySelector('.zoom-img-el');
+                if (img) img.style.cursor = 'zoom-out';
+            }
+        });
+        
+        modal.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const img = e.target;
+            if (!img.classList.contains('zoom-img-el')) return;
+            const slide = img.parentElement;
+            
+            const x = e.pageX - slide.offsetLeft;
+            const y = e.pageY - slide.offsetTop;
+            const walkX = (x - startX) * 1.5;
+            const walkY = (y - startY) * 1.5;
+            slide.scrollLeft = scrollLeft - walkX;
+            slide.scrollTop = scrollTop - walkY;
+        });
+    });
 </script>
 @endpush
 

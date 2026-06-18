@@ -113,6 +113,8 @@ class ItemApiController extends Controller
     /** GET /api/items/{id} — detalle */
     public function show(int $id)
     {
+        \App\Models\PagoCompra::liberarTodasLasOrdenesPendientesExpiradas();
+
         $item = Item::with([
             'imagenes:id_imagen,id_item,nombre,ruta',
             'categoria:id_categoria_item,categoria',

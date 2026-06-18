@@ -212,9 +212,15 @@ class PagoRedirectController extends Controller
                 return redirect()->route('carrito.checkout_index')->with('error', 'Ya hay un pago en procesamiento para esta orden. Por favor espera.');
             }
             Log::error('[Azul Redirect] Excepción al iniciar pago', ['error' => $e->getMessage()]);
+            if (isset($pagoCompra)) {
+                $this->procesarCancelacionODeclinacion($pagoCompra, 'cancelado', 'Excepción en redirección web: ' . $e->getMessage());
+            }
             return redirect()->route('carrito.checkout_index')->with('error', 'Error al procesar tu orden: ' . $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('[Azul Redirect] Excepción al iniciar pago', ['error' => $e->getMessage()]);
+            if (isset($pagoCompra)) {
+                $this->procesarCancelacionODeclinacion($pagoCompra, 'cancelado', 'Excepción en redirección web: ' . $e->getMessage());
+            }
             return redirect()->route('carrito.checkout_index')->with('error', 'Error al procesar tu orden: ' . $e->getMessage());
         }
     }
@@ -241,27 +247,35 @@ class PagoRedirectController extends Controller
             return response('La transacción ya fue procesada o no está pendiente.', 400);
         }
 
-        // Generar los campos y el AuthHash para AZUL
-        $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra);
+        try {
+            // Generar los campos y el AuthHash para AZUL
+            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra);
 
-        // Registrar log local del request
-        DB::table('logs_pagos')->insert([
-            'id_user'          => $pagoCompra->carrito?->id_user ?? auth()->id() ?? 0,
-            'custom_order_id'  => $pagoCompra->id_pago_compra,
-            'provider'         => 'azul_redirect_movil',
-            'transaction_type' => 'sale_init_movil',
-            'amount'           => $pagoCompra->total,
-            'request_payload'  => json_encode($azulData['fields']),
-            'response_payload' => json_encode([]),
-            'is_success'       => true,
-            'created_at'       => now(),
-            'updated_at'       => now(),
-        ]);
+            // Registrar log local del request
+            DB::table('logs_pagos')->insert([
+                'id_user'          => $pagoCompra->carrito?->id_user ?? auth()->id() ?? 0,
+                'custom_order_id'  => $pagoCompra->id_pago_compra,
+                'provider'         => 'azul_redirect_movil',
+                'transaction_type' => 'sale_init_movil',
+                'amount'           => $pagoCompra->total,
+                'request_payload'  => json_encode($azulData['fields']),
+                'response_payload' => json_encode([]),
+                'is_success'       => true,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
 
-        return view('pago.redirect', [
-            'url'    => $azulData['url'],
-            'fields' => $azulData['fields']
-        ]);
+            return view('pago.redirect', [
+                'url'    => $azulData['url'],
+                'fields' => $azulData['fields']
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[Azul Redirect Móvil] Error al iniciar pago móvil. Liberando stock.', ['error' => $e->getMessage()]);
+            
+            $this->procesarCancelacionODeclinacion($pagoCompra, 'cancelado', 'Fallo al iniciar redirección móvil: ' . $e->getMessage());
+
+            return response('Error al iniciar la redirección de pago: ' . $e->getMessage(), 500);
+        }
     }
 
     /**

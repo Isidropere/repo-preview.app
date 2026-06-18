@@ -639,6 +639,8 @@ class ItemController extends Controller
     public function showDetail($slug)
     {
         try {
+            \App\Models\PagoCompra::liberarTodasLasOrdenesPendientesExpiradas();
+
             if (ctype_digit((string) $slug)) {
                 $id = (int) $slug;
             } else {
@@ -761,6 +763,8 @@ class ItemController extends Controller
     public function VerDetalle($slug)
     {
         try {
+            \App\Models\PagoCompra::liberarTodasLasOrdenesPendientesExpiradas();
+
             $parts = explode('-', $slug);
             $hash  = array_pop($parts);
             $id    = \App\Helpers\HashIdHelper::decode($hash);

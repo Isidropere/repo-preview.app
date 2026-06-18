@@ -178,12 +178,39 @@ class PagoApiController extends Controller
                 'redirect_url' => $redirectUrl,
             ]);
 
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() === 'duplicate_order') {
+        } catch (\Throwable $e) {
+            if (isset($pagoCompra)) {
+                try {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($pagoCompra, $e) {
+                        $pagoCompra->estatus = 'cancelado';
+                        $pagoCompra->save();
+
+                        \App\Models\CompraTrazabilidad::create([
+                            'id_pago_compra'  => $pagoCompra->id_pago_compra,
+                            'estado_anterior' => 'pendiente',
+                            'estado_nuevo'    => 'cancelado',
+                            'nota'            => 'Cancelado por fallo en checkout API: ' . $e->getMessage(),
+                            'id_admin'        => null,
+                        ]);
+
+                        $pagoItems = \App\Models\PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
+                        foreach ($pagoItems as $pagoItem) {
+                            $itemModel = \App\Models\Item::find($pagoItem->id_item);
+                            if ($itemModel && $itemModel->inventarios) {
+                                $inventario = $itemModel->inventarios;
+                                $inventario->cantidad += $pagoItem->cantidad;
+                                $inventario->save();
+                            }
+                        }
+                    });
+                } catch (\Throwable $ex) {
+                    Log::error('Error al liberar stock en catch de checkout API: ' . $ex->getMessage());
+                }
+            }
+
+            if ($e instanceof \RuntimeException && $e->getMessage() === 'duplicate_order') {
                 return response()->json(['success' => false, 'message' => 'Ya hay un pago en procesamiento para esta orden.'], 422);
             }
-            return response()->json(['success' => false, 'message' => 'Error al procesar la orden: ' . $e->getMessage()], 500);
-        } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => 'Error al procesar la orden: ' . $e->getMessage()], 500);
         }
     }
