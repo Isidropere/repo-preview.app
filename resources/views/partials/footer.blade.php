@@ -20,7 +20,7 @@
                     <p><button type="button" id="btn-about-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Sobre Nosotros</button></p>
                     <p><button type="button" id="btn-contact-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Contáctanos</button></p>
                     <p><button type="button" id="btn-shipping-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Información de envíos</button></p>
-                    <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('empleos') }}">Empleos</a></p>
+                    <p><button type="button" id="btn-jobs-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Empleos</button></p>
                 </div>
             </div>
 
@@ -403,6 +403,88 @@
         </div>
     </div>
 
+    {{-- Modal Empleos --}}
+    @php
+        $vacantes = \App\Models\Empleo::where('activo', true)->orderBy('created_at', 'desc')->get();
+    @endphp
+    <div id="jobs-modal" class="fixed inset-0 hidden overflow-y-auto" style="z-index: 99999;" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" id="jobs-modal-close-bg"></div>
+
+            <!-- Trick browser to center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {{-- Modal Panel --}}
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-100">
+                <div class="bg-white px-6 pt-6 pb-4 sm:p-8 sm:pb-6 relative">
+                    <!-- Close Button -->
+                    <button type="button" id="btn-jobs-modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-left sm:mt-0 w-full">
+                            <h3 class="text-3xl font-bold text-primary mb-6" id="modal-title">
+                                Trabaja con Nosotros
+                            </h3>
+                            <div class="mt-2 text-gray-700 text-sm leading-relaxed space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                                <p class="text-gray-650 text-base leading-relaxed">
+                                    En <strong>Cámbialo RD</strong> estamos en constante crecimiento y buscamos personas apasionadas que deseen formar parte de nuestro equipo. Si compartes nuestra visión de un mundo más sostenible y te entusiasma la idea de transformar la manera en que las personas intercambian y comercian, ¡nos encantaría conocerte!
+                                </p>
+                                
+                                <div class="bg-orange-50 border border-orange-100 rounded-2xl p-5 flex gap-x-4">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-gray-700 text-sm leading-normal">
+                                        ¿No encuentras una vacante que se ajuste a tu perfil? No te preocupes. Puedes enviarnos tu currículum (CV) en formato PDF directamente a nuestro correo de contacto oficial: <a href="mailto:cambialord.com@gmail.com?subject=Postulación%2520Espontánea" class="text-primary font-bold hover:underline">cambialord.com@gmail.com</a>. Estaremos encantados de guardarlo para futuras oportunidades.
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <h4 class="font-bold text-gray-900 text-lg border-b border-gray-100 pb-2">Vacantes Disponibles</h4>
+                                    
+                                    @forelse($vacantes as $vac)
+                                    <div class="border border-gray-200 hover:border-primary/20 rounded-2xl p-5 space-y-4 bg-gray-50/50 transition-colors">
+                                        <div>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-bold bg-primary/10 text-primary uppercase tracking-wider mb-2">Vacante</span>
+                                            <h5 class="font-bold text-gray-900 text-lg">{{ $vac->titulo }}</h5>
+                                        </div>
+                                        <div class="text-gray-600 text-sm whitespace-pre-line leading-relaxed">
+                                            {{ $vac->descripcion }}
+                                        </div>
+                                        <div class="bg-white border border-gray-100 rounded-xl p-4 mt-2">
+                                            <span class="text-xs font-bold text-primary uppercase tracking-widest block mb-2">Instrucciones de Postulación / Requisitos:</span>
+                                            <div class="text-xs text-gray-600 whitespace-pre-line leading-relaxed">
+                                                {{ $vac->requisitos }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @empty
+                                    <div class="text-center py-8 text-gray-500 bg-gray-55 border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2">
+                                        <svg class="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H5a2 2 0 01-2 2v1m16 0h.01M9 16h.01" />
+                                        </svg>
+                                        <span class="font-medium text-sm">Actualmente no tenemos vacantes activas. ¡Vuelve pronto!</span>
+                                    </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 sm:px-8 sm:py-4 flex justify-end">
+                    <button type="button" id="btn-jobs-modal-close-footer" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to setup a modal
@@ -431,11 +513,12 @@
                 if (closeBg) closeBg.addEventListener('click', closeModal);
             }
 
-            // Setup the four modals
+            // Setup the five modals
             setupModal('btn-about-modal', 'about-modal', 'btn-about-modal-close', 'btn-about-modal-close-footer', 'about-modal-close-bg');
             setupModal('btn-contact-modal', 'contact-modal', 'btn-contact-modal-close', 'btn-contact-modal-close-footer', 'contact-modal-close-bg');
             setupModal('btn-shipping-modal', 'shipping-modal', 'btn-shipping-modal-close', 'btn-shipping-modal-close-footer', 'shipping-modal-close-bg');
             setupModal('btn-responsibility-modal', 'responsibility-modal', 'btn-responsibility-modal-close', 'btn-responsibility-modal-close-footer', 'responsibility-modal-close-bg');
+            setupModal('btn-jobs-modal', 'jobs-modal', 'btn-jobs-modal-close', 'btn-jobs-modal-close-footer', 'jobs-modal-close-bg');
         });
     </script>
 </footer>
