@@ -346,7 +346,7 @@
 
 
 {{-- MODAL ZOOM --}}
-<div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:flex-start;cursor:zoom-out;user-select:none;scroll-snap-type:x mandatory;">
+<div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:9999;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:flex-start;cursor:zoom-out;user-select:none;scroll-snap-type:x mandatory;">
     <button onclick="closeZoom()" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s;outline:none;" onmouseover="this.style.backgroundColor='rgba(255,255,255,.4)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,.2)'">✕</button>
     
     @if($imagenes->count() > 1)
