@@ -5,7 +5,7 @@
             {{-- Logo --}}
             <div class="col-span-full lg:col-span-1 flex items-center py-2">
                 <a class="flex-none text-xl font-semibold" href="/" aria-label="Brand">
-                    <img src="/imgs/logoTypes/logoFooter.png"
+                    <img src="/imgs/logoTypes/header-logo.png"
                          style="height:48px;object-fit:contain;transition:transform .3s ease, filter .3s ease;cursor:pointer;"
                          onmouseover="this.style.transform='scale(1.1)';this.style.filter='brightness(1.15)'"
                          onmouseout="this.style.transform='scale(1)';this.style.filter='brightness(1)'"
