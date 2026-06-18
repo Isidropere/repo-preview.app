@@ -28,7 +28,7 @@
             <div class="col-span-1">
                 <h4 class="font-bold text-secondary text-base mb-3">Ayuda</h4>
                 <div class="grid space-y-2 text-sm">
-                    <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('responsabilidad') }}">Responsabilidad social</a></p>
+                    <p><button type="button" id="btn-responsibility-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Responsabilidad social</button></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('realizar-intercambio') }}">¿Cómo realizar un intercambio?</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('como-vender') }}">¿Cómo vender?</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('realizar-compra') }}">¿Cómo realizar una compra?</a></p>
@@ -316,6 +316,99 @@
         </div>
     </div>
 
+    {{-- Modal Responsabilidad Social --}}
+    <div id="responsibility-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" id="responsibility-modal-close-bg"></div>
+
+            <!-- Trick browser to center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {{-- Modal Panel --}}
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-100">
+                <div class="bg-white px-6 pt-6 pb-4 sm:p-8 sm:pb-6 relative">
+                    <!-- Close Button -->
+                    <button type="button" id="btn-responsibility-modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-left sm:mt-0 w-full">
+                            <h3 class="text-3xl font-bold text-primary mb-6" id="modal-title">
+                                Responsabilidad Social
+                            </h3>
+                            <div class="mt-2 text-gray-700 text-sm leading-relaxed space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                                <p class="text-gray-650 text-base leading-relaxed">
+                                    En <strong>Cámbialo RD</strong>, la responsabilidad social no es solo un compromiso corporativo; es nuestra razón de ser. Nuestra plataforma fue creada con el firme propósito de mitigar el impacto ambiental y fortalecer la economía familiar en la República Dominicana a través de un modelo de <strong>economía circular</strong> y consumo consciente.
+                                </p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Tarjeta 1: Reducción de Huella Ecológica -->
+                                    <div class="border border-gray-100 rounded-2xl p-5 space-y-3 bg-green-50/10">
+                                        <h4 class="font-bold text-green-700 text-base flex items-center gap-x-2">
+                                            <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M4 11a8 8 0 1116 0 8 8 0 01-16 0z"/>
+                                            </svg>
+                                            Reducción de Desechos
+                                        </h4>
+                                        <p class="text-gray-600 text-sm leading-relaxed">
+                                            Promovemos la reutilización y el reciclaje práctico de objetos. Al darle una segunda vida a los artículos en buen estado, evitamos que terminen prematuramente en vertederos, disminuyendo la acumulación de residuos en nuestro país.
+                                        </p>
+                                    </div>
+
+                                    <!-- Tarjeta 2: Economía Circular -->
+                                    <div class="border border-gray-100 rounded-2xl p-5 space-y-3 bg-blue-50/10">
+                                        <h4 class="font-bold text-blue-700 text-base flex items-center gap-x-2">
+                                            <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3 3L22 4"/>
+                                            </svg>
+                                            Trueque Sostenible
+                                        </h4>
+                                        <p class="text-gray-600 text-sm leading-relaxed">
+                                            Bajo el lema <em>"Si no puedes venderlo, ¡cámbialo!"</em>, incentivamos el intercambio directo de bienes sin necesidad de usar dinero, promoviendo el ahorro, la solidaridad y un comercio más inclusivo y humano.
+                                        </p>
+                                    </div>
+
+                                    <!-- Tarjeta 3: Consumo Consciente -->
+                                    <div class="border border-gray-100 rounded-2xl p-5 space-y-3 bg-orange-50/10">
+                                        <h4 class="font-bold text-orange-600 text-base flex items-center gap-x-2">
+                                            <svg class="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                            </svg>
+                                            Educación Ecológica
+                                        </h4>
+                                        <p class="text-gray-600 text-sm leading-relaxed">
+                                            Operamos de manera transparente y ética, impulsando iniciativas y creando conciencia sobre los beneficios ecológicos de preferir el mercado de segunda mano frente al consumismo masivo tradicional.
+                                        </p>
+                                    </div>
+
+                                    <!-- Tarjeta 4: Impacto Comunitario -->
+                                    <div class="border border-gray-100 rounded-2xl p-5 space-y-3 bg-purple-50/10">
+                                        <h4 class="font-bold text-purple-700 text-base flex items-center gap-x-2">
+                                            <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                            </svg>
+                                            Unión de Comunidades
+                                        </h4>
+                                        <p class="text-gray-600 text-sm leading-relaxed">
+                                            Facilitamos que personas de diferentes provincias de la República Dominicana conecten de forma segura, construyendo una red colaborativa que promueve la equidad social y el acceso a productos de calidad.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 sm:px-8 sm:py-4 flex justify-end">
+                    <button type="button" id="btn-responsibility-modal-close-footer" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to setup a modal
@@ -344,10 +437,11 @@
                 if (closeBg) closeBg.addEventListener('click', closeModal);
             }
 
-            // Setup the three modals
+            // Setup the four modals
             setupModal('btn-about-modal', 'about-modal', 'btn-about-modal-close', 'btn-about-modal-close-footer', 'about-modal-close-bg');
             setupModal('btn-contact-modal', 'contact-modal', 'btn-contact-modal-close', 'btn-contact-modal-close-footer', 'contact-modal-close-bg');
             setupModal('btn-shipping-modal', 'shipping-modal', 'btn-shipping-modal-close', 'btn-shipping-modal-close-footer', 'shipping-modal-close-bg');
+            setupModal('btn-responsibility-modal', 'responsibility-modal', 'btn-responsibility-modal-close', 'btn-responsibility-modal-close-footer', 'responsibility-modal-close-bg');
         });
     </script>
 </footer>
