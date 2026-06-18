@@ -17,7 +17,7 @@
             <div class="col-span-1">
                 <h4 class="font-bold text-secondary text-base mb-3">Secciones</h4>
                 <div class="grid space-y-2 text-sm">
-                    <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('about') }}">Sobre Nosotros</a></p>
+                    <p><button type="button" id="btn-about-modal" class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors text-left focus:outline-none">Sobre Nosotros</button></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('cont') }}">Contáctanos</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('envios') }}">Información de envíos</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('empleos') }}">Empleos</a></p>
@@ -85,4 +85,95 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Sobre Nosotros --}}
+    <div id="about-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" id="about-modal-close-bg"></div>
+
+            <!-- Trick browser to center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {{-- Modal Panel --}}
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-100">
+                <div class="bg-white px-6 pt-6 pb-4 sm:p-8 sm:pb-6 relative">
+                    <!-- Close Button -->
+                    <button type="button" id="btn-about-modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-left sm:mt-0 w-full">
+                            <h3 class="text-3xl font-bold text-primary mb-6" id="modal-title">
+                                Sobre nosotros
+                            </h3>
+                            <div class="mt-2 text-gray-700 text-sm leading-relaxed space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                                <p>
+                                    Cámbialo RD nace con la visión de ofrecer una solución innovadora y sostenible en la República Dominicana. Somos una plataforma en línea dedicada a facilitar el intercambio, compra y venta de objetos nuevos o usados en buen estado. Nuestra misión es promover un estilo de vida más ecológico y consciente, brindando a nuestros usuarios la posibilidad de darle una segunda vida a esos artículos que ya no utilizan. Con nuestro eslogan: “Si no puedes venderlo, ¡cámbialo!", queremos incentivar el reciclaje y el ahorro, proporcionando una alternativa práctica para quienes desean obtener nuevos artículos sin necesidad de comprarlos, o simplemente desean vender lo que ya no usan.
+                                </p>
+                                
+                                <div>
+                                    <h4 class="font-bold text-primary text-lg mb-2">Misión</h4>
+                                    <p>
+                                        En Cámbialo RD, nuestra misión es transformar la forma en que las personas en la República Dominicana intercambian, compran y venden artículos, promoviendo un consumo consciente y sostenible. Nos dedicamos a ofrecer una plataforma en línea segura y accesible que facilite el aprovechamiento de recursos, reduciendo el desperdicio y fomentando un estilo de vida más ecológico. Buscamos conectar a las personas, dándoles la oportunidad de encontrar nuevas utilidades para los objetos que ya no usan, contribuyendo así a un mundo más responsable y sostenible.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-primary text-lg mb-2">Visión</h4>
+                                    <p>
+                                        Nuestra visión es ser la plataforma líder en la República Dominicana para el intercambio, compra y venta de artículos, posicionándonos como un referente en el consumo sostenible y consciente. Aspiramos a expandir nuestra comunidad, creando un impacto positivo tanto en el medio ambiente como en la economía local. Queremos ser reconocidos por nuestra capacidad de conectar a las personas, ofreciendo soluciones innovadoras que faciliten una vida más equilibrada y respetuosa con el entorno.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-primary text-lg mb-4">Valores</h4>
+                                    <ul class="list-disc pl-5 space-y-2.5">
+                                        <li><span class="font-bold text-gray-900">Sostenibilidad:</span> Fomentamos prácticas que contribuyen a la reducción de desechos y al cuidado del medio ambiente, promoviendo el intercambio y la reutilización de objetos.</li>
+                                        <li><span class="font-bold text-gray-900">Responsabilidad:</span> Operamos de manera ética y transparente, garantizando que nuestras acciones beneficien a la comunidad y respeten el entorno.</li>
+                                        <li><span class="font-bold text-gray-900">Innovación:</span> Nos esforzamos por ofrecer soluciones tecnológicas que faciliten la vida de nuestros usuarios, mejorando constantemente nuestra plataforma para adaptarnos a sus necesidades.</li>
+                                        <li><span class="font-bold text-gray-900">Confianza:</span> Brindamos un entorno seguro y confiable donde nuestros usuarios pueden realizar intercambios, compras y ventas con total tranquilidad.</li>
+                                        <li><span class="font-bold text-gray-900">Comunidad:</span> Valoramos y fortalecemos las conexiones entre nuestros usuarios, creando un espacio donde todos pueden beneficiarse mutuamente y contribuir al bien común.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 sm:px-8 sm:py-4 flex justify-end">
+                    <button type="button" id="btn-about-modal-close-footer" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const openBtn = document.getElementById('btn-about-modal');
+            const modal = document.getElementById('about-modal');
+            const closeBtn = document.getElementById('btn-about-modal-close');
+            const closeFooterBtn = document.getElementById('btn-about-modal-close-footer');
+            const closeBg = document.getElementById('about-modal-close-bg');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            if (openBtn && modal) {
+                openBtn.addEventListener('click', openModal);
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                if (closeFooterBtn) closeFooterBtn.addEventListener('click', closeModal);
+                if (closeBg) closeBg.addEventListener('click', closeModal);
+            }
+        });
+    </script>
 </footer>
