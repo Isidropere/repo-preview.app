@@ -537,32 +537,45 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 }
 
-class _CategoriesGlobe extends StatelessWidget {
+class _CategoriesGlobe extends StatefulWidget {
   final List categorias;
   const _CategoriesGlobe({required this.categorias});
 
   @override
+  State<_CategoriesGlobe> createState() => _CategoriesGlobeState();
+}
+
+class _CategoriesGlobeState extends State<_CategoriesGlobe> {
+  int _currentIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
     return CarouselSlider.builder(
-      itemCount: categorias.length,
+      itemCount: widget.categorias.length,
       itemBuilder: (context, index, realIndex) {
-        // Envolvemos el chip para darle forma de globo/píldora si lo desean, 
-        // pero ya el _CategoriaChip tiene su diseño.
-        return _CategoriaChip(cat: categorias[index]);
+        final isCenter = index == _currentIndex;
+        return Center(
+          child: AnimatedScale(
+            scale: isCenter ? 1.35 : 0.9,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutBack,
+            child: _CategoriaChip(cat: widget.categorias[index]),
+          ),
+        );
       },
       options: CarouselOptions(
-        height: 120,
-        viewportFraction: 0.3,          // Muestra unas 3-4 en pantalla
+        height: 130, // Ligeramente mayor para evitar recortes por escala
+        viewportFraction: 0.28,          // Muestra unas 3-4 en pantalla de forma balanceada
         initialPage: 0,
-        enableInfiniteScroll: true,     // AutoPlay infinito
+        enableInfiniteScroll: true,     // Scroll infinito continuo
         reverse: false,
         autoPlay: false,
-        autoPlayInterval: const Duration(seconds: 3),
-        autoPlayAnimationDuration: const Duration(milliseconds: 800),
-        autoPlayCurve: Curves.fastOutSlowIn, // Animación suave
-        enlargeCenterPage: true,        // Efecto 3D tipo CoverFlow
-        enlargeStrategy: CenterPageEnlargeStrategy.zoom,
         scrollDirection: Axis.horizontal,
+        onPageChanged: (index, reason) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }

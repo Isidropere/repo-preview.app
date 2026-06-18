@@ -874,6 +874,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'updateStep'])->name('update_step');
             Route::delete('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'destroyStep'])->name('destroy_step');
         });
+
+        // Recursos Humanos (Gestión de Empleos)
+        Route::prefix('recursos-humanos')->name('recursos-humanos.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'index'])->name('index');
+            Route::get('/crear', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'store'])->name('store');
+            Route::get('/{id}/editar', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 
