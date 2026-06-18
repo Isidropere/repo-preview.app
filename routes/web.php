@@ -292,15 +292,18 @@ Route::get('/responsabilidad', function () {
 })->name('responsabilidad');
 
 Route::get('/realizar-intercambio', function () {
-    return view('realizar-intercambio.realizar-intercambio');
+    $pagina = \App\Models\AyudaPagina::with('pasos')->where('slug', 'realizar-intercambio')->firstOrFail();
+    return view('realizar-intercambio.realizar-intercambio', compact('pagina'));
 })->name('realizar-intercambio');
 
 Route::get('/como-vender', function () {
-    return view('como-vender.como-vender');
+    $pagina = \App\Models\AyudaPagina::with('pasos')->where('slug', 'como-vender')->firstOrFail();
+    return view('como-vender.como-vender', compact('pagina'));
 })->name('como-vender');
 
 Route::get('/realizar-compra', function () {
-    return view('realizar-compra.realizar-compra');
+    $pagina = \App\Models\AyudaPagina::with('pasos')->where('slug', 'realizar-compra')->firstOrFail();
+    return view('realizar-compra.realizar-compra', compact('pagina'));
 })->name('realizar-compra');
 
 Route::get('/como-publicar-articulo', function () {
@@ -856,6 +859,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
             Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
             Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+        });
+
+        // Administración de Páginas de Ayuda y Tutoriales
+        Route::prefix('ayuda')->name('ayuda.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'index'])->name('index');
+            Route::get('/{id}/editar', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'editPage'])->name('edit_page');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'updatePage'])->name('update_page');
+            
+            // Pasos
+            Route::get('/{pageId}/pasos/crear', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'createStep'])->name('create_step');
+            Route::post('/{pageId}/pasos', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'storeStep'])->name('store_step');
+            Route::get('/pasos/{stepId}/editar', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'editStep'])->name('edit_step');
+            Route::put('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'updateStep'])->name('update_step');
+            Route::delete('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'destroyStep'])->name('destroy_step');
         });
     });
 });
