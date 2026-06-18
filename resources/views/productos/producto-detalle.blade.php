@@ -56,7 +56,7 @@
                              src="{{ \App\Helpers\ImageHelper::urlMedia($imgPrincipal->ruta, $imgPrincipal->nombre) }}"
                              alt="{{ $item->item }}"
                              style="width:100%;height:100%;object-fit:contain;cursor:zoom-in;"
-                             onclick="openZoom(this.src)">
+                             onclick="openZoom(currentMainImageIndex)">
                         @endif
                     @else
                         <div style="display:flex;flex-direction:column;align-items:center;color:#cbd5e1;gap:0.5rem;">
@@ -70,7 +70,7 @@
                         @if($esIntercambio)<span style="padding:0.2rem 0.55rem;background:#10b981;color:#fff;font-size:0.62rem;font-weight:700;border-radius:9999px;letter-spacing:.03em;">INTERCAMBIO</span>@endif
                     </div>
                     @if($imgPrincipal && ($imgPrincipal->tipo ?? 'imagen') !== 'video')
-                    <button onclick="openZoom(document.getElementById('mainMedia').src)"
+                    <button onclick="openZoom(currentMainImageIndex)"
                             style="position:absolute;bottom:0.6rem;right:0.6rem;background:rgba(255,255,255,.92);border:none;border-radius:9999px;padding:0.35rem;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12);">
                         <svg style="width:0.85rem;height:0.85rem;" fill="none" stroke="#64748b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </button>
@@ -82,7 +82,7 @@
                 <div style="display:flex;gap:0.4rem;overflow-x:auto;padding-bottom:2px;">
                     @foreach($imagenes as $img)
                     @php $isVid = ($img->tipo ?? 'imagen') === 'video'; @endphp
-                    <button onclick="switchMedia('{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}', {{ $isVid ? 'true':'false' }})"
+                    <button onclick="switchMedia('{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}', {{ $isVid ? 'true':'false' }}, {{ $loop->index }})"
                             style="flex-shrink:0;width:52px;height:52px;border-radius:0.5rem;border:2px solid #e2e8f0;overflow:hidden;cursor:pointer;padding:0;background:none;transition:border-color .15s;"
                             data-src="{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}" class="thumb-btn"
                             onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor=this.dataset.active?'#3b82f6':'#e2e8f0'">
@@ -346,9 +346,23 @@
 
 
 {{-- MODAL ZOOM --}}
-<div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
-    <button onclick="closeZoom()" style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:1.25rem;width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;">✕</button>
-    <img id="zoomImg" src="" alt="Zoom" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:0.5rem;" onclick="event.stopPropagation()">
+<div id="zoomModal" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:flex-start;cursor:zoom-out;user-select:none;scroll-snap-type:x mandatory;">
+    <button onclick="closeZoom()" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;transition:background .2s;outline:none;" onmouseover="this.style.backgroundColor='rgba(255,255,255,.4)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,.2)'">✕</button>
+    
+    @if($imagenes->count() > 1)
+    <button onclick="prevZoomImage(event)" id="btnZoomPrev" style="position:fixed;left:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">‹</button>
+    <button onclick="nextZoomImage(event)" id="btnZoomNext" style="position:fixed;right:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;font-size:1.5rem;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10000;outline:none;">›</button>
+    @endif
+
+    <div id="zoomTrack" style="display:inline-flex;align-items:center;height:100%;" onclick="event.stopPropagation()">
+        @foreach($imagenes as $img)
+            @if(($img->tipo ?? 'imagen') !== 'video')
+            <div class="zoom-slide" style="width:100vw;height:100vh;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;scroll-snap-align:center;overflow:hidden;position:relative;">
+                <img class="zoom-img-el" src="{{ \App\Helpers\ImageHelper::urlMedia($img->ruta, $img->nombre) }}" alt="Zoom" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:0.5rem;cursor:zoom-in;transition:transform 0.25s ease, max-width 0.25s ease, max-height 0.25s ease;" onclick="toggleZoom(event, this)">
+            </div>
+            @endif
+        @endforeach
+    </div>
 </div>
 
 {{-- MODAL NEGOCIACIONES --}}
@@ -612,7 +626,9 @@ window._urlNegStore = "{{ route('negociaciones.store') }}";
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 <script>
-function switchMedia(src, isVideo) {
+let currentMainImageIndex = 0;
+
+function switchMedia(src, isVideo, index) {
     if (isVideo) {
         const wrap = document.getElementById('mainMedia').parentElement;
         wrap.innerHTML = `<video src="${src}" style="width:100%;height:100%;object-fit:contain;" controls autoplay></video>`;
@@ -620,20 +636,178 @@ function switchMedia(src, isVideo) {
         const img = document.getElementById('mainMedia');
         if (img) img.src = src;
     }
+    if (index !== undefined) {
+        currentMainImageIndex = index;
+    }
     document.querySelectorAll('.thumb-btn').forEach(b => {
         b.style.borderColor = b.dataset.src === src ? '#3b82f6' : '#e2e8f0';
         b.dataset.active = b.dataset.src === src ? '1' : '';
     });
 }
 
-function openZoom(src) {
+let isZoomed = false;
+let currentZoomIndex = 0;
+
+function openZoom(index) {
     const m = document.getElementById('zoomModal');
-    document.getElementById('zoomImg').src = src;
+    currentZoomIndex = index || 0;
+    
+    // Reset zoomed states
+    isZoomed = false;
+    m.querySelectorAll('.zoom-slide').forEach(slide => {
+        slide.style.overflow = 'hidden';
+        slide.scrollLeft = 0;
+        slide.scrollTop = 0;
+        const img = slide.querySelector('.zoom-img-el');
+        if (img) {
+            img.style.maxWidth = '90vw';
+            img.style.maxHeight = '90vh';
+            img.style.width = 'auto';
+            img.style.height = 'auto';
+            img.style.cursor = 'zoom-in';
+        }
+    });
+
     m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Scroll to the active slide
+    setTimeout(() => {
+        const slides = m.querySelectorAll('.zoom-slide');
+        if (slides[currentZoomIndex]) {
+            slides[currentZoomIndex].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'start' });
+        }
+        updateZoomButtons();
+    }, 50);
 }
+
 function closeZoom() {
     document.getElementById('zoomModal').style.display = 'none';
+    document.body.style.overflow = '';
 }
+
+function updateZoomButtons() {
+    const m = document.getElementById('zoomModal');
+    const slides = m.querySelectorAll('.zoom-slide');
+    const prev = document.getElementById('btnZoomPrev');
+    const next = document.getElementById('btnZoomNext');
+    if (prev) prev.style.display = currentZoomIndex > 0 ? 'flex' : 'none';
+    if (next) next.style.display = currentZoomIndex < slides.length - 1 ? 'flex' : 'none';
+}
+
+function prevZoomImage(e) {
+    e.stopPropagation();
+    if (currentZoomIndex > 0) {
+        currentZoomIndex--;
+        const m = document.getElementById('zoomModal');
+        const slides = m.querySelectorAll('.zoom-slide');
+        slides[currentZoomIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        updateZoomButtons();
+    }
+}
+
+function nextZoomImage(e) {
+    e.stopPropagation();
+    const m = document.getElementById('zoomModal');
+    const slides = m.querySelectorAll('.zoom-slide');
+    if (currentZoomIndex < slides.length - 1) {
+        currentZoomIndex++;
+        slides[currentZoomIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        updateZoomButtons();
+    }
+}
+
+function toggleZoom(e, img) {
+    if (e) e.stopPropagation();
+    const slide = img.parentElement;
+    
+    if (!isZoomed) {
+        img.style.maxWidth = 'none';
+        img.style.maxHeight = 'none';
+        img.style.width = '180%';
+        img.style.height = 'auto';
+        img.style.cursor = 'zoom-out';
+        slide.style.overflow = 'auto';
+        isZoomed = true;
+    } else {
+        img.style.maxWidth = '90vw';
+        img.style.maxHeight = '90vh';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        img.style.cursor = 'zoom-in';
+        slide.style.overflow = 'hidden';
+        slide.scrollLeft = 0;
+        slide.scrollTop = 0;
+        isZoomed = false;
+    }
+}
+
+// Escuchar cambios de scroll para actualizar botones
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('zoomModal');
+    if (!modal) return;
+    
+    modal.addEventListener('scroll', function() {
+        const width = modal.clientWidth;
+        if (width === 0) return;
+        const slides = modal.querySelectorAll('.zoom-slide');
+        const index = Math.round(modal.scrollLeft / width);
+        if (index !== currentZoomIndex && index >= 0 && index < slides.length) {
+            currentZoomIndex = index;
+            updateZoomButtons();
+        }
+    });
+
+    // Drag to pan setup
+    let isDragging = false;
+    let startX, startY;
+    let scrollLeft, scrollTop;
+    
+    modal.addEventListener('mousedown', function(e) {
+        if (!isZoomed || e.target.tagName === 'BUTTON') return;
+        const img = e.target;
+        if (!img.classList.contains('zoom-img-el')) return;
+        const slide = img.parentElement;
+        
+        isDragging = true;
+        startX = e.pageX - slide.offsetLeft;
+        startY = e.pageY - slide.offsetTop;
+        scrollLeft = slide.scrollLeft;
+        scrollTop = slide.scrollTop;
+        img.style.cursor = 'grabbing';
+    });
+    
+    modal.addEventListener('mouseleave', function() {
+        if (isDragging) {
+            isDragging = false;
+            const img = modal.querySelector('.zoom-img-el');
+            if (img) img.style.cursor = 'zoom-out';
+        }
+    });
+    
+    modal.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            const img = modal.querySelector('.zoom-img-el');
+            if (img) img.style.cursor = 'zoom-out';
+        }
+    });
+    
+    modal.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const img = e.target;
+        if (!img.classList.contains('zoom-img-el')) return;
+        const slide = img.parentElement;
+        
+        const x = e.pageX - slide.offsetLeft;
+        const y = e.pageY - slide.offsetTop;
+        const walkX = (x - startX) * 1.5;
+        const walkY = (y - startY) * 1.5;
+        slide.scrollLeft = scrollLeft - walkX;
+        slide.scrollTop = scrollTop - walkY;
+    });
+});
 
 function changeQty(d) {
     const i = document.getElementById('quantity');

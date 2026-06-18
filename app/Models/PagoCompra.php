@@ -152,10 +152,55 @@ class PagoCompra extends Model
     }
 
     /**
+     * Libera todas las órdenes que han estado pendientes por más de 10 minutos (expiradas) y restaura su stock.
+     */
+    public static function liberarTodasLasOrdenesPendientesExpiradas(): void
+    {
+        try {
+            $limite = now()->subMinutes(10);
+            $ordenesExpiradas = self::where('estatus', 'pendiente')
+                ->where('fecha', '<=', $limite)
+                ->get();
+
+            foreach ($ordenesExpiradas as $pagoCompra) {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($pagoCompra) {
+                    $pagoCompra->estatus = 'cancelado';
+                    $pagoCompra->save();
+
+                    // Registrar trazabilidad
+                    CompraTrazabilidad::create([
+                        'id_pago_compra'  => $pagoCompra->id_pago_compra,
+                        'estado_anterior' => 'pendiente',
+                        'estado_nuevo'    => 'cancelado',
+                        'nota'            => 'Liberado automáticamente por expiración del tiempo de pago (10 minutos)',
+                        'id_admin'        => null,
+                    ]);
+
+                    // Devolver el inventario reservado
+                    $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
+                    foreach ($pagoItems as $pagoItem) {
+                        $itemModel = Item::find($pagoItem->id_item);
+                        if ($itemModel && $itemModel->inventarios) {
+                            $inventario = $itemModel->inventarios;
+                            $inventario->cantidad += $pagoItem->cantidad;
+                            $inventario->save();
+                        }
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error al liberar órdenes pendientes expiradas: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Libera cualquier orden pendiente asociada a un carrito y restaura su stock.
      */
     public static function liberarOrdenesPendientes($id_carrito): void
     {
+        // Primero liberamos las expiradas globales
+        self::liberarTodasLasOrdenesPendientesExpiradas();
+
         $ordenesPendientes = self::where('id_carrito', $id_carrito)
             ->where('estatus', 'pendiente')
             ->get();

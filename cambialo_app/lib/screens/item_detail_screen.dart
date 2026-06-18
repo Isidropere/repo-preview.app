@@ -5,6 +5,7 @@ import '../core/api_client.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
+import '../widgets/full_screen_image_viewer.dart';
 import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
 import 'login_screen.dart';
 import 'carrito_screen.dart';
@@ -99,22 +100,40 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
           // Galería de imágenes con indicador de página
           Stack(children: [
-            SizedBox(
-              height: 280,
-              child: imagenes.isEmpty
-                  ? ItemImage(item: _item!, width: double.infinity, height: 280)
-                  : PageView.builder(
-                      itemCount: imagenes.length,
-                      onPageChanged: (i) => setState(() => _imgIndex = i),
-                      itemBuilder: (_, i) {
-                        return ItemImage(
-                          item: _item!,
-                          imageUrl: imagenes[i]['image_url'],
-                          width: double.infinity,
-                          height: 280,
-                        );
-                      },
-                    ),
+            GestureDetector(
+              onTap: imagenes.isEmpty
+                  ? null
+                  : () {
+                      final urls = imagenes
+                          .map((img) => ApiClient.fixImageUrl(img['image_url'] as String?))
+                          .toList();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FullScreenImageViewer(
+                            imageUrls: urls,
+                            initialIndex: _imgIndex,
+                          ),
+                        ),
+                      );
+                    },
+              child: SizedBox(
+                height: 280,
+                child: imagenes.isEmpty
+                    ? ItemImage(item: _item!, width: double.infinity, height: 280)
+                    : PageView.builder(
+                        itemCount: imagenes.length,
+                        onPageChanged: (i) => setState(() => _imgIndex = i),
+                        itemBuilder: (_, i) {
+                          return ItemImage(
+                            item: _item!,
+                            imageUrl: imagenes[i]['image_url'],
+                            width: double.infinity,
+                            height: 280,
+                          );
+                        },
+                      ),
+              ),
             ),
             if (imagenes.length > 1)
               Positioned(
