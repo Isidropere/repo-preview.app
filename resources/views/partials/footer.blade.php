@@ -1,6 +1,6 @@
 <footer class="mt-auto w-full shadow-2xl bg-white border-t border-gray-100">
     <div class="mt-auto w-full max-w-[85rem] py-8 px-4 sm:px-6 lg:px-8 mx-auto">
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 lg:gap-12">
 
             {{-- Logo --}}
             <div class="col-span-full lg:col-span-1 flex items-center py-2">
@@ -17,7 +17,6 @@
             <div class="col-span-1">
                 <h4 class="font-bold text-secondary text-base mb-3">Secciones</h4>
                 <div class="grid space-y-2 text-sm">
-                    <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="/">Inicio</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('about') }}">Sobre Nosotros</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('cont') }}">Contáctanos</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('envios') }}">Información de envíos</a></p>
@@ -44,19 +43,6 @@
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('legal.privacidad') }}">Política de Privacidad</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('legal.devoluciones') }}">Devoluciones y Cancelaciones</a></p>
                 </div>
-            </div>
-
-            {{-- Buscador --}}
-            <div class="col-span-2 lg:col-span-1">
-                <h4 class="font-bold text-secondary text-base mb-3">Buscar</h4>
-                <form method="GET" action="{{ route('items.search_header') }}">
-                    <div class="flex flex-col gap-2 sm:flex-row bg-white rounded-lg border border-gray-200 p-1">
-                        <input type="search" name="q" class="py-1.5 px-3 block w-full border-0 rounded-lg text-xs focus:ring-0 focus:outline-none" placeholder="Buscar productos...">
-                        <button type="submit" class="py-1.5 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg border border-transparent bg-secondary text-white hover:bg-hoverSecondary transition-colors">
-                            Buscar
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
 
