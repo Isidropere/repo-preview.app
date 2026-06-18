@@ -537,32 +537,76 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 }
 
-class _CategoriesGlobe extends StatelessWidget {
+class _CategoriesGlobe extends StatefulWidget {
   final List categorias;
   const _CategoriesGlobe({required this.categorias});
 
   @override
+  State<_CategoriesGlobe> createState() => _CategoriesGlobeState();
+}
+
+class _CategoriesGlobeState extends State<_CategoriesGlobe> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return CarouselSlider.builder(
-      itemCount: categorias.length,
-      itemBuilder: (context, index, realIndex) {
-        // Envolvemos el chip para darle forma de globo/píldora si lo desean, 
-        // pero ya el _CategoriaChip tiene su diseño.
-        return _CategoriaChip(cat: categorias[index]);
-      },
-      options: CarouselOptions(
-        height: 120,
-        viewportFraction: 0.3,          // Muestra unas 3-4 en pantalla
-        initialPage: 0,
-        enableInfiniteScroll: true,     // AutoPlay infinito
-        reverse: false,
-        autoPlay: false,
-        autoPlayInterval: const Duration(seconds: 3),
-        autoPlayAnimationDuration: const Duration(milliseconds: 800),
-        autoPlayCurve: Curves.fastOutSlowIn, // Animación suave
-        enlargeCenterPage: true,        // Efecto 3D tipo CoverFlow
-        enlargeStrategy: CenterPageEnlargeStrategy.zoom,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final itemWidth = 85.0;
+    final sidePadding = (screenWidth / 2) - (itemWidth / 2);
+
+    return Container(
+      height: 130,
+      child: ListView.builder(
+        controller: _scrollController,
         scrollDirection: Axis.horizontal,
+        itemCount: widget.categorias.length,
+        padding: EdgeInsets.symmetric(horizontal: sidePadding),
+        itemBuilder: (context, index) {
+          double scale = 1.0;
+          if (_scrollController.hasClients) {
+            final center = screenWidth / 2;
+            final itemStart = sidePadding + (index * itemWidth);
+            final itemCenterInScroll = itemStart + (itemWidth / 2);
+            final itemCenterOnScreen = itemCenterInScroll - _scrollController.offset;
+            
+            final distance = (itemCenterOnScreen - center).abs();
+            final maxDistance = 150.0;
+            if (distance < maxDistance) {
+              final ratio = 1.0 - (distance / maxDistance);
+              scale = 1.0 + (0.3 * ratio); // Zoom maximo de 1.3x
+            }
+          } else {
+            if (index == 0) {
+              scale = 1.3;
+            }
+          }
+
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: itemWidth,
+              child: _CategoriaChip(cat: widget.categorias[index]),
+            ),
+          );
+        },
       ),
     );
   }
