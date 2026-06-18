@@ -52,6 +52,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
               onPageChanged: (index) {
                 setState(() {
                   _currentIndex = index;
+                  _isZoomed = false; // Reset zoom state when page changes
                 });
               },
               itemBuilder: (context, index) {
@@ -59,10 +60,14 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
                   child: ZoomableImageSlide(
                     imageUrl: widget.imageUrls[index],
                     onZoomChanged: (zoomed) {
-                      if (_isZoomed != zoomed) {
-                        setState(() {
-                          _isZoomed = zoomed;
-                        });
+                      // Only update the parent's scroll physics if this zoom change comes from the ACTIVE page.
+                      // This avoids layout calculations from background/disposed slides affecting parent physics.
+                      if (index == _currentIndex) {
+                        if (_isZoomed != zoomed) {
+                          setState(() {
+                            _isZoomed = zoomed;
+                          });
+                        }
                       }
                     },
                   ),
