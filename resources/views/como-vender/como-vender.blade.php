@@ -18,7 +18,7 @@
                     <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-6 w-full md:w-1/3">
                         <div class="bg-gray-200 h-64 flex items-center justify-center overflow-hidden rounded-xl border border-gray-100">
                             @if($paso->imagen)
-                            <img src="{{ $paso->imagen }}" alt="{{ $paso->titulo }}" class="w-full h-full object-cover">
+                            <img src="{{ $paso->imagen }}" alt="{{ $paso->titulo }}" class="w-full h-full object-contain">
                             @else
                             <span class="text-gray-500 text-center font-medium">Imagen del paso {{ $paso->orden }}</span>
                             @endif
