@@ -51,6 +51,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
       if (res.statusCode == 200) {
         final parsed = jsonDecode(res.body);
         setState(() { _data = parsed; _loading = false; });
+        try {
+          final todosItems = (parsed['todosLosItems'] as List?) ?? [];
+          ApiClient.cartCountNotifier.value = todosItems.length;
+        } catch (_) {}
       } else {
         setState(() => _loading = false);
       }

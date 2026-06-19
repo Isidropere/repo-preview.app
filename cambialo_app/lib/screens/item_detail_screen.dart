@@ -8,7 +8,6 @@ import '../widgets/item_image.dart';
 import '../widgets/full_screen_image_viewer.dart';
 import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
 import 'login_screen.dart';
-import 'carrito_screen.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -51,6 +50,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         {'id_item': widget.itemId, 'cantidad': 1}, auth: true);
     setState(() => _addingToCart = false);
     if (!mounted) return;
+    if (res.statusCode == 200) {
+      try {
+        final data = jsonDecode(res.body);
+        if (data['cart_count'] != null) {
+          ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+        } else {
+          ApiClient.cartCountNotifier.value++;
+        }
+      } catch (_) {
+        ApiClient.cartCountNotifier.value++;
+      }
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
       backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
@@ -83,17 +94,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CarritoScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -261,6 +261,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               backgroundColor: Colors.blue,
             ));
             ApiClient.clearCache('/carrito');
+            ApiClient.cartCountNotifier.value = 0;
             Navigator.pop(context);
           } else {
             setState(() => _errorMsg = 'No se pudo abrir la pasarela de pago.');

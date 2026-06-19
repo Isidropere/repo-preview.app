@@ -160,11 +160,6 @@ class PagoApiController extends Controller
                         'subtotal'        => ($itemModel->valor * $itemIntencion->cantidad) - ($itemIntencion->descuento ?? 0),
                         'imagen_url'      => $imagenUrl,
                     ]);
-
-                    if ($inventario) {
-                        $inventario->cantidad -= $itemIntencion->cantidad;
-                        $inventario->save();
-                    }
                 }
 
                 return $pagoCompra;
@@ -192,19 +187,9 @@ class PagoApiController extends Controller
                             'nota'            => 'Cancelado por fallo en checkout API: ' . $e->getMessage(),
                             'id_admin'        => null,
                         ]);
-
-                        $pagoItems = \App\Models\PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
-                        foreach ($pagoItems as $pagoItem) {
-                            $itemModel = \App\Models\Item::find($pagoItem->id_item);
-                            if ($itemModel && $itemModel->inventarios) {
-                                $inventario = $itemModel->inventarios;
-                                $inventario->cantidad += $pagoItem->cantidad;
-                                $inventario->save();
-                            }
-                        }
                     });
                 } catch (\Throwable $ex) {
-                    Log::error('Error al liberar stock en catch de checkout API: ' . $ex->getMessage());
+                    Log::error('Error al actualizar estatus a cancelado en catch de checkout API: ' . $ex->getMessage());
                 }
             }
 

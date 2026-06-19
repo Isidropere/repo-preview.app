@@ -22,6 +22,7 @@ import 'otras_categorias_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
+import '../widgets/footer_widget.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -349,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ]),
                       ]),
                     ),
-                    const SizedBox(height: 24),
+                    const FooterWidget(),
                   ],
                 ),
               ),
@@ -371,10 +372,6 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         if (_user != null) ...[
           IconButton(
-            icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined, color: kPrimary)),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarritoScreen())),
-          ),
-          IconButton(
             icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined, color: kPrimary)),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
           ),
@@ -384,11 +381,6 @@ class _HomeScreenState extends State<HomeScreen> {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificacionesScreen()));
               _loadBadges();
             },
-          ),
-        ] else ...[
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarritoScreen())),
           ),
         ],
         if (_user != null)
@@ -763,6 +755,18 @@ class _ProductCard extends StatelessWidget {
       if (!context.mounted) return;
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
+      if (res.statusCode == 200) {
+        try {
+          final data = jsonDecode(res.body);
+          if (data['cart_count'] != null) {
+            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+          } else {
+            ApiClient.cartCountNotifier.value++;
+          }
+        } catch (_) {
+          ApiClient.cartCountNotifier.value++;
+        }
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),

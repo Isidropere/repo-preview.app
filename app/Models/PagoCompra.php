@@ -175,17 +175,6 @@ class PagoCompra extends Model
                         'nota'            => 'Liberado automáticamente por expiración del tiempo de pago (10 minutos)',
                         'id_admin'        => null,
                     ]);
-
-                    // Devolver el inventario reservado
-                    $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
-                    foreach ($pagoItems as $pagoItem) {
-                        $itemModel = Item::find($pagoItem->id_item);
-                        if ($itemModel && $itemModel->inventarios) {
-                            $inventario = $itemModel->inventarios;
-                            $inventario->cantidad += $pagoItem->cantidad;
-                            $inventario->save();
-                        }
-                    }
                 });
             }
         } catch (\Throwable $e) {
@@ -218,17 +207,6 @@ class PagoCompra extends Model
                     'nota'            => 'Liberado por inicio de nueva sesión o recarga de checkout',
                     'id_admin'        => null,
                 ]);
-
-                // Devolver el inventario reservado
-                $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
-                foreach ($pagoItems as $pagoItem) {
-                    $itemModel = Item::find($pagoItem->id_item);
-                    if ($itemModel && $itemModel->inventarios) {
-                        $inventario = $itemModel->inventarios;
-                        $inventario->cantidad += $pagoItem->cantidad;
-                        $inventario->save();
-                    }
-                }
             });
         }
     }

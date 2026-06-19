@@ -20,6 +20,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _index = 0;
   int _authKey = 0;
+  int _cartKey = 0;
   bool _lastAuthState = false;
   
   int _cartCount = 0;
@@ -31,8 +32,20 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _checkAuthStateInit();
+    ApiClient.cartCountNotifier.addListener(_onCartCountChanged);
     _loadBadges();
     _badgeTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadBadges());
+  }
+
+  void _onCartCountChanged() {
+    if (mounted) {
+      setState(() {
+        _cartCount = ApiClient.cartCountNotifier.value;
+        if (_index != 3) {
+          _cartKey++;
+        }
+      });
+    }
   }
 
   Future<void> _checkAuthStateInit() async {
@@ -41,6 +54,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    ApiClient.cartCountNotifier.removeListener(_onCartCountChanged);
     _badgeTimer?.cancel();
     super.dispose();
   }
@@ -48,7 +62,14 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _loadBadges() async {
     if (!await AuthService.isLoggedIn()) {
       if (_cartCount != 0 || _intercambiosCount != 0 || _notifCount != 0) {
-        if (mounted) setState(() { _cartCount = 0; _intercambiosCount = 0; _notifCount = 0; });
+        if (mounted) {
+          setState(() {
+            _cartCount = 0;
+            ApiClient.cartCountNotifier.value = 0;
+            _intercambiosCount = 0;
+            _notifCount = 0;
+          });
+        }
       }
       return;
     }
@@ -56,8 +77,9 @@ class _MainScreenState extends State<MainScreen> {
       final res = await ApiClient.get('/auth/badges', auth: true, useCache: false);
       if (res.statusCode == 200 && mounted) {
         final data = jsonDecode(res.body);
+        final count = data['cart'] ?? 0;
+        ApiClient.cartCountNotifier.value = count;
         setState(() {
-          _cartCount = data['cart'] ?? 0;
           _intercambiosCount = data['intercambios'] ?? 0;
           _notifCount = data['notificaciones'] ?? 0;
         });
@@ -80,6 +102,9 @@ class _MainScreenState extends State<MainScreen> {
               _index = i;
               _lastAuthState = true;
               _authKey++;
+              if (i == 3) {
+                _cartKey++;
+              }
             });
             _loadBadges();
           }
@@ -89,7 +114,12 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     if (mounted) {
-      setState(() => _index = i);
+      setState(() {
+        _index = i;
+        if (i == 3) {
+          _cartKey++;
+        }
+      });
     }
     AuthService.isLoggedIn().then((isLoggedIn) {
        if (isLoggedIn != _lastAuthState) {
@@ -109,7 +139,7 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(key: ValueKey('home_$_authKey')),
       ItemsListScreen(key: ValueKey('inter_$_authKey'), tipo: 2),
       ItemsListScreen(key: ValueKey('comp_$_authKey'), tipo: 1),
-      CarritoScreen(key: ValueKey('carrito_$_authKey')),
+      CarritoScreen(key: ValueKey('carrito_${_authKey}_$_cartKey')),
       CuentaScreen(key: ValueKey('cuenta_$_authKey')),
     ];
 
