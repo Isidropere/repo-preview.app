@@ -51,6 +51,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         {'id_item': widget.itemId, 'cantidad': 1}, auth: true);
     setState(() => _addingToCart = false);
     if (!mounted) return;
+    if (res.statusCode == 200) {
+      try {
+        final data = jsonDecode(res.body);
+        if (data['cart_count'] != null) {
+          ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+        } else {
+          ApiClient.cartCountNotifier.value++;
+        }
+      } catch (_) {
+        ApiClient.cartCountNotifier.value++;
+      }
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
       backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,

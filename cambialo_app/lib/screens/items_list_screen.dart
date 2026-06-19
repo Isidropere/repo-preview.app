@@ -246,6 +246,18 @@ class _ItemGridCard extends StatelessWidget {
       if (!context.mounted) return;
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
+      if (res.statusCode == 200) {
+        try {
+          final data = jsonDecode(res.body);
+          if (data['cart_count'] != null) {
+            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+          } else {
+            ApiClient.cartCountNotifier.value++;
+          }
+        } catch (_) {
+          ApiClient.cartCountNotifier.value++;
+        }
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),

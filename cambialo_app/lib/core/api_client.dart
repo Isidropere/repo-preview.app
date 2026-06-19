@@ -18,6 +18,7 @@ const Duration             _cacheMaxAge = Duration(minutes: 3);
 final Map<String, DateTime> _cacheTimes = {};
 
 class ApiClient {
+  static final ValueNotifier<int> cartCountNotifier = ValueNotifier<int>(0);
   static final _storage = const FlutterSecureStorage();
   static final _client  = http.Client();
 
@@ -187,7 +188,13 @@ class ApiClient {
   }
 
   static Future<Map<String, String>> _headers({bool auth = false}) async {
-    final h = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final h = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    };
     if (auth) {
       final token = await getToken();
       if (token != null) h['Authorization'] = 'Bearer $token';
