@@ -173,12 +173,6 @@ class PagoRedirectController extends Controller
                         'subtotal'        => ($itemModel->valor * $itemIntencion->cantidad) - ($itemIntencion->descuento ?? 0),
                         'imagen_url'      => $imagenUrl,
                     ]);
-
-                    // Reservar inventario descontándolo temporalmente
-                    if ($inventario) {
-                        $inventario->cantidad -= $itemIntencion->cantidad;
-                        $inventario->save();
-                    }
                 }
 
                 return $pagoCompra;
@@ -421,6 +415,22 @@ class PagoRedirectController extends Controller
                 'id_admin'        => null,
             ]);
 
+            // Debitar el inventario real de los items comprados
+            $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
+            foreach ($pagoItems as $pagoItem) {
+                $itemModel = \App\Models\Item::find($pagoItem->id_item);
+                if ($itemModel) {
+                    $inventario = $itemModel->inventarios;
+                    if ($inventario) {
+                        $inventario->cantidad -= $pagoItem->cantidad;
+                        if ($inventario->cantidad < 0) {
+                            $inventario->cantidad = 0;
+                        }
+                        $inventario->save();
+                    }
+                }
+            }
+
             // Eliminar items seleccionados del carrito del usuario (ya que la compra finalizó con éxito)
             $carrito = Carrito::find($pagoCompra->id_carrito);
             if ($carrito) {
@@ -480,19 +490,6 @@ class PagoRedirectController extends Controller
                 'nota'            => $motivo,
                 'id_admin'        => null,
             ]);
-
-            // Devolver el inventario reservado
-            $pagoItems = PagoItem::where('id_pago_compra', $pagoCompra->id_pago_compra)->get();
-            foreach ($pagoItems as $pagoItem) {
-                $itemModel = \App\Models\Item::find($pagoItem->id_item);
-                if ($itemModel) {
-                    $inventario = $itemModel->inventarios;
-                    if ($inventario) {
-                        $inventario->cantidad += $pagoItem->cantidad;
-                        $inventario->save();
-                    }
-                }
-            }
         });
 
         // Registrar en logs_pagos

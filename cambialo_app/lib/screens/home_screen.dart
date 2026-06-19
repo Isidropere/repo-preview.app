@@ -372,10 +372,6 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         if (_user != null) ...[
           IconButton(
-            icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined, color: kPrimary)),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarritoScreen())),
-          ),
-          IconButton(
             icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined, color: kPrimary)),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
           ),
@@ -385,11 +381,6 @@ class _HomeScreenState extends State<HomeScreen> {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificacionesScreen()));
               _loadBadges();
             },
-          ),
-        ] else ...[
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarritoScreen())),
           ),
         ],
         if (_user != null)

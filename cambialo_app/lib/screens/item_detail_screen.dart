@@ -8,7 +8,6 @@ import '../widgets/item_image.dart';
 import '../widgets/full_screen_image_viewer.dart';
 import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
 import 'login_screen.dart';
-import 'carrito_screen.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -95,17 +94,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: kPrimary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CarritoScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
