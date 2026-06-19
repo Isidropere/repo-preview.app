@@ -52,6 +52,18 @@ Route::post('/images', [\App\Http\Controllers\ImageController::class, 'store'])-
 Route::get('/ubicacion/provincias',              [DireccionApiController::class, 'provincias']);
 Route::get('/ubicacion/municipios/{id_provincia}', [DireccionApiController::class, 'municipios']);
 
+// ── Empleos y Ayuda (públicos) ──────────────────────────────────────────
+Route::get('/empleos', function () {
+    return response()->json(\App\Models\Empleo::where('activo', true)->orderBy('created_at', 'desc')->get());
+});
+Route::get('/ayuda/{slug}', function ($slug) {
+    $pagina = \App\Models\AyudaPagina::with('pasos')->where('slug', $slug)->first();
+    if (!$pagina) {
+        return response()->json(['message' => 'Página no encontrada'], 404);
+    }
+    return response()->json($pagina);
+});
+
 // ── Rutas protegidas ──────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 

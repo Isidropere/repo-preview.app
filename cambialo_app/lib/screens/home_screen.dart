@@ -22,6 +22,7 @@ import 'otras_categorias_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
+import '../widgets/footer_widget.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -349,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ]),
                       ]),
                     ),
-                    const SizedBox(height: 24),
+                    const FooterWidget(),
                   ],
                 ),
               ),
