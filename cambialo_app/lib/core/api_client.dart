@@ -226,9 +226,11 @@ class ApiClient {
 
     final headers = await _headers(auth: auth);
     try {
-      final res = await _client
-          .get(Uri.parse('$kBaseUrl$path'), headers: headers)
-          .timeout(const Duration(seconds: 12));
+      final res = await _retryRequest(() async {
+        return await _client
+            .get(Uri.parse('$kBaseUrl$path'), headers: headers)
+            .timeout(const Duration(seconds: 25));
+      });
 
       final cleanRes = _cleanResponse(res);
       if (cleanRes.statusCode == 200 && useCache) {
@@ -262,7 +264,7 @@ class ApiClient {
     final headers = await _headers(auth: auth);
     final res = await _client
         .post(Uri.parse('$kBaseUrl$path'), headers: headers, body: jsonEncode(body))
-        .timeout(const Duration(seconds: 15));
+        .timeout(const Duration(seconds: 30));
     return _cleanResponse(res);
   }
 
@@ -294,7 +296,7 @@ class ApiClient {
       request.files.addAll(additionalImages);
     }
 
-    final streamedResponse = await request.send().timeout(const Duration(seconds: 45));
+    final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
     final response = await http.Response.fromStream(streamedResponse);
     return _cleanResponse(response);
   }
@@ -303,7 +305,7 @@ class ApiClient {
     final headers = await _headers(auth: auth);
     final res = await _client
         .put(Uri.parse('$kBaseUrl$path'), headers: headers, body: jsonEncode(body))
-        .timeout(const Duration(seconds: 15));
+        .timeout(const Duration(seconds: 30));
     return _cleanResponse(res);
   }
 
@@ -311,7 +313,7 @@ class ApiClient {
     final headers = await _headers(auth: auth);
     final res = await _client
         .delete(Uri.parse('$kBaseUrl$path'), headers: headers)
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 20));
     return _cleanResponse(res);
   }
 
@@ -328,5 +330,24 @@ class ApiClient {
       reasonPhrase: res.reasonPhrase,
       request: res.request,
     );
+  }
+
+  static Future<http.Response> _retryRequest(
+    Future<http.Response> Function() requestFn, {
+    int retries = 3,
+    Duration delay = const Duration(milliseconds: 800),
+  }) async {
+    int attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await requestFn();
+      } catch (e) {
+        if (attempt >= retries) {
+          rethrow;
+        }
+        await Future.delayed(delay * attempt);
+      }
+    }
   }
 }
