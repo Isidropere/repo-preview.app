@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import '../screens/items_list_screen.dart';
+import '../core/auth_service.dart';
+import 'adulto_verification_dialog.dart';
 
 /// Drawer de Categorías dinámico con filtro de búsqueda en tiempo real
 class CategoriasDrawer extends StatefulWidget {
@@ -38,17 +40,24 @@ class _CategoriasDrawerState extends State<CategoriasDrawer> {
       final res = await ApiClient.get('/categorias');
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
-        
+        final isLoggedIn = await AuthService.isLoggedIn();
+
+        final filtered = data.where((c) {
+          final id = ApiClient.parseInt(c['id_categoria_item']) ?? 0;
+          if (id == 11 && !isLoggedIn) return false;
+          return true;
+        }).toList();
+
         // Ordenar alfabéticamente
-        data.sort((a, b) => (a['categoria'] ?? '')
+        filtered.sort((a, b) => (a['categoria'] ?? '')
             .toString()
             .toLowerCase()
             .compareTo((b['categoria'] ?? '').toString().toLowerCase()));
 
         if (mounted) {
           setState(() {
-            _allCategorias = data;
-            _filteredCategorias = data;
+            _allCategorias = filtered;
+            _filteredCategorias = filtered;
             _loading = false;
           });
         }
@@ -265,20 +274,29 @@ class _CategoriasDrawerState extends State<CategoriasDrawer> {
             ),
           ),
           trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 18),
-          onTap: () {
+          onTap: () async {
+            if (idCat == 11) {
+              final ok = await AdultoVerificationDialog.showVerification(context);
+              if (!ok) return;
+            }
+
             // Cerrar el drawer
-            Navigator.pop(context);
+            if (context.mounted) {
+              Navigator.pop(context);
+            }
             
             // Navegar a los artículos de esa categoría
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ItemsListScreen(
-                  categoriaId: idCat,
-                  title: nombre,
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ItemsListScreen(
+                    categoriaId: idCat,
+                    title: nombre,
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           },
         );
       },

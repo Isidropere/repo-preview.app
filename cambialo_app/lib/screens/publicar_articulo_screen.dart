@@ -507,7 +507,31 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                       ),
                       items: _categorias.map<DropdownMenuItem<int>>((c) =>
                         DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
-                      onChanged: (v) => setState(() => _idCategoria = v),
+                      onChanged: (v) {
+                        setState(() => _idCategoria = v);
+                        if (v == 11) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              title: const Row(
+                                children: [
+                                  Icon(Icons.warning, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text('Categoría Adultos'),
+                                ],
+                              ),
+                              content: const Text('Has seleccionado la categoría Adultos. Recuerda que el contenido debe ser exclusivo para mayores de 18 años.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Entendido'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
                       validator: (v) => v == null ? 'Selecciona una categoría' : null,
                     ),
                   ),

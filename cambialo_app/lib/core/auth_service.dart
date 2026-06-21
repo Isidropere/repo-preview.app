@@ -9,6 +9,8 @@ DateTime?             _userCachedAt;
 const Duration        _userCacheTtl = Duration(minutes: 5);
 
 class AuthService {
+  static bool adultosAceptado = false;
+
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final res = await ApiClient.post('/auth/login', {'email': email, 'password': password});
@@ -46,6 +48,7 @@ class AuthService {
   static Future<void> logout() async {
     _cachedUser   = null;
     _userCachedAt = null;
+    adultosAceptado = false;
     await ApiClient.post('/auth/logout', {}, auth: true);
     await ApiClient.deleteToken();
     await ApiClient.deleteUser();
@@ -148,6 +151,26 @@ class AuthService {
         return {'success': true, 'user': body['user']};
       }
       return {'success': false, 'message': body['message'] ?? 'Error al iniciar sesión con Google'};
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> verificarAdultos(String email, String password) async {
+    try {
+      final res = await ApiClient.post('/auth/adultos/verificar', {
+        'email': email,
+        'password': password,
+      }, auth: true);
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        adultosAceptado = true;
+        return {'success': true};
+      }
+      return {
+        'success': false,
+        'message': body['message'] ?? 'Error al verificar credenciales.'
+      };
     } catch (e) {
       return {'success': false, 'message': 'No se pudo conectar al servidor.'};
     }
