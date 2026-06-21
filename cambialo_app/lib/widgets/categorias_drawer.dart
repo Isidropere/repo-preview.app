@@ -216,10 +216,18 @@ class _CategoriasDrawerState extends State<CategoriasDrawer> {
               const Icon(Icons.error_outline, color: Colors.grey, size: 40),
               const SizedBox(height: 12),
               Text(
-                _error!,
-                style: const TextStyle(color: kTextGray, fontSize: 14),
+                _error == 'Error de conexión' ? 'Error de conexión' : _error!,
+                style: const TextStyle(color: kTextDark, fontSize: 15, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
+              if (_error == 'Error de conexión') ...[
+                const SizedBox(height: 4),
+                const Text(
+                  'Verifique su conexión a la red',
+                  style: TextStyle(color: kTextGray, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {

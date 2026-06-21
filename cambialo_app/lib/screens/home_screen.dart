@@ -165,10 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   const Icon(Icons.wifi_off, size: 56, color: Colors.grey),
                   const SizedBox(height: 12),
-                  const Text('No se pudo conectar al servidor',
-                      style: TextStyle(color: kTextGray, fontSize: 15)),
+                  const Text('Error de conexión',
+                      style: TextStyle(color: kTextGray, fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text('Verifica que el servidor esté corriendo',
+                  Text('Verifique su conexión a la red',
                       style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 20),
                   ElevatedButton.icon(

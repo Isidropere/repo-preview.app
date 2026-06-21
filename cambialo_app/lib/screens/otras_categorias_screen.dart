@@ -108,7 +108,17 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.grey, size: 48),
             const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            Text(
+              _error == 'Error de conexión' ? 'Error de conexión' : _error!,
+              style: const TextStyle(color: kTextDark, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            if (_error == 'Error de conexión') ...[
+              const SizedBox(height: 4),
+              const Text(
+                'Verifique su conexión a la red',
+                style: TextStyle(color: kTextGray, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
