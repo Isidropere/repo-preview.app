@@ -23,6 +23,7 @@ import 'mis_intercambios_screen.dart';
 import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
 import '../widgets/footer_widget.dart';
+import '../widgets/categorias_drawer.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -155,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: _buildAppBar(),
+      drawer: const CategoriasDrawer(),
       body: RefreshIndicator(
         color: kPrimary,
         onRefresh: _loadHome,
@@ -363,6 +365,12 @@ class _HomeScreenState extends State<HomeScreen> {
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
       elevation: 0,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: kPrimary),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Image.network(
         '${kBaseUrl.replaceAll('/api', '')}/imgs/logoTypes/header-logo.png',
         height: 36,
