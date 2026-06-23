@@ -31,8 +31,8 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
 
   List _categorias     = [];
   int? _idCategoria;
-  int  _condicion      = 1;   // 1=Nuevo, 2=Como nuevo, 3=Usado - Buen estado, 4=Usado - Aceptable
-  int  _tipoTrans      = 1;   // 1=Venta, 2=Intercambio, 3=Venta o Intercambio
+  int? _condicion      = 1;   // 1=Nuevo, 2=Como nuevo, 3=Usado - Buen estado, 4=Usado - Aceptable
+  int? _tipoTrans;            // Null por defecto para obligar a seleccionar
   bool _saving         = false;
   bool _loadingItem    = false;
   String _error        = '';
@@ -52,7 +52,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
   // Mapa para guardar los colores seleccionados: id_color -> { 'nombre': String, 'codigo_hex': String, 'stockCtrl': TextEditingController }
   final Map<int, Map<String, dynamic>> _selectedColors = {};
 
-  bool _showDimensions = false;
+  bool _showDimensions = true;
   bool _showColors     = false;
 
   @override
@@ -227,9 +227,61 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
   }
 
   Future<void> _publicar() async {
+    if (_tipoTrans == null) {
+      setState(() {
+        _error = 'Debe seleccionar una modalidad de negocio.';
+      });
+      return;
+    }
+
     final desc = _descCtrl.text.trim();
     if (desc.isEmpty) {
       setState(() => _error = 'La descripción es obligatoria.');
+      return;
+    }
+
+    if (_tipoTrans == 1 || _tipoTrans == 3) {
+      final precioStr = _precioCtrl.text.trim();
+      if (precioStr.isEmpty || double.tryParse(precioStr) == null || double.parse(precioStr) < 0) {
+        setState(() {
+          _error = 'El precio es obligatorio si la modalidad incluye venta.';
+          _step = 1;
+        });
+        return;
+      }
+    }
+
+    final pesoStr = _pesoCtrl.text.trim();
+    final altoStr = _altoCtrl.text.trim();
+    final anchoStr = _anchoCtrl.text.trim();
+    final profundoStr = _profundoCtrl.text.trim();
+
+    if (pesoStr.isEmpty || double.tryParse(pesoStr) == null || double.parse(pesoStr) <= 0) {
+      setState(() {
+        _error = 'El peso es obligatorio y debe ser mayor que 0.';
+        _showDimensions = true;
+      });
+      return;
+    }
+    if (altoStr.isEmpty || double.tryParse(altoStr) == null || double.parse(altoStr) <= 0) {
+      setState(() {
+        _error = 'El alto es obligatorio y debe ser mayor que 0.';
+        _showDimensions = true;
+      });
+      return;
+    }
+    if (anchoStr.isEmpty || double.tryParse(anchoStr) == null || double.parse(anchoStr) <= 0) {
+      setState(() {
+        _error = 'El ancho es obligatorio y debe ser mayor que 0.';
+        _showDimensions = true;
+      });
+      return;
+    }
+    if (profundoStr.isEmpty || double.tryParse(profundoStr) == null || double.parse(profundoStr) <= 0) {
+      setState(() {
+        _error = 'La profundidad es obligatoria y debe ser mayor que 0.';
+        _showDimensions = true;
+      });
       return;
     }
 
@@ -263,7 +315,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
         'descuento':         _descuentoCtrl.text.trim(),
         'cantidad':          _cantidadCtrl.text.trim(),
         'condicion':         _condicion.toString(),
-        'tipo_trans':        _tipoTrans.toString(),
+        'tipo_trans':        _tipoTrans?.toString() ?? '',
         'id_categoria_item': _idCategoria.toString(),
         'peso_lbs':          _pesoCtrl.text.trim(),
         'alto_cm':           _altoCtrl.text.trim(),
@@ -475,7 +527,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _campo(_precioCtrl, 'Precio (RD\$) (Opcional)', required: false, keyboardType: TextInputType.number),
+                    child: _campo(_precioCtrl, (_tipoTrans == 1 || _tipoTrans == 3) ? 'Precio (RD\$) *' : 'Precio (RD\$) (Opcional)', required: false, keyboardType: TextInputType.number),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -507,7 +559,31 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                       ),
                       items: _categorias.map<DropdownMenuItem<int>>((c) =>
                         DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
-                      onChanged: (v) => setState(() => _idCategoria = v),
+                      onChanged: (v) {
+                        setState(() => _idCategoria = v);
+                        if (v == 11) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              title: const Row(
+                                children: [
+                                  Icon(Icons.warning, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text('Categoría Adultos'),
+                                ],
+                              ),
+                              content: const Text('Has seleccionado la categoría Adultos. Recuerda que el contenido debe ser exclusivo para mayores de 18 años.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Entendido'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
                       validator: (v) => v == null ? 'Selecciona una categoría' : null,
                     ),
                   ),
@@ -916,10 +992,12 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _titulo('Modalidad *'),
+                      _titulo('Modalidad de negocio *'),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
                         value: _tipoTrans,
+                        hint: const Text('Seleccione una modalidad de negocio', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                        isExpanded: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           filled: true,
@@ -931,7 +1009,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                           DropdownMenuItem(value: 2, child: Text('Intercambio')),
                           DropdownMenuItem(value: 3, child: Text('Venta o Intercambio')),
                         ],
-                        onChanged: (v) => setState(() => _tipoTrans = v ?? 1),
+                        onChanged: (v) => setState(() => _tipoTrans = v),
                       ),
                     ],
                   ),
@@ -949,7 +1027,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    title: const Text('Dimensiones y peso (Opcional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
+                    title: const Text('Dimensiones y peso *', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
                     leading: const Icon(Icons.line_weight, color: kPrimary),
                     trailing: Icon(_showDimensions ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
                     onTap: () => setState(() => _showDimensions = !_showDimensions),

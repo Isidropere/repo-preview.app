@@ -29,7 +29,11 @@ class DeliveryZonaController extends Controller
         $resultado = $this->deliveryService->calcular(
             $request->validated('pueblo'),
             $request->validated('tipo_destinatario', 'persona'),
-            (float) $request->validated('valor_articulo', 0)
+            (float) $request->validated('valor_articulo', 0),
+            (float) $request->input('peso_lbs', 0),
+            (float) $request->input('alto_cm', 0),
+            (float) $request->input('ancho_cm', 0),
+            (float) $request->input('profundo_cm', 0)
         );
 
         if (!$resultado['success']) {
@@ -54,12 +58,22 @@ class DeliveryZonaController extends Controller
      */
     public function updateConfig(Request $request, string $clave)
     {
-        $data = $request->validate([
-            'porcentaje'            => 'sometimes|numeric|min:0|max:100',
-            'porcentaje_plataforma' => 'sometimes|numeric|min:0|max:100',
-            'porcentaje_seguro'     => 'sometimes|numeric|min:0|max:100',
-            'porcentaje_manejo'     => 'sometimes|numeric|min:0|max:100',
-        ]);
+        if ($clave === 'sobredimensionado') {
+            $data = $request->validate([
+                'min_peso_lbs'     => 'sometimes|numeric|min:0',
+                'min_alto_cm'      => 'sometimes|numeric|min:0',
+                'min_ancho_cm'     => 'sometimes|numeric|min:0',
+                'min_profundo_cm'  => 'sometimes|numeric|min:0',
+                'recargo_monto'    => 'sometimes|numeric|min:0',
+            ]);
+        } else {
+            $data = $request->validate([
+                'porcentaje'            => 'sometimes|numeric|min:0|max:100',
+                'porcentaje_plataforma' => 'sometimes|numeric|min:0|max:100',
+                'porcentaje_seguro'     => 'sometimes|numeric|min:0|max:100',
+                'porcentaje_manejo'     => 'sometimes|numeric|min:0|max:100',
+            ]);
+        }
 
         $resultado = $this->deliveryService->actualizarConfig($clave, $data);
 

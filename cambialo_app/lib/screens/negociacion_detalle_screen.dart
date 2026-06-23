@@ -357,10 +357,16 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
           builder: (context, setDialogState) {
             
             // Iniciar calculo
-            if (calculandoEnvio && montoEnvio == 0.0 && errorEnvio.isEmpty) {
-               Future.microtask(() async {
-                  final url = '/delivery/calcular?pueblo=${Uri.encodeComponent(_municipioUsuario)}&tipo_destinatario=persona&valor_articulo=0';
-                  final res = await ApiClient.get(url, auth: true);
+             if (calculandoEnvio && montoEnvio == 0.0 && errorEnvio.isEmpty) {
+                Future.microtask(() async {
+                   final item = _neg?['item'] as Map? ?? {};
+                   final peso = item['peso_lbs'] ?? 0.0;
+                   final alto = item['alto_cm'] ?? 0.0;
+                   final ancho = item['ancho_cm'] ?? 0.0;
+                   final profundo = item['profundo_cm'] ?? 0.0;
+
+                   final url = '/delivery/calcular?pueblo=${Uri.encodeComponent(_municipioUsuario)}&tipo_destinatario=persona&valor_articulo=0&peso_lbs=$peso&alto_cm=$alto&ancho_cm=$ancho&profundo_cm=$profundo';
+                   final res = await ApiClient.get(url, auth: true);
                   if (mounted && context.mounted) {
                      setDialogState(() {
                         if (res.statusCode == 200) {

@@ -204,11 +204,35 @@ function abrirModalPagoIntercambio(negId, monto, itemNombre, modoEntrega) {
     }
 }
 
+var negociacionItemsConfig = {
+    @foreach($comoEmisor as $neg)
+        @if($neg->item)
+            '{{ $neg->id_negociacion }}': {
+                peso: {{ (float) ($neg->item->peso_lbs ?? 0) }},
+                alto: {{ (float) ($neg->item->alto_cm ?? 0) }},
+                ancho: {{ (float) ($neg->item->ancho_cm ?? 0) }},
+                profundo: {{ (float) ($neg->item->profundo_cm ?? 0) }}
+            },
+        @endif
+    @endforeach
+    @foreach($comoReceptor as $neg)
+        @if($neg->item)
+            '{{ $neg->id_negociacion }}': {
+                peso: {{ (float) ($neg->item->peso_lbs ?? 0) }},
+                alto: {{ (float) ($neg->item->alto_cm ?? 0) }},
+                ancho: {{ (float) ($neg->item->ancho_cm ?? 0) }},
+                profundo: {{ (float) ($neg->item->profundo_cm ?? 0) }}
+            },
+        @endif
+    @endforeach
+};
+
 function calcularMontoEnvioIntercambio(negId, montoEl) {
     var municipio = window._municipioUsuario || '';
+    var config = negociacionItemsConfig[negId] || { peso: 0, alto: 0, ancho: 0, profundo: 0 };
 
     function fetchCosto(mun) {
-        fetch('/delivery/calcular?pueblo=' + encodeURIComponent(mun) + '&tipo_destinatario=persona&valor_articulo=0', {
+        fetch('/delivery/calcular?pueblo=' + encodeURIComponent(mun) + '&tipo_destinatario=persona&valor_articulo=0&peso_lbs=' + config.peso + '&alto_cm=' + config.alto + '&ancho_cm=' + config.ancho + '&profundo_cm=' + config.profundo, {
             headers: { 'Accept': 'application/json' }
         })
         .then(function(r) { return r.json(); })

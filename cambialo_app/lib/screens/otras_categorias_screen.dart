@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import 'items_list_screen.dart';
+import '../core/auth_service.dart';
+import '../widgets/adulto_verification_dialog.dart';
 
 class OtrasCategoriasScreen extends StatefulWidget {
   const OtrasCategoriasScreen({Key? key}) : super(key: key);
@@ -27,12 +29,15 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
       final res = await ApiClient.get('/categorias');
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List;
+        final isLoggedIn = await AuthService.isLoggedIn();
         // Excluir las que ya se muestran en el home
         final idsHome = [26, 27, 20, 19, 16, 4, 29, 24, 6, 2, 10];
         
         final filtered = data.where((c) {
-          final id = c['id_categoria_item'];
-          return !idsHome.contains(id);
+          final id = ApiClient.parseInt(c['id_categoria_item']) ?? 0;
+          if (idsHome.contains(id)) return false;
+          if (id == 11 && !isLoggedIn) return false;
+          return true;
         }).toList();
 
         // Ordenar alfabéticamente
@@ -103,7 +108,17 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.grey, size: 48),
             const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            Text(
+              _error == 'Error de conexión' ? 'Error de conexión' : _error!,
+              style: const TextStyle(color: kTextDark, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            if (_error == 'Error de conexión') ...[
+              const SizedBox(height: 4),
+              const Text(
+                'Verifique su conexión a la red',
+                style: TextStyle(color: kTextGray, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -140,16 +155,23 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
         final cat = _categorias[i];
         final idCat = ApiClient.parseInt(cat['id_categoria_item']) ?? 0;
         return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ItemsListScreen(
-                  categoriaId: idCat,
-                  title: cat['categoria']?.toString() ?? '',
+          onTap: () async {
+            if (idCat == 11) {
+              final ok = await AdultoVerificationDialog.showVerification(context);
+              if (!ok) return;
+            }
+
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ItemsListScreen(
+                    categoriaId: idCat,
+                    title: cat['categoria']?.toString() ?? '',
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           },
           borderRadius: BorderRadius.circular(10),
           child: Container(

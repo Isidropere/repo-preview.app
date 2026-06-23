@@ -23,6 +23,7 @@ import 'mis_intercambios_screen.dart';
 import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
 import '../widgets/footer_widget.dart';
+import '../widgets/categorias_drawer.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -155,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: _buildAppBar(),
+      drawer: const CategoriasDrawer(),
       body: RefreshIndicator(
         color: kPrimary,
         onRefresh: _loadHome,
@@ -163,10 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   const Icon(Icons.wifi_off, size: 56, color: Colors.grey),
                   const SizedBox(height: 12),
-                  const Text('No se pudo conectar al servidor',
-                      style: TextStyle(color: kTextGray, fontSize: 15)),
+                  const Text('Error de conexión',
+                      style: TextStyle(color: kTextGray, fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text('Verifica que el servidor esté corriendo',
+                  Text('Verifique su conexión a la red',
                       style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
@@ -363,6 +365,12 @@ class _HomeScreenState extends State<HomeScreen> {
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
       elevation: 0,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: kPrimary),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Image.network(
         '${kBaseUrl.replaceAll('/api', '')}/imgs/logoTypes/header-logo.png',
         height: 36,

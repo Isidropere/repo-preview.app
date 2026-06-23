@@ -95,9 +95,22 @@ class PagoRedirectController extends Controller
 
         // Calcular costo de envío si aplica (solo para productos físicos)
         if (!$esServicio && $direccion) {
+            $maxPeso = 0;
+            $maxAlto = 0;
+            $maxAncho = 0;
+            $maxProfundo = 0;
+            foreach ($itemsSeleccionados as $i) {
+                if ($i->item) {
+                    $maxPeso = max($maxPeso, (float) ($i->item->peso_lbs ?? 0));
+                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0));
+                    $maxAncho = max($maxAncho, (float) ($i->item->ancho_cm ?? 0));
+                    $maxProfundo = max($maxProfundo, (float) ($i->item->profundo_cm ?? 0));
+                }
+            }
+
             $deliveryService = app(\App\Services\DeliveryService::class);
             $pueblo = $direccion->municipio->municipio ?? '';
-            $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal);
+            $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal, $maxPeso, $maxAlto, $maxAncho, $maxProfundo);
             
             // Si el delivery dio error de tarifa no definida, redirigir informando al usuario
             if (!$resultadoDelivery['success'] && ($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {

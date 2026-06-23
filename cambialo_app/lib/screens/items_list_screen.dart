@@ -131,14 +131,14 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                       const Icon(Icons.cloud_off, size: 80, color: Colors.grey),
                       const SizedBox(height: 16),
                       const Text(
-                        'Error de conexión con el servidor',
+                        'Error de conexión',
                         style: TextStyle(fontSize: 16, color: kTextDark, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 24),
                         child: Text(
-                          'Verifica que el servidor esté encendido e intenta nuevamente.',
+                          'Verifique su conexión a la red',
                           style: TextStyle(fontSize: 13, color: kTextGray),
                           textAlign: TextAlign.center,
                         ),

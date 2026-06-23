@@ -371,4 +371,31 @@ class AuthApiController extends Controller
             'notificaciones' => $notificacionesCount,
         ]);
     }
+
+    public function verificarCredencialesAdultos(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = auth()->user();
+
+        // Verificar si el correo electrónico coincide con el del usuario autenticado
+        if ($request->email !== $user->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El correo electrónico no coincide con tu sesión actual.'
+            ], 422);
+        }
+
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Contraseña incorrecta.'
+        ], 422);
+    }
 }

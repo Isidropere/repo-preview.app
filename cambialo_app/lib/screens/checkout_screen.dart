@@ -103,9 +103,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     if (mounted) setState(() => _calculandoEnvio = true);
 
+    final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
+    final selectedItems = items.where((i) => ApiClient.parseBool(i['es_seleccionado'])).toList();
+
+    double maxPeso = 0.0;
+    double maxAlto = 0.0;
+    double maxAncho = 0.0;
+    double maxProfundo = 0.0;
+
+    for (var i in selectedItems) {
+      final itemData = i['item'] as Map<String, dynamic>?;
+      if (itemData != null) {
+        final double p = double.tryParse(itemData['peso_lbs']?.toString() ?? '') ?? 0.0;
+        final double al = double.tryParse(itemData['alto_cm']?.toString() ?? '') ?? 0.0;
+        final double an = double.tryParse(itemData['ancho_cm']?.toString() ?? '') ?? 0.0;
+        final double pr = double.tryParse(itemData['profundo_cm']?.toString() ?? '') ?? 0.0;
+
+        if (p > maxPeso) maxPeso = p;
+        if (al > maxAlto) maxAlto = al;
+        if (an > maxAncho) maxAncho = an;
+        if (pr > maxProfundo) maxProfundo = pr;
+      }
+    }
+
     try {
       final res = await ApiClient.get(
-        '/delivery/calcular?pueblo=${Uri.encodeComponent(municipio)}&valor_articulo=$_subtotal',
+        '/delivery/calcular?pueblo=${Uri.encodeComponent(municipio)}&valor_articulo=$_subtotal&peso_lbs=$maxPeso&alto_cm=$maxAlto&ancho_cm=$maxAncho&profundo_cm=$maxProfundo',
         auth: true,
       );
 

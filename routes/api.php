@@ -37,6 +37,7 @@ Route::prefix('auth')->group(function () {
         Route::get('/badges',              [AuthApiController::class, 'getBadges']);
         Route::post('/cambiar-contrasena', [AuthApiController::class, 'cambiarContrasena']);
         Route::post('/profile',            [AuthApiController::class, 'updateProfile']);
+        Route::post('/adultos/verificar',  [AuthApiController::class, 'verificarCredencialesAdultos']);
     });
 });
 

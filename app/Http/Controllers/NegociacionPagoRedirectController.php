@@ -97,7 +97,15 @@ class NegociacionPagoRedirectController extends Controller
         $montoACobrar = 0;
         if ($neg->item) {
             $deliveryService = app(\App\Services\DeliveryService::class);
-            $resultado = $deliveryService->calcular($direccion->municipio->municipio ?? '', 'persona', 0);
+            $resultado = $deliveryService->calcular(
+                $direccion->municipio->municipio ?? '',
+                'persona',
+                0,
+                (float) ($neg->item->peso_lbs ?? 0),
+                (float) ($neg->item->alto_cm ?? 0),
+                (float) ($neg->item->ancho_cm ?? 0),
+                (float) ($neg->item->profundo_cm ?? 0)
+            );
             if (!$resultado['success'] && ($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
                 return redirect()->route('negociaciones.mis')->with('error', 'El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espere a que el administrador defina el costo de envío.');
             }

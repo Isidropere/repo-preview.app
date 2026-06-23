@@ -867,23 +867,48 @@ function abrirModalDelivery() {
   if (!cfg.length) { fields.innerHTML = '<p style="color:#94a3b8;">Sin datos de configuracion.</p>'; return; }
   deliveryConfigCache = cfg;
   
-  // cfg is array of {clave, porcentaje, porcentaje_plataforma, porcentaje_seguro, porcentaje_manejo, descripcion}
+  // cfg is array of {clave, porcentaje, porcentaje_plataforma, porcentaje_seguro, porcentaje_manejo, descripcion, min_peso_lbs...}
   const fieldLabels = {
     porcentaje:'Ganancia negocio (%)',
     porcentaje_plataforma:'Plataforma (%)',
     porcentaje_seguro:'Seguro (%)',
     porcentaje_manejo:'Manejo (%)'
   };
+
+  const sobredimLabels = {
+    min_peso_lbs: 'Peso Mínimo (lbs)',
+    min_alto_cm: 'Alto Mínimo (cm)',
+    min_ancho_cm: 'Ancho Mínimo (cm)',
+    min_profundo_cm: 'Profundidad Mínima (cm)',
+    recargo_monto: 'Monto de Recargo (RD$)'
+  };
  
-  const claveLabel = {cortas:'Rutas cortas', largas:'Rutas largas', especiales:'Rutas especiales', chequeados:'Bultos chequeados'};
+  const claveLabel = {
+    cortas:'Rutas cortas', 
+    largas:'Rutas largas', 
+    especiales:'Rutas especiales', 
+    chequeados:'Bultos chequeados',
+    sobredimensionado:'Recargo por Exceso de Peso/Dimensiones'
+  };
+
   fields.innerHTML = cfg.map(row => {
     const titulo = claveLabel[row.clave] || row.clave;
-    const inputs = Object.entries(fieldLabels).map(([f,l]) =>
-      '<div style="margin-bottom:10px;">' +
-      '<label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">'+l+'</label>' +
-      '<input type="number" step="0.01" min="0" max="100" id="dc-'+row.clave+'-'+f+'" value="'+(row[f]||0)+'" style="border:1px solid #cbd5e1;border-radius:6px;padding:5px 9px;font-size:.83rem;width:100%;box-sizing:border-box;">' +
-      '</div>'
-    ).join('');
+    let inputs = '';
+    if (row.clave === 'sobredimensionado') {
+      inputs = Object.entries(sobredimLabels).map(([f,l]) =>
+        '<div style="margin-bottom:10px;">' +
+        '<label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">'+l+'</label>' +
+        '<input type="number" step="0.01" min="0" id="dc-'+row.clave+'-'+f+'" value="'+(row[f]||0)+'" style="border:1px solid #cbd5e1;border-radius:6px;padding:5px 9px;font-size:.83rem;width:100%;box-sizing:border-box;">' +
+        '</div>'
+      ).join('');
+    } else {
+      inputs = Object.entries(fieldLabels).map(([f,l]) =>
+        '<div style="margin-bottom:10px;">' +
+        '<label style="font-size:.75rem;color:#64748b;display:block;margin-bottom:3px;">'+l+'</label>' +
+        '<input type="number" step="0.01" min="0" max="100" id="dc-'+row.clave+'-'+f+'" value="'+(row[f]||0)+'" style="border:1px solid #cbd5e1;border-radius:6px;padding:5px 9px;font-size:.83rem;width:100%;box-sizing:border-box;">' +
+        '</div>'
+      ).join('');
+    }
     return '<div style="margin-bottom:18px;padding:14px;background:#f8fafc;border-radius:8px;border-left:3px solid #3b82f6;">' +
       '<div style="font-size:.85rem;font-weight:700;color:#1e293b;margin-bottom:10px;">'+titulo+'</div>' +
       inputs + '</div>';
@@ -896,10 +921,13 @@ async function guardarConfigDelivery() {
   msg.textContent = 'Guardando...'; msg.style.color = '#64748b';
   try {
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    const fields = ['porcentaje','porcentaje_plataforma','porcentaje_seguro','porcentaje_manejo'];
     for (const row of deliveryConfigCache) {
       const body = {};
-      fields.forEach(f => {
+      const targetFields = row.clave === 'sobredimensionado'
+        ? ['min_peso_lbs', 'min_alto_cm', 'min_ancho_cm', 'min_profundo_cm', 'recargo_monto']
+        : ['porcentaje','porcentaje_plataforma','porcentaje_seguro','porcentaje_manejo'];
+        
+      targetFields.forEach(f => {
         const el = document.getElementById('dc-'+row.clave+'-'+f);
         if (el) body[f] = parseFloat(el.value);
       });

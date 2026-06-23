@@ -82,6 +82,10 @@
                    class="item-checkbox item-seleccionado mt-1" 
                    value="{{ $item->id_item_intencion_compra }}" 
                    data-id="{{ $item->id_item_intencion_compra }}" 
+                   data-peso="{{ $item->item->peso_lbs ?? 0 }}"
+                   data-alto="{{ $item->item->alto_cm ?? 0 }}"
+                   data-ancho="{{ $item->item->ancho_cm ?? 0 }}"
+                   data-profundo="{{ $item->item->profundo_cm ?? 0 }}"
                    {{ $item->es_seleccionado ? 'checked' : '' }}>
         </div>
 
@@ -1550,7 +1554,24 @@ window.recalcularEnvio = function() {
         return;
     }
 
-    fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio)
+    let maxPeso = 0;
+    let maxAlto = 0;
+    let maxAncho = 0;
+    let maxProfundo = 0;
+
+    document.querySelectorAll('.item-checkbox:checked').forEach(cb => {
+        const peso = parseFloat(cb.getAttribute('data-peso') || 0);
+        const alto = parseFloat(cb.getAttribute('data-alto') || 0);
+        const ancho = parseFloat(cb.getAttribute('data-ancho') || 0);
+        const profundo = parseFloat(cb.getAttribute('data-profundo') || 0);
+
+        if (peso > maxPeso) maxPeso = peso;
+        if (alto > maxAlto) maxAlto = alto;
+        if (ancho > maxAncho) maxAncho = ancho;
+        if (profundo > maxProfundo) maxProfundo = profundo;
+    });
+
+    fetch('/delivery/calcular?pueblo=' + encodeURIComponent(municipioCarrito) + '&valor_articulo=' + totalSinEnvio + '&peso_lbs=' + maxPeso + '&alto_cm=' + maxAlto + '&ancho_cm=' + maxAncho + '&profundo_cm=' + maxProfundo)
         .then(r => {
             return r.json().then(data => {
                 if (!r.ok) {

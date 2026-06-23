@@ -9,6 +9,7 @@ import 'items_list_screen.dart';
 import 'carrito_screen.dart';
 import 'cuenta_screen.dart';
 import 'login_screen.dart';
+import '../widgets/categorias_drawer.dart';
 
 /// Pantalla principal con Bottom Navigation Bar
 class MainScreen extends StatefulWidget {
@@ -152,6 +153,7 @@ class _MainScreenState extends State<MainScreen> {
         }
       },
       child: Scaffold(
+        drawer: const CategoriasDrawer(),
         body: IndexedStack(index: _index, children: screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
