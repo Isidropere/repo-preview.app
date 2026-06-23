@@ -441,9 +441,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     // ── Cálculo de envío ──────────────────────────────────
+    @php
+        $maxPeso = 0;
+        $maxAlto = 0;
+        $maxAncho = 0;
+        $maxProfundo = 0;
+        if (isset($carrito) && $carrito->itemsIntencionCompra) {
+            foreach ($carrito->itemsIntencionCompra as $itemIntencion) {
+                if ($itemIntencion->es_seleccionado && $itemIntencion->item) {
+                    $maxPeso = max($maxPeso, (float) ($itemIntencion->item->peso_lbs ?? 0));
+                    $maxAlto = max($maxAlto, (float) ($itemIntencion->item->alto_cm ?? 0));
+                    $maxAncho = max($maxAncho, (float) ($itemIntencion->item->ancho_cm ?? 0));
+                    $maxProfundo = max($maxProfundo, (float) ($itemIntencion->item->profundo_cm ?? 0));
+                }
+            }
+        }
+    @endphp
     (function () {
         const municipio = @json($municipioDefault ?? '');
         const subtotal  = {{ $totalFinal }};
+        const maxPeso = {{ $maxPeso }};
+        const maxAlto = {{ $maxAlto }};
+        const maxAncho = {{ $maxAncho }};
+        const maxProfundo = {{ $maxProfundo }};
         const elCosto   = document.getElementById('envio-costo');
         const elDias    = document.getElementById('envio-dias');
         const elTotal   = document.getElementById('total-final');
@@ -469,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + subtotal)
+        fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + subtotal + '&peso_lbs=' + maxPeso + '&alto_cm=' + maxAlto + '&ancho_cm=' + maxAncho + '&profundo_cm=' + maxProfundo)
             .then(r => {
                 return r.json().then(data => {
                     if (!r.ok) {

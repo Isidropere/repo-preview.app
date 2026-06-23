@@ -270,7 +270,15 @@ class NegociacionController extends Controller
             $todasNegs = $comoEmisor->merge($comoReceptor);
             foreach ($todasNegs as $neg) {
                 if ($neg->item) {
-                    $resultado = $deliveryService->calcular($municipioUsuario, 'persona', 0);
+                    $resultado = $deliveryService->calcular(
+                        $municipioUsuario,
+                        'persona',
+                        0,
+                        (float) ($neg->item->peso_lbs ?? 0),
+                        (float) ($neg->item->alto_cm ?? 0),
+                        (float) ($neg->item->ancho_cm ?? 0),
+                        (float) ($neg->item->profundo_cm ?? 0)
+                    );
                     if ($resultado['success']) {
                         $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['costo_envio_total'] ?? 0;
                     } else {

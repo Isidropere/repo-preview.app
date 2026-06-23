@@ -64,12 +64,21 @@
                     </div>
               
              <!-- Thumbnails -->
-                @if($imgsToShow->count() > 0)
-                <div style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:none;-ms-overflow-style:none;">
+                @if($imgsToShow->count() > 1)
+                <div style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:none;-ms-overflow-style:none;margin-top:0.5rem;">
                     @foreach($imgsToShow as $index => $imagen)
-
-
+                        <button type="button" onclick="changeMainImage(this, {{ $index }})"
+                                class="thumbnail flex-shrink-0 cursor-pointer border-2 border-gray-200 rounded overflow-hidden"
+                                style="width: 56px; height: 56px; padding: 0; background: none;">
+                            <img src="{{ \App\Helpers\ImageHelper::urlMedia($imagen->ruta, $imagen->nombre) }}" 
+                                 alt="Thumbnail" 
+                                 style="width:100%; height:100%; object-fit:cover;"
+                                 loading="lazy">
+                        </button>
+                    @endforeach
                 </div>
+                @endif
+            </div>
 
                 <!-- Product Info -->
                 <div class="md:w-1/2 p-6">
@@ -147,8 +156,8 @@
                                 <img class="h-10 w-10 rounded-full" src="{{ $item->usuario && $item->usuario->foto_perfil && ($item->usuario->foto_perfil_estado ?? 'pendiente') === 'aprobado' ? \App\Helpers\ImageHelper::urlPerfil($item->usuario->foto_perfil ?? null) : asset(\App\Helpers\ImageHelper::DEFAULT_PROFILE) }}" alt="Foto del vendedor" onerror="this.src='{{ asset(\App\Helpers\ImageHelper::DEFAULT_PROFILE) }}'">
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">{{ $item->usuario->nombres ?? 'N/A' }} {{ $item->usuario->apellidos ?? '' }}</p>
-                                <p class="text-sm text-gray-500">Miembro desde {{ $item->usuario->created_at->format('M Y') }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ $item->usuario ? ($item->usuario->nombres ?? 'N/A') : 'N/A' }} {{ $item->usuario->apellidos ?? '' }}</p>
+                                <p class="text-sm text-gray-500">Miembro desde {{ $item->usuario && $item->usuario->created_at ? $item->usuario->created_at->format('M Y') : 'N/A' }}</p>
                             </div>
                         </div>
 
@@ -236,10 +245,10 @@
     <!-- Contact Modal -->
     <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-4">Contactar a {{ $item->usuario->Nombre }}</h3>
+            <h3 class="text-xl font-semibold mb-4">Contactar a {{ $item->usuario ? ($item->usuario->Nombre ?? $item->usuario->nombres ?? 'Vendedor') : 'Vendedor' }}</h3>
             <form id="contactForm" action="{{ route('messages.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="receiver_id" value="{{ $item->usuario->id }}">
+                <input type="hidden" name="receiver_id" value="{{ $item->usuario->id ?? '' }}">
                 <input type="hidden" name="item_id" value="{{ $item->id_item }}">
                 <div class="mb-4">
                     <label for="message" class="block text-sm font-medium text-gray-700">Mensaje</label>

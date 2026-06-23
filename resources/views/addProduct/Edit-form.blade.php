@@ -71,7 +71,7 @@
                     {{-- Precio y Descuento --}}
                     <div class="grid grid-cols-2 gap-3" style="align-items:end">
                         <div>
-                            <label for="valor" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span class="text-gray-400">(opcional)</span></label>
+                            <label for="valor" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Precio (DOP) <span id="valor-label-suffix" class="text-gray-400">(opcional)</span></label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">RD$</span>
                                 <input type="text" id="valor" name="valor" value="{{ old('valor', number_format($item->valor, 2)) }}" placeholder="0.00" inputmode="decimal" oninput="formatPrice(this)"
@@ -228,8 +228,9 @@
                             @error('condicion')<span class="text-red-500 text-xs mt-1">{{ $message }}</span>@enderror
                         </div>
                         <div>
-                            <label for="tipo_trans" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Modalidad <span class="text-red-500">*</span></label>
-                            <select id="tipo_trans" name="tipo_trans" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
+                            <label for="tipo_trans" class="flex items-center gap-1 text-xs font-medium text-gray-700 mb-0.5">Modalidad de negocio <span class="text-red-500">*</span></label>
+                            <select id="tipo_trans" name="tipo_trans" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
+                                <option value="" disabled {{ old('tipo_trans', $item->tipo_trans) === null || old('tipo_trans', $item->tipo_trans) === '' ? 'selected' : '' }}>Seleccione una modalidad de negocio</option>
                                 <option value="1" {{ old('tipo_trans', $item->tipo_trans) == 1 ? 'selected' : '' }}>Venta</option>
                                 <option value="2" {{ old('tipo_trans', $item->tipo_trans) == 2 ? 'selected' : '' }}>Intercambio</option>
                                 <option value="3" {{ old('tipo_trans', $item->tipo_trans) == 3 ? 'selected' : '' }}>Venta o Intercambio</option>
@@ -261,29 +262,33 @@
                         <button type="button" onclick="toggleDimensions()" class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors">
                             <span class="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                Dimensiones y peso <span class="text-gray-400 font-normal">(opcional)</span>
+                                Dimensiones y peso <span class="text-red-500 font-bold">*</span>
                             </span>
-                            <svg id="dim-arrow" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            <svg id="dim-arrow" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                        <div id="dimensions-panel" class="hidden px-4 py-4 space-y-3">
+                        <div id="dimensions-panel" class="px-4 py-4 space-y-3">
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Peso (lbs)</label>
-                                    <input type="number" id="peso_lbs" name="peso_lbs" step="0.01" min="0" value="{{ old('peso_lbs', $item->peso_lbs) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                    <label class="block text-xs text-gray-500 mb-1">Peso (lbs) *</label>
+                                    <input type="number" id="peso_lbs" name="peso_lbs" step="0.01" min="0.01" value="{{ old('peso_lbs', $item->peso_lbs) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Alto (cm)</label>
-                                    <input type="number" id="alto_cm" name="alto_cm" step="0.1" min="0" value="{{ old('alto_cm', $item->alto_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                    <label class="block text-xs text-gray-500 mb-1">Alto (cm) *</label>
+                                    <input type="number" id="alto_cm" name="alto_cm" step="0.1" min="0.1" value="{{ old('alto_cm', $item->alto_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Ancho (cm)</label>
-                                    <input type="number" id="ancho_cm" name="ancho_cm" step="0.1" min="0" value="{{ old('ancho_cm', $item->ancho_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                    <label class="block text-xs text-gray-500 mb-1">Ancho (cm) *</label>
+                                    <input type="number" id="ancho_cm" name="ancho_cm" step="0.1" min="0.1" value="{{ old('ancho_cm', $item->ancho_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Profundidad (cm)</label>
-                                    <input type="number" id="profundo_cm" name="profundo_cm" step="0.1" min="0" value="{{ old('profundo_cm', $item->profundo_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                    <label class="block text-xs text-gray-500 mb-1">Profundidad (cm) *</label>
+                                    <input type="number" id="profundo_cm" name="profundo_cm" step="0.1" min="0.1" value="{{ old('profundo_cm', $item->profundo_cm) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                             </div>
+                            @error('peso_lbs')<span class="text-red-500 text-xs block">{{ $message }}</span>@enderror
+                            @error('alto_cm')<span class="text-red-500 text-xs block">{{ $message }}</span>@enderror
+                            @error('ancho_cm')<span class="text-red-500 text-xs block">{{ $message }}</span>@enderror
+                            @error('profundo_cm')<span class="text-red-500 text-xs block">{{ $message }}</span>@enderror
                         </div>
                     </div>
 
@@ -433,6 +438,20 @@ function validarPaso1Producto() {
             limpiarErrorCampo(el);
         }
     });
+
+    // Validar precio si la modalidad actual incluye venta
+    const tipoTransSelect = document.getElementById('tipo_trans');
+    const valorInput = document.getElementById('valor');
+    if (tipoTransSelect && valorInput) {
+        const tipoTrans = tipoTransSelect.value;
+        if ((tipoTrans === '1' || tipoTrans === '3') && !valorInput.value.trim()) {
+            valido = false;
+            mostrarErrorCampo(valorInput, 'El precio es obligatorio si la modalidad incluye venta.');
+        } else {
+            limpiarErrorCampo(valorInput);
+        }
+    }
+
     if (valido) goToStep(2);
 }
 
@@ -585,12 +604,58 @@ document.addEventListener('DOMContentLoaded', function() {
             const inp = label.querySelector('.imagen-input'), pi = label.querySelector('.preview-image'), pd = label.querySelector('.preview-default'), fn = label.querySelector('.file-name'), pa = label.querySelector('.preview-actions');
             const hiddenExist = label.querySelector('input[name="imagenes_existentes[]"]');
             if (hiddenExist) hiddenExist.remove();
-            if (inp) inp.value=''; if (pi) { pi.src=''; pi.classList.add('hidden'); } if (pd) pd.classList.remove('hidden'); if (fn) fn.classList.add('hidden'); if (pa) pa.classList.add('hidden');
         });
     });
+
+    // ═══ Modalidad & Precio Requerido Dinámico ═══
+    const tipoTransSelect = document.getElementById('tipo_trans');
+    const valorSuffix = document.getElementById('valor-label-suffix');
+    
+    function updatePriceLabel() {
+        if (!tipoTransSelect || !valorSuffix) return;
+        const tipoTrans = tipoTransSelect.value;
+        if (tipoTrans === '1' || tipoTrans === '3') {
+            valorSuffix.className = 'text-red-500 font-bold';
+            valorSuffix.textContent = '*';
+        } else {
+            valorSuffix.className = 'text-gray-400';
+            valorSuffix.textContent = '(opcional)';
+        }
+    }
+
+    if (tipoTransSelect) {
+        tipoTransSelect.addEventListener('change', updatePriceLabel);
+        updatePriceLabel(); // Ejecutar al cargar la página
+    }
 });
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Validar descripción (Paso 3)
+    const presentacion = document.getElementById('presentacion');
+    if (presentacion && !presentacion.value.trim()) {
+        e.preventDefault();
+        mostrarErrorCampo(presentacion, 'La descripción es obligatoria.');
+        alert('Falta la descripción del producto.');
+        return;
+    } else if (presentacion) {
+        limpiarErrorCampo(presentacion);
+    }
+
+    // Validar precio si la modalidad incluye venta
+    const tipoTransSelect = document.getElementById('tipo_trans');
+    const valorInput = document.getElementById('valor');
+    if (tipoTransSelect && valorInput) {
+        const tipoTrans = tipoTransSelect.value;
+        if ((tipoTrans === '1' || tipoTrans === '3') && !valorInput.value.trim()) {
+            e.preventDefault();
+            goToStep(1);
+            mostrarErrorCampo(valorInput, 'El precio es obligatorio si la modalidad incluye venta.');
+            valorInput.focus();
+            alert('El precio es obligatorio para la modalidad seleccionada.');
+            return;
+        }
+    }
+
     let v = document.getElementById('valor'); v.value = v.value.replace(/,/g, '');
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;

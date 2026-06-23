@@ -40,7 +40,15 @@ class DeliveryService
     /**
      * Calcula costo de envío para un pueblo.
      */
-    public function calcular(string $pueblo, string $tipoDestinatario, float $valorArticulo): array
+    public function calcular(
+        string $pueblo,
+        string $tipoDestinatario,
+        float $valorArticulo,
+        float $peso = 0,
+        float $alto = 0,
+        float $ancho = 0,
+        float $profundo = 0
+    ): array
     {
         $pueblo = strtolower(trim($pueblo));
 
@@ -104,14 +112,22 @@ class DeliveryService
 
         return array_merge(
             ['success' => true, 'pueblo_buscado' => $pueblo],
-            $this->calcularPorZona($zonaEncontrada, $tipoDestinatario, $valorArticulo)
+            $this->calcularPorZona($zonaEncontrada, $tipoDestinatario, $valorArticulo, $peso, $alto, $ancho, $profundo)
         );
     }
 
     /**
      * Calcula costo de envío para una zona concreta (misma lógica que calcular()).
      */
-    public function calcularPorZona(DeliveryZona $zona, string $tipoDestinatario = 'persona', float $valorArticulo = 0): array
+    public function calcularPorZona(
+        DeliveryZona $zona,
+        string $tipoDestinatario = 'persona',
+        float $valorArticulo = 0,
+        float $peso = 0,
+        float $alto = 0,
+        float $ancho = 0,
+        float $profundo = 0
+    ): array
     {
         $precioBase = $tipoDestinatario === 'empresa'
             ? (float) $zona->precio_empresa
@@ -129,6 +145,29 @@ class DeliveryService
         $costoSeguro     = round($precioBase * ($pctSeguro / 100), 2);
         $costoManejo     = round($precioBase * ($pctManejo / 100), 2);
         $costoTotal      = round($costoFlete + $costoPlataforma + $costoSeguro + $costoManejo, 2);
+
+        // Calcular recargo por sobredimensionado / sobrepeso
+        $recargo = 0.00;
+        $recargoAplicado = false;
+        $sobredimensionado = DB::table('delivery_config')->where('clave', 'sobredimensionado')->first();
+        if ($sobredimensionado) {
+            $minPeso = (float) ($sobredimensionado->min_peso_lbs ?? 0);
+            $minAlto = (float) ($sobredimensionado->min_alto_cm ?? 0);
+            $minAncho = (float) ($sobredimensionado->min_ancho_cm ?? 0);
+            $minProfundo = (float) ($sobredimensionado->min_profundo_cm ?? 0);
+            $montoRecargo = (float) ($sobredimensionado->recargo_monto ?? 0);
+
+            if (
+                ($minPeso > 0 && $peso > $minPeso) ||
+                ($minAlto > 0 && $alto > $minAlto) ||
+                ($minAncho > 0 && $ancho > $minAncho) ||
+                ($minProfundo > 0 && $profundo > $minProfundo)
+            ) {
+                $recargo = $montoRecargo;
+                $recargoAplicado = true;
+                $costoTotal = round($costoTotal + $recargo, 2);
+            }
+        }
 
         $diasHabiles = match ($zona->tipo) {
             'corta' => 5, 'larga' => 7, 'especial' => 10, default => 7,
@@ -151,6 +190,8 @@ class DeliveryService
                 'costo_seguro'          => $costoSeguro,
                 'manejo_pct'            => $pctManejo,
                 'costo_manejo'          => $costoManejo,
+                'recargo_sobredimensionado' => $recargo,
+                'sobredimensionado_aplicado' => $recargoAplicado,
             ],
             'costo_envio_total' => $costoTotal,
         ];
@@ -170,7 +211,7 @@ class DeliveryService
      */
     public function actualizarConfig(string $clave, array $datos): array
     {
-        $allowed = ['cortas', 'largas', 'especiales', 'chequeados'];
+        $allowed = ['cortas', 'largas', 'especiales', 'chequeados', 'sobredimensionado'];
         if (!in_array($clave, $allowed)) {
             return ['success' => false, 'message' => 'Clave inválida.'];
         }
