@@ -385,9 +385,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final totales = _data?['totales'] ?? {};
     final double totalArticulos = double.tryParse((totales['total_articulos'] ?? 0).toString()) ?? 0.0;
     final double totalDescuento = double.tryParse((totales['total_descuento'] ?? 0).toString()) ?? 0.0;
+    final double totalImpuestos = double.tryParse((totales['total_impuestos'] ?? 0).toString()) ?? 0.0;
     final double totalEstimado = double.tryParse((totales['total_estimado'] ?? 0).toString()) ?? 0.0;
     final double envio = 0.0; // Todo: integrar calculo de envio
-    final double granTotal = totalEstimado + envio;
+    final double granTotal = totalEstimado + totalImpuestos + envio;
 
     // Verificar si todos están seleccionados (para servicios, solo consideramos los aprobados)
     bool todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
@@ -480,6 +481,11 @@ class _CarritoScreenState extends State<CarritoScreen> {
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Text('Envío:', style: TextStyle(color: kTextGray)),
               Text('RD\$ ${envio.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
+            ]),
+            const SizedBox(height: 4),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('Impuestos:', style: TextStyle(color: kTextGray)),
+              Text('RD\$ ${totalImpuestos.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
             ]),
             const Divider(height: 24),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [

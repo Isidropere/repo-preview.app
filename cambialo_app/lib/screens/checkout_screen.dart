@@ -233,7 +233,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return _costoEnvio;
   }
 
-  double get _totalFinal => _subtotal - _totalDescuento + _envio;
+  double get _totalImpuestos {
+    final items = widget.carrito['items_intencion_compra'] as List? ?? widget.carrito['items'] as List? ?? [];
+    double sum = 0.0;
+    for (var i in items) {
+      final esSel = ApiClient.parseBool(i['es_seleccionado']);
+      if (esSel) {
+        final itemData = i['item'] as Map? ?? {};
+        final catData = itemData['categoria'] as Map? ?? {};
+        final aplicaImpuesto = ApiClient.parseBool(catData['aplica_impuesto'] ?? true);
+        if (aplicaImpuesto) {
+          final double valor = double.tryParse((itemData['valor'] ?? 0).toString()) ?? 0.0;
+          final int cantidad = int.tryParse((i['cantidad'] ?? 1).toString()) ?? 1;
+          final double descuento = double.tryParse((i['descuento'] ?? 0).toString()) ?? 0.0;
+          final double neto = (valor * cantidad) - (descuento * cantidad);
+          if (neto > 0) {
+            final isServicio = (itemData['id_categoria_item'] == 29);
+            if (isServicio) {
+              sum += neto * 0.10; // 10% ISR
+            } else {
+              sum += neto * 0.18; // 18% ITBIS
+            }
+          }
+        }
+      }
+    }
+    return sum;
+  }
+
+  double get _totalFinal => _subtotal - _totalDescuento + _totalImpuestos + _envio;
 
   Future<void> _pagar() async {
     final bool esServicio = widget.carrito['tipo'] == 'servicio';
@@ -551,6 +579,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                   ],
+                ],
+                if (_totalImpuestos > 0) ...[
+                  const SizedBox(height: 4),
+                  _fila('Impuestos (ITBIS/ISR)', 'RD\$ ${_totalImpuestos.toStringAsFixed(2)}'),
                 ],
                 const Divider(height: 16),
                 _fila('TOTAL', 'RD\$ ${_totalFinal.toStringAsFixed(2)}', bold: true),

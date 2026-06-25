@@ -248,7 +248,33 @@
                         $itemsSeleccionados = $carrito->itemsIntencionCompra->filter(fn($i) => $i->es_seleccionado);
                         $subtotal           = $itemsSeleccionados->sum(fn($i) => $i->item->valor * $i->cantidad);
                         $totalDescuento     = $itemsSeleccionados->sum('descuento');
-                        $totalFinal         = $subtotal - $totalDescuento;
+                        $totalBase          = $subtotal - $totalDescuento;
+
+                        // Calcular impuestos (ITBIS/ISR)
+                        $itbisConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'itbis')->first();
+                        $itbisPct = $itbisConfig ? (float) $itbisConfig->porcentaje : 18.00;
+                        $isrConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'isr')->first();
+                        $isrPct = $isrConfig ? (float) $isrConfig->porcentaje : 10.00;
+
+                        $totalImpuestos = 0;
+                        foreach ($itemsSeleccionados as $i) {
+                            if ($i->item) {
+                                $aplicaImpuesto = (bool) ($i->item->categoria?->aplica_impuesto ?? true);
+                                if ($aplicaImpuesto) {
+                                    $netoItem = ($i->item->valor * $i->cantidad) - ($i->descuento ?? 0);
+                                    if ($netoItem > 0) {
+                                        $isServicio = (int) ($i->item->id_categoria_item ?? 0) === 29;
+                                        if ($isServicio) {
+                                            $totalImpuestos += $netoItem * ($isrPct / 100);
+                                        } else {
+                                            $totalImpuestos += $netoItem * ($itbisPct / 100);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        $totalImpuestos = round($totalImpuestos, 2);
+                        $totalFinal     = $totalBase + $totalImpuestos;
                     @endphp
 
                     <div class="space-y-4 mb-5 max-h-72 overflow-y-auto">
@@ -290,6 +316,12 @@
                         </div>
                         @endif
                         <div id="envio-dias" class="text-right text-xs text-gray-400 hidden"></div>
+                        @if($totalImpuestos > 0)
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>Impuestos (ITBIS/ISR)</span>
+                            <span class="font-medium text-gray-700">RD$ {{ number_format($totalImpuestos, 2) }}</span>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="border-t-2 border-gray-100 mt-3 pt-3 flex justify-between items-center">
@@ -460,7 +492,9 @@ document.addEventListener('DOMContentLoaded', function () {
     @endphp
     (function () {
         const municipio = @json($municipioDefault ?? '');
-        const subtotal  = {{ $totalFinal }};
+        const baseTotal = {{ $totalBase }};
+        const totalImpuestos = {{ $totalImpuestos }};
+        const subtotal  = baseTotal + totalImpuestos;
         const maxPeso = {{ $maxPeso }};
         const maxAlto = {{ $maxAlto }};
         const maxAncho = {{ $maxAncho }};
@@ -490,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + subtotal + '&peso_lbs=' + maxPeso + '&alto_cm=' + maxAlto + '&ancho_cm=' + maxAncho + '&profundo_cm=' + maxProfundo)
+        fetch('/api/delivery/calcular?pueblo=' + encodeURIComponent(municipio) + '&valor_articulo=' + baseTotal + '&peso_lbs=' + maxPeso + '&alto_cm=' + maxAlto + '&ancho_cm=' + maxAncho + '&profundo_cm=' + maxProfundo)
             .then(r => {
                 return r.json().then(data => {
                     if (!r.ok) {
@@ -510,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     elCosto.textContent = 'RD$ ' + costo.toLocaleString('es-DO', {minimumFractionDigits:2});
                     elCosto.className   = 'font-medium text-gray-700';
                     if (elTotal) {
-                        const nuevo = subtotal + costo;
+                        const nuevo = baseTotal + totalImpuestos + costo;
                         elTotal.textContent = 'RD$ ' + nuevo.toLocaleString('es-DO', {minimumFractionDigits:2});
                     }
                     if (elDias && d.dias_habiles) {

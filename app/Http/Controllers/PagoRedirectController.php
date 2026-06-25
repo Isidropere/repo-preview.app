@@ -23,6 +23,7 @@ class PagoRedirectController extends Controller
         private AzulProvider $azulProvider,
         private SolicitudServicioService $solicitudService,
         private ERPService $erpService,
+        private \App\Services\CheckoutService $checkoutService,
     ) {}
 
     /**
@@ -93,6 +94,10 @@ class PagoRedirectController extends Controller
             return redirect()->route('carrito.checkout_index')->with('error', 'El monto total debe ser mayor a cero.');
         }
 
+        // Calcular impuestos (ITBIS/ISR)
+        $totalImpuestos = $this->checkoutService->calcularImpuestos($itemsSeleccionados);
+        $costoEnvio = 0;
+
         // Calcular costo de envío si aplica (solo para productos físicos)
         if (!$esServicio && $direccion) {
             $maxPeso = 0;
@@ -123,11 +128,13 @@ class PagoRedirectController extends Controller
             $montoTotal += $costoEnvio;
         }
 
+        $montoTotal += $totalImpuestos;
+
         // 6. Transacción en base de datos para reservar stock y crear orden 'pendiente'
         try {
             PagoCompra::liberarOrdenesPendientes($carrito->id_carrito);
 
-            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $userId) {
+            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $userId, $totalImpuestos, $costoEnvio) {
                 // Evitar compras duplicadas simultáneas
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
@@ -149,6 +156,8 @@ class PagoRedirectController extends Controller
                     'id_proveedor_pago' => 1, // AZUL
                     'transaction_id'    => null,
                     'total'             => $montoTotal,
+                    'impuestos'         => $totalImpuestos,
+                    'costo_envio'       => $costoEnvio,
                     'cantidad_items'    => $itemsSeleccionados->count(),
                     'id_direccion'      => $direccion?->id_direccion,
                     'fecha'             => now(),
@@ -193,7 +202,7 @@ class PagoRedirectController extends Controller
             });
 
             // 7. Generar los campos y el AuthHash para AZUL
-            $azulData = $this->azulProvider->generarCamposFormulario($montoTotal, $pagoCompra->id_pago_compra);
+            $azulData = $this->azulProvider->generarCamposFormulario($montoTotal, $pagoCompra->id_pago_compra, ['tax' => $totalImpuestos]);
 
             // Registrar log local del request
             DB::table('logs_pagos')->insert([
@@ -257,7 +266,7 @@ class PagoRedirectController extends Controller
 
         try {
             // Generar los campos y el AuthHash para AZUL
-            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra);
+            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra, ['tax' => (float) ($pagoCompra->impuestos ?? 0)]);
 
             // Registrar log local del request
             DB::table('logs_pagos')->insert([

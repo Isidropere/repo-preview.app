@@ -105,6 +105,9 @@ class CheckoutService
             return $this->error('El monto total no puede ser cero o negativo.');
         }
 
+        // Calcular impuestos (ITBIS/ISR)
+        $totalImpuestos = $this->calcularImpuestos($itemsSeleccionados);
+
         // Calcular costo de envío si aplica (solo para productos físicos)
         if (!$esServicio && $direccion) {
             $maxPeso = 0;
@@ -133,6 +136,8 @@ class CheckoutService
             $montoTotal += $costoEnvio;
         }
 
+        $montoTotal += $totalImpuestos;
+
         // 6. Validar tarjeta del usuario
         $tarjeta = $this->obtenerTarjetaUsuario($idTarjeta, $userId);
         if (!$tarjeta) {
@@ -142,6 +147,7 @@ class CheckoutService
         // 6. Preparar datos de cobro
         $datosTarjeta = $this->prepararDatosTarjeta($tarjeta, $cvv);
         $opciones = $this->prepararOpciones($carrito, $clientIp);
+        $opciones['tax'] = $totalImpuestos;
 
         // 7. Cobrar
         $resultadoPago = $this->pagoService->cobrarTarjeta($montoTotal, '214', $datosTarjeta, $opciones);
@@ -159,7 +165,8 @@ class CheckoutService
         // 8. Registrar en BD (con reembolso automático si falla)
         return $this->registrarCompra(
             $itemsSeleccionados, $carrito, $tarjeta,
-            $resultadoPago, $montoTotal, $direccion, $userId
+            $resultadoPago, $montoTotal, $direccion, $userId,
+            $totalImpuestos, $costoEnvio ?? 0
         );
     }
 
@@ -252,9 +259,11 @@ class CheckoutService
         float $montoTotal,
         ?Direcciones $direccion,
         int $userId,
+        float $totalImpuestos = 0,
+        float $costoEnvio = 0,
     ): array {
         try {
-            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $tarjeta, $resultadoPago, $montoTotal, $direccion) {
+            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $tarjeta, $resultadoPago, $montoTotal, $direccion, $totalImpuestos, $costoEnvio) {
                 // Bloqueo pesimista: evita pedidos duplicados por doble submit (ventana de 2 minutos)
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
@@ -274,6 +283,8 @@ class CheckoutService
                     'id_proveedor_pago' => 1,
                     'transaction_id'    => $resultadoPago['transaction_id'] ?? null,
                     'total'             => $montoTotal,
+                    'impuestos'         => $totalImpuestos,
+                    'costo_envio'       => $costoEnvio,
                     'cantidad_items'    => $itemsSeleccionados->count(),
                     'id_direccion'      => $direccion?->id_direccion,
                 ]);
@@ -467,5 +478,43 @@ class CheckoutService
     private function error(string $message): array
     {
         return ['success' => false, 'message' => $message];
+    }
+
+    public function calcularImpuestos(Collection $items): float
+    {
+        $totalImpuestos = 0;
+
+        // Cargar tasas de la BD
+        $itbisConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'itbis')->first();
+        $itbisPct = $itbisConfig ? (float) $itbisConfig->porcentaje : 18.00;
+
+        $isrConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'isr')->first();
+        $isrPct = $isrConfig ? (float) $isrConfig->porcentaje : 10.00;
+
+        foreach ($items as $i) {
+            if ($i->item) {
+                // Verificar si la categoría aplica impuesto
+                $aplicaImpuesto = (bool) ($i->item->categoria?->aplica_impuesto ?? true);
+                if (!$aplicaImpuesto) {
+                    continue;
+                }
+
+                $valorUnitario = (float) ($i->item->valor ?? 0);
+                $cantidad = (int) ($i->cantidad ?? 0);
+                $descuentoUnitario = (float) ($i->descuento ?? 0);
+
+                $netoItem = ($valorUnitario * $cantidad) - ($descuentoUnitario * $cantidad);
+                if ($netoItem > 0) {
+                    $isServicio = (int) ($i->item->id_categoria_item ?? 0) === 29;
+                    if ($isServicio) {
+                        $totalImpuestos += $netoItem * ($isrPct / 100);
+                    } else {
+                        $totalImpuestos += $netoItem * ($itbisPct / 100);
+                    }
+                }
+            }
+        }
+
+        return round($totalImpuestos, 2);
     }
 }
