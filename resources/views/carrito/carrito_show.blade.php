@@ -41,20 +41,6 @@
 <main class="bg-gray-50 min-h-screen py-10">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 lg:px-8">
         @include('components.btn-volver', ['backUrl' => route('home')])
-
-        <div class="mt-4">
-            @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mb-4 shadow-sm">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl mb-4 shadow-sm">
-                    {{ session('error') }}
-                </div>
-            @endif
-        </div>
-
         <!-- Select All -->
         <div class="flex items-center mb-4">
             <input type="checkbox" id="selectAll" class="mr-2">

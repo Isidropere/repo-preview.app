@@ -800,6 +800,113 @@
     }, true); // capturing phase is crucial as error events do not bubble
 </script>
 
+<!-- Sistema de Notificaciones Premium (Toasts) -->
+<div id="toast-container" class="fixed top-5 right-5 z-[99999] flex flex-col gap-3 w-full max-w-sm pointer-events-none"></div>
+
+<style>
+.toast-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f3f4f6;
+    transform: translateX(120%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, margin 0.3s ease;
+    opacity: 0;
+    pointer-events: auto;
+}
+.toast-card.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.toast-card.hide {
+    transform: translateX(120%);
+    opacity: 0;
+}
+</style>
+
+<script>
+window.showToast = function(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    
+    let iconColor = 'text-green-500';
+    let iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    let borderLeft = 'border-l-4 border-l-green-500';
+    let title = 'Éxito';
+
+    if (type === 'error') {
+        iconColor = 'text-red-500';
+        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        borderLeft = 'border-l-4 border-l-red-500';
+        title = 'Error';
+    } else if (type === 'warning' || type === 'alerta') {
+        iconColor = 'text-amber-500';
+        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+        borderLeft = 'border-l-4 border-l-amber-500';
+        title = 'Atención';
+    } else if (type === 'info') {
+        iconColor = 'text-blue-500';
+        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        borderLeft = 'border-l-4 border-l-blue-500';
+        title = 'Información';
+    }
+
+    toast.className = `toast-card ${borderLeft}`;
+    toast.innerHTML = `
+        <div class="${iconColor} flex-shrink-0 mt-0.5">
+            ${iconSvg}
+        </div>
+        <div class="flex-1">
+            <p class="font-bold text-gray-900 text-sm">${title}</p>
+            <p class="text-gray-600 text-xs mt-0.5">${message}</p>
+        </div>
+        <button class="text-gray-400 hover:text-gray-600 text-sm leading-none ml-2 focus:outline-none">&times;</button>
+    `;
+
+    // Click to close
+    toast.querySelector('button').onclick = () => {
+        toast.classList.replace('show', 'hide');
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    container.appendChild(toast);
+
+    // Trigger reflow to start transition
+    toast.offsetHeight;
+    toast.classList.add('show');
+
+    // Auto-dismiss after 4.5 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.replace('show', 'hide');
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 4500);
+};
+
+// Check for session flash messages and display them
+document.addEventListener("DOMContentLoaded", function() {
+    @if(session('success'))
+        window.showToast(@json(session('success')), 'success');
+    @endif
+    @if(session('error'))
+        window.showToast(@json(session('error')), 'error');
+    @endif
+    @if(session('alerta'))
+        window.showToast(@json(session('alerta')), 'alerta');
+    @endif
+    @if(session('status'))
+        window.showToast(@json(session('status')), 'info');
+    @endif
+});
+</script>
+
 @include('legal.partials.modal')
 
 @stack('scripts')
