@@ -82,6 +82,19 @@ class _CarritoScreenState extends State<CarritoScreen> {
   Future<void> _actualizarCantidad(int itemIntencionId, String accion) async {
     final res = await ApiClient.put('/carrito/$itemIntencionId/cantidad', {'accion': accion}, auth: true);
     if (res.statusCode == 200) {
+      try {
+        final body = jsonDecode(res.body);
+        final msg = body['message'] ?? 'Cantidad actualizada';
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ));
+        }
+      } catch (e) {
+        // Ignorar
+      }
       _load();
     } else {
       try {

@@ -237,10 +237,20 @@ class CarritoService
     public function actualizarCantidad(int $itemIntencionId, string $accion): array
     {
         $item = ItemIntencionCompra::findOrFail($itemIntencionId);
-        $stockDisponible = $item->item->inventarios?->cantidad ?? 0;
 
         $isServicio = (int) $item->item->id_categoria_item === 29;
-        
+        $stockDisponible = 0;
+
+        if (!$isServicio) {
+            if ($item->id_color) {
+                $colorPivot = $item->item->colors()->where('colors.id_color', $item->id_color)->first();
+                $stockDisponible = $colorPivot ? $colorPivot->pivot->stock : 0;
+            } else {
+                $stockDisponible = $item->item->inventarios?->cantidad ?? 0;
+            }
+        }
+
+        $message = 'Cantidad actualizada';
         if ($accion === 'incrementar') {
             if (!$isServicio) {
                 if ($stockDisponible <= 0) {
@@ -251,12 +261,14 @@ class CarritoService
                 }
             }
             $item->cantidad++;
+            $message = 'Artículo agregado';
         } elseif ($accion === 'decrementar' && $item->cantidad > 1) {
             $item->cantidad--;
+            $message = 'Cantidad disminuida';
         }
 
         $item->save();
-        return ['success' => true, 'message' => 'Cantidad actualizada'];
+        return ['success' => true, 'message' => $message];
     }
 
     /**

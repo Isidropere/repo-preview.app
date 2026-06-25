@@ -118,9 +118,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         final double al = double.tryParse(itemData['alto_cm']?.toString() ?? '') ?? 0.0;
         final double an = double.tryParse(itemData['ancho_cm']?.toString() ?? '') ?? 0.0;
         final double pr = double.tryParse(itemData['profundo_cm']?.toString() ?? '') ?? 0.0;
+        final int cantidad = int.tryParse(i['cantidad']?.toString() ?? '') ?? 1;
 
-        if (p > maxPeso) maxPeso = p;
-        if (al > maxAlto) maxAlto = al;
+        maxPeso += p * cantidad;
+        final double stackedAlto = al * cantidad;
+        if (stackedAlto > maxAlto) maxAlto = stackedAlto;
         if (an > maxAncho) maxAncho = an;
         if (pr > maxProfundo) maxProfundo = pr;
       }

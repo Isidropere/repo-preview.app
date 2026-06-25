@@ -101,8 +101,9 @@ class PagoRedirectController extends Controller
             $maxProfundo = 0;
             foreach ($itemsSeleccionados as $i) {
                 if ($i->item) {
-                    $maxPeso = max($maxPeso, (float) ($i->item->peso_lbs ?? 0));
-                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0));
+                    $itemCantidad = (int) ($i->cantidad ?? 1);
+                    $maxPeso += (float) ($i->item->peso_lbs ?? 0) * $itemCantidad;
+                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0) * $itemCantidad);
                     $maxAncho = max($maxAncho, (float) ($i->item->ancho_cm ?? 0));
                     $maxProfundo = max($maxProfundo, (float) ($i->item->profundo_cm ?? 0));
                 }

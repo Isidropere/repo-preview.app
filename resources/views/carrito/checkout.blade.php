@@ -449,8 +449,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isset($carrito) && $carrito->itemsIntencionCompra) {
             foreach ($carrito->itemsIntencionCompra as $itemIntencion) {
                 if ($itemIntencion->es_seleccionado && $itemIntencion->item) {
-                    $maxPeso = max($maxPeso, (float) ($itemIntencion->item->peso_lbs ?? 0));
-                    $maxAlto = max($maxAlto, (float) ($itemIntencion->item->alto_cm ?? 0));
+                    $itemCantidad = (int) ($itemIntencion->cantidad ?? 1);
+                    $maxPeso += (float) ($itemIntencion->item->peso_lbs ?? 0) * $itemCantidad;
+                    $maxAlto = max($maxAlto, (float) ($itemIntencion->item->alto_cm ?? 0) * $itemCantidad);
                     $maxAncho = max($maxAncho, (float) ($itemIntencion->item->ancho_cm ?? 0));
                     $maxProfundo = max($maxProfundo, (float) ($itemIntencion->item->profundo_cm ?? 0));
                 }
