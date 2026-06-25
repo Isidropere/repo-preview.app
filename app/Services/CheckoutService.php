@@ -344,12 +344,16 @@ class CheckoutService
                         $dirTexto .= ", República Dominicana";
                     }
 
-                    $subtotalItems = $this->calcularTotal($itemsSeleccionados);
-                    $costoEnvio = $montoTotal - $subtotalItems;
+                    $subtotalItems = $pagoCompra->total - $pagoCompra->impuestos - $pagoCompra->costo_envio;
+                    $costoEnvio = (float) ($pagoCompra->costo_envio ?? 0);
+                    $totalImpuestos = (float) ($pagoCompra->impuestos ?? 0);
 
                     $breakdownText = "Subtotal de la Compra: RD\$ " . number_format($subtotalItems, 2) . "\n";
                     if ($costoEnvio > 0) {
                         $breakdownText .= "Costo de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
+                    }
+                    if ($totalImpuestos > 0) {
+                        $breakdownText .= "Impuestos: RD\$ " . number_format($totalImpuestos, 2) . "\n";
                     }
 
                     $emailContent = "Hola, {$user->nombres} {$user->apellidos}:\n\n" .
