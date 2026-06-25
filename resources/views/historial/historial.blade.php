@@ -514,7 +514,7 @@
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
                 <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
-                    <form id="formModalDevolucion" method="POST">
+                    <form id="formModalDevolucion" method="POST" onsubmit="mostrarProgreso()">
                         @csrf
                         <div class="bg-white px-6 pt-6 pb-4">
                             <div class="sm:flex sm:items-start">
