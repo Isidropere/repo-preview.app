@@ -82,16 +82,79 @@ class _CarritoScreenState extends State<CarritoScreen> {
   Future<void> _actualizarCantidad(int itemIntencionId, String accion) async {
     final res = await ApiClient.put('/carrito/$itemIntencionId/cantidad', {'accion': accion}, auth: true);
     if (res.statusCode == 200) {
+      try {
+        final body = jsonDecode(res.body);
+        final msg = body['message'] ?? 'Cantidad actualizada';
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    msg,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ));
+        }
+      } catch (e) {
+        // Ignorar
+      }
       _load();
     } else {
       try {
         final msg = jsonDecode(res.body)['message'] ?? 'Error al actualizar cantidad';
-        if(mounted){
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    msg,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          ));
         }
       } catch (e) {
-        if(mounted){
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al actualizar cantidad'), backgroundColor: Colors.red));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Error al actualizar cantidad',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          ));
         }
       }
     }
@@ -322,9 +385,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final totales = _data?['totales'] ?? {};
     final double totalArticulos = double.tryParse((totales['total_articulos'] ?? 0).toString()) ?? 0.0;
     final double totalDescuento = double.tryParse((totales['total_descuento'] ?? 0).toString()) ?? 0.0;
+    final double totalImpuestos = double.tryParse((totales['total_impuestos'] ?? 0).toString()) ?? 0.0;
     final double totalEstimado = double.tryParse((totales['total_estimado'] ?? 0).toString()) ?? 0.0;
     final double envio = 0.0; // Todo: integrar calculo de envio
-    final double granTotal = totalEstimado + envio;
+    final double granTotal = totalEstimado + totalImpuestos + envio;
 
     // Verificar si todos están seleccionados (para servicios, solo consideramos los aprobados)
     bool todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
@@ -417,6 +481,11 @@ class _CarritoScreenState extends State<CarritoScreen> {
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Text('Envío:', style: TextStyle(color: kTextGray)),
               Text('RD\$ ${envio.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
+            ]),
+            const SizedBox(height: 4),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('Impuestos:', style: TextStyle(color: kTextGray)),
+              Text('RD\$ ${totalImpuestos.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
             ]),
             const Divider(height: 24),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [

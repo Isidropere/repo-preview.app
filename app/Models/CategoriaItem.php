@@ -16,7 +16,11 @@ class CategoriaItem extends Model
     public $incrementing = true;
     protected $keyType = 'integer';
 
-    protected $fillable = ['categoria'];
+    protected $fillable = ['categoria', 'aplica_impuesto'];
+
+    protected $casts = [
+        'aplica_impuesto' => 'boolean',
+    ];
 
     public function items()
     {

@@ -85,6 +85,10 @@ class PagoApiController extends Controller
             return response()->json(['success' => false, 'message' => 'El monto total debe ser mayor a cero.'], 422);
         }
 
+        // Calcular impuestos (ITBIS/ISR)
+        $totalImpuestos = $this->checkoutService->calcularImpuestos($itemsSeleccionados);
+        $costoEnvio = 0;
+
         // Calcular costo de envío si aplica (solo para productos físicos)
         if (!$esServicio && $direccion) {
             $maxPeso = 0;
@@ -93,8 +97,9 @@ class PagoApiController extends Controller
             $maxProfundo = 0;
             foreach ($itemsSeleccionados as $i) {
                 if ($i->item) {
-                    $maxPeso = max($maxPeso, (float) ($i->item->peso_lbs ?? 0));
-                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0));
+                    $itemCantidad = (int) ($i->cantidad ?? 1);
+                    $maxPeso += (float) ($i->item->peso_lbs ?? 0) * $itemCantidad;
+                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0) * $itemCantidad);
                     $maxAncho = max($maxAncho, (float) ($i->item->ancho_cm ?? 0));
                     $maxProfundo = max($maxProfundo, (float) ($i->item->profundo_cm ?? 0));
                 }
@@ -115,10 +120,12 @@ class PagoApiController extends Controller
             $montoTotal += $costoEnvio;
         }
 
+        $montoTotal += $totalImpuestos;
+
         try {
             \App\Models\PagoCompra::liberarOrdenesPendientes($carrito->id_carrito);
 
-            $pagoCompra = \Illuminate\Support\Facades\DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion) {
+            $pagoCompra = \Illuminate\Support\Facades\DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $totalImpuestos, $costoEnvio) {
                 $carritoLocked = \App\Models\Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = \App\Models\PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
                     ->whereIn('estatus', ['aprobado', 'pendiente'])
@@ -138,6 +145,8 @@ class PagoApiController extends Controller
                     'id_proveedor_pago' => 1, // AZUL
                     'transaction_id'    => null,
                     'total'             => $montoTotal,
+                    'impuestos'         => $totalImpuestos,
+                    'costo_envio'       => $costoEnvio,
                     'cantidad_items'    => $itemsSeleccionados->count(),
                     'id_direccion'      => $direccion?->id_direccion,
                     'fecha'             => now(),

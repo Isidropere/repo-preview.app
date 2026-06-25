@@ -175,6 +175,18 @@
                                         {{ strtoupper($pago->tarjeta->tipo_tarjeta ?? 'Tarjeta') }} terminado en <strong>{{ $pago->tarjeta->last4 }}</strong>
                                     </p>
                                     <p class="text-[10px] text-gray-400 mt-0.5">Titular: {{ $pago->tarjeta->nombre_titular }}</p>
+                                @elseif($pago->id_tarjeta === 'REDIRECT_AZUL')
+                                    @php
+                                        $azulResponse = $pago->azul_response;
+                                        $cardNumber = $azulResponse['CardNumber'] ?? null;
+                                        $brand = $azulResponse['DataVaultBrand'] ?? $azulResponse['Brand'] ?? 'Tarjeta';
+                                        $last4 = $cardNumber ? substr($cardNumber, -4) : null;
+                                    @endphp
+                                    <p class="flex items-center gap-1.5 text-gray-700 font-medium">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                        {{ strtoupper($brand) }} @if($last4) terminado en <strong>{{ $last4 }}</strong> @else de Crédito/Débito @endif
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Procesado vía pasarela segura AZUL</p>
                                 @else
                                     <p class="text-gray-400">Método de pago no registrado</p>
                                 @endif
@@ -514,7 +526,7 @@
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
                 <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
-                    <form id="formModalDevolucion" method="POST">
+                    <form id="formModalDevolucion" method="POST" onsubmit="mostrarProgreso()">
                         @csrf
                         <div class="bg-white px-6 pt-6 pb-4">
                             <div class="sm:flex sm:items-start">
@@ -572,6 +584,150 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-10 text-center">
                 <p class="text-gray-500 text-sm">Debes <a href="{{ route('login') }}" class="text-primary underline">iniciar sesion</a> para ver tu historial.</p>
             </div>
+        @if(isset($compraCompletada))
+        {{-- Modal de Pago Completado Exitosamente --}}
+        <div id="modalPagoExitoso" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="cerrarModalPagoExitoso()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-100">
+                    
+                    {{-- Cabecera con fondo gradiente sutil --}}
+                    <div class="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-6 border-b border-orange-100/60 relative">
+                        <div class="flex items-center gap-4">
+                            <div class="flex-shrink-0 h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-extrabold text-slate-800" id="modal-title">
+                                    ¡Compra Completada Exitosamente!
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Hemos enviado un correo electrónico con tu recibo de compra a <strong class="text-slate-700 font-semibold">{{ $compraCompletada->comprador->email ?? 'tu correo registrado' }}</strong>.
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="cerrarModalPagoExitoso()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Cuerpo del modal: Vista del Recibo --}}
+                    <div class="bg-white px-6 py-6 max-h-[60vh] overflow-y-auto">
+                        <div class="border border-slate-100 rounded-2xl bg-slate-50/50 p-5 shadow-sm">
+                            
+                            {{-- Detalles de la Orden --}}
+                            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-200/60 text-xs">
+                                <div>
+                                    <p class="text-slate-400 font-medium">Factura / Orden</p>
+                                    <p class="font-mono font-bold text-slate-800 mt-0.5">#{{ Str::limit($compraCompletada->id_pago_compra, 8, '') }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-slate-400 font-medium">Fecha y Hora</p>
+                                    <p class="font-semibold text-slate-800 mt-0.5">{{ \Carbon\Carbon::parse($compraCompletada->fecha)->format('d/m/Y h:i A') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400 font-medium">Método de Pago</p>
+                                    <p class="font-semibold text-slate-800 mt-0.5 flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                        </svg>
+                                        @if($compraCompletada->tarjeta)
+                                            {{ strtoupper($compraCompletada->tarjeta->tipo_tarjeta) }} terminado en {{ $compraCompletada->tarjeta->last4 }}
+                                        @elseif($compraCompletada->id_tarjeta === 'REDIRECT_AZUL')
+                                            @php
+                                                $azulResp = $compraCompletada->azul_response;
+                                                $cardNum = $azulResp['CardNumber'] ?? null;
+                                                $cardBrand = $azulResp['DataVaultBrand'] ?? $azulResp['Brand'] ?? 'Tarjeta';
+                                                $cardLast4 = $cardNum ? substr($cardNum, -4) : null;
+                                            @endphp
+                                            {{ strtoupper($cardBrand) }} @if($cardLast4) terminado en {{ $cardLast4 }} @else de Crédito/Débito @endif
+                                        @else
+                                            Tarjeta de Crédito / Débito
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-slate-400 font-medium">Código de Autorización</p>
+                                    <p class="font-mono font-bold text-emerald-600 mt-0.5">{{ $compraCompletada->autorizacion_pago ?? 'N/A' }}</p>
+                                </div>
+                            </div>
+
+                            {{-- Artículos --}}
+                            <div class="py-4 border-b border-slate-200/60">
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Detalle de la Compra</p>
+                                <div class="space-y-3">
+                                    @foreach($compraCompletada->pagoItems as $item)
+                                        <div class="flex justify-between items-center text-sm">
+                                            <div class="min-w-0 flex-1 pr-4">
+                                                <p class="font-semibold text-slate-800 truncate">{{ $item->nombre_item }}</p>
+                                                <p class="text-xs text-slate-400">
+                                                    {{ $item->cantidad }} x RD$ {{ number_format($item->precio_unitario, 2) }}
+                                                    @if($item->descuento > 0)
+                                                        <span class="text-green-600 ml-1">-RD$ {{ number_format($item->descuento, 2) }}</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <span class="font-bold text-slate-700">RD$ {{ number_format($item->subtotal, 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Desglose de Totales --}}
+                            <div class="pt-4 space-y-2 text-xs">
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Subtotal:</span>
+                                    <span>RD$ {{ number_format($compraCompletada->total - $compraCompletada->impuestos - $compraCompletada->costo_envio, 2) }}</span>
+                                </div>
+                                @if((float) $compraCompletada->costo_envio > 0)
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Costo de Envío:</span>
+                                        <span>RD$ {{ number_format($compraCompletada->costo_envio, 2) }}</span>
+                                    </div>
+                                @endif
+                                @if((float) $compraCompletada->impuestos > 0)
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Impuestos:</span>
+                                        <span>RD$ {{ number_format($compraCompletada->impuestos, 2) }}</span>
+                                    </div>
+                                @endif
+                                <div class="flex justify-between text-base font-extrabold text-primary pt-2 border-t border-slate-200">
+                                    <span>Total Pagado:</span>
+                                    <span>RD$ {{ number_format($compraCompletada->total, 2) }}</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- Acciones del modal --}}
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 sm:flex sm:flex-row-reverse sm:justify-between gap-3">
+                        <div class="flex flex-col sm:flex-row-reverse gap-2 w-full sm:w-auto">
+                            <a href="{{ route('historial.factura', $compraCompletada->id_pago_compra) }}"
+                               class="inline-flex justify-center items-center gap-2 rounded-2xl border border-transparent shadow-sm px-5 py-2.5 bg-primary text-sm font-bold text-white hover:bg-hoverPrimary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary w-full sm:w-auto transition-all shadow-orange-500/10 hover:shadow-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Descargar Recibo (PDF)
+                            </a>
+                            <button type="button" onclick="cerrarModalPagoExitoso()"
+                                    class="inline-flex justify-center items-center rounded-2xl border border-slate-200 shadow-sm px-5 py-2.5 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary w-full sm:w-auto transition-all">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        @endif
         @endauth
 
     </div>
@@ -622,6 +778,13 @@ function mostrarTab(tab) {
 function toggleTrazabilidad(id) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hidden');
+}
+
+function cerrarModalPagoExitoso() {
+    const modal = document.getElementById('modalPagoExitoso');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

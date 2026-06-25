@@ -86,6 +86,7 @@
                    data-alto="{{ $item->item->alto_cm ?? 0 }}"
                    data-ancho="{{ $item->item->ancho_cm ?? 0 }}"
                    data-profundo="{{ $item->item->profundo_cm ?? 0 }}"
+                   data-cantidad="{{ $item->cantidad }}"
                    {{ $item->es_seleccionado ? 'checked' : '' }}>
         </div>
 
@@ -311,6 +312,11 @@
                     El sistema espera por una definición para el cálculo de Análisis de costos de envío.
                 </div>
 
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>Impuestos:</span>
+                    <span class="total_impuestos">RD$ {{ number_format($totales['total_impuestos'] ?? 0, 2) }}</span>
+                </div>
+
                 <hr class="my-3">
 
                 <div class="flex justify-between font-bold text-lg text-gray-800">
@@ -417,10 +423,15 @@
     <h6 class="font-semibold text-gray-800 mb-2 text-lg">Medios de pago aceptados:</h6>
 
     <!-- Logos de medios de pago -->
-   <div class="mt-6 flex items-center gap-4">
-    <img src="{{ asset('https://images.seeklogo.com/logo-png/14/1/visa-logo-png_seeklogo-149684.png') }}" alt="Visa" class="h-8">
-  
-</div>
+    <div class="mt-6 flex items-center gap-4 flex-wrap">
+        <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-10 object-contain">
+        <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-10 object-contain">
+        <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-12 object-contain">
+        <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-12 object-contain">
+        <div class="flex items-center bg-blue-600 text-white font-black px-4 py-2 rounded-lg text-[10px] tracking-widest uppercase shadow-sm select-none h-10">
+            AZUL
+        </div>
+    </div>
 </div>
 
         </div>
@@ -1152,9 +1163,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             if (data.status === 'ok' && data.totales) {
                 const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                window.baseTotalEstimado = parseFloat(data.totales.total_estimado ?? 0);
+                window.totalImpuestos = parseFloat(data.totales.total_impuestos ?? 0);
                 document.querySelector('.total_articulos').textContent = formatter.format(data.totales.total_articulos);
                 document.querySelector('.total_descuento').textContent = '-' + formatter.format(data.totales.total_descuento);
-                document.getElementById('total_estimado').textContent = formatter.format(data.totales.total_estimado);
+                document.querySelector('.total_impuestos').textContent = 'RD$ ' + formatter.format(data.totales.total_impuestos);
+                document.getElementById('total_estimado').textContent = formatter.format(window.baseTotalEstimado + window.totalImpuestos + (window.costoEnvioActual ?? 0));
                 if (typeof recalcularEnvio === 'function') recalcularEnvio();
                 // Actualizar conteo de botones de pago
                 actualizarConteoBotones();
@@ -1538,11 +1552,15 @@ function formatearFecha(fecha) {
     return fecha.toLocaleDateString('es-DO', opciones);
 }
 
+window.baseTotalEstimado = parseFloat("{{ $totales['total_estimado'] ?? 0 }}");
+window.totalImpuestos = parseFloat("{{ $totales['total_impuestos'] ?? 0 }}");
+window.costoEnvioActual = 0;
+
 window.recalcularEnvio = function() {
     const elCosto = document.getElementById('carrito-envio-costo');
     const elDias  = document.getElementById('carrito-envio-dias');
     const totalEstEl = document.getElementById('total_estimado');
-    const totalSinEnvio = parseFloat(totalEstEl?.textContent?.replace(/,/g,'') || 0);
+    const totalSinEnvio = window.baseTotalEstimado;
     const formatter = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     if (!municipioCarrito || totalSinEnvio <= 0) {
@@ -1550,7 +1568,7 @@ window.recalcularEnvio = function() {
         if (elCosto) { elCosto.textContent = 'Gratis'; elCosto.style.color = '#16a34a'; }
         if (elDias) elDias.classList.add('hidden');
         document.getElementById('carrito-espera-admin-delivery')?.classList.add('hidden');
-        if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
+        if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio + window.totalImpuestos);
         return;
     }
 
@@ -1564,9 +1582,11 @@ window.recalcularEnvio = function() {
         const alto = parseFloat(cb.getAttribute('data-alto') || 0);
         const ancho = parseFloat(cb.getAttribute('data-ancho') || 0);
         const profundo = parseFloat(cb.getAttribute('data-profundo') || 0);
+        const cantidad = parseInt(cb.getAttribute('data-cantidad') || 1);
 
-        if (peso > maxPeso) maxPeso = peso;
-        if (alto > maxAlto) maxAlto = alto;
+        maxPeso += peso * cantidad;
+        const itemAltoStacked = alto * cantidad;
+        if (itemAltoStacked > maxAlto) maxAlto = itemAltoStacked;
         if (ancho > maxAncho) maxAncho = ancho;
         if (profundo > maxProfundo) maxProfundo = profundo;
     });
@@ -1608,8 +1628,8 @@ window.recalcularEnvio = function() {
                 document.getElementById('carrito-espera-admin-delivery')?.classList.add('hidden');
                 if (elDias) elDias.classList.add('hidden');
             }
-            // Sumar envío al total estimado
-            if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio + window.costoEnvioActual);
+            // Sumar envío y impuestos al total estimado
+            if (totalEstEl) totalEstEl.textContent = formatter.format(window.baseTotalEstimado + window.totalImpuestos + window.costoEnvioActual);
         })
         .catch(() => {
             window.costoEnvioActual = 0;
@@ -1619,7 +1639,7 @@ window.recalcularEnvio = function() {
             }
             if (elDias) elDias.classList.add('hidden');
             document.getElementById('carrito-espera-admin-delivery')?.classList.remove('hidden');
-            if (totalEstEl) totalEstEl.textContent = formatter.format(totalSinEnvio);
+            if (totalEstEl) totalEstEl.textContent = formatter.format(window.baseTotalEstimado + window.totalImpuestos);
         });
 };
 

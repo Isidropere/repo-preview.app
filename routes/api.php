@@ -215,14 +215,83 @@ Route::middleware('auth:sanctum')->group(function () {
             ];
         });
 
+        $enviosCol = \App\Models\PagoEnvioIntercambio::where('id_user', $userId)
+            ->whereIn('estado', ['pagado', 'pagado_pull'])
+            ->with(['negociacion.item', 'tarjeta'])
+            ->get();
+
+        $mappedEnvios = $enviosCol->map(function ($envio) {
+            $authCode = null;
+            $cardNumber = null;
+            $brand = null;
+
+            if ($envio->estado === 'pagado_pull') {
+                $authCode = 'PULL';
+                $cardNumber = 'xxxx';
+                $brand = 'Pull Points';
+            } else {
+                $authCode = $envio->approval_code;
+                $azulResponse = $envio->azul_response;
+                if ($azulResponse) {
+                    $cardNumber = $azulResponse['CardNumber'] ?? null;
+                    $brand = $azulResponse['DataVaultBrand'] ?? $azulResponse['Brand'] ?? 'Tarjeta';
+                } elseif ($envio->tarjeta) {
+                    $cardNumber = $envio->tarjeta->last4;
+                    $brand = $envio->tarjeta->tipo_tarjeta;
+                }
+            }
+
+            $tarjeta = null;
+            if ($brand || $cardNumber) {
+                $tarjeta = [
+                    'tipo_tarjeta' => $brand ?? 'Tarjeta',
+                    'last4'        => $cardNumber ? substr($cardNumber, -4) : 'xxxx',
+                    'nombre_titular' => auth()->user()->nombres ?? 'Cliente',
+                ];
+            }
+
+            return [
+                'id_pago_compra'      => 'ENV-' . $envio->id,
+                'estatus'             => 'aprobado',
+                'total'               => (float) $envio->monto,
+                'fecha'               => $envio->created_at ? $envio->created_at->toDateTimeString() : null,
+                'is_delivery_payment' => true,
+                'delivery_negociacion_id' => $envio->id_negociacion,
+                'pago_items'          => [
+                    [
+                        'nombre_item' => 'Costo de Envío Intercambio #' . $envio->id_negociacion . ': ' . ($envio->negociacion?->item?->item ?? 'Artículo'),
+                        'cantidad'    => 1,
+                    ]
+                ],
+                'tarjeta'             => $tarjeta,
+                'autorizacion_pago'   => $authCode,
+                'transaction_id'      => $envio->transaction_id,
+                'trazabilidad'        => [],
+                'impuestos'           => 0.00,
+                'costo_envio'         => (float) $envio->monto,
+            ];
+        });
+
         // Convert $compras to arrays to merge with mapped arrays
         $comprasArr = $compras->map(function ($compra) {
             $arr = $compra->toArray();
             $arr['fecha'] = $compra->fecha ? $compra->fecha->toDateTimeString() : null;
+            if ($compra->id_tarjeta === 'REDIRECT_AZUL') {
+                $azulResponse = $compra->azul_response;
+                $cardNumber = $azulResponse['CardNumber'] ?? null;
+                $brand = $azulResponse['DataVaultBrand'] ?? $azulResponse['Brand'] ?? 'Tarjeta';
+                $last4 = $cardNumber ? substr($cardNumber, -4) : 'xxxx';
+                
+                $arr['tarjeta'] = [
+                    'tipo_tarjeta' => $brand,
+                    'last4'        => $last4,
+                    'nombre_titular' => 'Procesado vía AZUL',
+                ];
+            }
             return $arr;
         });
 
-        $mergedCompras = $comprasArr->concat($mappedTalentos)->sortByDesc(function ($item) {
+        $mergedCompras = $comprasArr->concat($mappedTalentos)->concat($mappedEnvios)->sortByDesc(function ($item) {
             return $item['fecha'] ? strtotime($item['fecha']) : 0;
         })->values()->all();
 

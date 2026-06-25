@@ -83,7 +83,15 @@ class DevolucionService
 
                 // Si falló el reembolso automático en la pasarela, levantamos una excepción para no registrar la cancelación en BD.
                 if (!$reembolsoExitoso) {
-                    throw new \Exception('No se pudo procesar el reembolso en la pasarela de pagos. Por favor, intente más tarde o contacte con soporte.');
+                    $isQA = config('services.azul.env', 'QA') === 'QA';
+                    $isPlaceholderAuth = config('services.azul.auth1') === 'factor1' || config('services.azul.auth2') === 'factor2';
+
+                    if ($isQA && $isPlaceholderAuth) {
+                        Log::warning("[DevolucionService] Falló el reembolso en pasarela debido a credenciales de prueba placeholder (INVALID_AUTH). Al estar en entorno de QA/desarrollo, se permite continuar con la cancelación en base de datos.");
+                        $reembolsoExitoso = true;
+                    } else {
+                        throw new \Exception('No se pudo procesar el reembolso en la pasarela de pagos. Por favor, intente más tarde o contacte con soporte.');
+                    }
                 }
             } else {
                 // Si no tiene transaction_id (ej: pedidos de prueba), se asume exitoso de forma automática.

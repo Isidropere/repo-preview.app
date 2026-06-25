@@ -23,6 +23,7 @@ class PagoRedirectController extends Controller
         private AzulProvider $azulProvider,
         private SolicitudServicioService $solicitudService,
         private ERPService $erpService,
+        private \App\Services\CheckoutService $checkoutService,
     ) {}
 
     /**
@@ -93,6 +94,10 @@ class PagoRedirectController extends Controller
             return redirect()->route('carrito.checkout_index')->with('error', 'El monto total debe ser mayor a cero.');
         }
 
+        // Calcular impuestos (ITBIS/ISR)
+        $totalImpuestos = $this->checkoutService->calcularImpuestos($itemsSeleccionados);
+        $costoEnvio = 0;
+
         // Calcular costo de envío si aplica (solo para productos físicos)
         if (!$esServicio && $direccion) {
             $maxPeso = 0;
@@ -101,8 +106,9 @@ class PagoRedirectController extends Controller
             $maxProfundo = 0;
             foreach ($itemsSeleccionados as $i) {
                 if ($i->item) {
-                    $maxPeso = max($maxPeso, (float) ($i->item->peso_lbs ?? 0));
-                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0));
+                    $itemCantidad = (int) ($i->cantidad ?? 1);
+                    $maxPeso += (float) ($i->item->peso_lbs ?? 0) * $itemCantidad;
+                    $maxAlto = max($maxAlto, (float) ($i->item->alto_cm ?? 0) * $itemCantidad);
                     $maxAncho = max($maxAncho, (float) ($i->item->ancho_cm ?? 0));
                     $maxProfundo = max($maxProfundo, (float) ($i->item->profundo_cm ?? 0));
                 }
@@ -122,11 +128,13 @@ class PagoRedirectController extends Controller
             $montoTotal += $costoEnvio;
         }
 
+        $montoTotal += $totalImpuestos;
+
         // 6. Transacción en base de datos para reservar stock y crear orden 'pendiente'
         try {
             PagoCompra::liberarOrdenesPendientes($carrito->id_carrito);
 
-            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $userId) {
+            $pagoCompra = DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $userId, $totalImpuestos, $costoEnvio) {
                 // Evitar compras duplicadas simultáneas
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
@@ -148,6 +156,8 @@ class PagoRedirectController extends Controller
                     'id_proveedor_pago' => 1, // AZUL
                     'transaction_id'    => null,
                     'total'             => $montoTotal,
+                    'impuestos'         => $totalImpuestos,
+                    'costo_envio'       => $costoEnvio,
                     'cantidad_items'    => $itemsSeleccionados->count(),
                     'id_direccion'      => $direccion?->id_direccion,
                     'fecha'             => now(),
@@ -192,7 +202,7 @@ class PagoRedirectController extends Controller
             });
 
             // 7. Generar los campos y el AuthHash para AZUL
-            $azulData = $this->azulProvider->generarCamposFormulario($montoTotal, $pagoCompra->id_pago_compra);
+            $azulData = $this->azulProvider->generarCamposFormulario($montoTotal, $pagoCompra->id_pago_compra, ['tax' => $totalImpuestos]);
 
             // Registrar log local del request
             DB::table('logs_pagos')->insert([
@@ -256,7 +266,7 @@ class PagoRedirectController extends Controller
 
         try {
             // Generar los campos y el AuthHash para AZUL
-            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra);
+            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra, ['tax' => (float) ($pagoCompra->impuestos ?? 0)]);
 
             // Registrar log local del request
             DB::table('logs_pagos')->insert([
@@ -308,16 +318,22 @@ class PagoRedirectController extends Controller
 
         // Si ya fue aprobada por IPN u otra redirección, omitir duplicado
         if ($pagoCompra->estatus === 'aprobado') {
-            return redirect()->route('historial')->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.');
+            return redirect()->route('historial')
+                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         }
 
         // 2. Confirmar transacción de compra
         try {
             $this->procesarAprobacionLocal($pagoCompra, $request->all());
-            return redirect()->route('historial')->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.');
+            return redirect()->route('historial')
+                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         } catch (\Throwable $e) {
             Log::error('[Azul Redirect] Error al asentar compra aprobada', ['error' => $e->getMessage()]);
-            return redirect()->route('historial')->with('success', '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.');
+            return redirect()->route('historial')
+                ->with('success', '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         }
     }
 
@@ -557,6 +573,18 @@ class PagoRedirectController extends Controller
             $fecha = now()->format('d/m/Y H:i A');
             $totalFormatted = number_format($pagoCompra->total, 2);
 
+            $subtotalItems = $pagoItems->sum('subtotal');
+            $costoEnvio = (float) ($pagoCompra->costo_envio ?? 0);
+            $totalImpuestos = (float) ($pagoCompra->impuestos ?? 0);
+
+            $breakdownText = "Subtotal de la Compra: RD\$ " . number_format($subtotalItems, 2) . "\n";
+            if ($costoEnvio > 0) {
+                $breakdownText .= "Costo de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
+            }
+            if ($totalImpuestos > 0) {
+                $breakdownText .= "Impuestos: RD\$ " . number_format($totalImpuestos, 2) . "\n";
+            }
+
             $emailContent = "Hola, {$user->nombres} {$user->apellidos}:\n\n" .
                 "¡Gracias por tu compra en Cámbialo RD! A continuación, te presentamos el detalle de tu recibo:\n\n" .
                 "Número de Orden: {$pagoCompra->id_pago_compra}\n" .
@@ -565,6 +593,7 @@ class PagoRedirectController extends Controller
                 "Código de Autorización: " . ($azulParams['AuthorizationCode'] ?? 'N/A') . "\n\n" .
                 "Detalle de la Compra:\n" .
                 $itemsText . "\n" .
+                $breakdownText . "\n" .
                 "Total Procesado: RD\$ {$totalFormatted} (DOP)\n\n" .
                 "Dirección de Entrega: {$dirTexto}\n\n" .
                 "----------------------------------------\n" .

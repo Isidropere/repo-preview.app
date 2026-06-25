@@ -47,6 +47,8 @@ class PagoCompra extends Model
         'id_proveedor_pago',
         'transaction_id',    // pnRef (CardNet) o pi_xxx (Stripe) — para anulaciones/reembolsos
         'total',             // Monto total al momento del pago
+        'impuestos',
+        'costo_envio',
         'cantidad_items',    // Cantidad de artículos al momento del pago
         'id_direccion',      // Dirección de envío capturada al momento del pago
         'tracking_code',     // Código/sufijo de rastreo del envío
@@ -64,6 +66,8 @@ class PagoCompra extends Model
     protected $casts = [
         'fecha' => 'datetime',
         'total' => 'decimal:2',
+        'impuestos' => 'decimal:2',
+        'costo_envio' => 'decimal:2',
     ];
 
     /**

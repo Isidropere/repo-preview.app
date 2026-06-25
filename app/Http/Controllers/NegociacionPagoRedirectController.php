@@ -191,7 +191,7 @@ class NegociacionPagoRedirectController extends Controller
         }
 
         if ($pagoEnvio->estado === 'pagado') {
-            return $this->mostrarVistaResultado(true, 'El pago de este envío ya ha sido procesado con éxito.');
+            return $this->mostrarVistaResultado(true, 'El pago de este envío ya ha sido procesado con éxito.', $pagoEnvio->id);
         }
 
         try {
@@ -215,7 +215,7 @@ class NegociacionPagoRedirectController extends Controller
                 $this->actualizarEstadoTransicion($neg);
             });
 
-            return $this->mostrarVistaResultado(true, '¡El pago de tu envío se ha registrado exitosamente!');
+            return $this->mostrarVistaResultado(true, '¡El pago de tu envío se ha registrado exitosamente!', $pagoEnvio->id);
         } catch (\Throwable $e) {
             Log::error('[Negociacion Redirect] Error al asentar pago de envío', ['error' => $e->getMessage()]);
             return $this->mostrarVistaResultado(false, 'El pago fue cobrado por el banco, pero ocurrió un error al asentarlo en el sistema: ' . $e->getMessage());
@@ -273,7 +273,7 @@ class NegociacionPagoRedirectController extends Controller
     /**
      * Renderiza una vista de confirmación que funciona para la Web y es amigable con la App móvil.
      */
-    private function mostrarVistaResultado(bool $success, string $message)
+    private function mostrarVistaResultado(bool $success, string $message, $pagoEnvioId = null)
     {
         $isMobile = request()->segment(3) === 'movil' || request()->has('mobile') || !auth()->check();
 
@@ -286,6 +286,9 @@ class NegociacionPagoRedirectController extends Controller
         }
 
         if ($success) {
+            if ($pagoEnvioId) {
+                return redirect()->route('historial')->with('success', $message)->with('order_completed_id', 'ENV-' . $pagoEnvioId);
+            }
             return redirect()->route('negociaciones.mis')->with('success', $message);
         } else {
             return redirect()->route('negociaciones.mis')->with('error', $message);

@@ -66,7 +66,8 @@ class TalentoRegistroPagoController extends Controller
             return redirect()->back()->with('error', $resultado['error']);
         }
 
-        return redirect()->route('items.admintalento')
-            ->with('success', 'Tu talento fue publicado exitosamente.');
+        return redirect()->route('historial')
+            ->with('success', 'Tu talento fue publicado exitosamente.')
+            ->with('order_completed_id', 'TAL-' . ($resultado['item']->id_item ?? '') . '-' . ($resultado['pago_talento_id'] ?? ''));
     }
 }

@@ -330,13 +330,21 @@
         <div>
             <table class="totals-table">
                 <tr>
-                    <td>Subtotal:</td>
-                    <td class="text-right">RD$ {{ number_format($compra->total, 2) }}</td>
+                    <td>Subtotal de productos:</td>
+                    <td class="text-right">RD$ {{ number_format($compra->total - $compra->impuestos - $compra->costo_envio, 2) }}</td>
                 </tr>
+                @if((float) $compra->costo_envio > 0)
                 <tr>
-                    <td>Envío / Impuestos:</td>
-                    <td class="text-right">RD$ 0.00</td>
+                    <td>Costo de Envío:</td>
+                    <td class="text-right">RD$ {{ number_format($compra->costo_envio, 2) }}</td>
                 </tr>
+                @endif
+                @if((float) $compra->impuestos > 0)
+                <tr>
+                    <td>Impuestos:</td>
+                    <td class="text-right">RD$ {{ number_format($compra->impuestos, 2) }}</td>
+                </tr>
+                @endif
                 <tr class="total-row">
                     <td>TOTAL PAGADO:</td>
                     <td class="text-right">RD$ {{ number_format($compra->total, 2) }}</td>

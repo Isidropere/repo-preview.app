@@ -237,10 +237,20 @@ class CarritoService
     public function actualizarCantidad(int $itemIntencionId, string $accion): array
     {
         $item = ItemIntencionCompra::findOrFail($itemIntencionId);
-        $stockDisponible = $item->item->inventarios?->cantidad ?? 0;
 
         $isServicio = (int) $item->item->id_categoria_item === 29;
-        
+        $stockDisponible = 0;
+
+        if (!$isServicio) {
+            if ($item->id_color) {
+                $colorPivot = $item->item->colors()->where('colors.id_color', $item->id_color)->first();
+                $stockDisponible = $colorPivot ? $colorPivot->pivot->stock : 0;
+            } else {
+                $stockDisponible = $item->item->inventarios?->cantidad ?? 0;
+            }
+        }
+
+        $message = 'Cantidad actualizada';
         if ($accion === 'incrementar') {
             if (!$isServicio) {
                 if ($stockDisponible <= 0) {
@@ -251,12 +261,14 @@ class CarritoService
                 }
             }
             $item->cantidad++;
+            $message = 'Artículo agregado';
         } elseif ($accion === 'decrementar' && $item->cantidad > 1) {
             $item->cantidad--;
+            $message = 'Cantidad disminuida';
         }
 
         $item->save();
-        return ['success' => true, 'message' => 'Cantidad actualizada'];
+        return ['success' => true, 'message' => $message];
     }
 
     /**
@@ -294,17 +306,50 @@ class CarritoService
     {
         $seleccionados = $items->where('es_seleccionado', true);
 
-        $totalArticulos = $seleccionados->sum(
-            fn($i) => ($i->item->valor ?? 0) * ($i->cantidad ?? 0)
-        );
-        $totalDescuento = $seleccionados->sum(
-            fn($i) => ($i->descuento ?? 0) * ($i->cantidad ?? 0)
-        );
+        $totalArticulos = 0;
+        $totalDescuento = 0;
+        $totalImpuestos = 0;
+
+        // Cargar tasas de la BD
+        $itbisConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'itbis')->first();
+        $itbisPct = $itbisConfig ? (float) $itbisConfig->porcentaje : 18.00;
+
+        $isrConfig = \Illuminate\Support\Facades\DB::table('delivery_config')->where('clave', 'isr')->first();
+        $isrPct = $isrConfig ? (float) $isrConfig->porcentaje : 10.00;
+
+        foreach ($seleccionados as $i) {
+            $valorUnitario = $i->item->valor ?? 0;
+            $cantidad = $i->cantidad ?? 0;
+            $descuentoUnitario = $i->descuento ?? 0;
+
+            $subtotalItem = $valorUnitario * $cantidad;
+            $descuentoItem = $descuentoUnitario * $cantidad;
+            $netoItem = $subtotalItem - $descuentoItem;
+
+            $totalArticulos += $subtotalItem;
+            $totalDescuento += $descuentoItem;
+
+            // Calcular impuestos si aplica la categoría
+            $aplicaImpuesto = (bool) ($i->item?->categoria?->aplica_impuesto ?? true);
+            if ($aplicaImpuesto && $netoItem > 0) {
+                $isServicio = (int) ($i->item?->id_categoria_item ?? 0) === 29;
+                if ($isServicio) {
+                    // Impuesto sobre la Renta (retención) para servicios
+                    $totalImpuestos += $netoItem * ($isrPct / 100);
+                } else {
+                    // ITBIS para productos
+                    $totalImpuestos += $netoItem * ($itbisPct / 100);
+                }
+            }
+        }
+
+        $totalEstimado = $totalArticulos - $totalDescuento;
 
         return [
             'total_articulos' => round($totalArticulos, 2),
             'total_descuento' => round($totalDescuento, 2),
-            'total_estimado'  => round($totalArticulos - $totalDescuento, 2),
+            'total_impuestos' => round($totalImpuestos, 2),
+            'total_estimado'  => round($totalEstimado, 2),
         ];
     }
 }

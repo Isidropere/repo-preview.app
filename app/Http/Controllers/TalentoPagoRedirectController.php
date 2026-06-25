@@ -244,7 +244,12 @@ class TalentoPagoRedirectController extends Controller
         }
 
         if ($success) {
-            return redirect()->route('items.admintalento')->with('success', $message);
+            $pagoTalento = $item ? \App\Models\PagoRegistroTalento::where('id_item', $item->id_item)->orderBy('id', 'desc')->first() : null;
+            $orderCompletedId = $pagoTalento ? ('TAL-' . $item->id_item . '-' . $pagoTalento->id) : null;
+
+            return redirect()->route('historial')
+                ->with('success', $message)
+                ->with('order_completed_id', $orderCompletedId);
         } else {
             return redirect()->route('items.admintalento')->with('error', $message);
         }
