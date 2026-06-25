@@ -287,7 +287,7 @@
                     @endif
                     <tr>
                         <td class="info-label">Proveedor de Pago:</td>
-                        <td class="info-value">{{ $compra->proveedorPago->proveedor ?? 'CardNet' }}</td>
+                        <td class="info-value">{{ $compra->proveedorPago->proveedor ?? 'AZUL' }}</td>
                     </tr>
                 </table>
             </div>
