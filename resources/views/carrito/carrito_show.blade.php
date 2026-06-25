@@ -417,10 +417,15 @@
     <h6 class="font-semibold text-gray-800 mb-2 text-lg">Medios de pago aceptados:</h6>
 
     <!-- Logos de medios de pago -->
-   <div class="mt-6 flex items-center gap-4">
-    <img src="{{ asset('https://images.seeklogo.com/logo-png/14/1/visa-logo-png_seeklogo-149684.png') }}" alt="Visa" class="h-8">
-  
-</div>
+    <div class="mt-6 flex items-center gap-4 flex-wrap">
+        <img src="/imgs/Visa_Brandmark_Blue_RGB_2021.png" alt="Visa" class="h-10 object-contain">
+        <img src="/imgs/mastercard-logo.png" alt="Mastercard" class="h-10 object-contain">
+        <img src="/imgs/visa-secure_blu_2021_dkbg.png" alt="Visa Secure" class="h-12 object-contain">
+        <img src="/imgs/mastercardidentitycheck.png" alt="Mastercard Identity Check" class="h-12 object-contain">
+        <div class="flex items-center bg-blue-600 text-white font-black px-4 py-2 rounded-lg text-[10px] tracking-widest uppercase shadow-sm select-none h-10">
+            AZUL
+        </div>
+    </div>
 </div>
 
         </div>
