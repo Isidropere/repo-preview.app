@@ -801,20 +801,33 @@
 </script>
 
 <!-- Sistema de Notificaciones Premium (Toasts) -->
-<div id="toast-container" class="fixed top-5 right-5 z-[99999] flex flex-col gap-3 w-full max-w-sm pointer-events-none"></div>
+<div id="toast-container"></div>
 
 <style>
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 350px;
+    pointer-events: none;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
 .toast-card {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     background-color: #ffffff;
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: 1px solid #f3f4f6;
     transform: translateX(120%);
-    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, margin 0.3s ease;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
     opacity: 0;
     pointer-events: auto;
 }
@@ -826,6 +839,34 @@
     transform: translateX(120%);
     opacity: 0;
 }
+.toast-card-success { border-left: 4px solid #10b981; }
+.toast-card-error { border-left: 4px solid #ef4444; }
+.toast-card-warning { border-left: 4px solid #f59e0b; }
+.toast-card-info { border-left: 4px solid #3b82f6; }
+
+.toast-icon { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.toast-icon svg { width: 100%; height: 100%; }
+.toast-icon-success { color: #10b981; }
+.toast-icon-error { color: #ef4444; }
+.toast-icon-warning { color: #f59e0b; }
+.toast-icon-info { color: #3b82f6; }
+
+.toast-content { flex-grow: 1; }
+.toast-title { font-weight: 700; color: #111827; font-size: 14px; margin: 0; }
+.toast-message { color: #4b5563; font-size: 12px; margin: 3px 0 0 0; line-height: 1.4; }
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 4px;
+    transition: color 0.15s ease;
+}
+.toast-close:hover { color: #4b5563; }
 </style>
 
 <script>
@@ -835,44 +876,44 @@ window.showToast = function(message, type = 'success') {
 
     const toast = document.createElement('div');
     
-    let iconColor = 'text-green-500';
-    let iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
-    let borderLeft = 'border-l-4 border-l-green-500';
+    let iconClass = 'toast-icon-success';
+    let iconSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    let cardClass = 'toast-card-success';
     let title = 'Éxito';
 
     if (type === 'error') {
-        iconColor = 'text-red-500';
-        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
-        borderLeft = 'border-l-4 border-l-red-500';
+        iconClass = 'toast-icon-error';
+        iconSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        cardClass = 'toast-card-error';
         title = 'Error';
     } else if (type === 'warning' || type === 'alerta') {
-        iconColor = 'text-amber-500';
-        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
-        borderLeft = 'border-l-4 border-l-amber-500';
+        iconClass = 'toast-icon-warning';
+        iconSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+        cardClass = 'toast-card-warning';
         title = 'Atención';
     } else if (type === 'info') {
-        iconColor = 'text-blue-500';
-        iconSvg = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
-        borderLeft = 'border-l-4 border-l-blue-500';
+        iconClass = 'toast-icon-info';
+        iconSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        cardClass = 'toast-card-info';
         title = 'Información';
     }
 
-    toast.className = `toast-card ${borderLeft}`;
+    toast.className = `toast-card ${cardClass}`;
     toast.innerHTML = `
-        <div class="${iconColor} flex-shrink-0 mt-0.5">
+        <div class="toast-icon ${iconClass}">
             ${iconSvg}
         </div>
-        <div class="flex-1">
-            <p class="font-bold text-gray-900 text-sm">${title}</p>
-            <p class="text-gray-600 text-xs mt-0.5">${message}</p>
+        <div class="toast-content">
+            <p class="toast-title">${title}</p>
+            <p class="toast-message">${message}</p>
         </div>
-        <button class="text-gray-400 hover:text-gray-600 text-sm leading-none ml-2 focus:outline-none">&times;</button>
+        <button class="toast-close">&times;</button>
     `;
 
     // Click to close
-    toast.querySelector('button').onclick = () => {
+    toast.querySelector('.toast-close').onclick = () => {
         toast.classList.replace('show', 'hide');
-        setTimeout(() => toast.remove(), 500);
+        setTimeout(() => toast.remove(), 450);
     };
 
     container.appendChild(toast);
@@ -885,7 +926,7 @@ window.showToast = function(message, type = 'success') {
     setTimeout(() => {
         if (toast.parentNode) {
             toast.classList.replace('show', 'hide');
-            setTimeout(() => toast.remove(), 500);
+            setTimeout(() => toast.remove(), 450);
         }
     }, 4500);
 };
