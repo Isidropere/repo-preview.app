@@ -79,8 +79,9 @@ class TalentoRegistroPagoService
         }
 
         // 5. Pago aprobado — guardar talento en transacción
+        $pagoTalento = null;
         try {
-            $item = DB::transaction(function () use ($userId, $datosTalento, $resultado, $monto) {
+            $item = DB::transaction(function () use ($userId, $datosTalento, $resultado, $monto, &$pagoTalento) {
                 // Crear el ítem
                 $item = Item::create(array_merge($datosTalento, [
                     'id_user'    => $userId,
@@ -115,7 +116,7 @@ class TalentoRegistroPagoService
                 return $item;
             });
 
-            return ['success' => true, 'item' => $item];
+            return ['success' => true, 'item' => $item, 'pago_talento_id' => $pagoTalento->id ?? null];
 
         } catch (\Throwable $e) {
             Log::error('[TalentoRegistroPago] Error al guardar talento tras cobro aprobado', [

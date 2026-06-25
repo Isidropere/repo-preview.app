@@ -42,6 +42,7 @@ class PagoController extends Controller
         }
 
         return redirect()->route('historial')
-            ->with('success', $resultado['message']);
+            ->with('success', $resultado['message'])
+            ->with('order_completed_id', $resultado['order_completed_id'] ?? null);
     }
 }

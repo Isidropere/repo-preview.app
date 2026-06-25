@@ -318,16 +318,22 @@ class PagoRedirectController extends Controller
 
         // Si ya fue aprobada por IPN u otra redirección, omitir duplicado
         if ($pagoCompra->estatus === 'aprobado') {
-            return redirect()->route('historial')->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.');
+            return redirect()->route('historial')
+                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         }
 
         // 2. Confirmar transacción de compra
         try {
             $this->procesarAprobacionLocal($pagoCompra, $request->all());
-            return redirect()->route('historial')->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.');
+            return redirect()->route('historial')
+                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         } catch (\Throwable $e) {
             Log::error('[Azul Redirect] Error al asentar compra aprobada', ['error' => $e->getMessage()]);
-            return redirect()->route('historial')->with('success', '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.');
+            return redirect()->route('historial')
+                ->with('success', '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.')
+                ->with('order_completed_id', $pagoCompra->id_pago_compra);
         }
     }
 

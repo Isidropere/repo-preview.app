@@ -383,7 +383,11 @@ class CheckoutService
                 Log::error('Error al enviar el recibo de compra por email', ['error' => $e->getMessage()]);
             }
 
-            return $this->exito('¡Pago procesado correctamente! Tu pedido está en camino.');
+            return [
+                'success' => true,
+                'message' => '¡Pago procesado correctamente! Tu pedido está en camino.',
+                'order_completed_id' => $pagoCompra->id_pago_compra
+            ];
 
         } catch (\RuntimeException $e) {
             if ($e->getMessage() === 'duplicate_order') {
