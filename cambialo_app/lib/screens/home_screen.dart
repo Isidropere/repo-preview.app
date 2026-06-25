@@ -380,20 +380,25 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         if (_user != null) ...[
           IconButton(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            constraints: const BoxConstraints(),
             icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined, color: kPrimary)),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
           ),
           IconButton(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            constraints: const BoxConstraints(),
             icon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.notifications_none, color: kPrimary)),
             onPressed: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificacionesScreen()));
               _loadBadges();
             },
           ),
+          const SizedBox(width: 8),
         ],
         if (_user != null)
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
               onTap: () => _showUserMenu(),
               child: _buildAvatarWidget(18),
