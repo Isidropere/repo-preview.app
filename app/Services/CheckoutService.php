@@ -336,24 +336,7 @@ class CheckoutService
                     $costoEnvio = $montoTotal - $subtotalItems;
 
                     $breakdownText = "Subtotal de la Compra: RD\$ " . number_format($subtotalItems, 2) . "\n";
-                    if ($costoEnvio > 0 && isset($resultadoDelivery) && ($resultadoDelivery['success'] ?? false)) {
-                        $desglose = $resultadoDelivery['desglose'] ?? [];
-                        $flete = $desglose['costo_flete'] ?? 0;
-                        $plataforma = $desglose['costo_plataforma'] ?? 0;
-                        $seguro = $desglose['costo_seguro'] ?? 0;
-                        $manejo = $desglose['costo_manejo'] ?? 0;
-                        $recargo = $desglose['recargo_sobredimensionado'] ?? 0;
-                        
-                        $breakdownText .= "\nDetalles de Envío y Gestión:\n";
-                        $breakdownText .= "  - Costo de Envío Base (Flete): RD\$ " . number_format($flete, 2) . "\n";
-                        $breakdownText .= "  - Cargo de Gestión de Plataforma: RD\$ " . number_format($plataforma, 2) . "\n";
-                        $breakdownText .= "  - Seguro de Envío: RD\$ " . number_format($seguro, 2) . "\n";
-                        $breakdownText .= "  - Costo de Manejo: RD\$ " . number_format($manejo, 2) . "\n";
-                        if ($recargo > 0) {
-                            $breakdownText .= "  - Recargo por Sobredimensión/Sobrepeso: RD\$ " . number_format($recargo, 2) . " (Artículo supera límites estándar)\n";
-                        }
-                        $breakdownText .= "Costo Total de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
-                    } elseif ($costoEnvio > 0) {
+                    if ($costoEnvio > 0) {
                         $breakdownText .= "Costo de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
                     }
 

@@ -561,46 +561,7 @@ class PagoRedirectController extends Controller
             $costoEnvio = (float)$pagoCompra->total - $subtotalItems;
 
             $breakdownText = "Subtotal de la Compra: RD\$ " . number_format($subtotalItems, 2) . "\n";
-            if ($costoEnvio > 0 && $direccion) {
-                $maxPeso = 0;
-                $maxAlto = 0;
-                $maxAncho = 0;
-                $maxProfundo = 0;
-                foreach ($pagoItems as $pagoItem) {
-                    $item = \App\Models\Item::find($pagoItem->id_item);
-                    if ($item) {
-                        $maxPeso = max($maxPeso, (float) ($item->peso_lbs ?? 0));
-                        $maxAlto = max($maxAlto, (float) ($item->alto_cm ?? 0));
-                        $maxAncho = max($maxAncho, (float) ($item->ancho_cm ?? 0));
-                        $maxProfundo = max($maxProfundo, (float) ($item->profundo_cm ?? 0));
-                    }
-                }
-                
-                $deliveryService = app(\App\Services\DeliveryService::class);
-                $pueblo = $direccion->municipio->municipio ?? '';
-                $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $subtotalItems, $maxPeso, $maxAlto, $maxAncho, $maxProfundo);
-                
-                if ($resultadoDelivery && ($resultadoDelivery['success'] ?? false)) {
-                    $desglose = $resultadoDelivery['desglose'] ?? [];
-                    $flete = $desglose['costo_flete'] ?? 0;
-                    $plataforma = $desglose['costo_plataforma'] ?? 0;
-                    $seguro = $desglose['costo_seguro'] ?? 0;
-                    $manejo = $desglose['costo_manejo'] ?? 0;
-                    $recargo = $desglose['recargo_sobredimensionado'] ?? 0;
-                    
-                    $breakdownText .= "\nDetalles de Envío y Gestión:\n";
-                    $breakdownText .= "  - Costo de Envío Base (Flete): RD\$ " . number_format($flete, 2) . "\n";
-                    $breakdownText .= "  - Cargo de Gestión de Plataforma: RD\$ " . number_format($plataforma, 2) . "\n";
-                    $breakdownText .= "  - Seguro de Envío: RD\$ " . number_format($seguro, 2) . "\n";
-                    $breakdownText .= "  - Costo de Manejo: RD\$ " . number_format($manejo, 2) . "\n";
-                    if ($recargo > 0) {
-                        $breakdownText .= "  - Recargo por Sobredimensión/Sobrepeso: RD\$ " . number_format($recargo, 2) . " (Artículo supera límites estándar)\n";
-                    }
-                    $breakdownText .= "Costo Total de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
-                } else {
-                    $breakdownText .= "Costo de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
-                }
-            } elseif ($costoEnvio > 0) {
+            if ($costoEnvio > 0) {
                 $breakdownText .= "Costo de Envío: RD\$ " . number_format($costoEnvio, 2) . "\n";
             }
 
