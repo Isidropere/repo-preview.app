@@ -17,6 +17,8 @@ import 'publicar_talento_screen.dart';
 import 'mis_talentos_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'notificaciones_screen.dart';
+import 'items_list_screen.dart';
+import '../widgets/footer_widget.dart';
 
 /// Pantalla "Tu cuenta" — fiel al diseño web de Cambialord
 class CuentaScreen extends StatefulWidget {
@@ -398,6 +400,35 @@ class _CuentaScreenState extends State<CuentaScreen> {
               itemCount: _opciones.length,
               itemBuilder: (_, i) => _OpcionCard(opcion: _opciones[i]),
             ),
+            const SizedBox(height: 24),
+            Container(
+              color: kPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Column(children: [
+                const Text(
+                  '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                    child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                    child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                  ),
+                ]),
+              ]),
+            ),
+            const FooterWidget(),
           ]),
         ),
       ),

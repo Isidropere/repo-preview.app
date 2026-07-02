@@ -5,6 +5,8 @@ import '../core/theme.dart';
 import 'items_list_screen.dart';
 import '../core/auth_service.dart';
 import '../widgets/adulto_verification_dialog.dart';
+import 'publicar_articulo_screen.dart';
+import '../widgets/footer_widget.dart';
 
 class OtrasCategoriasScreen extends StatefulWidget {
   const OtrasCategoriasScreen({Key? key}) : super(key: key);
@@ -142,79 +144,119 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.0,
-      ),
-      itemCount: _categorias.length,
-      itemBuilder: (context, i) {
-        final cat = _categorias[i];
-        final idCat = ApiClient.parseInt(cat['id_categoria_item']) ?? 0;
-        return InkWell(
-          onTap: () async {
-            if (idCat == 11) {
-              final ok = await AdultoVerificationDialog.showVerification(context);
-              if (!ok) return;
-            }
-
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ItemsListScreen(
-                    categoriaId: idCat,
-                    title: cat['categoria']?.toString() ?? '',
-                  ),
-                ),
-              );
-            }
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 3,
-                  offset: const Offset(0, 2),
-                )
-              ],
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(12),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.0,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _icons[idCat] ?? Icons.category_outlined,
-                  size: 24,
-                  color: kPrimary,
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Text(
-                    cat['categoria'] ?? '',
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: kTextDark,
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final cat = _categorias[i];
+                final idCat = ApiClient.parseInt(cat['id_categoria_item']) ?? 0;
+                return InkWell(
+                  onTap: () async {
+                    if (idCat == 11) {
+                      final ok = await AdultoVerificationDialog.showVerification(context);
+                      if (!ok) return;
+                    }
+
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ItemsListScreen(
+                            categoriaId: idCat,
+                            title: cat['categoria']?.toString() ?? '',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 3,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _icons[idCat] ?? Icons.category_outlined,
+                          size: 24,
+                          color: kPrimary,
+                        ),
+                        const SizedBox(height: 6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            cat['categoria'] ?? '',
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: kTextDark,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                );
+              },
+              childCount: _categorias.length,
             ),
           ),
-        );
-      },
+        ),
+        SliverToBoxAdapter(
+          child: Container(
+            color: kPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Column(children: [
+              const Text(
+                '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                  style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                  child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                  style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                  child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                ),
+              ]),
+            ]),
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: FooterWidget(),
+        ),
+      ],
     );
   }
 }
