@@ -29,6 +29,32 @@ class _MainScreenState extends State<MainScreen> {
   int _notifCount = 0;
   Timer? _badgeTimer;
 
+  bool _showBottomNav = true;
+  double _lastScrollOffset = 0;
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      final metrics = notification.metrics;
+      if (metrics.axis == Axis.vertical) {
+        final double currentOffset = metrics.pixels;
+        if (currentOffset <= 10) {
+          if (!_showBottomNav) {
+            setState(() => _showBottomNav = true);
+          }
+        } else {
+          final double delta = currentOffset - _lastScrollOffset;
+          if (delta > 15 && _showBottomNav) {
+            setState(() => _showBottomNav = false);
+          } else if (delta < -15 && !_showBottomNav) {
+            setState(() => _showBottomNav = true);
+          }
+        }
+        _lastScrollOffset = currentOffset;
+      }
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -101,6 +127,8 @@ class _MainScreenState extends State<MainScreen> {
           if (mounted) {
             setState(() {
               _index = i;
+              _showBottomNav = true;
+              _lastScrollOffset = 0;
               _lastAuthState = true;
               _authKey++;
               if (i == 3) {
@@ -117,6 +145,8 @@ class _MainScreenState extends State<MainScreen> {
     if (mounted) {
       setState(() {
         _index = i;
+        _showBottomNav = true;
+        _lastScrollOffset = 0;
         if (i == 3) {
           _cartKey++;
         }
@@ -149,37 +179,50 @@ class _MainScreenState extends State<MainScreen> {
       onPopInvoked: (didPop) {
         if (didPop) return;
         if (mounted) {
-          setState(() => _index = 0);
+          setState(() {
+            _index = 0;
+            _showBottomNav = true;
+            _lastScrollOffset = 0;
+          });
         }
       },
       child: Scaffold(
         drawer: const CategoriasDrawer(),
-        body: IndexedStack(index: _index, children: screens),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _onTabTapped,
-          backgroundColor: Colors.white,
-          indicatorColor: kPrimary.withOpacity(0.12),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
-            const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: kPrimary), label: 'Inicio'),
-            NavigationDestination(
-              icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined)),
-              selectedIcon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz, color: kPrimary)),
-              label: 'Trueque',
-            ),
-            const NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Compra'),
-            NavigationDestination(
-              icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined)),
-              selectedIcon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart, color: kPrimary)),
-              label: 'Carrito',
-            ),
-            NavigationDestination(
-              icon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person_outline)),
-              selectedIcon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person, color: kPrimary)),
-              label: 'Mi cuenta',
-            ),
-          ],
+        body: NotificationListener<ScrollNotification>(
+          onNotification: _onScrollNotification,
+          child: IndexedStack(index: _index, children: screens),
+        ),
+        bottomNavigationBar: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: _showBottomNav ? (80.0 + MediaQuery.of(context).padding.bottom) : 0.0,
+          clipBehavior: Clip.antiAlias,
+          decoration: const BoxDecoration(),
+          child: NavigationBar(
+            selectedIndex: _index,
+            onDestinationSelected: _onTabTapped,
+            backgroundColor: Colors.white,
+            indicatorColor: kPrimary.withOpacity(0.12),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            destinations: [
+              const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: kPrimary), label: 'Inicio'),
+              NavigationDestination(
+                icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined)),
+                selectedIcon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz, color: kPrimary)),
+                label: 'Trueque',
+              ),
+              const NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Compra'),
+              NavigationDestination(
+                icon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart_outlined)),
+                selectedIcon: Badge(isLabelVisible: _cartCount > 0, label: Text('$_cartCount'), child: const Icon(Icons.shopping_cart, color: kPrimary)),
+                label: 'Carrito',
+              ),
+              NavigationDestination(
+                icon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person_outline)),
+                selectedIcon: Badge(isLabelVisible: _notifCount > 0, label: Text('$_notifCount'), child: const Icon(Icons.person, color: kPrimary)),
+                label: 'Mi cuenta',
+              ),
+            ],
+          ),
         ),
       ),
     );
