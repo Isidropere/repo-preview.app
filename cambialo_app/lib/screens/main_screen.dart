@@ -11,6 +11,7 @@ import 'carrito_screen.dart';
 import 'cuenta_screen.dart';
 import 'login_screen.dart';
 import '../widgets/categorias_drawer.dart';
+import '../widgets/ticker_banner_widget.dart';
 
 /// Pantalla principal con Bottom Navigation Bar
 class MainScreen extends StatefulWidget {
@@ -214,9 +215,16 @@ class _MainScreenState extends State<MainScreen> {
       },
       child: Scaffold(
         drawer: const CategoriasDrawer(),
-        body: NotificationListener<ScrollNotification>(
-          onNotification: _onScrollNotification,
-          child: IndexedStack(index: _index, children: screens),
+        body: Column(
+          children: [
+            const TickerBannerWidget(),
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _onScrollNotification,
+                child: IndexedStack(index: _index, children: screens),
+              ),
+            ),
+          ],
         ),
         bottomNavigationBar: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
