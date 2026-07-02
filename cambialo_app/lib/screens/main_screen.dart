@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../core/api_client.dart';
@@ -31,6 +32,8 @@ class _MainScreenState extends State<MainScreen> {
 
   bool _showBottomNav = true;
   double _lastScrollOffset = 0;
+
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
 
   bool _onScrollNotification(ScrollNotification notification) {
     if (notification is ScrollUpdateNotification) {
@@ -115,12 +118,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onTabTapped(int i) async {
+    if (i == _index) {
+      final currentNavigator = _navigatorKeys[i].currentState;
+      if (currentNavigator != null && currentNavigator.canPop()) {
+        currentNavigator.popUntil((route) => route.isFirst);
+      }
+      return;
+    }
+
     if (i == 3 || i == 4) {
       final isLoggedIn = await AuthService.isLoggedIn();
       if (!isLoggedIn) {
         if (!mounted) return;
-        final loggedIn = await Navigator.push(
-          context,
+        final loggedIn = await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
         if (loggedIn == true) {
@@ -164,26 +174,42 @@ class _MainScreenState extends State<MainScreen> {
      }).catchError((_) {});
   }
 
+  Widget _buildTabNavigator(int index, Widget rootPage) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (routeSettings) {
+        return MaterialPageRoute(
+          builder: (context) => rootPage,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
-      HomeScreen(key: ValueKey('home_$_authKey')),
-      ItemsListScreen(key: ValueKey('inter_$_authKey'), tipo: 2),
-      ItemsListScreen(key: ValueKey('comp_$_authKey'), tipo: 1),
-      CarritoScreen(key: ValueKey('carrito_${_authKey}_$_cartKey')),
-      CuentaScreen(key: ValueKey('cuenta_$_authKey')),
+      _buildTabNavigator(0, HomeScreen(key: ValueKey('home_$_authKey'))),
+      _buildTabNavigator(1, ItemsListScreen(key: ValueKey('inter_$_authKey'), tipo: 2)),
+      _buildTabNavigator(2, ItemsListScreen(key: ValueKey('comp_$_authKey'), tipo: 1)),
+      _buildTabNavigator(3, CarritoScreen(key: ValueKey('carrito_${_authKey}_$_cartKey'))),
+      _buildTabNavigator(4, CuentaScreen(key: ValueKey('cuenta_$_authKey'))),
     ];
 
     return PopScope(
-      canPop: _index == 0,
+      canPop: false,
       onPopInvoked: (didPop) {
         if (didPop) return;
-        if (mounted) {
+        final currentNavigator = _navigatorKeys[_index].currentState;
+        if (currentNavigator != null && currentNavigator.canPop()) {
+          currentNavigator.pop();
+        } else if (_index != 0) {
           setState(() {
             _index = 0;
             _showBottomNav = true;
             _lastScrollOffset = 0;
           });
+        } else {
+          SystemNavigator.pop();
         }
       },
       child: Scaffold(
