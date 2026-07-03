@@ -211,7 +211,7 @@ class DeliveryService
      */
     public function actualizarConfig(string $clave, array $datos): array
     {
-        $allowed = ['cortas', 'largas', 'especiales', 'chequeados', 'sobredimensionado'];
+        $allowed = ['cortas', 'largas', 'especiales', 'chequeados', 'sobredimensionado', 'itbis', 'isr'];
         if (!in_array($clave, $allowed)) {
             return ['success' => false, 'message' => 'Clave inválida.'];
         }

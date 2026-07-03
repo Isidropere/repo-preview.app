@@ -30,6 +30,140 @@ class DevolucionService
     public function procesarDevolucion(string $compraId, int $userId, ?int $motivoId = null, ?string $comentario = null): array
     {
         return DB::transaction(function () use ($compraId, $userId, $motivoId, $comentario) {
+            // Validar motivo si viene provisto
+            $motivoTexto = 'No especificado';
+            if ($motivoId) {
+                $motivoModel = \App\Models\MotivoDevolucion::find($motivoId);
+                if ($motivoModel) {
+                    $motivoTexto = $motivoModel->motivo;
+                }
+            }
+
+            // A. Caso Registro de Talento (TAL-)
+            if (str_starts_with($compraId, 'TAL-')) {
+                $parts = explode('-', $compraId);
+                $itemId = (int) ($parts[1] ?? 0);
+                $pagoId = (int) ($parts[2] ?? 0);
+
+                $pagoTalento = \App\Models\PagoRegistroTalento::where('id', $pagoId)
+                    ->where('id_item', $itemId)
+                    ->firstOrFail();
+
+                if ($pagoTalento->id_user !== $userId) {
+                    throw new \Exception('No estás autorizado para solicitar la devolución de este registro.');
+                }
+
+                if ($pagoTalento->estatus !== 'aprobado') {
+                    throw new \Exception('No se puede solicitar devolución de este registro en su estado actual.');
+                }
+
+                $txId = $pagoTalento->transaction_id;
+                $monto = $pagoTalento->monto_pagado;
+                $reembolsoExitoso = false;
+
+                if ($txId && !str_starts_with($txId, 'GRATIS_')) {
+                    try {
+                        $res = $this->pagoService->anularTransaccion($txId, $monto);
+                        if ($res['success'] ?? false) {
+                            $reembolsoExitoso = true;
+                        } else {
+                            $resRefund = $this->pagoService->reembolsar($txId, $monto);
+                            if ($resRefund['success'] ?? false) {
+                                $reembolsoExitoso = true;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        Log::critical("[DevolucionService] Excepción al reembolsar talento: " . $e->getMessage());
+                    }
+
+                    if (!$reembolsoExitoso) {
+                        $isQA = config('services.azul.env', 'QA') === 'QA';
+                        $isPlaceholderAuth = config('services.azul.auth1') === 'factor1' || config('services.azul.auth2') === 'factor2';
+                        if ($isQA && $isPlaceholderAuth) {
+                            $reembolsoExitoso = true;
+                        } else {
+                            throw new \Exception('No se pudo procesar el reembolso en la pasarela. Por favor, intente más tarde.');
+                        }
+                    }
+                } else {
+                    $reembolsoExitoso = true;
+                }
+
+                $pagoTalento->update([
+                    'estatus' => 'cancelado',
+                    'notas' => trim(($pagoTalento->notes ?? $pagoTalento->notas ?? '') . " | Devolución solicitada por el usuario. Motivo: {$motivoTexto}." . ($comentario ? " Comentario: {$comentario}." : ''))
+                ]);
+
+                $item = \App\Models\Item::find($itemId);
+                if ($item) {
+                    $item->update(['estatus' => 0]); // Inactivo de nuevo
+                }
+
+                return ['success' => true, 'message' => 'Devolución de registro de talento procesada con éxito.'];
+            }
+
+            // B. Caso Pago de Envío (ENV-)
+            if (str_starts_with($compraId, 'ENV-')) {
+                $parts = explode('-', $compraId);
+                $pagoEnvioId = (int) ($parts[1] ?? 0);
+
+                $pagoEnvio = \App\Models\PagoEnvioIntercambio::where('id', $pagoEnvioId)
+                    ->firstOrFail();
+
+                if ($pagoEnvio->id_user !== $userId) {
+                    throw new \Exception('No estás autorizado para solicitar la devolución de este envío.');
+                }
+
+                if ($pagoEnvio->estado !== 'pagado') {
+                    throw new \Exception('No se puede solicitar devolución de este envío en su estado actual.');
+                }
+
+                $txId = $pagoEnvio->transaction_id;
+                $monto = $pagoEnvio->monto;
+                $reembolsoExitoso = false;
+
+                if ($txId && !str_starts_with($txId, 'REDIRECT_AZUL_') && !str_starts_with($txId, 'PULL_')) {
+                    try {
+                        $res = $this->pagoService->anularTransaccion($txId, $monto);
+                        if ($res['success'] ?? false) {
+                            $reembolsoExitoso = true;
+                        } else {
+                            $resRefund = $this->pagoService->reembolsar($txId, $monto);
+                            if ($resRefund['success'] ?? false) {
+                                $reembolsoExitoso = true;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        Log::critical("[DevolucionService] Excepción al reembolsar envío: " . $e->getMessage());
+                    }
+
+                    if (!$reembolsoExitoso) {
+                        $isQA = config('services.azul.env', 'QA') === 'QA';
+                        $isPlaceholderAuth = config('services.azul.auth1') === 'factor1' || config('services.azul.auth2') === 'factor2';
+                        if ($isQA && $isPlaceholderAuth) {
+                            $reembolsoExitoso = true;
+                        } else {
+                            throw new \Exception('No se pudo procesar el reembolso en la pasarela. Por favor, intente más tarde.');
+                        }
+                    }
+                } else {
+                    $reembolsoExitoso = true;
+                }
+
+                $pagoEnvio->update(['estado' => 'reembolsado']);
+
+                $neg = $pagoEnvio->negociacion;
+                if ($neg) {
+                    $campoPago = $pagoEnvio->id_user == $neg->usuario_emisor_id ? 'pago_emisor' : 'pago_receptor';
+                    $neg->update([
+                        $campoPago => false,
+                        'estado' => 'aceptado' // Retroceder estado para que puedan volver a elegir o cancelar
+                    ]);
+                }
+
+                return ['success' => true, 'message' => 'Devolución de pago de envío de intercambio procesada con éxito.'];
+            }
+
             // 1. Cargar y bloquear la orden para evitar modificaciones concurrentes
             $compra = PagoCompra::where('id_pago_compra', $compraId)
                 ->lockForUpdate()
@@ -45,14 +179,7 @@ class DevolucionService
                 throw new \Exception('No se puede solicitar devolución en el estado actual de la orden (' . $compra->estatus . ').');
             }
 
-            // Validar motivo si viene provisto
-            $motivoTexto = 'No especificado';
-            if ($motivoId) {
-                $motivoModel = \App\Models\MotivoDevolucion::find($motivoId);
-                if ($motivoModel) {
-                    $motivoTexto = $motivoModel->motivo;
-                }
-            }
+
 
             // 4. Intentar revertir el pago si existe un ID de transacción
             $reembolsoExitoso = false;

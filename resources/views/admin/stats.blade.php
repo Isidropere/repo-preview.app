@@ -972,6 +972,9 @@ async function cargarDatos() {
     renderProvincias(datos.actividad_provincia || []);
     renderDelivery(datos.delivery_zonas || []);
     renderResumenRutasDelivery(datos.delivery_config || []);
+    if (typeof window.renderImpuestosConfig === 'function') {
+      window.renderImpuestosConfig(datos.delivery_config || [], datos.categorias || []);
+    }
     renderDeliveryErrors(datos.delivery_errors || []);
     if (typeof window.refrescarTablaZonasDelivery === 'function') {
       window.refrescarTablaZonasDelivery();
@@ -1178,6 +1181,47 @@ document.addEventListener('DOMContentLoaded', () => {
       Ejemplo: si el monto es RD$ 500 y el descuento es 10% con mínimo 3 unidades, al comprar 3 o más servicios de categoría 29 se aplica un descuento de RD$ 50 por unidad.
     </p>
     <button id="btnGuardarTarifa" onclick="guardarConfigTarifa()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar configuración</button>
+  </div>
+
+  {{-- 
+       Configuración de Impuestos (ITBIS / ISR) e Impuestos por Categoría
+  --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
+    <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0 0 16px;">📊 Configuración de Impuestos (ITBIS / ISR)</h2>
+    <div id="cfgImpuestosMsgOk" style="display:none;background:#d1fae5;border:1px solid #a7f3d0;border-radius:6px;padding:10px 14px;color:#065f46;font-size:.875rem;margin-bottom:14px;">Configuración de impuestos guardada correctamente.</div>
+    
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+      <div>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Tasa ITBIS Global (%)</label>
+        <input id="cfgImpuestoITBIS" type="number" min="0" max="100" step="0.01" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;">Tasa ISR Global (%)</label>
+        <input id="cfgImpuestoISR" type="number" min="0" max="100" step="0.01" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 12px;font-size:.9rem;box-sizing:border-box;">
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:.95rem;font-weight:700;color:#374151;margin:0 0 10px;">Exención de Impuestos por Categoría</h3>
+      <p style="font-size:.78rem;color:#64748b;margin:0 0 14px;">Define qué categorías de artículos están sujetas a impuestos (ITBIS o ISR) al realizar el checkout.</p>
+      
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+              <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">ID</th>
+              <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600;">Categoría</th>
+              <th style="padding:10px 12px;text-align:center;color:#64748b;font-weight:600;width:150px;">Aplica Impuesto</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCategoriasImpuestos">
+            <tr><td colspan="3" style="padding:15px;text-align:center;color:#94a3b8;">Cargando categorías...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <button onclick="guardarConfigImpuestos()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;">Guardar impuestos globales</button>
   </div>
 
   </div><!-- /seccion-config -->
@@ -1479,6 +1523,100 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/admin/delivery-zonas/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } })
       .then(function(r) { return r.json(); })
       .then(function(d) { if (d.success) { cargarZonas(); if (typeof cargarDatos === 'function') cargarDatos(); } });
+  };
+
+  window.renderImpuestosConfig = function(config, categorias) {
+    var itbisRow = config.find(function(c) { return c.clave === 'itbis'; });
+    var isrRow = config.find(function(c) { return c.clave === 'isr'; });
+    
+    var itbisInput = document.getElementById('cfgImpuestoITBIS');
+    var isrInput = document.getElementById('cfgImpuestoISR');
+    
+    if (itbisRow && itbisInput) itbisInput.value = itbisRow.porcentaje;
+    if (isrRow && isrInput) isrInput.value = isrRow.porcentaje;
+    
+    var tbody = document.getElementById('tbodyCategoriasImpuestos');
+    if (!tbody) return;
+    if (!categorias || !categorias.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:15px;">No hay categorías registradas.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    categorias.forEach(function(cat) {
+      var isChecked = cat.aplica_impuesto ? 'checked' : '';
+      tbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9;">' +
+        '<td style="padding:10px 12px;color:#475569;">' + cat.id_categoria_item + '</td>' +
+        '<td style="padding:10px 12px;font-weight:600;color:#1e293b;">' + cat.categoria + '</td>' +
+        '<td style="padding:10px 12px;text-align:center;">' +
+          '<input type="checkbox" onchange="toggleAplicaImpuesto(' + cat.id_categoria_item + ', this.checked)" ' + isChecked + ' style="width:16px;height:16px;cursor:pointer;">' +
+        '</td>' +
+        '</tr>';
+    });
+  };
+
+  window.guardarConfigImpuestos = function() {
+    var btn = event?.target;
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+    var msg = document.getElementById('cfgImpuestosMsgOk');
+    if (msg) msg.style.display = 'none';
+    
+    var itbisVal = parseFloat(document.getElementById('cfgImpuestoITBIS').value || 0);
+    var isrVal = parseFloat(document.getElementById('cfgImpuestoISR').value || 0);
+    
+    Promise.all([
+      fetch('/admin/estadisticas/delivery-config/itbis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken || csrf, 'Accept': 'application/json' },
+        body: JSON.stringify({ porcentaje: itbisVal })
+      }),
+      fetch('/admin/estadisticas/delivery-config/isr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken || csrf, 'Accept': 'application/json' },
+        body: JSON.stringify({ porcentaje: isrVal })
+      })
+    ])
+    .then(function() {
+      if (msg) {
+        msg.textContent = 'Configuración de impuestos guardada correctamente.';
+        msg.style.background = '#d1fae5';
+        msg.style.color = '#065f46';
+        msg.style.borderColor = '#a7f3d0';
+        msg.style.display = 'block';
+      }
+      if (typeof cargarDatos === 'function') cargarDatos();
+    })
+    .catch(function(err) {
+      console.error(err);
+      if (msg) {
+        msg.textContent = 'Error al guardar impuestos.';
+        msg.style.background = '#fee2e2';
+        msg.style.color = '#991b1b';
+        msg.style.borderColor = '#fca5a5';
+        msg.style.display = 'block';
+      }
+    })
+    .finally(function() {
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    });
+  };
+
+  window.toggleAplicaImpuesto = function(id, aplica) {
+    fetch('/admin/estadisticas/categorias/' + id + '/aplica-impuesto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken || csrf, 'Accept': 'application/json' },
+      body: JSON.stringify({ aplica_impuesto: aplica ? 1 : 0 })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) {
+        alert('Error al actualizar exención de impuesto.');
+      }
+    })
+    .catch(function(e) {
+      console.error(e);
+      alert('Error de red al actualizar exención.');
+    });
   };
 
   cargarZonas();

@@ -170,7 +170,7 @@
             <div class="header-left">
                 <p class="logo">CAMBIALORD</p>
                 <p class="tagline">Intercambios y Compras Seguras</p>
-                <p class="tagline">RNC: 132-45678-9 | Santo Domingo, RD</p>
+                <p class="tagline">RNC: 132-96880-8 | Santo Domingo, RD</p>
                 <p class="tagline">soporte@cambialord.com</p>
             </div>
             <div class="header-right">
@@ -287,7 +287,7 @@
                     @endif
                     <tr>
                         <td class="info-label">Proveedor de Pago:</td>
-                        <td class="info-value">{{ $compra->proveedorPago->proveedor ?? 'CardNet' }}</td>
+                        <td class="info-value">{{ $compra->proveedorPago->proveedor ?? 'AZUL' }}</td>
                     </tr>
                 </table>
             </div>

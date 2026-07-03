@@ -51,5 +51,16 @@
 	<string>Requerimos acceso a tu galería de fotos para que puedas subir las imágenes de los productos que deseas intercambiar o vender.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Requerimos acceso a la cámara para tomar fotos de tus productos directamente desde la app.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.888336739336-ti3q4e2ejj4tuf6voeb36bbh5e2fua40</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

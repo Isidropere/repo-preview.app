@@ -55,15 +55,19 @@ class AdminComprasController extends Controller
         }
 
         $request->validate([
-            'tab'     => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio,intercambios_confirmados',
-            'estatus' => 'nullable|string|max:50',
-            'buscar'  => 'nullable|string|max:100',
+            'tab'         => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio,intercambios_confirmados',
+            'estatus'     => 'nullable|string|max:50',
+            'buscar'      => 'nullable|string|max:100',
+            'fecha_desde' => 'nullable|date_format:Y-m-d',
+            'fecha_hasta' => 'nullable|date_format:Y-m-d',
         ]);
 
         $data = $this->adminComprasService->obtenerDatosPanelPrincipal(
             $request->get('tab', 'compras'),
             $request->estatus,
-            $request->buscar
+            $request->buscar,
+            $request->fecha_desde,
+            $request->fecha_hasta
         );
 
         return view('admin.index', $data);

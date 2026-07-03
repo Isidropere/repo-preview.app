@@ -141,11 +141,14 @@ class NegociacionPagoRedirectController extends Controller
             'id_tarjeta'     => null,
         ]);
 
+        $isMobile = ($provider === 'azul_negociacion_movil');
+        $queryParam = $isMobile ? '?mobile=1' : '';
+
         $orderNumber = 'INT-' . $pagoEnvio->id . '-' . time();
         $azulData = $this->azulProvider->generarCamposFormulario($montoACobrar, $orderNumber, [
-            'approved_url' => route('negociaciones.pago.aprobado'),
-            'declined_url' => route('negociaciones.pago.declinado'),
-            'cancel_url'   => route('negociaciones.pago.cancelado'),
+            'approved_url' => route('negociaciones.pago.aprobado') . $queryParam,
+            'declined_url' => route('negociaciones.pago.declinado') . $queryParam,
+            'cancel_url'   => route('negociaciones.pago.cancelado') . $queryParam,
         ]);
 
         // Registrar log de pago

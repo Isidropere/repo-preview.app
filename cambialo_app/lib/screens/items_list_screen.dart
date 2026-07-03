@@ -10,6 +10,8 @@ import '../widgets/item_image.dart';
 import 'item_detail_screen.dart';
 import 'login_screen.dart';
 import 'propuesta_intercambio_screen.dart';
+import 'publicar_articulo_screen.dart';
+import '../widgets/footer_widget.dart';
 
 /// Listado de productos — Intercambio o Venta
 class ItemsListScreen extends StatefulWidget {
@@ -159,49 +161,126 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey.shade400),
-                            const SizedBox(height: 16),
-                            Text(
-                              widget.tipo == 1
-                                  ? 'No hay productos de venta disponibles'
-                                  : (widget.tipo == 2 || widget.tipo == 3
-                                      ? 'No hay productos de intercambio disponibles'
-                                      : (widget.query != null
-                                          ? 'No se encontraron resultados'
-                                          : 'Aún no hay productos en esta categoría')),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey.shade400),
+                                const SizedBox(height: 16),
+                                Text(
+                                  widget.tipo == 1
+                                      ? 'No hay productos de venta disponibles'
+                                      : (widget.tipo == 2 || widget.tipo == 3
+                                          ? 'No hay productos de intercambio disponibles'
+                                          : (widget.query != null
+                                              ? 'No se encontraron resultados'
+                                              : 'Aún no hay productos en esta categoría')),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+                            Container(
+                              color: kPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                              child: Column(children: [
+                                const Text(
+                                  '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.white, fontSize: 16),
+                                ),
+                                const SizedBox(height: 16),
+                                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.push(context,
+                                        MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                                    child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.push(context,
+                                        MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                                    child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ]),
+                              ]),
+                            ),
+                            const FooterWidget(),
+                          ],
+                        )
+                      : CustomScrollView(
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.all(12),
+                              sliver: SliverGrid(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: computedAspectRatio,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (ctx, i) {
+                                    return _ItemGridCard(item: _items[i], currentUserId: _currentUserId);
+                                  },
+                                  childCount: _items.length,
+                                ),
+                              ),
+                            ),
+                            if (_hasMore)
+                              SliverToBoxAdapter(
+                                child: Builder(
+                                  builder: (context) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      if (!_loading) {
+                                        _load();
+                                      }
+                                    });
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                                      child: Center(child: CircularProgressIndicator(color: kPrimary)),
+                                    );
+                                  },
+                                ),
+                              ),
+                            SliverToBoxAdapter(
+                              child: Container(
+                                color: kPrimary,
+                                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                                child: Column(children: [
+                                  const Text(
+                                    '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.white, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.push(context,
+                                          MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                                      child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.push(context,
+                                          MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                                      child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ]),
+                                ]),
+                              ),
+                            ),
+                            const SliverToBoxAdapter(
+                              child: FooterWidget(),
                             ),
                           ],
                         ),
-                      ],
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(12),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: computedAspectRatio,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
-                      itemCount: _items.length + (_hasMore ? 1 : 0),
-                      itemBuilder: (ctx, i) {
-                        if (i == _items.length) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!_loading) {
-                              _load();
-                            }
-                          });
-                          return const Center(child: CircularProgressIndicator(color: kPrimary));
-                        }
-                        return _ItemGridCard(item: _items[i], currentUserId: _currentUserId);
-                      },
-                    ),
-            ),
+                ),
     );
   }
 }

@@ -896,6 +896,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/estadisticas', [AdminStatsController::class, 'index'])->name('stats.index');
     Route::get('/estadisticas/data', [AdminStatsController::class, 'data'])->name('stats.data');
     Route::post('/estadisticas/delivery-config/{clave}', [\App\API\DeliveryZonaController::class, 'updateConfig'])->name('stats.delivery.config');
+    Route::post('/estadisticas/categorias/{id}/aplica-impuesto', [AdminStatsController::class, 'updateCategoriaAplicaImpuesto'])->name('stats.categorias.aplica_impuesto');
 
     // CRUD Zonas de Delivery
     Route::get('/delivery-zonas', function () {

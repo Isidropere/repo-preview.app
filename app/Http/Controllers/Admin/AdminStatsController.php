@@ -396,6 +396,7 @@ class AdminStatsController extends Controller
             'delivery_zonas'          => $deliveryStats,
             'delivery_config'         => $deliveryConfigData,
             'delivery_errors'         => $deliveryErrors,
+            'categorias'              => DB::table('categorias_item')->select('id_categoria_item', 'categoria', 'aplica_impuesto')->get(),
             'filtros'                 => [
                 'desde'   => $desde->format('Y-m-d'),
                 'hasta'   => $hasta->format('Y-m-d'),
@@ -416,5 +417,20 @@ class AdminStatsController extends Controller
             $hasta = now()->endOfDay();
         }
         return [$desde, $hasta];
+    }
+
+    public function updateCategoriaAplicaImpuesto(Request $request, $id)
+    {
+        $data = $request->validate([
+            'aplica_impuesto' => 'required|boolean',
+        ]);
+
+        DB::table('categorias_item')
+            ->where('id_categoria_item', $id)
+            ->update([
+                'aplica_impuesto' => $data['aplica_impuesto'],
+            ]);
+
+        return response()->json(['success' => true]);
     }
 }

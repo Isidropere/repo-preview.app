@@ -287,11 +287,11 @@
                         💳 Esperando por el administrador para el costo de envío
                     </button>
                 @else
-                    <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                            id="btn-pago-{{ $neg->id_negociacion }}"
-                            class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                    <a href="{{ route('negociaciones.pago.iniciar', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
+                       id="btn-pago-{{ $neg->id_negociacion }}"
+                       class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
                         💳 Realizar pago de envío
-                    </button>
+                    </a>
                 @endif
             </div>
             @endif
@@ -323,11 +323,15 @@
                             🚚 Enviar (Tarifa no calculable)
                         </button>
                     @else
-                        <button type="button"
-                                onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}', 'envio')"
-                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
-                            🚚 Enviar y pagar
-                        </button>
+                        <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="modo" value="envio">
+                            <input type="hidden" name="redirect_to_payment" value="1">
+                            <button type="submit" onclick="this.disabled=true;this.textContent='Redirigiendo...';this.form.submit();"
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg" style="background:#f58634;">
+                                🚚 Enviar y pagar
+                            </button>
+                        </form>
                     @endif
                     {{-- Retiro: POST directo sin pago --}}
                     <form action="{{ route('negociaciones.modo_entrega', $neg->id_negociacion) }}" method="POST">
@@ -364,10 +368,10 @@
                                 <button type="button" onclick="recalcularEnvio({{ $neg->id_negociacion }})"
                                         style="background:none;border:1px solid #fed7aa;border-radius:4px;padding:1px 6px;font-size:0.7rem;color:#c2410c;cursor:pointer;">🔄</button>
                             </div>
-                            <button type="button" onclick="abrirModalPagoIntercambio({{ $neg->id_negociacion }}, {{ $montoEnvio }}, '{{ addslashes($neg->item?->item ?? 'Intercambio') }}')"
-                                    class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg mt-2" style="background:#f58634;">
+                            <a href="{{ route('negociaciones.pago.iniciar', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
+                               class="inline-flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-lg mt-2" style="background:#f58634;">
                                 💳 Pagar envío
-                            </button>
+                            </a>
                         @endif
                     @else
                         <p class="text-xs mt-1" style="color:#166534;">✅ Pago de envío registrado.</p>

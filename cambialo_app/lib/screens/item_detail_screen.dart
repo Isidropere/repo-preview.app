@@ -6,8 +6,12 @@ import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
 import '../widgets/full_screen_image_viewer.dart';
-import 'propuesta_intercambio_screen.dart';import 'mis_intercambios_screen.dart';
+import 'propuesta_intercambio_screen.dart';
+import 'mis_intercambios_screen.dart';
 import 'login_screen.dart';
+import 'publicar_articulo_screen.dart';
+import 'items_list_screen.dart';
+import '../widgets/footer_widget.dart';
 
 /// Detalle de producto — fiel al diseño web de Cambialord
 class ItemDetailScreen extends StatefulWidget {
@@ -279,6 +283,34 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               ),
             ]),
           ),
+          Container(
+            color: kPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Column(children: [
+              const Text(
+                '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                  style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                  child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                  style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                  child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                ),
+              ]),
+            ]),
+          ),
+          const FooterWidget(),
         ]),
       ),
     );

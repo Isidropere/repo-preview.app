@@ -598,6 +598,7 @@ class PagoRedirectController extends Controller
                 "Dirección de Entrega: {$dirTexto}\n\n" .
                 "----------------------------------------\n" .
                 "Cámbialo RD\n" .
+                "RNC: 132-96880-8\n" .
                 "Dirección permanente: Napoleón Bonaparte, Manzana T, Edificio 21, Res. Pablo Mella Morales II, Santo Domingo, República Dominicana\n" .
                 "Soporte al Cliente: Teléfono: (829) 963-4839 | Email: cambialord.com@gmail.com\n" .
                 "http://cambialord.com.do\n\n" .
