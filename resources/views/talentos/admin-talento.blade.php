@@ -80,8 +80,8 @@
                             <div class="flex items-center gap-2 mb-0.5">
                                 <h3 class="text-sm font-semibold text-gray-800 truncate">{{ $item->item }}</h3>
                                 <span class="flex-shrink-0 px-2 py-0.5 text-[10px] font-semibold rounded-full
-                                    {{ $item->estatus == 1 ? 'bg-green-100 text-green-700' : ($item->estatus == 2 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
-                                    {{ $item->estatus == 1 ? 'Activo' : ($item->estatus == 2 ? 'Inactivo' : 'Pausado') }}
+                                    {{ $item->estatus == 1 ? 'bg-green-100 text-green-700' : ($item->estatus == 2 ? 'bg-red-100 text-red-700' : ($item->estatus == 0 ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700')) }}">
+                                    {{ $item->estatus == 1 ? 'Activo' : ($item->estatus == 2 ? 'Inactivo' : ($item->estatus == 0 ? 'Pendiente de pago' : 'Pausado')) }}
                                 </span>
                             </div>
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500">
@@ -96,6 +96,12 @@
 
                         {{-- Acciones --}}
                         <div class="flex items-center gap-1.5 flex-shrink-0">
+                            @if($item->estatus == 0)
+                            <a href="{{ route('talento.pago.iniciar', $item->id_item) }}" class="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all" title="Pagar Registro">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                Pagar
+                            </a>
+                            @endif
                             <a href="{{ route('items.VerDetalle', $item->slug) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             </a>

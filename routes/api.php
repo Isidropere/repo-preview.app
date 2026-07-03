@@ -30,6 +30,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthApiController::class, 'login']);
     Route::post('/register', [AuthApiController::class, 'register']);
     Route::post('/google',   [AuthApiController::class, 'loginGoogle']);
+    Route::post('/password/email', [\App\Http\Controllers\Auth\PasswordResetController::class, 'email']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',             [AuthApiController::class, 'logout']);

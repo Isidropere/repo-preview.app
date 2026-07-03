@@ -38,15 +38,15 @@ class AdminComprasService
     /**
      * Datos del panel principal con todas las pestañas.
      */
-    public function obtenerDatosPanelPrincipal(string $tab, ?string $estatus, ?string $buscar): array
+    public function obtenerDatosPanelPrincipal(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null): array
     {
         return [
-            'compras'                    => $this->queryCompras($tab, $estatus, $buscar)->paginate(20, ['*'], 'page_compras')->withQueryString(),
-            'ventas'                     => $this->queryVentas($tab, $buscar)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
-            'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
+            'compras'                    => $this->queryCompras($tab, $estatus, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_compras')->withQueryString(),
+            'ventas'                     => $this->queryVentas($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
+            'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
             'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
-            'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar)->paginate(20, ['*'], 'page_ii')->withQueryString(),
-            'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
+            'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ii')->withQueryString(),
+            'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
             'totalCompras'               => PagoCompra::count(),
             'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
             'totalIntercambios'          => Negociacion::count(),
@@ -113,7 +113,7 @@ class AdminComprasService
     // Queries privadas
     // ───────────────────────────────────────────────────────
 
-    private function queryCompras(string $tab, ?string $estatus, ?string $buscar)
+    private function queryCompras(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
     {
         $query = PagoCompra::with(['pagoItems.item.imagenes', 'carrito.usuario'])
             ->orderByDesc('id_pago_compra');
@@ -127,32 +127,38 @@ class AdminComprasService
                         ->where('nombres', 'like', "%$buscar%")
                         ->orWhere('email', 'like', "%$buscar%")));
             }
+            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
         }
 
         return $query;
     }
 
-    private function queryVentas(string $tab, ?string $buscar)
+    private function queryVentas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
     {
         $query = PagoCompra::with(['pagoItems.item.imagenes', 'pagoItems.item.usuario', 'carrito.usuario'])
             ->whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
             ->orderByDesc('id_pago_compra');
 
-        if ($tab === 'ventas' && $buscar) {
-            $query->where(fn($q) => $q
-                ->where('id_pago_compra', 'like', "%$buscar%")
-                ->orWhereHas('carrito.usuario', fn($q2) => $q2
-                    ->where('nombres', 'like', "%$buscar%")
-                    ->orWhere('email', 'like', "%$buscar%"))
-                ->orWhereHas('pagoItems.item.usuario', fn($q2) => $q2
-                    ->where('nombres', 'like', "%$buscar%")
-                    ->orWhere('email', 'like', "%$buscar%")));
+        if ($tab === 'ventas') {
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->where('id_pago_compra', 'like', "%$buscar%")
+                    ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('pagoItems.item.usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%")));
+            }
+            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
         }
 
         return $query;
     }
 
-    private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar)
+    private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
     {
         $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
             ->orderByDesc('id_negociacion');
@@ -167,6 +173,8 @@ class AdminComprasService
                     ->orWhereHas('item', fn($q2) => $q2
                         ->where('item', 'like', "%$buscar%")));
             }
+            if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
         }
 
         return $query;
@@ -189,25 +197,29 @@ class AdminComprasService
         return $query;
     }
 
-    private function queryIntencionIntercambio(string $tab, ?string $buscar)
+    private function queryIntencionIntercambio(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
     {
         $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
             ->whereIn('estado', ['Inicial', 'pendiente', 'contraoferta'])
             ->orderByDesc('id_negociacion');
 
-        if ($tab === 'intencion_intercambio' && $buscar) {
-            $query->where(fn($q) => $q
-                ->whereHas('usuario', fn($q2) => $q2
-                    ->where('nombres', 'like', "%$buscar%")
-                    ->orWhere('email', 'like', "%$buscar%"))
-                ->orWhereHas('item', fn($q2) => $q2
-                    ->where('item', 'like', "%$buscar%")));
+        if ($tab === 'intencion_intercambio') {
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
+            }
+            if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
         }
 
         return $query;
     }
 
-    private function queryIntercambiosConfirmados(string $tab, ?string $buscar)
+    private function queryIntercambiosConfirmados(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
     {
         $query = Negociacion::with(['item.imagenes', 'item.categoria', 'usuario', 'usuarioReceptor'])
             ->where(function ($q) {
@@ -222,16 +234,20 @@ class AdminComprasService
             })
             ->orderByDesc('id_negociacion');
 
-        if ($tab === 'intercambios_confirmados' && $buscar) {
-            $query->where(fn($q) => $q
-                ->whereHas('usuario', fn($q2) => $q2
-                    ->where('nombres', 'like', "%$buscar%")
-                    ->orWhere('email', 'like', "%$buscar%"))
-                ->orWhereHas('usuarioReceptor', fn($q2) => $q2
-                    ->where('nombres', 'like', "%$buscar%")
-                    ->orWhere('email', 'like', "%$buscar%"))
-                ->orWhereHas('item', fn($q2) => $q2
-                    ->where('item', 'like', "%$buscar%")));
+        if ($tab === 'intercambios_confirmados') {
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('usuarioReceptor', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
+            }
+            if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
         }
 
         return $query;

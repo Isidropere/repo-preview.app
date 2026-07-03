@@ -18,7 +18,7 @@ android {
     namespace = "com.cambialord.cambialo_app"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

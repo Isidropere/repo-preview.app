@@ -164,6 +164,18 @@ class NegociacionApiController extends Controller
         if (!$realId) { return response()->json(['message' => 'Negociación no encontrada.'], 404); }
         $request->validate(['modo' => 'required|in:envio,retiro']);
         $resultado = $this->negociacionService->seleccionarModoEntrega($request->user()->id, $realId, $request->modo);
+        
+        if ($resultado['success'] && $request->modo === 'envio') {
+            $userId = $request->user()->id;
+            $redirectUrl = route('negociaciones.pago.iniciar-movil', ['id_negociacion' => $realId]) . '?user_id=' . $userId;
+            
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Modo de entrega seleccionado. Redirigiendo al pago de envío...',
+                'redirect_url' => $redirectUrl,
+            ], 200);
+        }
+
         return response()->json(['success' => $resultado['success'], 'message' => $resultado['message']], $resultado['success'] ? 200 : 422);
     }
 

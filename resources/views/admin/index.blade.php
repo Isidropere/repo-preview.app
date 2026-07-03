@@ -261,42 +261,62 @@
                             @endif
                         </a>
                     </nav>
-                </div>
-
-                {{-- Filtros --}}
+                       {{-- Filtros --}}
                 @if($tab !== 'envio')
                 <div class="p-4 border-b border-gray-50 bg-gray-50">
-                    <form method="GET" action="{{ route('admin.index') }}" class="flex flex-col sm:flex-row gap-3">
+                    <form method="GET" action="{{ route('admin.index') }}" class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
                         <input type="hidden" name="tab" value="{{ $tab }}">
-                        <input type="text" name="buscar" value="{{ request('buscar') }}"
-                               placeholder="Buscar..."
-                               class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        
+                        <div class="flex-1">
+                            <input type="text" name="buscar" value="{{ request('buscar') }}"
+                                   placeholder="Buscar..."
+                                   class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
 
                         @if($tab === 'compras')
-                        <select name="estatus" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="">Todos los estados</option>
-                            @foreach($estadosCompra as $e)
-                                <option value="{{ $e }}" {{ request('estatus') === $e ? 'selected' : '' }}>{{ ucfirst($e) }}</option>
-                            @endforeach
-                        </select>
+                        <div>
+                            <select name="estatus" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Todos los estados</option>
+                                @foreach($estadosCompra as $e)
+                                    <option value="{{ $e }}" {{ request('estatus') === $e ? 'selected' : '' }}>{{ ucfirst($e) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         @elseif($tab === 'intercambios')
-                        <select name="estatus" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="">Todos los estados</option>
-                            @foreach($estadosIntercambio as $e)
-                                <option value="{{ $e }}" {{ request('estatus') === $e ? 'selected' : '' }}>{{ ucfirst($e) }}</option>
-                            @endforeach
-                        </select>
+                        <div>
+                            <select name="estatus" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Todos los estados</option>
+                                @foreach($estadosIntercambio as $e)
+                                    <option value="{{ $e }}" {{ request('estatus') === $e ? 'selected' : '' }}>{{ ucfirst($e) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         @endif
 
-                        <button type="submit" class="bg-primary hover:bg-hoverPrimary text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
-                            Filtrar
-                        </button>
-                        @if(request('buscar') || request('estatus'))
-                        <a href="{{ route('admin.index', ['tab' => $tab]) }}"
-                           class="border border-gray-200 text-gray-600 hover:bg-gray-100 px-5 py-2 rounded-lg text-sm font-medium transition-colors text-center">
-                            Limpiar
-                        </a>
+                        @if($tab !== 'intencion_compra')
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
+                            <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
+                            <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
                         @endif
+
+                        <div class="flex gap-2">
+                            <button type="submit" class="bg-primary hover:bg-hoverPrimary text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Filtrar
+                            </button>
+                            @if(request('buscar') || request('estatus') || request('fecha_desde') || request('fecha_hasta'))
+                            <a href="{{ route('admin.index', ['tab' => $tab]) }}"
+                               class="border border-gray-200 text-gray-600 hover:bg-gray-100 px-5 py-2 rounded-lg text-sm font-medium transition-colors text-center flex items-center justify-center">
+                                Limpiar
+                            </a>
+                            @endif
+                        </div>
                     </form>
                 </div>
                 @endif

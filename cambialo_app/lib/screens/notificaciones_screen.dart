@@ -5,6 +5,7 @@ import '../core/theme.dart';
 import 'negociacion_detalle_screen.dart';
 import 'historial_screen.dart';
 import 'mis_talentos_screen.dart';
+import 'mis_intercambios_screen.dart';
 
 class NotificacionesScreen extends StatefulWidget {
   const NotificacionesScreen({super.key});
@@ -74,15 +75,25 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         context,
         MaterialPageRoute(builder: (_) => NegociacionDetalleScreen(negociacionId: ApiClient.parseInt(idOferta) ?? 0)),
       );
+    } else if (esIntercambio) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MisIntercambiosScreen()),
+      );
     } else if (esServicio) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MisTalentosScreen()),
       );
-    } else if (esCompra || esVenta) {
+    } else if (esCompra) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HistorialScreen()),
+        MaterialPageRoute(builder: (_) => const HistorialScreen(initialTabIndex: 0)),
+      );
+    } else if (esVenta) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HistorialScreen(initialTabIndex: 1)),
       );
     } else {
       _load();

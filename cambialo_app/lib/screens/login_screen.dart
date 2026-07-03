@@ -5,6 +5,7 @@ import '../core/auth_service.dart';
 import '../core/theme.dart';
 import 'main_screen.dart';
 import 'register_screen.dart';
+import 'olvidaste_contrasena_screen.dart';
 
 /// Pantalla de login — rediseñada con estilo premium móvil
 class LoginScreen extends StatefulWidget {
@@ -35,8 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),
           (_) => false,
         );
@@ -89,8 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (result['success']) {
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),
           (_) => false,
         );
@@ -315,15 +314,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Por favor, ponte en contacto con soporte técnico.'),
-                                          backgroundColor: kPrimary,
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const OlvidasteContrasenaScreen(),
                                         ),
                                       );
                                     },
                                     child: const Text(
-                                      '¿La olvidaste?',
+                                      '¿Olvidaste tu contraseña?',
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: kPrimary,

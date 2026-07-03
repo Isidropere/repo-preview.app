@@ -49,8 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainScreen()),
         (_) => false,
       );
@@ -131,8 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _loading = false);
       if (result['success']) {
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),
           (_) => false,
         );

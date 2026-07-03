@@ -10,7 +10,8 @@ import 'negociacion_detalle_screen.dart';
 /// Historial de compras, ventas e intercambios
 /// Fiel al diseño web con tabs
 class HistorialScreen extends StatefulWidget {
-  const HistorialScreen({super.key});
+  final int initialTabIndex;
+  const HistorialScreen({super.key, this.initialTabIndex = 0});
   @override
   State<HistorialScreen> createState() => _HistorialScreenState();
 }
@@ -27,7 +28,7 @@ class _HistorialScreenState extends State<HistorialScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _load();
   }
 

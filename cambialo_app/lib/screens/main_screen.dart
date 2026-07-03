@@ -215,16 +215,9 @@ class _MainScreenState extends State<MainScreen> {
       },
       child: Scaffold(
         drawer: const CategoriasDrawer(),
-        body: Column(
-          children: [
-            const TickerBannerWidget(),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScrollNotification,
-                child: IndexedStack(index: _index, children: screens),
-              ),
-            ),
-          ],
+        body: NotificationListener<ScrollNotification>(
+          onNotification: _onScrollNotification,
+          child: IndexedStack(index: _index, children: screens),
         ),
         bottomNavigationBar: AnimatedContainer(
           duration: const Duration(milliseconds: 200),

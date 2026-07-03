@@ -24,12 +24,12 @@ class FooterWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.only(top: 8, bottom: 24, left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Divider(color: Color(0xFFF3F4F6), thickness: 1), // border-gray-100
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Secciones del Footer en Acordeones / ExpansionTiles para diseño móvil limpio
           Theme(
@@ -104,9 +104,9 @@ class FooterWidget extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           const Divider(color: Color(0xFFF3F4F6), thickness: 1),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Bloque de información y pagos centralizado
           Center(
@@ -224,9 +224,9 @@ class FooterWidget extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
-          const Divider(color: Color(0xFFF3F4F6), thickness: 1),
           const SizedBox(height: 12),
+          const Divider(color: Color(0xFFF3F4F6), thickness: 1),
+          const SizedBox(height: 6),
 
           // Copyright y Social Icons
           Row(

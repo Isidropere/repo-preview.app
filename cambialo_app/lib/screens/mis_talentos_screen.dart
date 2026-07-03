@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
@@ -412,12 +413,14 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                               // Mapeo exacto de estados de la web
                               final String statusText = statusVal == 1
                                   ? 'Activo'
-                                  : (statusVal == 2 ? 'Inactivo' : 'Pausado');
+                                  : (statusVal == 2
+                                      ? 'Inactivo'
+                                      : (statusVal == 0 ? 'Pendiente de Pago' : 'Pausado'));
                               final Color badgeColor = statusVal == 1
                                   ? Colors.green
                                   : (statusVal == 2
                                       ? Colors.red
-                                      : Colors.yellow.shade800);
+                                      : (statusVal == 0 ? Colors.orange : Colors.yellow.shade800));
 
                               final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
                               final String transText = transVal == 1
@@ -553,7 +556,27 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Acciones (Editar/Eliminar)
+                                      // Acciones (Pagar/Editar/Eliminar)
+                                      if (statusVal == 0)
+                                        IconButton(
+                                          icon: const Icon(Icons.payment_outlined,
+                                              color: Colors.green, size: 20),
+                                          tooltip: 'Pagar Registro',
+                                          onPressed: () async {
+                                            final String payUrl = '${kBaseUrl.replaceAll('/api', '')}/talento/pago/iniciar-movil/$itemId';
+                                            final Uri url = Uri.parse(payUrl);
+                                            if (await canLaunchUrl(url)) {
+                                              await launchUrl(url, mode: LaunchMode.externalApplication);
+                                            } else {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                                  content: Text('No se pudo abrir la pasarela de pago.'),
+                                                  backgroundColor: Colors.red,
+                                                ));
+                                              }
+                                            }
+                                          },
+                                        ),
                                       IconButton(
                                         icon: const Icon(Icons.edit_outlined,
                                             color: kPrimary, size: 20),

@@ -175,4 +175,23 @@ class AuthService {
       return {'success': false, 'message': 'No se pudo conectar al servidor.'};
     }
   }
+
+  static Future<Map<String, dynamic>> sendPasswordResetEmail(String email) async {
+    try {
+      final res = await ApiClient.post('/auth/password/email', {'email': email});
+      final body = jsonDecode(res.body);
+      if (body['success'] == true) {
+        return {
+          'success': true,
+          'message': body['message'] ?? 'Se ha enviado un link a su correo para cambiar su contraseña.'
+        };
+      }
+      return {
+        'success': false,
+        'message': body['message'] ?? 'Error al enviar el correo de recuperación.'
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor.'};
+    }
+  }
 }

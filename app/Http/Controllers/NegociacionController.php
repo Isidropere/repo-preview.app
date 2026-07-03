@@ -183,6 +183,9 @@ class NegociacionController extends Controller
         if ($request->wantsJson()) {
             return response()->json($resultado, $resultado['success'] ? 200 : 422);
         }
+        if ($resultado['success'] && $request->input('redirect_to_payment')) {
+            return redirect()->route('negociaciones.pago.iniciar', $id);
+        }
         return back()->with($resultado['success'] ? 'success' : 'error', $resultado['message']);
     }
 

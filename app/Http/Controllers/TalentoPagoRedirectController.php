@@ -77,11 +77,14 @@ class TalentoPagoRedirectController extends Controller
             return redirect()->route('items.admintalento')->with('success', 'Talento publicado correctamente (tarifa cero).');
         }
 
+        $isMobile = ($provider === 'azul_talento_movil');
+        $queryParam = $isMobile ? '?mobile=1' : '';
+
         $orderNumber = 'TAL-' . $item->id_item . '-' . time();
         $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
-            'approved_url' => route('talento.pago.aprobado'),
-            'declined_url' => route('talento.pago.declinado'),
-            'cancel_url'   => route('talento.pago.cancelado'),
+            'approved_url' => route('talento.pago.aprobado') . $queryParam,
+            'declined_url' => route('talento.pago.declinado') . $queryParam,
+            'cancel_url'   => route('talento.pago.cancelado') . $queryParam,
         ]);
 
         // Registrar log de pago

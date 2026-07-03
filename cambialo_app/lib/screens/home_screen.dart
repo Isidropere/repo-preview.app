@@ -24,6 +24,7 @@ import 'propuesta_intercambio_screen.dart';
 import '../widgets/item_image.dart';
 import '../widgets/footer_widget.dart';
 import '../widgets/categorias_drawer.dart';
+import '../widgets/ticker_banner_widget.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -140,7 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _logout() async {
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainScreen()), (route) => false);
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MainScreen()),
+      (route) => false,
+    );
   }
 
   void _search() {
@@ -184,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const TickerBannerWidget(),
                     // Banner superior — "Encuentra lo que deseas cambiar"
                     Container(
                       width: double.infinity,
@@ -200,43 +205,55 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Buscador
                     Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Row(children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchCtrl,
-                            onSubmitted: (_) => _search(),
-                            decoration: InputDecoration(
-                              hintText: 'Buscar Productos, Marcas y más...',
-                              prefixIcon: const Icon(Icons.search, color: kPrimary),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                      child: SizedBox(
+                        height: 40,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _searchCtrl,
+                                onSubmitted: (_) => _search(),
+                                decoration: InputDecoration(
+                                  hintText: 'Buscar Productos, Marcas y más...',
+                                  prefixIcon: const Icon(Icons.search, color: kPrimary, size: 20),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: kSecondary),
+                                  ),
+                                ),
+                                style: const TextStyle(fontSize: 13),
                               ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: kSecondary),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: _search,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimary,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'Buscar',
+                                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _search,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Text('Buscar', style: TextStyle(color: Colors.white)),
-                        ),
-                      ]),
+                      ),
                     ),
 
                     // Carrusel
@@ -272,11 +289,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final loggedIn = await AuthService.isLoggedIn();
                                   if (!loggedIn) {
                                     if (!mounted) return;
-                                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                    final result = await Navigator.of(context, rootNavigator: true).push(
+                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    );
                                     if (result != true) return;
                                   }
                                   if (!mounted) return;
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarArticuloScreen()));
+                                  Navigator.of(context, rootNavigator: true).push(
+                                    MaterialPageRoute(builder: (_) => const PublicarArticuloScreen()),
+                                  );
                                 },
                                 icon: const Icon(Icons.add_shopping_cart, color: Colors.white, size: 16),
                                 label: const Text('Crear producto', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -295,11 +316,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final loggedIn = await AuthService.isLoggedIn();
                                   if (!loggedIn) {
                                     if (!mounted) return;
-                                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                    final result = await Navigator.of(context, rootNavigator: true).push(
+                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    );
                                     if (result != true) return;
                                   }
                                   if (!mounted) return;
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarTalentoScreen()));
+                                  Navigator.of(context, rootNavigator: true).push(
+                                    MaterialPageRoute(builder: (_) => const PublicarTalentoScreen()),
+                                  );
                                 },
                                 icon: const Icon(Icons.psychology, color: Colors.white, size: 16),
                                 label: const Text('Crear talento', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
