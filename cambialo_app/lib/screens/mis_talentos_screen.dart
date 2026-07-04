@@ -41,9 +41,8 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
         final list = jsonDecode(res.body) as List;
         setState(() {
           _talentos = list.where((item) {
-            final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
             final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-            return tipo == 2 || cat == 29;
+            return cat == 29;
           }).toList();
           _loading = false;
         });

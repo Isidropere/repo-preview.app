@@ -35,9 +35,8 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
       final list = jsonDecode(res.body) as List;
       setState(() {
         _items = list.where((item) {
-          final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
           final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          return tipo != 2 && cat != 29;
+          return cat != 29;
         }).toList();
         _loading = false;
       });
