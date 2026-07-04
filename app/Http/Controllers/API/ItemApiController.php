@@ -107,6 +107,54 @@ class ItemApiController extends Controller
             ];
         });
 
+        $user = $request->user('sanctum');
+        if ($user) {
+            $cartItems = \App\Models\ItemIntencionCompra::whereHas('carrito', function($q) use ($user) {
+                $q->where('id_user', $user->id);
+            })->pluck('id_item')->toArray();
+            $cartSet = array_flip($cartItems);
+
+            $userActiveNegociaciones = \App\Models\Negociacion::where(function($q) use ($user) {
+                  $q->where('usuario_emisor_id', $user->id)
+                    ->orWhere('usuario_receptor_id', $user->id);
+               })
+              ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
+              ->get(['receptor_item_id', 'items_ofrecidos']);
+              
+            $negSet = [];
+            foreach ($userActiveNegociaciones as $neg) {
+                if ($neg->receptor_item_id) {
+                    $negSet[$neg->receptor_item_id] = true;
+                }
+                if (is_array($neg->items_ofrecidos)) {
+                    foreach ($neg->items_ofrecidos as $offeredId) {
+                        $negSet[$offeredId] = true;
+                    }
+                }
+            }
+
+            $itemsData = $result['data'];
+            if (is_array($itemsData) || $itemsData instanceof \Illuminate\Support\Collection) {
+                $itemsData = collect($itemsData)->map(function($item) use ($cartSet, $negSet) {
+                    $id = $item['id_item'] ?? null;
+                    $item['ya_en_carrito'] = $id ? isset($cartSet[$id]) : false;
+                    $item['con_negociacion_activa'] = $id ? isset($negSet[$id]) : false;
+                    return $item;
+                })->toArray();
+                $result['data'] = $itemsData;
+            }
+        } else {
+            $itemsData = $result['data'];
+            if (is_array($itemsData) || $itemsData instanceof \Illuminate\Support\Collection) {
+                $itemsData = collect($itemsData)->map(function($item) {
+                    $item['ya_en_carrito'] = false;
+                    $item['con_negociacion_activa'] = false;
+                    return $item;
+                })->toArray();
+                $result['data'] = $itemsData;
+            }
+        }
+
         return response()->json($result);
     }
 
