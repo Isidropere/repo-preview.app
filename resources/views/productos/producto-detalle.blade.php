@@ -198,7 +198,19 @@
 
                 {{-- Sección 5: Botones de acción --}}
                 <div style="padding:1rem 0;border-bottom:1px solid #f1f5f9;display:flex;gap:0.6rem;flex-wrap:wrap;">
-                    @if($esVenta && $stock > 0)
+                    @if($yaEnCarrito)
+                    <button disabled
+                            style="flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#e2e8f0;color:#94a3b8;border:none;border-radius:0.65rem;padding:0.7rem 1.1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Ya en el carrito
+                    </button>
+                    @elseif($conNegociacionActiva)
+                    <button disabled
+                            style="flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#e2e8f0;color:#94a3b8;border:none;border-radius:0.65rem;padding:0.7rem 1.1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">
+                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Negociación activa
+                    </button>
+                    @elseif($esVenta && $stock > 0)
                     <button id="add-to-cart-{{ $item->id_item }}" onclick="agregarAlCarrito({{ $item->id_item }})"
                             style="flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#3b82f6;color:#fff;border:none;border-radius:0.65rem;padding:0.7rem 1.1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s,transform .1s;box-shadow:0 2px 8px rgba(59,130,246,.25);"
                             onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'"
@@ -211,12 +223,26 @@
                     <button disabled style="flex:1;min-width:150px;background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.7rem 1.1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">Agotado</button>
                     @endif
                     @if($esIntercambio && $item->id_user != auth()->id())
-                    <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
-                            style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#fff7ed;color:#c2410c;border:1.5px solid #f58634;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"
-                            onmouseover="this.style.background='#fed7aa'" onmouseout="this.style.background='#fff7ed'">
-                        <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                        Intercambio sin Negociación
-                    </button>
+                        @if($yaEnCarrito)
+                        <button disabled
+                                style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">
+                            <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            Ya en el carrito
+                        </button>
+                        @elseif($conNegociacionActiva)
+                        <button disabled
+                                style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:not-allowed;">
+                            <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            Negociación activa
+                        </button>
+                        @else
+                        <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
+                                style="flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#fff7ed;color:#c2410c;border:1.5px solid #f58634;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"
+                                onmouseover="this.style.background='#fed7aa'" onmouseout="this.style.background='#fff7ed'">
+                            <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            Intercambio sin Negociación
+                        </button>
+                        @endif
                     @endif
                     <button type="button" onclick="compartirItem('{{ addslashes($item->item) }}', '{{ route('producto.detalle', $item->slug) }}')"
                             style="display:flex;align-items:center;justify-content:center;gap:0.45rem;background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;border-radius:0.65rem;padding:0.65rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .15s;"

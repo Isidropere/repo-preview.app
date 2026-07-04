@@ -34,7 +34,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
   Future<void> _load() async {
-    final res = await ApiClient.get('/items/${widget.itemId}');
+    final res = await ApiClient.get('/items/${widget.itemId}', auth: true);
     if (res.statusCode == 200) {
       setState(() { _item = jsonDecode(res.body); _loading = false; });
     } else {
@@ -89,6 +89,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     final esIntercambio = tipoTransRaw == 2;
     final esMixto       = tipoTransRaw == 3;
     final tipoTrans     = esVenta ? 'Venta' : (esMixto ? 'Venta+Intercambio' : 'Intercambio');
+
+    final yaEnCarrito = _item!['ya_en_carrito'] == true;
+    final conNegociacionActiva = _item!['con_negociacion_activa'] == true;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -217,15 +220,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _addingToCart ? null : _addToCart,
+                    onPressed: (yaEnCarrito || conNegociacionActiva || _addingToCart) ? null : _addToCart,
                     icon: _addingToCart
                         ? const SizedBox(width: 18, height: 18,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                    label: const Text('Agregar al carrito',
-                        style: TextStyle(fontSize: 15, color: Colors.white)),
+                        : Icon(
+                            yaEnCarrito ? Icons.check : (conNegociacionActiva ? Icons.lock_outline : Icons.shopping_cart_outlined),
+                            color: Colors.white,
+                          ),
+                    label: Text(
+                      yaEnCarrito
+                          ? 'Ya en el carrito'
+                          : (conNegociacionActiva ? 'Negociación activa' : 'Agregar al carrito'),
+                      style: const TextStyle(fontSize: 15, color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kSecondary,
+                      backgroundColor: (yaEnCarrito || conNegociacionActiva) ? Colors.grey : kSecondary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
@@ -238,26 +248,40 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final loggedIn = await AuthService.isLoggedIn();
-                      if (!loggedIn) {
-                        if (!mounted) return;
-                        final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-                        if (result != true) return;
-                      }
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => PropuestaIntercambioScreen(
-                          receptorItemId:  int.tryParse(_item!['id_item']?.toString() ?? '') ?? 0,
-                          nombreArticulo:  _item!['item'] ?? '',
-                          idCategoriaItem: int.tryParse(_item!['id_categoria_item']?.toString() ?? '') ?? 0,
-                        ),
-                      ));
-                    },
-                    icon: const Icon(Icons.swap_horiz, color: kPrimary),
-                    label: const Text('Proponer intercambio',
-                        style: TextStyle(color: kPrimary, fontSize: 15)),
+                    onPressed: (yaEnCarrito || conNegociacionActiva)
+                        ? null
+                        : () async {
+                            final loggedIn = await AuthService.isLoggedIn();
+                            if (!loggedIn) {
+                              if (!mounted) return;
+                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                              if (result != true) return;
+                            }
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => PropuestaIntercambioScreen(
+                                receptorItemId:  int.tryParse(_item!['id_item']?.toString() ?? '') ?? 0,
+                                nombreArticulo:  _item!['item'] ?? '',
+                                idCategoriaItem: int.tryParse(_item!['id_categoria_item']?.toString() ?? '') ?? 0,
+                              ),
+                            ));
+                          },
+                    icon: Icon(
+                      Icons.swap_horiz,
+                      color: (yaEnCarrito || conNegociacionActiva) ? Colors.grey : kPrimary,
+                    ),
+                    label: Text(
+                      yaEnCarrito
+                          ? 'Ya en el carrito'
+                          : (conNegociacionActiva ? 'Negociación activa' : 'Proponer intercambio'),
+                      style: TextStyle(
+                        color: (yaEnCarrito || conNegociacionActiva) ? Colors.grey : kPrimary,
+                        fontSize: 15,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: kPrimary),
+                      side: BorderSide(
+                        color: (yaEnCarrito || conNegociacionActiva) ? Colors.grey.shade300 : kPrimary,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),

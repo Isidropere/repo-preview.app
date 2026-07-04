@@ -122,7 +122,26 @@ class ItemApiController extends Controller
             'inventarios',
         ])->where('estatus', 1)->findOrFail($id);
 
-        return response()->json($this->appendImageUrl($item));
+        $user = request()->user('sanctum');
+        $yaEnCarrito = false;
+        $conNegociacionActiva = false;
+
+        if ($user) {
+            $yaEnCarrito = \App\Models\ItemIntencionCompra::whereHas('carrito', function ($q) use ($user) {
+                $q->where('id_user', $user->id);
+            })->where('id_item', $item->id_item)->exists();
+
+            $conNegociacionActiva = \App\Models\Negociacion::where('usuario_emisor_id', $user->id)
+                ->where('receptor_item_id', $item->id_item)
+                ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
+                ->exists();
+        }
+
+        $res = $this->appendImageUrl($item)->toArray();
+        $res['ya_en_carrito'] = $yaEnCarrito;
+        $res['con_negociacion_activa'] = $conNegociacionActiva;
+
+        return response()->json($res);
     }
 
     /** GET /api/categorias */

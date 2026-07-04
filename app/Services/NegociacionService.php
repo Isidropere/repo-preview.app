@@ -70,11 +70,19 @@ class NegociacionService
         // Validar que no exista negociación activa del mismo emisor por el mismo item
         $existente = Negociacion::where('usuario_emisor_id', $emisorId)
             ->where('receptor_item_id', $receptorItem->id_item)
-            ->whereNotIn('estado', ['rechazado', 'cancelado', 'completado'])
+            ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
             ->exists();
 
         if ($existente) {
             return $this->error('Ya tienes una negociación activa por este artículo.');
+        }
+
+        // No permitir si ya está en el carrito
+        $yaEnCarrito = \App\Models\ItemIntencionCompra::whereHas('carrito', fn($q) => $q->where('id_user', $emisorId))
+            ->where('id_item', $receptorItem->id_item)
+            ->exists();
+        if ($yaEnCarrito) {
+            return $this->error('Este artículo ya está en tu carrito. No puedes proponer un intercambio.');
         }
 
         // Validar que el paquete pertenezca al emisor
