@@ -589,28 +589,67 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: Text(isEdit ? 'Editar Talento' : 'Publicar Talento'),
+        title: Text(
+          isEdit ? 'Editar Talento' : 'Publicar Talento',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: _loadingConfig || _loadingItem
           ? const Center(child: CircularProgressIndicator(color: kPrimary))
           : SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Indicador de pasos (Omitir paso 3 en modo edición)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _stepIndicator(1, 'Info', _step >= 1),
-                      _stepDivider(_step >= 2),
-                      _stepIndicator(2, 'Multimedia', _step >= 2),
-                      if (!isEdit) ...[
-                        _stepDivider(_step >= 3),
-                        _stepIndicator(3, 'Pago', _step >= 3),
-                      ]
-                    ],
+                  // Nuevo Indicador de pasos moderno
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100, width: 1.5),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _step == 1
+                                  ? 'Paso 1 de ${isEdit ? 2 : 3}: Información Básica'
+                                  : (_step == 2 ? 'Paso 2 de ${isEdit ? 2 : 3}: Multimedia' : 'Paso 3 de 3: Pago de Publicación'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: kTextDark,
+                              ),
+                            ),
+                            Text(
+                              '${(_step / (isEdit ? 2.0 : 3.0) * 100).toInt()}% completado',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: kPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _step / (isEdit ? 2.0 : 3.0),
+                            backgroundColor: kPrimary.withOpacity(0.1),
+                            color: kPrimary,
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   if (_step == 1) _buildStep1(),
                   if (_step == 2) _buildStep2(),
@@ -621,127 +660,178 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     );
   }
 
-  Widget _stepIndicator(int stepNum, String title, bool active) => Column(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: active ? kPrimary : Colors.grey.shade300,
-            child: Text(
-              stepNum.toString(),
-              style: TextStyle(color: active ? Colors.white : kTextGray, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 10, color: active ? kTextDark : kTextGray, fontWeight: FontWeight.w500)),
-        ],
-      );
-
-  Widget _stepDivider(bool active) => Container(
-        width: 40,
-        height: 2,
-        margin: const EdgeInsets.only(left: 8, right: 8, bottom: 12),
-        color: active ? kPrimary : Colors.grey.shade300,
-      );
-
   Widget _buildStep1() => Form(
         key: _formKey,
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Información del talento', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextDark)),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _nombreCtrl,
-                decoration: const InputDecoration(labelText: 'Nombre del talento *', hintText: 'Ej: Clases de guitarra, Diseño gráfico', border: OutlineInputBorder()),
-                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-              ),
+              _campo(_nombreCtrl, 'Nombre del talento *', required: true),
               const SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: _precioCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Precio (RD\$) *', prefixText: 'RD\$ ', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                    ),
+                    child: _campo(_precioCtrl, 'Precio (RD\$) *', required: true, keyboardType: TextInputType.number),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       value: _tipoTrans,
+                      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        labelText: 'Modalidad *',
+                        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        prefixIcon: const Icon(Icons.handshake_outlined, color: kPrimary, size: 20),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: kPrimary, width: 2),
+                        ),
+                      ),
                       items: const [
                         DropdownMenuItem(value: 3, child: Text('Venta o Canje')),
                         DropdownMenuItem(value: 2, child: Text('Solo Canje')),
                         DropdownMenuItem(value: 1, child: Text('Solo Venta')),
                       ],
                       onChanged: (val) => setState(() => _tipoTrans = val!),
-                      decoration: const InputDecoration(labelText: 'Modalidad *', border: OutlineInputBorder()),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _cantidadCtrl,
+              _campo(
+                _cantidadCtrl,
+                'Cantidad de servicios *',
+                required: true,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Cantidad de servicios *', border: OutlineInputBorder()),
                 validator: (v) {
-                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (v == null || v.isEmpty) return 'Este campo es obligatorio';
                   final qty = int.tryParse(v);
                   if (qty == null || qty < 1) return 'Debe ser mayor a 0';
                   return null;
                 },
-                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
+              
+              // Descripción con contador
+              const Text(
+                'Descripción del talento *',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextDark),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _descCtrl,
                 maxLines: 4,
                 maxLength: 250,
-                decoration: const InputDecoration(labelText: 'Descripción del talento *', hintText: 'Resume tus habilidades y lo que ofreces...', border: OutlineInputBorder()),
-                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: 'Resume tus habilidades y lo que ofreces...',
+                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.all(16),
+                  counterText: '',
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                  ),
+                ),
+                onChanged: (val) => setState(() {}),
+                validator: (v) => (v == null || v.isEmpty) ? 'La descripción es obligatoria' : null,
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${_descCtrl.text.length}/250 caracteres',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
               ),
               const SizedBox(height: 16),
+
               DropdownButtonFormField<int>(
                 value: _estatus,
-                decoration: const InputDecoration(labelText: 'Estatus *', border: OutlineInputBorder()),
+                style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  labelText: 'Estatus *',
+                  labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  prefixIcon: const Icon(Icons.toggle_on_outlined, color: kPrimary, size: 20),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                  ),
+                ),
                 items: const [
                   DropdownMenuItem(value: 1, child: Text('Activo')),
                   DropdownMenuItem(value: 2, child: Text('Pausado (Inactivo)')),
                 ],
                 onChanged: (val) => setState(() => _estatus = val ?? 2),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _nextStep,
-                  style: ElevatedButton.styleFrom(backgroundColor: kPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: const Text('Siguiente', style: TextStyle(color: Colors.white, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Siguiente', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
-          ),
-        ),
-      );
-
-  Widget _buildStep2() {
+     Widget _buildStep2() {
     final isEdit = widget.itemId != null;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -756,23 +846,18 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               width: double.infinity,
               height: 180,
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _mainImage != null ? kPrimary.withOpacity(0.5) : Colors.grey.shade200,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    )
-                  ]),
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _mainImage != null ? kPrimary : Colors.grey.shade300,
+                  width: _mainImage != null ? 2.0 : 1.5,
+                ),
+              ),
               child: _mainImage != null
                   ? Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           child: _isVideoPath(_mainImage!.path)
                               ? Container(
                                   width: double.infinity,
@@ -795,7 +880,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             color: Colors.black38,
                           ),
                         ),
@@ -818,7 +903,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       ? Stack(
                           children: [
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               child: _isVideoPath(_existingMainImageUrl!)
                                   ? Container(
                                       width: double.infinity,
@@ -848,7 +933,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 color: Colors.black38,
                               ),
                             ),
@@ -871,44 +956,43 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: kPrimary.withOpacity(0.05),
+                                color: kPrimary.withOpacity(0.08),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.add_photo_alternate_outlined, size: 32, color: kPrimary),
+                              child: const Icon(Icons.cloud_upload_outlined, size: 36, color: kPrimary),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 12),
                             const Text(
                               'Imagen Principal *',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kTextDark),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
-                              'Presiona para subir la imagen de portada',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              'Toca aquí para seleccionar una imagen o video de portada',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                             ),
                           ],
                         )),
-            ),
           ),
           if (isEdit) ...[
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
                 '⚠️ Si cambias la imagen principal, las imágenes opcionales previas serán eliminadas y deberás volver a agregarlas.',
-                style: TextStyle(color: Colors.orange, fontSize: 11, height: 1.3),
+                style: TextStyle(color: Colors.orange, fontSize: 11, height: 1.3, fontWeight: FontWeight.w500),
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Selector imágenes adicionales
           Text(
             'Imágenes adicionales (Opcional) - ${_existingImages.length + _additionalImages.length}/4',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextDark),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextDark),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           SizedBox(
             height: 80,
             child: ListView(
@@ -922,11 +1006,11 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade200),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300, width: 1.5),
                       ),
-                      child: const Icon(Icons.add_a_photo_outlined, color: kTextGray, size: 22),
+                      child: const Icon(Icons.add_a_photo_outlined, color: kPrimary, size: 24),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -940,7 +1024,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                     child: Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: _isVideoPath(img['image_url'])
                               ? Container(
                                   width: 80,
@@ -953,10 +1037,6 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: Colors.grey.shade100,
-                                    child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
-                                  ),
                                 ),
                         ),
                         Positioned(
@@ -989,7 +1069,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                     child: Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: _isVideoPath(img.path)
                               ? Container(
                                   width: 80,
@@ -1026,29 +1106,47 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
           ),
           const SizedBox(height: 24),
           if (_error != null) ...[
-            Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: _prevStep,
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: const Text('Anterior'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: Colors.grey, width: 1.5),
+                  ),
+                  child: const Text('Anterior', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _saving ? null : _nextStep,
-                  style: ElevatedButton.styleFrom(backgroundColor: kPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: Text(isEdit ? 'Guardar cambios' : 'Siguiente', style: const TextStyle(color: Colors.white, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text(isEdit ? 'Guardar cambios' : 'Siguiente', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
-        ],
       ),
     );
   }
@@ -1057,8 +1155,15 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1067,7 +1172,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.orange.shade200)),
+              decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange.shade200)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1081,7 +1186,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               alignment: Alignment.centerRight,
               child: Text(
                 'Tarifa RD\$ ${_montoRegistro.toStringAsFixed(2)} × ${int.tryParse(_cantidadCtrl.text) ?? 1} servicio(s)',
-                style: const TextStyle(fontSize: 11, color: kTextGray),
+                style: const TextStyle(fontSize: 11, color: kTextGray, fontWeight: FontWeight.w500),
               ),
             ),
             const SizedBox(height: 20),
@@ -1090,43 +1195,62 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.blue.shade200),
               ),
               child: Row(children: [
-                Icon(Icons.security, color: Colors.blue.shade800, size: 20),
-                const SizedBox(width: 8),
+                Icon(Icons.security_outlined, color: Colors.blue.shade800, size: 22),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Serás redirigido a la pasarela de pago seguro de AZUL para completar la publicación. Tu información financiera está completamente protegida.',
-                    style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
+                    style: TextStyle(fontSize: 12, color: Colors.blue.shade900, height: 1.3),
                   ),
                 ),
               ]),
             ),
 
             if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                  ],
+                ),
+              ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _prevStep,
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                    child: const Text('Anterior'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: Colors.grey, width: 1.5),
+                    ),
+                    child: const Text('Anterior', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _saving ? null : _publicarTalento,
-                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary, padding: const EdgeInsets.symmetric(vertical: 14)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kSecondary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
                     child: _saving
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Proceder al Pago Seguro', style: TextStyle(color: Colors.white, fontSize: 15)),
+                        : const Text('Proceder al Pago Seguro', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -1134,4 +1258,48 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
           ],
         ),
       );
+
+  Widget _campo(TextEditingController ctrl, String label,
+      {bool required = false, TextInputType? keyboardType, int maxLines = 1, String? Function(String?)? validator}) {
+    IconData? prefixIcon;
+    if (label.contains('Nombre')) {
+      prefixIcon = Icons.star_outline;
+    } else if (label.contains('Precio')) {
+      prefixIcon = Icons.monetization_on_outlined;
+    } else if (label.contains('Cantidad') || label.contains('servicios')) {
+      prefixIcon = Icons.inventory_2_outlined;
+    }
+
+    return TextFormField(
+      controller: ctrl,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: kPrimary, size: 20) : null,
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
+      ),
+      validator: validator ?? (required ? (v) => (v == null || v.isEmpty) ? 'Este campo es obligatorio' : null : null),
+    );
+  }
 }
