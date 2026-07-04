@@ -325,22 +325,36 @@ class _ItemGridCard extends StatelessWidget {
       if (!context.mounted) return;
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
+      String message = 'Error al agregar';
+      bool isSuccess = false;
       if (res.statusCode == 200) {
         try {
           final data = jsonDecode(res.body);
-          if (data['cart_count'] != null) {
-            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+          if (data['success'] == true) {
+            isSuccess = true;
+            message = data['message'] ?? '¡Agregado al carrito!';
+            if (data['cart_count'] != null) {
+              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+            } else {
+              ApiClient.cartCountNotifier.value++;
+            }
           } else {
-            ApiClient.cartCountNotifier.value++;
+            message = data['message'] ?? 'Error al agregar';
           }
         } catch (_) {
+          isSuccess = true;
           ApiClient.cartCountNotifier.value++;
         }
+      } else {
+        try {
+          final data = jsonDecode(res.body);
+          message = data['message'] ?? 'Error al agregar';
+        } catch (_) {}
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
-          backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
+          content: Text(message),
+          backgroundColor: isSuccess ? kPrimary : Colors.red,
         ));
       }
     }
