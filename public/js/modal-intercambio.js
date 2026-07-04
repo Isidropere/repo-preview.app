@@ -1,4 +1,4 @@
-﻿var _intercambioItemId = null;
+var _intercambioItemId = null;
 var _intercambioItemNombre = null;
 
 function abrirModalIntercambio(itemId, itemNombre) {
@@ -47,20 +47,25 @@ async function cargarMisProductosIntercambio() {
         var items = await resp.json();
         if (!Array.isArray(items)) items = items.items || [];
         var list = items.filter(function(i) {
-            return [1, 2, 3].includes(parseInt(i.tipo_trans));
+            var qty = i.inventarios ? parseInt(i.inventarios.cantidad) : 0;
+            return [1, 2, 3].includes(parseInt(i.tipo_trans)) && qty > 0;
         });
         if (!list.length) {
             lista.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">No tienes productos disponibles para intercambiar.</p>';
             return;
         }
         lista.innerHTML = list.map(function(i) {
+            var qty = i.inventarios ? parseInt(i.inventarios.cantidad) : 0;
             return '<label style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;cursor:pointer;background:#fff;transition:all .15s;" ' +
                 'onmouseover="this.style.borderColor=\'#10b981\';this.style.background=\'#f0fdf4\'" ' +
                 'onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">' +
                 '<input type="checkbox" value="' + i.id_item + '" class="chk-intercambio" style="width:1.1rem;height:1.1rem;accent-color:#f58634;flex-shrink:0;cursor:pointer;">' +
                 '<div style="flex:1;min-width:0;">' +
                 '<p style="font-size:0.85rem;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + i.item + '</p>' +
-                '<p style="font-size:0.72rem;color:#059669;font-weight:600;margin:0.1rem 0 0;">' + (i.valor ? 'RD$ ' + parseFloat(i.valor).toLocaleString('es-DO') : 'Solo intercambio') + '</p>' +
+                '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.1rem;">' +
+                '<span style="font-size:0.72rem;color:#059669;font-weight:600;">' + (i.valor ? 'RD$ ' + parseFloat(i.valor).toLocaleString('es-DO') : 'Solo intercambio') + '</span>' +
+                '<span style="font-size:0.72rem;color:#6b7280;font-weight:500;">• Disp: ' + qty + '</span>' +
+                '</div>' +
                 '</div>' +
                 '<span style="font-size:0.65rem;background:#d1fae5;color:#065f46;padding:0.2rem 0.5rem;border-radius:9999px;font-weight:700;flex-shrink:0;">OFRECER</span>' +
                 '</label>';

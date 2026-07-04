@@ -2039,6 +2039,7 @@ class ItemController extends Controller
                 ->whereHas('inventarios', function ($q) {
                     $q->where('cantidad', '>', 0);
                 })
+                ->with(['inventarios:id_item,cantidad'])
                 ->get(['id_item', 'item', 'valor', 'tipo_trans', 'condicion']);
 
             Log::info('Items del usuario obtenidos correctamente', [
