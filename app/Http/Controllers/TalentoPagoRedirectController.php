@@ -84,11 +84,11 @@ class TalentoPagoRedirectController extends Controller
         $declinedUrl = route('talento.pago.declinado') . $queryParam;
         $cancelUrl   = route('talento.pago.cancelado') . $queryParam;
 
-        if ($isMobile) {
-            $approvedUrl = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $approvedUrl);
-            $declinedUrl = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $declinedUrl);
-            $cancelUrl   = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $cancelUrl);
-        }
+        // Reemplazar dinámicamente el host local por el host real usado por el cliente (ej: 10.0.2.2:8000 o 10.0.0.51:8000)
+        $clientHost = request()->getHttpHost();
+        $approvedUrl = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $approvedUrl);
+        $declinedUrl = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $declinedUrl);
+        $cancelUrl   = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $cancelUrl);
 
         $orderNumber = 'TAL-' . $item->id_item . '-' . time();
         $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
