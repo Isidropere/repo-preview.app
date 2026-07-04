@@ -139,6 +139,17 @@ class ApiClient {
 
   static Future<Map<String, dynamic>?> getUser() async {
     if (_memStore.containsKey(_userKey)) return _memStore[_userKey] as Map<String, dynamic>?;
+
+    try {
+      final prefs = await _getPrefs;
+      final uStr = prefs.getString('auth_user');
+      if (uStr != null) {
+        final u = jsonDecode(uStr) as Map<String, dynamic>;
+        _memStore[_userKey] = u;
+        return u;
+      }
+    } catch (_) {}
+
     String? uStr;
     if (kIsWeb) {
       final prefs = await _getPrefs;
@@ -164,31 +175,28 @@ class ApiClient {
   static Future<void> saveUser(Map<String, dynamic> u) async {
     _memStore[_userKey] = u;
     final uStr = jsonEncode(u);
-    if (kIsWeb) {
+    try {
       final prefs = await _getPrefs;
       await prefs.setString('auth_user', uStr);
-    } else {
+    } catch (_) {}
+
+    if (!kIsWeb) {
       try {
         await _storage.write(key: 'auth_user', value: uStr);
-      } catch (_) {
-        final prefs = await _getPrefs;
-        await prefs.setString('auth_user', uStr);
-      }
+      } catch (_) {}
     }
   }
 
   static Future<void> deleteUser() async {
     _memStore.remove(_userKey);
-    if (kIsWeb) {
+    try {
       final prefs = await _getPrefs;
       await prefs.remove('auth_user');
-    } else {
+    } catch (_) {}
+    if (!kIsWeb) {
       try {
         await _storage.delete(key: 'auth_user');
-      } catch (_) {
-        final prefs = await _getPrefs;
-        await prefs.remove('auth_user');
-      }
+      } catch (_) {}
     }
   }
 
@@ -196,6 +204,7 @@ class ApiClient {
     final h = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Connection': 'close',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
@@ -290,6 +299,7 @@ class ApiClient {
       }
     }
     request.headers['Accept'] = 'application/json';
+    request.headers['Connection'] = 'close';
 
     request.fields.addAll(fields);
 

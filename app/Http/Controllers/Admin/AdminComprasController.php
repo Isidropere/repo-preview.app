@@ -129,8 +129,12 @@ class AdminComprasController extends Controller
             $id, $request->estatus, $request->nota, auth()->id()
         );
 
-        return redirect()->route('admin.compras.show', $id)
-            ->with('success', 'Estado actualizado correctamente.');
+        $redirect = redirect()->back();
+        if ($request->estatus === 'enviado') {
+            $redirect->with('download_pdf_url', route('admin.compras.pdf', $id));
+        }
+
+        return $redirect->with('success', 'Estado actualizado correctamente.');
     }
 
     public function enviarTracking(Request $request, $id)
@@ -289,8 +293,12 @@ class AdminComprasController extends Controller
             $realId, $request->estado, $request->nota, auth()->id()
         );
 
-        return redirect()->route('admin.intercambios.show', \App\Helpers\HashIdHelper::encode($realId))
-            ->with('success', 'Estado del intercambio actualizado.');
+        $redirect = redirect()->back();
+        if ($request->estado === 'en_envio') {
+            $redirect->with('download_pdf_url', route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($realId)));
+        }
+
+        return $redirect->with('success', 'Estado del intercambio actualizado.');
     }
 
     public function descargarPdf($id)

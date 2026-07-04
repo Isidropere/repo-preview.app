@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import '../widgets/item_image.dart';
 import 'direcciones_screen.dart';
 
 class NegociacionDetalleScreen extends StatefulWidget {
@@ -638,7 +639,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
     final receptor = _neg!['usuario_receptor'] as Map? ?? {};
     final item = _neg!['item'] as Map? ?? {};
     final estado = _neg!['estado'] ?? 'Inicial';
-    final itemsOfrecidos = _neg!['items_ofrecidos'] as List? ?? [];
+    final itemsOfrecidosDetalles = _neg!['items_ofrecidos_detalles'] as List? ?? [];
 
     final isEmisor = _userId == emisor['id'];
     final isReceptor = _userId == receptor['id'];
@@ -685,9 +686,10 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
         children: [
           // Info de negociación & Estado
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
               border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Column(
@@ -696,33 +698,172 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Con: ${isEmisor ? (receptor['nombres'] ?? '') : (emisor['nombres'] ?? '')}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: kPrimary.withOpacity(0.1),
+                          child: const Icon(Icons.person, size: 16, color: kPrimary),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Intercambio con: ${isEmisor ? (receptor['nombres'] ?? '') : (emisor['nombres'] ?? '')}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kTextDark),
+                        ),
+                      ],
                     ),
                     _buildStatusBadge(estado),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Solicita: ${item['item'] ?? ''}',
-                  style: const TextStyle(fontSize: 12, color: kTextDark),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(height: 1, color: Color(0xFFEEEEEE)),
                 ),
-                if (itemsOfrecidos.isNotEmpty)
-                  Text(
-                    'Ofrece: ${itemsOfrecidos.length} artículo(s)/servicio(s)',
-                    style: const TextStyle(fontSize: 11, color: kTextGray),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 56, height: 56,
+                        color: Colors.grey.shade100,
+                        child: ItemImage(item: item),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Artículo Solicitado:',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item['item'] ?? '',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark),
+                          ),
+                          const SizedBox(height: 4),
+                          Builder(builder: (context) {
+                            final esServServ = esServicioServicio;
+                            final esProdServ = esProductoServicio;
+                            final label = esServServ
+                                ? '🤝 Servicio ↔ Servicio'
+                                : esProdServ
+                                    ? '📦🔧 Producto ↔ Servicio'
+                                    : '📦📦 Producto ↔ Producto';
+                            final color = esServServ
+                                ? Colors.blue
+                                : esProdServ
+                                    ? Colors.orange
+                                    : Colors.green;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: color.withOpacity(0.3)),
+                              ),
+                              child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color.shade700)),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (itemsOfrecidosDetalles.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Artículos Ofrecidos a cambio:',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray),
                   ),
-                if (_neg!['monto_oferta'] != null && _neg!['monto_oferta'] > 0)
-                  Text(
-                    'Monto adicional: RD\$ ${_neg!['monto_oferta']}',
-                    style: const TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: itemsOfrecidosDetalles.map((offeredItem) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: SizedBox(
+                                width: 22, height: 22,
+                                child: ItemImage(item: offeredItem),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                offeredItem['item'] ?? '',
+                                style: const TextStyle(fontSize: 11, color: kTextDark, fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
-                if (_neg!['monto_contra_oferta'] != null && _neg!['monto_contra_oferta'] > 0)
-                  Text(
-                    'Monto Contraoferta: RD\$ ${_neg!['monto_contra_oferta']}',
-                    style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.bold),
+                ],
+                if ((_neg!['monto_oferta'] != null && _neg!['monto_oferta'] > 0) || (_neg!['monto_contra_oferta'] != null && _neg!['monto_contra_oferta'] > 0)) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (_neg!['monto_oferta'] != null && _neg!['monto_oferta'] > 0)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: kPrimary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: kPrimary.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.add_circle_outline, size: 12, color: kPrimary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Monto Adicional: RD\$ ${_neg!['monto_oferta']}',
+                                style: const TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (_neg!['monto_contra_oferta'] != null && _neg!['monto_contra_oferta'] > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.swap_horizontal_circle_outlined, size: 12, color: Colors.orange),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Contraoferta: RD\$ ${_neg!['monto_contra_oferta']}',
+                                style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
+                ],
               ],
             ),
           ),
@@ -732,59 +873,76 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
             const LinearProgressIndicator(color: kPrimary)
           else if (estado.toString().toLowerCase() != 'cancelado' && estado.toString().toLowerCase() != 'rechazado')
             Container(
-              padding: const EdgeInsets.all(12),
-              color: Colors.orange.shade50,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Acciones pendientes / Estado:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: kTextDark),
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.amber.shade800),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Acciones pendientes / Estado:',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber.shade900),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
                       // RECEPTOR: Inicial o contraoferta
                       if ((estado == 'Inicial' || estado == 'contraoferta') && isReceptor) ...[
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/aceptar'),
+                          icon: const Icon(Icons.check, color: Colors.white, size: 16),
+                          label: const Text('Aceptar propuesta', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: const Text('✓ Aceptar propuesta', style: TextStyle(color: Colors.white)),
                         ),
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/rechazar'),
+                          icon: const Icon(Icons.close, color: Colors.white, size: 16),
+                          label: const Text('Rechazar', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text('✕ Rechazar', style: TextStyle(color: Colors.white)),
                         ),
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: _mostrarContraofertaDialog,
+                          icon: const Icon(Icons.edit, color: Colors.white, size: 16),
+                          label: const Text('Contraoferta', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                          child: const Text('Contraoferta', style: TextStyle(color: Colors.white)),
                         ),
                       ],
 
                       // EMISOR: Contraoferta
                       if (estado == 'contraoferta' && isEmisor) ...[
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/aceptar-como-emisor'),
+                          icon: const Icon(Icons.check, color: Colors.white, size: 16),
+                          label: const Text('Aceptar contraoferta', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: const Text('✓ Aceptar contraoferta', style: TextStyle(color: Colors.white)),
                         ),
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/rechazar'),
+                          icon: const Icon(Icons.close, color: Colors.white, size: 16),
+                          label: const Text('Rechazar', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text('✕ Rechazar', style: TextStyle(color: Colors.white)),
                         ),
                       ],
 
                       // EMISOR: Cancelar propuesta inicial
                       if ((estado == 'Inicial' || estado == 'contraoferta') && isEmisor) ...[
-                        OutlinedButton(
+                        OutlinedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/cancelar'),
+                          icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                          label: const Text('Cancelar propuesta', style: TextStyle(color: Colors.red)),
                           style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
-                          child: const Text('Cancelar propuesta', style: TextStyle(color: Colors.red)),
                         ),
                       ],
 
@@ -792,17 +950,24 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                       if (estado == 'aceptado' && !miConfirmado) ...[
                         ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/${isEmisor ? 'confirmar-emisor' : 'confirmar-receptor'}'),
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          label: const Text('✅ Aprobar intercambio', style: TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.check, color: Colors.white, size: 16),
+                          label: const Text('Aprobar intercambio', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                         ),
                       ],
                       
                       // YA APROBÉ
                       if (estado == 'aceptado' && miConfirmado && !otroConfirmado) ...[
-                        const Text(
-                          '⏳ Ya aprobaste. Esperando a la otra parte...',
-                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.brown),
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.brown)),
+                            SizedBox(width: 8),
+                            Text(
+                              'Ya aprobaste. Esperando a la otra parte...',
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.brown),
+                            ),
+                          ],
                         ),
                       ],
 
@@ -829,7 +994,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                                       // Reload to check if user added a direction
                                       _loadDirecciones().then((_) => setState(() {}));
                                     },
-                                    icon: const Icon(Icons.add_location_alt, color: Colors.white),
+                                    icon: const Icon(Icons.add_location_alt, color: Colors.white, size: 16),
                                     label: const Text('Agregar Dirección', style: TextStyle(color: Colors.white)),
                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                   ),
@@ -839,8 +1004,8 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                         else
                            ElevatedButton.icon(
                              onPressed: () => _mostrarPagoDialog(),
-                             icon: const Icon(Icons.payment, color: Colors.white),
-                             label: const Text('💳 Realizar pago de envío', style: TextStyle(color: Colors.white)),
+                             icon: const Icon(Icons.payment, color: Colors.white, size: 16),
+                             label: const Text('Pagar costo de envío', style: TextStyle(color: Colors.white)),
                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                            ),
                       ],
@@ -850,28 +1015,35 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                         if (soyDuenioProducto && !modoYaElegido) ...[
                           ElevatedButton.icon(
                             onPressed: () => _mostrarPagoDialog(modoEntrega: 'envio'),
-                            icon: const Icon(Icons.local_shipping, color: Colors.white),
-                            label: const Text('🚚 Enviar y pagar', style: TextStyle(color: Colors.white)),
+                            icon: const Icon(Icons.local_shipping, color: Colors.white, size: 16),
+                            label: const Text('Enviar y pagar', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                           ),
                           ElevatedButton.icon(
                             onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/modo-entrega', body: {'modo': 'retiro'}),
-                            icon: const Icon(Icons.handshake, color: Colors.white),
-                            label: const Text('🤝 Retiro en persona', style: TextStyle(color: Colors.white)),
+                            icon: const Icon(Icons.handshake, color: Colors.white, size: 16),
+                            label: const Text('Retiro en persona', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                           ),
                         ] else if (soyDuenioProducto && modoYaElegido && modoEntrega == 'envio' && !miPago) ...[
                            ElevatedButton.icon(
                             onPressed: () => _mostrarPagoDialog(),
-                            icon: const Icon(Icons.payment, color: Colors.white),
-                            label: const Text('💳 Pagar envío', style: TextStyle(color: Colors.white)),
+                            icon: const Icon(Icons.payment, color: Colors.white, size: 16),
+                            label: const Text('Pagar envío', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                           ),
                         ] else if (!soyDuenioProducto && !modoYaElegido) ...[
-                           const Text(
-                            '⏳ Esperando que el dueño del producto elija el modo de entrega.',
-                            style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.brown),
-                          ),
+                           const Row(
+                             mainAxisSize: MainAxisSize.min,
+                             children: [
+                               Icon(Icons.hourglass_empty, size: 14, color: Colors.brown),
+                               SizedBox(width: 6),
+                               Text(
+                                 'Esperando modo de entrega del dueño.',
+                                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.brown),
+                               ),
+                             ],
+                           ),
                         ]
                       ],
 
@@ -879,16 +1051,16 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                       if (ambosConfirmados && modoYaElegido && !soyDuenioProducto && !entregaConfirmada) ...[
                         ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/confirmar-entrega'),
-                          icon: const Icon(Icons.check_circle, color: Colors.white),
-                          label: Text(modoEntrega == 'envio' ? '✅ Confirmar recepción del producto' : '✅ Confirmar retiro del producto', style: const TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                          label: Text(modoEntrega == 'envio' ? 'Confirmar recepción del producto' : 'Confirmar retiro del producto', style: const TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                         ),
                       ],
                       if (estado == 'en_envio' && !entregaConfirmada) ...[ // Caso producto vs producto general
                         ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/confirmar-entrega'),
-                          icon: const Icon(Icons.check_circle, color: Colors.white),
-                          label: const Text('✅ Confirmar recepción del producto', style: TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                          label: const Text('Confirmar recepción del producto', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                         ),
                       ],
@@ -897,23 +1069,29 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                       if (ambosConfirmados && esServicioServicio && estado != 'completado') ...[
                         ElevatedButton.icon(
                           onPressed: () => _ejecutarAccion('/negociaciones/${widget.negociacionId}/completar'),
-                          icon: const Icon(Icons.check_circle, color: Colors.white),
-                          label: const Text('✅ Marcar como completado', style: TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                          label: const Text('Marcar como completado', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                         ),
                       ],
 
                       // ESTADO COMPLETADO Y RATING
                       if (estado == 'completado') ...[
-                        const Text(
-                          '🎉 Intercambio completado.',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Intercambio completado.',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                            ),
+                          ],
                         ),
-                        // Nota: El sistema de rating iría aquí o en un modal separado
                         ElevatedButton.icon(
                           onPressed: _mostrarRatingDialog,
-                          icon: const Icon(Icons.star, color: Colors.white),
-                          label: const Text('⭐ Calificar experiencia', style: TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.star, color: Colors.white, size: 16),
+                          label: const Text('Calificar experiencia', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                         ),
                       ],

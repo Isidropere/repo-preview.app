@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import '../widgets/item_image.dart';
 import 'negociacion_detalle_screen.dart';
 
 /// Pantalla "Mis Intercambios" — lista negociaciones activas del usuario
@@ -197,22 +198,21 @@ class _NegList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(children: [
-                    // Icono intercambio
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.08),
-                        shape: BoxShape.circle,
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 52, height: 52,
+                        color: Colors.grey.shade100,
+                        child: ItemImage(item: item),
                       ),
-                      child: const Icon(Icons.swap_horiz, color: kPrimary, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(
                           item['item'] ?? 'Artículo #${neg['id_negociacion']}',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -221,36 +221,87 @@ class _NegList extends StatelessWidget {
                           'Con: ${receptor['nombres'] ?? ''} ${receptor['apellidos'] ?? ''}',
                           style: TextStyle(fontSize: 11, color: kTextGray),
                         ),
-                        const SizedBox(height: 4),
-                        // Tipo de intercambio
-                        Builder(builder: (context) {
-                          final esServServ = neg['es_servicio_servicio'] == true;
-                          final esProdServ = neg['es_producto_servicio'] == true;
-                          final label = esServServ
-                              ? '🤝 Servicio ↔ Servicio'
-                              : esProdServ
-                                  ? '📦🔧 Producto ↔ Servicio'
-                                  : '📦📦 Producto ↔ Producto';
-                          final color = esServServ
-                              ? Colors.blue
-                              : esProdServ
-                                  ? Colors.orange
-                                  : Colors.green;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: color.withOpacity(0.3)),
-                            ),
-                            child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color.shade700)),
-                          );
-                        }),
-                        if (neg['monto_oferta'] != null && (neg['monto_oferta'] as num) > 0) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Oferta: RD\$ ${neg['monto_oferta']}',
-                            style: const TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Builder(builder: (context) {
+                              final esServServ = neg['es_servicio_servicio'] == true;
+                              final esProdServ = neg['es_producto_servicio'] == true;
+                              final label = esServServ
+                                  ? '🤝 Servicio ↔ Servicio'
+                                  : esProdServ
+                                      ? '📦🔧 Producto ↔ Servicio'
+                                      : '📦📦 Producto ↔ Producto';
+                              final color = esServServ
+                                  ? Colors.blue
+                                  : esProdServ
+                                      ? Colors.orange
+                                      : Colors.green;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: color.withOpacity(0.3)),
+                                ),
+                                child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color.shade700)),
+                              );
+                            }),
+                            if (neg['monto_oferta'] != null && (neg['monto_oferta'] as num) > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: kPrimary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: kPrimary.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  '+ RD\$ ${neg['monto_oferta']}',
+                                  style: const TextStyle(fontSize: 9, color: kPrimary, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (neg['items_ofrecidos_detalles'] != null && (neg['items_ofrecidos_detalles'] as List).isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text('Ofrece a cambio:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray)),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: (neg['items_ofrecidos_detalles'] as List).map((offeredItem) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: SizedBox(
+                                        width: 16, height: 16,
+                                        child: ItemImage(item: offeredItem),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        offeredItem['item'] ?? '',
+                                        style: const TextStyle(fontSize: 10, color: kTextDark, fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ],
                       ]),

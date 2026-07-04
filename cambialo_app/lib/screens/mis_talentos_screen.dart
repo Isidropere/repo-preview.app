@@ -53,7 +53,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
       _loading = true;
       _errorMsg = null;
     });
-    _loadTarifa();
+    await _loadTarifa();
     try {
       final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
       if (res.statusCode == 200) {

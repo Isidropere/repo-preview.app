@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _user = AuthService.currentUser;
     _initAll();
     _startCarouselTimer();
   }
@@ -95,16 +96,27 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /// Carga usuario e items en paralelo — antes era secuencial
+  /// Carga usuario e items de forma óptima
   Future<void> _initAll() async {
     setState(() { _loading = true; _error = false; });
     try {
       final loggedIn = await AuthService.isLoggedIn();
-      // Usuario e items se cargan al mismo tiempo
+      
+      // 1. Cargar el usuario de la cache/SharedPreferences de inmediato
+      if (loggedIn) {
+        final cachedUser = await AuthService.me();
+        if (cachedUser != null && mounted) {
+          setState(() {
+            _user = cachedUser;
+          });
+        }
+      }
+
+      // 2. Cargar los items en paralelo y refrescar el usuario de fondo si es necesario
       final results = await Future.wait([
         ApiClient.get('/items?tipo=2&page=1', auth: loggedIn),
         ApiClient.get('/items?tipo=1&page=1', auth: loggedIn),
-        AuthService.me(),
+        if (loggedIn) AuthService.me(forceRefresh: true) else Future.value(null),
       ]);
       if (!mounted) return;
 
@@ -119,12 +131,14 @@ class _HomeScreenState extends State<HomeScreen> {
         if (ventaRes.statusCode == 200) {
           _venta = jsonDecode(ventaRes.body)['data'] ?? [];
         }
-        _user    = user;
+        if (user != null) {
+          _user = user;
+        }
         _loading = false;
       });
 
       // Notificaciones en background — no bloquean la UI
-      if (user != null) _loadBadges();
+      if (_user != null) _loadBadges();
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = true; });
     }

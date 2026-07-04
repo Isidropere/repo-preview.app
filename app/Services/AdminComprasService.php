@@ -47,6 +47,7 @@ class AdminComprasService
             'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
             'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ii')->withQueryString(),
             'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
+            'ventasConfirmadas'          => $this->queryVentasConfirmadas($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_vc')->withQueryString(),
             'totalCompras'               => PagoCompra::count(),
             'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
             'totalIntercambios'          => Negociacion::count(),
@@ -248,6 +249,35 @@ class AdminComprasService
             }
             if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
             if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
+        }
+
+        return $query;
+    }
+
+    private function queryVentasConfirmadas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    {
+        $query = PagoCompra::with([
+            'pagoItems.item.imagenes',
+            'pagoItems.item.usuario',
+            'carrito.usuario',
+            'direccion.provincia',
+            'direccion.municipio'
+        ])
+        ->whereIn('estatus', ['aprobado', 'enviado', 'entregado'])
+        ->orderByDesc('id_pago_compra');
+
+        if ($tab === 'intercambios_confirmados') {
+            if ($buscar) {
+                $query->where(fn($q) => $q
+                    ->where('id_pago_compra', 'like', "%$buscar%")
+                    ->orWhereHas('carrito.usuario', fn($q2) => $q2
+                        ->where('nombres', 'like', "%$buscar%")
+                        ->orWhere('email', 'like', "%$buscar%"))
+                    ->orWhereHas('pagoItems.item', fn($q2) => $q2
+                        ->where('item', 'like', "%$buscar%")));
+            }
+            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
         }
 
         return $query;

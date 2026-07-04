@@ -35,6 +35,11 @@ class _CuentaScreenState extends State<CuentaScreen> {
   @override
   void initState() {
     super.initState();
+    final cached = AuthService.currentUser;
+    if (cached != null) {
+      _user = cached;
+      _loading = false;
+    }
     _load();
   }
 

@@ -13,6 +13,24 @@ class NegociacionApiController extends Controller
         private NegociacionService $negociacionService
     ) {}
 
+    private function formatItem($item)
+    {
+        if (!$item) return null;
+        $arr = is_array($item) ? $item : $item->toArray();
+        $imagenes = $item['imagenes'] ?? [];
+        if (count($imagenes) > 0) {
+            $first = $imagenes[0];
+            $nombre = $first['nombre'] ?? '';
+            $ruta = $first['ruta'] ?? 'imgs/articulos/items';
+            $arr['image_url'] = file_exists(public_path("{$ruta}/{$nombre}"))
+                ? url("{$ruta}/{$nombre}")
+                : url("storage/{$ruta}/{$nombre}");
+        } else {
+            $arr['image_url'] = url('storage/imgs/defaults/producto_default.svg');
+        }
+        return $arr;
+    }
+
     /** GET /api/negociaciones — lista negociaciones del usuario */
     public function index(Request $request)
     {
@@ -26,13 +44,7 @@ class NegociacionApiController extends Controller
                 'usuarioReceptor:id,nombres,apellidos',
             ])
             ->orderByDesc('id_negociacion')
-            ->get()
-            ->map(function ($neg) {
-                $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
-                $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
-                $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
-                return $neg;
-            });
+            ->get();
 
         $comoReceptor = Negociacion::where('usuario_receptor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
@@ -42,13 +54,63 @@ class NegociacionApiController extends Controller
                 'usuario:id,nombres,apellidos',
             ])
             ->orderByDesc('id_negociacion')
-            ->get()
-            ->map(function ($neg) {
-                $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
-                $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
-                $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
-                return $neg;
-            });
+            ->get();
+
+        // Cargar todos los detalles de items ofrecidos
+        $itemIds = [];
+        foreach ($comoEmisor as $neg) {
+            $itemIds = array_merge($itemIds, $neg->items_ofrecidos ?? []);
+        }
+        foreach ($comoReceptor as $neg) {
+            $itemIds = array_merge($itemIds, $neg->items_ofrecidos ?? []);
+        }
+        $itemIds = array_unique($itemIds);
+
+        $itemsMap = [];
+        if (!empty($itemIds)) {
+            $itemsMap = \App\Models\Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                ->whereIn('id_item', $itemIds)
+                ->get()
+                ->keyBy('id_item');
+        }
+
+        $comoEmisor = $comoEmisor->map(function ($neg) use ($itemsMap) {
+            $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
+            $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
+            $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
+
+            if ($neg->item) {
+                $neg->item = $this->formatItem($neg->item);
+            }
+
+            $detalles = [];
+            foreach (($neg->items_ofrecidos ?? []) as $id) {
+                if (isset($itemsMap[$id])) {
+                    $detalles[] = $this->formatItem($itemsMap[$id]);
+                }
+            }
+            $neg->items_ofrecidos_detalles = $detalles;
+            return $neg;
+        });
+
+        $comoReceptor = $comoReceptor->map(function ($neg) use ($itemsMap) {
+            $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
+            $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
+            $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
+
+            if ($neg->item) {
+                $neg->item = $this->formatItem($neg->item);
+            }
+
+            $detalles = [];
+            foreach (($neg->items_ofrecidos ?? []) as $id) {
+                if (isset($itemsMap[$id])) {
+                    $detalles[] = $this->formatItem($itemsMap[$id]);
+                }
+            }
+            $neg->items_ofrecidos_detalles = $detalles;
+            return $neg;
+        });
 
         return response()->json([
             'como_emisor'   => $comoEmisor,
@@ -77,6 +139,22 @@ class NegociacionApiController extends Controller
         $negociacion->es_servicio_servicio = $this->negociacionService->esServicioServicio($negociacion);
         $negociacion->es_producto_servicio = $this->negociacionService->esProductoServicio($negociacion);
         $negociacion->es_producto_producto = $this->negociacionService->esProductoProducto($negociacion);
+
+        if ($negociacion->item) {
+            $negociacion->item = $this->formatItem($negociacion->item);
+        }
+
+        $offeredIds = $negociacion->items_ofrecidos ?? [];
+        $detalles = [];
+        if (!empty($offeredIds)) {
+            $items = \App\Models\Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                ->whereIn('id_item', $offeredIds)
+                ->get();
+            foreach ($items as $it) {
+                $detalles[] = $this->formatItem($it);
+            }
+        }
+        $negociacion->items_ofrecidos_detalles = $detalles;
 
         return response()->json($negociacion);
     }
