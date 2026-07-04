@@ -90,11 +90,17 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
   Future<void> _loadDirecciones() async {
     final res = await ApiClient.get('/direcciones', auth: true);
     if (res.statusCode == 200) {
-      final body = jsonDecode(res.body);
-      final List dirs = body['data'] ?? [];
+      final decoded = jsonDecode(res.body);
+      // API returns a plain array [], not {data:[]}
+      final List dirs = decoded is List
+          ? decoded
+          : (decoded['data'] as List? ?? []);
       _tieneDireccion = dirs.isNotEmpty;
       if (_tieneDireccion) {
-        final defaultDir = dirs.firstWhere((d) => d['es_predeterminada'] == 1, orElse: () => dirs.first);
+        final defaultDir = dirs.firstWhere(
+          (d) => d['es_predeterminada'] == 1 || d['es_predeterminada'] == true,
+          orElse: () => dirs.first,
+        );
         _municipioUsuario = defaultDir['municipio']?['municipio'] ?? '';
       }
     }
