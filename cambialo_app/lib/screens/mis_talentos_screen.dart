@@ -471,13 +471,13 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                               final String statusText = statusVal == 1
                                   ? 'Activo'
                                   : (statusVal == 2
-                                      ? 'Inactivo'
-                                      : (statusVal == 0 ? 'Pendiente de Pago' : 'Pausado'));
+                                      ? 'Pausado'
+                                      : (statusVal == 0 ? 'Pendiente de Pago' : 'Inactivo'));
                               final Color badgeColor = statusVal == 1
                                   ? Colors.green
                                   : (statusVal == 2
-                                      ? Colors.red
-                                      : (statusVal == 0 ? Colors.orange : Colors.yellow.shade800));
+                                      ? Colors.orange
+                                      : (statusVal == 0 ? Colors.red.shade700 : Colors.grey));
 
                               final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
                               final String transText = transVal == 1

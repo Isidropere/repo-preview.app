@@ -512,6 +512,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               content: Text('Redirigiendo a la pasarela de pago seguro...'),
               backgroundColor: Colors.blue,
             ));
+            Navigator.pop(context, true);
           } else {
             setState(() => _error = 'No se pudo abrir la pasarela de pago.');
             return;
