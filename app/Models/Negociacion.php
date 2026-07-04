@@ -57,4 +57,40 @@ class Negociacion extends Model
         return $this->hasMany(NegociacionTrazabilidad::class, 'id_negociacion', 'id_negociacion')
             ->orderBy('created_at', 'asc');
     }
+
+    public function getItemsOfrecidosAttribute($value)
+    {
+        if (!$value) {
+            return [];
+        }
+        $decoded = json_decode($value, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        
+        // If it is associative (meaning any key is not an integer from 0 to N-1, or we can check if keys are item IDs):
+        if (array_keys($decoded) !== range(0, count($decoded) - 1)) {
+            return array_map('intval', array_keys($decoded));
+        }
+        
+        return array_map('intval', $decoded);
+    }
+
+    public function getCantidadOfrecida(int $idItem): int
+    {
+        $raw = $this->attributes['items_ofrecidos'] ?? null;
+        if (!$raw) {
+            return 1;
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return 1;
+        }
+        
+        if (array_keys($decoded) !== range(0, count($decoded) - 1)) {
+            return (int) ($decoded[$idItem] ?? 1);
+        }
+        
+        return in_array($idItem, $decoded) ? 1 : 0;
+    }
 }

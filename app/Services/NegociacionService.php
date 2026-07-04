@@ -89,6 +89,18 @@ class NegociacionService
             }
         }
 
+        $itemsOfrecidos = !empty($datos['items_ofrecidos']) ? $datos['items_ofrecidos'] : [];
+        $cantidades = !empty($datos['cantidades_ofrecidas']) ? $datos['cantidades_ofrecidas'] : [];
+
+        $itemsConCantidad = [];
+        if (!empty($itemsOfrecidos)) {
+            foreach ($itemsOfrecidos as $idItem) {
+                $qty = isset($cantidades[$idItem]) ? (int) $cantidades[$idItem] : 1;
+                if ($qty < 1) $qty = 1;
+                $itemsConCantidad[$idItem] = $qty;
+            }
+        }
+
         $negociacion = Negociacion::create([
             'receptor_item_id'    => $receptorItem->id_item,
             'id_color'            => $datos['id_color'] ?? null,
@@ -99,7 +111,7 @@ class NegociacionService
             'monto_oferta'        => $datos['monto_oferta'] ?? null,
             'estado'              => 'Inicial',
             'fecha_creacion'      => now(),
-            'items_ofrecidos'     => !empty($datos['items_ofrecidos']) ? $datos['items_ofrecidos'] : null,
+            'items_ofrecidos'     => !empty($itemsConCantidad) ? $itemsConCantidad : null,
         ]);
 
         $this->crearMensaje(

@@ -78,6 +78,7 @@ class NegociacionApiController extends Controller
             'monto_oferta'    => 'nullable|numeric|min:0',
             'items_ofrecidos' => 'nullable|array',
             'items_ofrecidos.*' => 'integer|exists:items,id_item',
+            'cantidades_ofrecidas' => 'nullable|array',
         ]);
 
         $resultado = $this->negociacionService->crear($request->user()->id, $validated);

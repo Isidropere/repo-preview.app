@@ -34,6 +34,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function onCheckboxChange(chk) {
+    var itemId = chk.value;
+    var qtyContainer = document.getElementById('qty-container-' + itemId);
+    if (chk.checked) {
+        qtyContainer.style.display = 'flex';
+    } else {
+        qtyContainer.style.display = 'none';
+        var input = document.getElementById('qty-input-' + itemId);
+        input.value = 1;
+        updateQuedan(itemId);
+    }
+}
+
+function updateQuedan(itemId) {
+    var input = document.getElementById('qty-input-' + itemId);
+    var max = parseInt(input.getAttribute('data-max')) || 1;
+    var val = parseInt(input.value) || 1;
+    if (val < 1) { val = 1; input.value = 1; }
+    if (val > max) { val = max; input.value = max; }
+    var quedan = max - val;
+    var textSpan = document.getElementById('qty-quedan-' + itemId);
+    textSpan.textContent = 'Quedan: ' + quedan;
+}
+
 async function cargarMisProductosIntercambio() {
     var lista = document.getElementById('misProductosLista');
     lista.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">Cargando tus productos...</p>';
@@ -56,10 +80,9 @@ async function cargarMisProductosIntercambio() {
         }
         lista.innerHTML = list.map(function(i) {
             var qty = i.inventarios ? parseInt(i.inventarios.cantidad) : 0;
-            return '<label style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;cursor:pointer;background:#fff;transition:all .15s;" ' +
-                'onmouseover="this.style.borderColor=\'#10b981\';this.style.background=\'#f0fdf4\'" ' +
-                'onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">' +
-                '<input type="checkbox" value="' + i.id_item + '" class="chk-intercambio" style="width:1.1rem;height:1.1rem;accent-color:#f58634;flex-shrink:0;cursor:pointer;">' +
+            return '<div style="display:flex;flex-direction:column;gap:0.4rem;padding:0.65rem 0.75rem;border:2px solid #e5e7eb;border-radius:0.75rem;background:#fff;transition:all .15s;" class="item-intercambio-container" id="item-box-' + i.id_item + '">' +
+                '<label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;margin:0;">' +
+                '<input type="checkbox" value="' + i.id_item + '" class="chk-intercambio" style="width:1.1rem;height:1.1rem;accent-color:#f58634;flex-shrink:0;cursor:pointer;" onchange="onCheckboxChange(this)">' +
                 '<div style="flex:1;min-width:0;">' +
                 '<p style="font-size:0.85rem;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + i.item + '</p>' +
                 '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.1rem;">' +
@@ -68,7 +91,15 @@ async function cargarMisProductosIntercambio() {
                 '</div>' +
                 '</div>' +
                 '<span style="font-size:0.65rem;background:#d1fae5;color:#065f46;padding:0.2rem 0.5rem;border-radius:9999px;font-weight:700;flex-shrink:0;">OFRECER</span>' +
-                '</label>';
+                '</label>' +
+                '<div id="qty-container-' + i.id_item + '" style="display:none;align-items:center;justify-content:space-between;border-top:1px dashed #e5e7eb;padding-top:0.4rem;margin-top:0.2rem;gap:0.5rem;">' +
+                '<div style="display:flex;align-items:center;gap:0.4rem;">' +
+                '<span style="font-size:0.75rem;color:#4b5563;font-weight:600;">Cant. a ofrecer:</span>' +
+                '<input type="number" id="qty-input-' + i.id_item + '" value="1" min="1" max="' + qty + '" data-max="' + qty + '" class="qty-intercambio" style="width:3.5rem;padding:0.15rem 0.35rem;font-size:0.75rem;border:1.5px solid #d1d5db;border-radius:0.375rem;outline:none;" oninput="updateQuedan(' + i.id_item + ')">' +
+                '</div>' +
+                '<span id="qty-quedan-' + i.id_item + '" style="font-size:0.75rem;color:#f97316;font-weight:700;">Quedan: ' + (qty - 1) + '</span>' +
+                '</div>' +
+                '</div>';
         }).join('');
     } catch (e) {
         lista.innerHTML = '<p class="text-center text-red-400 text-sm py-4">Error al cargar productos.</p>';
@@ -101,6 +132,13 @@ async function enviarPropuestaIntercambio() {
         return;
     }
 
+    // Collect quantities
+    var quantities = {};
+    checks.forEach(function(id) {
+        var input = document.getElementById('qty-input-' + id);
+        quantities[id] = parseInt(input.value) || 1;
+    });
+
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Enviando...';
 
@@ -115,7 +153,8 @@ async function enviarPropuestaIntercambio() {
             body: JSON.stringify({
                 item_id: _intercambioItemId,
                 mensaje: mensaje,
-                items_ofrecidos: checks
+                items_ofrecidos: checks,
+                cantidades_ofrecidas: quantities
             })
         });
         var data = await resp.json();
