@@ -49,15 +49,15 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
   Future<void> _eliminar(int idItem, String nombre) async {
     final ok = await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (dialogCtx) => AlertDialog(
             title: const Text('Eliminar artículo'),
             content: Text('¿Seguro que deseas eliminar "$nombre"?'),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
+                  onPressed: () => Navigator.pop(dialogCtx, false),
                   child: const Text('Cancelar')),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogCtx, true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
               ),

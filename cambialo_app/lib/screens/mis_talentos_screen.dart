@@ -50,7 +50,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
   Future<void> _eliminar(int idItem, String nombre) async {
     final ok = await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (dialogCtx) => AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
@@ -112,12 +112,12 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(dialogCtx, false),
                 child: const Text('Cancelar',
                     style: TextStyle(color: Colors.grey, fontSize: 13)),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogCtx, true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
