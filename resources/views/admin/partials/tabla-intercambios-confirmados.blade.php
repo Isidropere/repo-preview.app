@@ -363,7 +363,11 @@
                                 @if($neg->items_ofrecidos)
                                     <div class="flex flex-wrap gap-1 mt-1">
                                         @foreach(\App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() as $io)
-                                        <span class="inline-flex items-center text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium border border-blue-100">{{ $io->item }}</span>
+                                        @php $cantIo = $neg->getCantidadOfrecida($io->id_item); @endphp
+                                        <span class="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium border border-blue-100">
+                                            {{ $io->item }}
+                                            @if($cantIo > 1)<span class="bg-blue-600 text-white text-[9px] font-bold rounded-full px-1 ml-0.5">× {{ $cantIo }}</span>@endif
+                                        </span>
                                         @endforeach
                                     </div>
                                 @else

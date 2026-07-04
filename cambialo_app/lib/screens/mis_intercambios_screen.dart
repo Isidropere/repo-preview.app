@@ -272,6 +272,7 @@ class _NegList extends StatelessWidget {
                             spacing: 4,
                             runSpacing: 4,
                             children: (neg['items_ofrecidos_detalles'] as List).map((offeredItem) {
+                              final cantidadOfrecida = offeredItem['cantidad_ofrecida'] ?? 1;
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                 decoration: BoxDecoration(
@@ -298,6 +299,20 @@ class _NegList extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    if (cantidadOfrecida > 1) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: kPrimary,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          '× $cantidadOfrecida',
+                                          style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               );

@@ -127,8 +127,12 @@
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Ofrecido a cambio:</p>
                     <div class="flex flex-col gap-1.5">
                         @foreach(\App\Models\Item::whereIn('id_item', $negociacion->items_ofrecidos)->get() as $io)
-                        <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1.5 rounded-lg border border-blue-100 font-medium leading-tight">
+                        @php $cantidadIo = $negociacion->getCantidadOfrecida($io->id_item); @endphp
+                        <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1.5 rounded-lg border border-blue-100 font-medium leading-tight flex items-center gap-1.5">
                             {{ $io->item }}
+                            @if($cantidadIo > 1)
+                            <span class="inline-flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[20px]">× {{ $cantidadIo }}</span>
+                            @endif
                         </span>
                         @endforeach
                     </div>

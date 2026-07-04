@@ -86,7 +86,9 @@ class NegociacionApiController extends Controller
             $detalles = [];
             foreach (($neg->items_ofrecidos ?? []) as $id) {
                 if (isset($itemsMap[$id])) {
-                    $detalles[] = $this->formatItem($itemsMap[$id]);
+                    $detail = $this->formatItem($itemsMap[$id]);
+                    $detail['cantidad_ofrecida'] = $neg->getCantidadOfrecida((int)$id);
+                    $detalles[] = $detail;
                 }
             }
             $neg->items_ofrecidos_detalles = $detalles;
@@ -105,7 +107,9 @@ class NegociacionApiController extends Controller
             $detalles = [];
             foreach (($neg->items_ofrecidos ?? []) as $id) {
                 if (isset($itemsMap[$id])) {
-                    $detalles[] = $this->formatItem($itemsMap[$id]);
+                    $detail = $this->formatItem($itemsMap[$id]);
+                    $detail['cantidad_ofrecida'] = $neg->getCantidadOfrecida((int)$id);
+                    $detalles[] = $detail;
                 }
             }
             $neg->items_ofrecidos_detalles = $detalles;
@@ -151,7 +155,9 @@ class NegociacionApiController extends Controller
                 ->whereIn('id_item', $offeredIds)
                 ->get();
             foreach ($items as $it) {
-                $detalles[] = $this->formatItem($it);
+                $detail = $this->formatItem($it);
+                $detail['cantidad_ofrecida'] = $negociacion->getCantidadOfrecida($it->id_item);
+                $detalles[] = $detail;
             }
         }
         $negociacion->items_ofrecidos_detalles = $detalles;

@@ -784,6 +784,7 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                     spacing: 6,
                     runSpacing: 6,
                     children: itemsOfrecidosDetalles.map((offeredItem) {
+                      final cantidadOfrecida = offeredItem['cantidad_ofrecida'] ?? 1;
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -810,6 +811,20 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            if (cantidadOfrecida > 1) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: kPrimary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '× $cantidadOfrecida',
+                                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       );

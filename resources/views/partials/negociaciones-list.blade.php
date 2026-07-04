@@ -49,7 +49,11 @@
             <div class="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs">
                 <p class="font-semibold text-gray-700 mb-1">Productos ofrecidos:</p>
                 @foreach(\App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() as $itemOfrecido)
-                <span class="inline-block bg-white border border-gray-200 rounded px-2 py-0.5 mr-1 mb-1">{{ $itemOfrecido->item }}</span>
+                @php $cantIO = $neg->getCantidadOfrecida($itemOfrecido->id_item); @endphp
+                <span class="inline-flex items-center gap-1 bg-white border border-gray-200 rounded px-2 py-0.5 mr-1 mb-1">
+                    {{ $itemOfrecido->item }}
+                    @if($cantIO > 1)<span class="bg-blue-600 text-white text-[9px] font-bold rounded-full px-1">× {{ $cantIO }}</span>@endif
+                </span>
                 @endforeach
             </div>
             @endif
