@@ -71,23 +71,23 @@
         {{-- Contenedor de Badges Flotantes --}}
         <div class="absolute top-2 left-2 flex flex-col gap-1.5 z-10 pointer-events-none">
             @if($enCarrito)
-                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider border"
+                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider border"
                       style="background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">
-                    En Carrito
+                    Carrito
                 </span>
             @elseif($enNegociacion)
                 @php
                     $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
                     $hashNeg = \App\Helpers\HashIdHelper::encode($idNeg);
                 @endphp
-                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
-                    En Negociación
+                    Negociación
                 </a>
             @elseif($stock <= 0)
-                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider border"
+                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider border"
                       style="background:#fee2e2; color:#ef4444; border-color:#fca5a5;">
                     Agotado
                 </span>
