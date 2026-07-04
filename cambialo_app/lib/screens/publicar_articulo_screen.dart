@@ -644,6 +644,8 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -661,18 +663,55 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Indicador de pasos
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _stepIndicator(1, 'Info', _step >= 1),
-                      _stepDivider(_step >= 2),
-                      _stepIndicator(2, 'Multimedia', _step >= 2),
-                      _stepDivider(_step >= 3),
-                      _stepIndicator(3, 'Detalles', _step >= 3),
-                    ],
+                  // Nuevo Indicador de pasos moderno
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100, width: 1.5),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _step == 1
+                                  ? 'Paso 1 de 3: Información Básica'
+                                  : (_step == 2 ? 'Paso 2 de 3: Multimedia' : 'Paso 3 de 3: Detalles'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: kTextDark,
+                              ),
+                            ),
+                            Text(
+                              '${(_step / 3.0 * 100).toInt()}% completado',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: kPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _step / 3.0,
+                            backgroundColor: kPrimary.withOpacity(0.1),
+                            color: kPrimary,
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   if (_step == 1) _buildStep1(),
                   if (_step == 2) _buildStep2(),
@@ -683,44 +722,32 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
     );
   }
 
-  Widget _stepIndicator(int stepNum, String title, bool active) => Column(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: active ? kPrimary : Colors.grey.shade300,
-            child: Text(
-              stepNum.toString(),
-              style: TextStyle(color: active ? Colors.white : kTextGray, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 10, color: active ? kTextDark : kTextGray, fontWeight: FontWeight.w500)),
-        ],
-      );
-
-  Widget _stepDivider(bool active) => Container(
-        width: 40,
-        height: 2,
-        margin: const EdgeInsets.only(left: 8, right: 8, bottom: 12),
-        color: active ? kPrimary : Colors.grey.shade300,
-      );
-
   Widget _buildStep1() => Form(
         key: _formKey,
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _titulo('Información básica'),
-              const SizedBox(height: 12),
+              const Text(
+                'Información básica',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+              ),
+              const SizedBox(height: 16),
               _campo(_nombreCtrl, 'Nombre del artículo *', required: true),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               // Precio y Descuento en fila
               Row(
@@ -729,13 +756,13 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   Expanded(
                     child: _campo(_precioCtrl, (_tipoTrans == 1 || _tipoTrans == 3) ? 'Precio (RD\$) *' : 'Precio (RD\$) (Opcional)', required: false, keyboardType: TextInputType.number),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _campo(_descuentoCtrl, 'Descuento (%)', required: false, keyboardType: TextInputType.number),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Cantidad y Categoría en fila
               Row(
@@ -745,17 +772,27 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     flex: 1,
                     child: _campo(_cantidadCtrl, 'Cantidad *', required: true, keyboardType: TextInputType.number),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<int>(
                       value: _idCategoria,
+                      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         labelText: 'Categoría *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        prefixIcon: const Icon(Icons.category_outlined, color: kPrimary, size: 20),
                         filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: kPrimary, width: 2),
+                        ),
                       ),
                       items: _categorias.map<DropdownMenuItem<int>>((c) =>
                         DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
@@ -794,7 +831,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
                   child: Row(
                     children: [
                       const Icon(Icons.error_outline, color: Colors.red),
@@ -812,8 +849,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   onPressed: _nextStep,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
                   ),
                   child: const Text('Siguiente', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
@@ -827,14 +865,24 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _titulo('Imágenes del producto'),
-            const SizedBox(height: 12),
+            const Text(
+              'Imágenes del producto',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+            ),
+            const SizedBox(height: 16),
             
             // Selector imagen principal
             GestureDetector(
@@ -843,26 +891,20 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                 width: double.infinity,
                 height: 180,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: (_mainImage != null || _existingMainImageUrl != null)
-                        ? kPrimary.withOpacity(0.5)
-                        : Colors.grey.shade200,
+                        ? kPrimary
+                        : Colors.grey.shade300,
+                    width: (_mainImage != null || _existingMainImageUrl != null) ? 2.0 : 1.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    )
-                  ]
                 ),
                 child: _mainImage != null
                     ? Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             child: _isVideoPath(_mainImage!.path)
                                 ? Container(
                                     width: double.infinity,
@@ -885,7 +927,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                           ),
                           Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               color: Colors.black38,
                             ),
                           ),
@@ -908,7 +950,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                         ? Stack(
                             children: [
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 child: _isVideoPath(_existingMainImageUrl!)
                                     ? Container(
                                         width: double.infinity,
@@ -938,7 +980,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   color: Colors.black38,
                                 ),
                               ),
@@ -961,35 +1003,35 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: kPrimary.withOpacity(0.05),
+                                  color: kPrimary.withOpacity(0.08),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.add_photo_alternate_outlined, size: 32, color: kPrimary),
+                                child: const Icon(Icons.cloud_upload_outlined, size: 36, color: kPrimary),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 12),
                               const Text(
                                 'Imagen Principal *',
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kTextDark),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 4),
                               Text(
-                                'Presiona para subir la imagen de portada',
-                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                                'Toca aquí para seleccionar una imagen o video de portada',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                               ),
                             ],
                           ),
               ),
             ),
             if (widget.itemId != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               const Text(
                 'Nota: Reemplazar la imagen principal eliminará las imágenes adicionales actuales y requerirá volver a subirlas.',
                 style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w500),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Selector imágenes adicionales
             Builder(
@@ -1000,9 +1042,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   children: [
                     Text(
                       'Imágenes adicionales (Opcional) - $totalAdicionales/4',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextDark),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextDark),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     SizedBox(
                       height: 80,
                       child: ListView(
@@ -1016,11 +1058,11 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                                 width: 80,
                                 height: 80,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade300, width: 1.5),
                                 ),
-                                child: const Icon(Icons.add_a_photo_outlined, color: kTextGray, size: 22),
+                                child: const Icon(Icons.add_a_photo_outlined, color: kPrimary, size: 24),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -1036,7 +1078,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               child: Stack(
                                 children: [
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(12),
                                     child: imgUrl != null 
                                         ? (_isVideoPath(imgUrl)
                                             ? Container(
@@ -1050,12 +1092,8 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                                                 width: 80,
                                                 height: 80,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) => Container(
-                                                  color: Colors.grey.shade100,
-                                                  child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
-                                                ),
                                               ))
-                                        : Container(color: Colors.grey.shade200, child: const Icon(Icons.image)),
+                                        : Container(color: Colors.grey),
                                   ),
                                   Positioned(
                                     right: 2,
@@ -1077,7 +1115,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               ),
                             );
                           }),
-                          // Mostrar nuevas
+                          // Mostrar locales
                           ...List.generate(_additionalImages.length, (index) {
                             final img = _additionalImages[index];
                             return Container(
@@ -1087,7 +1125,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               child: Stack(
                                 children: [
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(12),
                                     child: _isVideoPath(img.path)
                                         ? Container(
                                             width: 80,
@@ -1131,7 +1169,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline, color: Colors.red),
@@ -1149,10 +1187,11 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   child: OutlinedButton(
                     onPressed: _prevStep,
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: Colors.grey, width: 1.5),
                     ),
-                    child: const Text('Anterior'),
+                    child: const Text('Anterior', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1161,8 +1200,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     onPressed: _nextStep,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
                     ),
                     child: const Text('Siguiente', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
@@ -1177,33 +1217,65 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _titulo('Detalles del producto'),
-            const SizedBox(height: 16),
+            const Text(
+              'Detalles del producto',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+            ),
+            const SizedBox(height: 20),
 
             // Descripción (max 250 characters, required)
-            _titulo('Descripción *'),
-            const SizedBox(height: 6),
+            const Text(
+              'Descripción *',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextDark),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _descCtrl,
               maxLines: 4,
               maxLength: 250,
+              style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Describe tu producto: estado, características, etc.',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
-                fillColor: Colors.white,
-                counterText: '${_descCtrl.text.length}/250',
+                fillColor: Colors.grey.shade50,
+                contentPadding: const EdgeInsets.all(16),
+                counterText: '',
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: kPrimary, width: 2),
+                ),
               ),
               onChanged: (val) => setState(() {}),
               validator: (v) => (v == null || v.isEmpty) ? 'La descripción es obligatoria' : null,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_descCtrl.text.length}/250 caracteres',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Estado y Modalidad side-by-side
             Row(
@@ -1212,15 +1284,24 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _titulo('Estado *'),
-                      const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
                         value: _condicion,
+                        style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          labelText: 'Estado *',
+                          labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                          prefixIcon: const Icon(Icons.star_outline, color: kPrimary, size: 20),
                           filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: kPrimary, width: 2),
+                          ),
                         ),
                         items: const [
                           DropdownMenuItem(value: 1, child: Text('Nuevo')),
@@ -1238,17 +1319,25 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _titulo('Modalidad de negocio *'),
-                      const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
                         value: _tipoTrans,
-                        hint: const Text('Seleccione una modalidad de negocio', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                        isExpanded: true,
+                        hint: const Text('Modalidad *', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                        style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          labelText: 'Modalidad de negocio *',
+                          labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                          prefixIcon: const Icon(Icons.handshake_outlined, color: kPrimary, size: 20),
                           filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: kPrimary, width: 2),
+                          ),
                         ),
                         items: const [
                           DropdownMenuItem(value: 1, child: Text('Venta')),
@@ -1263,15 +1352,24 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _titulo('Estatus *'),
-            const SizedBox(height: 6),
             DropdownButtonFormField<int>(
               value: _estatus,
+              style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                labelText: 'Estatus *',
+                labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                prefixIcon: const Icon(Icons.toggle_on_outlined, color: kPrimary, size: 20),
                 filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                fillColor: Colors.grey.shade50,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: kPrimary, width: 2),
+                ),
               ),
               items: const [
                 DropdownMenuItem(value: 1, child: Text('Activo')),
@@ -1284,14 +1382,15 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
             // Dimensiones colapsable
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200, width: 1.2),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey.shade50,
               ),
               child: Column(
                 children: [
                   ListTile(
                     title: const Text('Dimensiones y peso *', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
-                    leading: const Icon(Icons.line_weight, color: kPrimary),
+                    leading: const Icon(Icons.square_foot_outlined, color: kPrimary),
                     trailing: Icon(_showDimensions ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
                     onTap: () => setState(() => _showDimensions = !_showDimensions),
                   ),
@@ -1326,14 +1425,15 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
             // Colores y stock colapsable
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200, width: 1.2),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey.shade50,
               ),
               child: Column(
                 children: [
                   ListTile(
                     title: const Text('Colores y stock (Opcional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
-                    leading: const Icon(Icons.color_lens, color: kPrimary),
+                    leading: const Icon(Icons.palette_outlined, color: kPrimary),
                     trailing: Icon(_showColors ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
                     onTap: () => setState(() => _showColors = !_showColors),
                   ),
@@ -1385,10 +1485,19 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                                       child: TextFormField(
                                         controller: ctrl,
                                         keyboardType: TextInputType.number,
-                                        decoration: const InputDecoration(
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                        decoration: InputDecoration(
                                           labelText: 'Stock',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          border: OutlineInputBorder(),
+                                          labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: Colors.grey.shade300),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: const BorderSide(color: kPrimary),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1426,7 +1535,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline, color: Colors.red),
@@ -1444,10 +1553,11 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                   child: OutlinedButton(
                     onPressed: _prevStep,
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: Colors.grey, width: 1.5),
                     ),
-                    child: const Text('Anterior'),
+                    child: const Text('Anterior', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1456,8 +1566,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     onPressed: _saving ? null : _publicar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
                     ),
                     child: _saving
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
@@ -1597,17 +1708,50 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
       );
 
   Widget _campo(TextEditingController ctrl, String label,
-      {bool required = false, TextInputType? keyboardType, int maxLines = 1}) =>
-    TextFormField(
+      {bool required = false, TextInputType? keyboardType, int maxLines = 1}) {
+    IconData? prefixIcon;
+    if (label.contains('Nombre')) {
+      prefixIcon = Icons.shopping_bag_outlined;
+    } else if (label.contains('Precio')) {
+      prefixIcon = Icons.monetization_on_outlined;
+    } else if (label.contains('Descuento')) {
+      prefixIcon = Icons.percent_outlined;
+    } else if (label.contains('Cantidad')) {
+      prefixIcon = Icons.inventory_2_outlined;
+    } else if (label.contains('Peso') || label.contains('Alto') || label.contains('Ancho') || label.contains('Profundidad')) {
+      prefixIcon = Icons.square_foot_outlined;
+    }
+
+    return TextFormField(
       controller: ctrl,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: kPrimary, size: 20) : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
       ),
-      validator: required ? (v) => (v == null || v.isEmpty) ? 'Campo requerido' : null : null,
+      validator: required ? (v) => (v == null || v.isEmpty) ? 'Este campo es obligatorio' : null : null,
     );
+  }
 }
