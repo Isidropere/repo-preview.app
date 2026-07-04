@@ -218,7 +218,7 @@ class ItemApiController extends Controller
             try {
                 $items = Item::search($q)
                     ->where('estatus', 1)
-                    ->query(fn($query) => $query->with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                    ->query(fn($query) => $query->with(['imagenes:id_imagen,id_item,nombre,ruta', 'inventarios'])
                         ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
                         ->latest('fecha')
                     )
@@ -228,7 +228,7 @@ class ItemApiController extends Controller
             } catch (\Throwable $scoutException) {
                 \Log::warning('Elasticsearch caído o no configurado en API buscar, usando fallback de DB: ' . $scoutException->getMessage());
                 
-                $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+                $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'inventarios'])
                     ->where('estatus', 1)
                     ->where(function($query) use ($q) {
                         $query->where('item', 'like', '%' . $q . '%')
@@ -241,13 +241,53 @@ class ItemApiController extends Controller
                     ->map(fn($item) => $this->appendImageUrl($item));
             }
         } else {
-            $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta'])
+            $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'inventarios'])
                 ->where('estatus', 1)
                 ->select('id_item', 'item', 'valor', 'tipo_trans', 'fecha', 'id_categoria_item', 'id_user')
                 ->latest('fecha')
                 ->limit(20)
                 ->get()
                 ->map(fn($item) => $this->appendImageUrl($item));
+        }
+
+        $user = $request->user('sanctum');
+        if ($user) {
+            $cartItems = \App\Models\ItemIntencionCompra::whereHas('carrito', function($q) use ($user) {
+                $q->where('id_user', $user->id);
+            })->pluck('id_item')->toArray();
+            $cartSet = array_flip($cartItems);
+
+            $userActiveNegociaciones = \App\Models\Negociacion::where(function($q) use ($user) {
+                  $q->where('usuario_emisor_id', $user->id)
+                    ->orWhere('usuario_receptor_id', $user->id);
+               })
+              ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
+              ->get(['receptor_item_id', 'items_ofrecidos']);
+              
+            $negSet = [];
+            foreach ($userActiveNegociaciones as $neg) {
+                if ($neg->receptor_item_id) {
+                    $negSet[$neg->receptor_item_id] = true;
+                }
+                if (is_array($neg->items_ofrecidos)) {
+                    foreach ($neg->items_ofrecidos as $offeredId) {
+                        $negSet[$offeredId] = true;
+                    }
+                }
+            }
+
+            $items = collect($items)->map(function($item) use ($cartSet, $negSet) {
+                $id = $item['id_item'] ?? null;
+                $item['ya_en_carrito'] = $id ? isset($cartSet[$id]) : false;
+                $item['con_negociacion_activa'] = $id ? isset($negSet[$id]) : false;
+                return $item;
+            })->toArray();
+        } else {
+            $items = collect($items)->map(function($item) {
+                $item['ya_en_carrito'] = false;
+                $item['con_negociacion_activa'] = false;
+                return $item;
+            })->toArray();
         }
 
         return response()->json($items);

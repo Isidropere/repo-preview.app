@@ -99,10 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initAll() async {
     setState(() { _loading = true; _error = false; });
     try {
+      final loggedIn = await AuthService.isLoggedIn();
       // Usuario e items se cargan al mismo tiempo
       final results = await Future.wait([
-        ApiClient.get('/items?tipo=2&page=1'),
-        ApiClient.get('/items?tipo=1&page=1'),
+        ApiClient.get('/items?tipo=2&page=1', auth: loggedIn),
+        ApiClient.get('/items?tipo=1&page=1', auth: loggedIn),
         AuthService.me(),
       ]);
       if (!mounted) return;

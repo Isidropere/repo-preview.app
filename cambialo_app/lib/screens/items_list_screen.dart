@@ -70,7 +70,8 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
     }
 
     try {
-      final res = await ApiClient.get(path);
+      final loggedIn = await AuthService.isLoggedIn();
+      final res = await ApiClient.get(path, auth: loggedIn);
       if (!mounted) return;
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
