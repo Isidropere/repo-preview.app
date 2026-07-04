@@ -80,11 +80,21 @@ class TalentoPagoRedirectController extends Controller
         $isMobile = ($provider === 'azul_talento_movil');
         $queryParam = $isMobile ? '?mobile=1' : '';
 
+        $approvedUrl = route('talento.pago.aprobado') . $queryParam;
+        $declinedUrl = route('talento.pago.declinado') . $queryParam;
+        $cancelUrl   = route('talento.pago.cancelado') . $queryParam;
+
+        if ($isMobile) {
+            $approvedUrl = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $approvedUrl);
+            $declinedUrl = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $declinedUrl);
+            $cancelUrl   = str_replace(['127.0.0.1', 'localhost'], '10.0.2.2', $cancelUrl);
+        }
+
         $orderNumber = 'TAL-' . $item->id_item . '-' . time();
         $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
-            'approved_url' => route('talento.pago.aprobado') . $queryParam,
-            'declined_url' => route('talento.pago.declinado') . $queryParam,
-            'cancel_url'   => route('talento.pago.cancelado') . $queryParam,
+            'approved_url' => $approvedUrl,
+            'declined_url' => $declinedUrl,
+            'cancel_url'   => $cancelUrl,
         ]);
 
         // Registrar log de pago
