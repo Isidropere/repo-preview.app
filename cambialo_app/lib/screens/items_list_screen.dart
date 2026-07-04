@@ -405,6 +405,46 @@ class _ItemGridCard extends StatelessWidget {
                   width: double.infinity,
                 ),
               ),
+              if (yaEnCarrito || conNegociacionActiva || (int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? const Color(0xFFFEE2E2)
+                          : const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFFCA5A5)
+                            : const Color(0xFFBFDBFE),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        )
+                      ],
+                    ),
+                    child: Text(
+                      ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? 'AGOTADO'
+                          : (yaEnCarrito ? 'CARRITO' : 'NEGOCIACIÓN'),
+                      style: TextStyle(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.bold,
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF1D4ED8),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: 8,
                 right: 8,

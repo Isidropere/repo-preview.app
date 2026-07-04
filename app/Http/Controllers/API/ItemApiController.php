@@ -30,7 +30,7 @@ class ItemApiController extends Controller
                     }
 
                     $query = $scout->query(function ($q) use ($request) {
-                        $q->with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                        $q->with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios'])
                             ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
 
                         if ($request->filled('tipo')) {
@@ -50,7 +50,7 @@ class ItemApiController extends Controller
                 } catch (\Throwable $scoutException) {
                     \Log::warning('Elasticsearch caído o no configurado en API index, usando fallback de DB: ' . $scoutException->getMessage());
                     
-                    $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                    $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios'])
                         ->where('estatus', 1)
                         ->where(function($query) use ($request) {
                             $query->where('item', 'like', '%' . $request->q . '%')
@@ -76,7 +76,7 @@ class ItemApiController extends Controller
                     $items = $query->latest('fecha')->paginate(12);
                 }
             } else {
-                $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria'])
+                $query = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios'])
                     ->where('estatus', 1)
                     ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'id_user', 'fecha', 'id_categoria_item');
 
@@ -855,6 +855,15 @@ class ItemApiController extends Controller
             }, $imagenes);
         } else {
             $arr['image_url'] = null;
+        }
+
+        $arr['stock'] = 0;
+        if (is_object($item)) {
+            $arr['stock'] = $item->inventarios?->cantidad ?? 0;
+        } elseif (is_array($item)) {
+            $arr['stock'] = isset($item['inventarios']['cantidad'])
+                ? $item['inventarios']['cantidad']
+                : (is_numeric($item['inventarios'] ?? null) ? $item['inventarios'] : 0);
         }
 
         return $arr;
