@@ -17,6 +17,7 @@ class MisTalentosScreen extends StatefulWidget {
 class _MisTalentosScreenState extends State<MisTalentosScreen> {
   List _talentos = [];
   bool _loading = true;
+  String? _errorMsg;
 
   // Filtros de búsqueda (idénticos a la web)
   String _searchQuery = '';
@@ -30,20 +31,35 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
-    final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
-    if (res.statusCode == 200) {
-      final list = jsonDecode(res.body) as List;
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+    try {
+      final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        setState(() {
+          _talentos = list.where((item) {
+            final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
+            final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
+            return tipo == 2 || cat == 29;
+          }).toList();
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _loading = false;
+          _errorMsg = 'Error del servidor: Código ${res.statusCode}';
+        });
+      }
+    } catch (e, stack) {
+      print('DEBUG ERROR: Fallo al cargar talentos: $e');
+      print(stack);
       setState(() {
-        _talentos = list.where((item) {
-          final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
-          final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          return tipo == 2 || cat == 29;
-        }).toList();
         _loading = false;
+        _errorMsg = 'Error de conexión o datos: $e';
       });
-    } else {
-      setState(() => _loading = false);
     }
   }
 
@@ -388,15 +404,36 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                 Expanded(
                   child: filteredTalentos.isEmpty
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.star_outline,
-                                  size: 56, color: Colors.grey.shade300),
-                              const SizedBox(height: 12),
-                              Text('No se encontraron talentos',
-                                  style: TextStyle(color: kTextGray)),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _errorMsg != null ? Icons.error_outline : Icons.star_outline,
+                                  size: 56,
+                                  color: _errorMsg != null ? Colors.red.shade300 : Colors.grey.shade300,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _errorMsg ?? 'No se encontraron talentos',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: kTextGray, fontSize: 14),
+                                ),
+                                if (_errorMsg != null) ...[
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: _load,
+                                    icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+                                    label: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kPrimary,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         )
                       : RefreshIndicator(
