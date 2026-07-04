@@ -298,9 +298,18 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                               ),
                             ],
                           ),
-                          subtitle: Text(
-                            'Valor estimado: RD\$ ${item['valor'] ?? 0}',
-                            style: const TextStyle(fontSize: 11, color: kPrimary),
+                          subtitle: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Valor estimado: RD\$ ${item['valor'] ?? 0}',
+                                style: const TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                'Disponible: ${item['inventarios'] != null ? ApiClient.parseInt(item['inventarios']['cantidad']) ?? 0 : 0}',
+                                style: TextStyle(fontSize: 11, color: kTextGray, fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
                         );
                       },
