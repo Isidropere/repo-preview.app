@@ -960,19 +960,19 @@ class _ProductCard extends StatelessWidget {
                             alignment: Alignment.center,
                             margin: const EdgeInsets.only(right: 4),
                             decoration: BoxDecoration(
-                              color: yaEnCarrito ? const Color(0xFFEFF6FF) : const Color(0xFFF5F3FF),
+                              color: const Color(0xFFEFF6FF),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: yaEnCarrito ? const Color(0xFFBFDBFE) : const Color(0xFFC7D2FE),
+                                color: const Color(0xFFBFDBFE),
                                 width: 1,
                               ),
                             ),
                             child: Text(
                               yaEnCarrito ? 'EN CARRITO' : 'EN NEGOCIACIÓN',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: yaEnCarrito ? const Color(0xFF1D4ED8) : const Color(0xFF4F46E5),
+                                color: Color(0xFF1D4ED8),
                               ),
                             ),
                           ),

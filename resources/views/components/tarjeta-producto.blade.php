@@ -80,7 +80,7 @@
                     $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
                     $hashNeg = \App\Helpers\HashIdHelper::encode($idNeg);
                 @endphp
-                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
+                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
@@ -126,7 +126,7 @@
             @if($enCarrito)
                 <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">En Carrito</div>
             @elseif($enNegociacion)
-                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#ede9fe;color:#4f46e5;border:1px solid #c7d2fe;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">En Negociación</div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">En Negociación</div>
             @elseif($stock <= 0)
                 <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">Agotado</div>
             @else
