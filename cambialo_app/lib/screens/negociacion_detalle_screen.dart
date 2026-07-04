@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import 'direcciones_screen.dart';
 
 class NegociacionDetalleScreen extends StatefulWidget {
   final int negociacionId;
@@ -336,9 +337,26 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Necesitas una dirección', style: TextStyle(color: Colors.red)),
-          content: const Text('Por favor, registra una dirección de envío en la sección de Direcciones / Mi Cuenta antes de continuar.'),
+          content: const Text('Por favor, registra una dirección de envío antes de continuar.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(context); // close dialog
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DireccionesScreen()),
+                );
+                // Reload after returning to check if address was added
+                _loadDirecciones().then((_) => setState(() {}));
+              },
+              icon: const Icon(Icons.add_location_alt, color: Colors.white),
+              label: const Text('Agregar Dirección', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
           ],
         ),
       );
@@ -796,13 +814,18 @@ class _NegociacionDetalleScreenState extends State<NegociacionDetalleScreen> {
                                   const SizedBox(height: 4),
                                   const Text('Debes registrar tu dirección antes de realizar el pago.', style: TextStyle(fontSize: 12)),
                                   const SizedBox(height: 8),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                       // Navegaría a crear dirección, por ahora solo avisamos
-                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ve a Mi Cuenta > Direcciones para agregar una.')));
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const DireccionesScreen()),
+                                      );
+                                      // Reload to check if user added a direction
+                                      _loadDirecciones().then((_) => setState(() {}));
                                     },
+                                    icon: const Icon(Icons.add_location_alt, color: Colors.white),
+                                    label: const Text('Agregar Dirección', style: TextStyle(color: Colors.white)),
                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                    child: const Text('Agregar Dirección', style: TextStyle(color: Colors.white)),
                                   ),
                                 ]
                               ),
