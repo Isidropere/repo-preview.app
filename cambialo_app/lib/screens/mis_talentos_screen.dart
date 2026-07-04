@@ -18,6 +18,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
   List _talentos = [];
   bool _loading = true;
   String? _errorMsg;
+  double _tarifa = 100.0; // Tarifa dinámica obtenida del servidor
 
   // Filtros de búsqueda (idénticos a la web)
   String _searchQuery = '';
@@ -30,11 +31,29 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
     _load();
   }
 
+  Future<void> _loadTarifa() async {
+    try {
+      final res = await ApiClient.get('/talentos/config', auth: true, useCache: false);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map;
+        final val = double.tryParse(data['monto_registro']?.toString() ?? '');
+        if (val != null) {
+          setState(() {
+            _tarifa = val;
+          });
+        }
+      }
+    } catch (e) {
+      print('DEBUG: Fallo al cargar tarifa de talento: $e');
+    }
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _errorMsg = null;
     });
+    _loadTarifa();
     try {
       final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
       if (res.statusCode == 200) {
@@ -676,7 +695,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
 
   void _mostrarDialogoRecarga(int itemId, String name) {
     int cantidad = 1;
-    const double tarifa = 150.0; // Tarifa por publicación para previsualización
+    final double tarifa = _tarifa;
 
     showDialog(
       context: context,
