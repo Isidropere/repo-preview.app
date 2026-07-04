@@ -192,7 +192,7 @@ class ItemApiController extends Controller
         $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios:id_item,cantidad'])
             ->withCount('views')
             ->where('id_user', $request->user()->id)
-            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item')
+            ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item', 'id_tipo_item')
             ->latest('fecha')
             ->get()
             ->map(fn($item) => $this->appendImageUrl($item));
