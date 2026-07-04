@@ -816,8 +816,138 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                 ),
               ),
             ],
-     Widget _buildStep2() {
+          ),
+        ),
+      );
+
+  Widget _buildStep2() {
     final isEdit = widget.itemId != null;
+
+    Widget mainImagePreview;
+    if (_mainImage != null) {
+      mainImagePreview = Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: _isVideoPath(_mainImage!.path)
+                ? Container(
+                    width: double.infinity,
+                    height: 180,
+                    color: Colors.black,
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+                          SizedBox(height: 8),
+                          Text('Video Seleccionado', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  )
+                : (kIsWeb
+                    ? Image.network(_mainImage!.path, width: double.infinity, height: 180, fit: BoxFit.cover)
+                    : Image.file(File(_mainImage!.path), width: double.infinity, height: 180, fit: BoxFit.cover)),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.black38,
+            ),
+          ),
+          const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit_outlined, color: Colors.white, size: 28),
+                SizedBox(height: 4),
+                Text(
+                  'Cambiar Archivo Principal',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else if (_existingMainImageUrl != null) {
+      mainImagePreview = Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: _isVideoPath(_existingMainImageUrl!)
+                ? Container(
+                    width: double.infinity,
+                    height: 180,
+                    color: Colors.black,
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+                          SizedBox(height: 8),
+                          Text('Video Principal Guardado', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  )
+                : Image.network(
+                    _existingMainImageUrl!,
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey.shade100,
+                      child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                    ),
+                  ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.black38,
+            ),
+          ),
+          const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit_outlined, color: Colors.white, size: 28),
+                SizedBox(height: 4),
+                Text(
+                  'Cambiar Imagen Principal',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      mainImagePreview = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.cloud_upload_outlined, size: 36, color: kPrimary),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Imagen Principal *',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kTextDark),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Toca aquí para seleccionar una imagen o video de portada',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          ),
+        ],
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -853,128 +983,8 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                   width: _mainImage != null ? 2.0 : 1.5,
                 ),
               ),
-              child: _mainImage != null
-                  ? Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: _isVideoPath(_mainImage!.path)
-                              ? Container(
-                                  width: double.infinity,
-                                  height: 180,
-                                  color: Colors.black,
-                                  child: const Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-                                        SizedBox(height: 8),
-                                        Text('Video Seleccionado', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : (kIsWeb
-                                  ? Image.network(_mainImage!.path, width: double.infinity, height: 180, fit: BoxFit.cover)
-                                  : Image.file(File(_mainImage!.path), width: double.infinity, height: 180, fit: BoxFit.cover)),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: Colors.black38,
-                          ),
-                        ),
-                        const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.edit_outlined, color: Colors.white, size: 28),
-                              SizedBox(height: 4),
-                              Text(
-                                'Cambiar Archivo Principal',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  : (_existingMainImageUrl != null
-                      ? Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: _isVideoPath(_existingMainImageUrl!)
-                                  ? Container(
-                                      width: double.infinity,
-                                      height: 180,
-                                      color: Colors.black,
-                                      child: const Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-                                            SizedBox(height: 8),
-                                            Text('Video Principal Guardado', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : Image.network(
-                                      _existingMainImageUrl!,
-                                      width: double.infinity,
-                                      height: 180,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: Colors.grey.shade100,
-                                        child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
-                                      ),
-                                    ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: Colors.black38,
-                              ),
-                            ),
-                            const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.edit_outlined, color: Colors.white, size: 28),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Cambiar Imagen Principal',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: kPrimary.withOpacity(0.08),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.cloud_upload_outlined, size: 36, color: kPrimary),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Imagen Principal *',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kTextDark),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Toca aquí para seleccionar una imagen o video de portada',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                            ),
-                          ],
-                        )),
+              child: mainImagePreview,
+            ),
           ),
           if (isEdit) ...[
             const Padding(
@@ -1147,6 +1157,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               ),
             ],
           ),
+        ],
       ),
     );
   }
