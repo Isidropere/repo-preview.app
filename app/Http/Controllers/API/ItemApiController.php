@@ -757,6 +757,15 @@ class ItemApiController extends Controller
             $arr['item'] = preg_replace('/\s*\(User\s*\d+\)/i', '', $arr['item']);
         }
 
+        $idItem = $arr['id_item'] ?? 0;
+        if (is_object($item) && $item->relationLoaded('todasLasImagenes')) {
+            $arr['tiene_imagenes_pendientes'] = $item->todasLasImagenes->where('estado', 'pendiente')->isNotEmpty();
+        } else {
+            $arr['tiene_imagenes_pendientes'] = \App\Models\ImagenItem::where('id_item', $idItem)
+                ->where('estado', 'pendiente')
+                ->exists();
+        }
+
         $imagenes = $arr['imagenes'] ?? [];
         if (!empty($imagenes)) {
             $primera = $imagenes[0];
