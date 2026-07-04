@@ -170,23 +170,23 @@
                            href="{{ route('carrito.show') }}" 
                            data-tooltip="Carrito" title="Mi carrito">
                           
+                               <svg class="h-6 w-6 fill-primary hover:fill-hoverPrimary"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"> 
+                                   <path d="M21.822 7.431A1 1 0 0 0 21 7H7.333L6.179 4.23A1.994 1.994 0 0 0 4.333 3H2v2h2.333l4.744 11.385A1 1 0 0 0 10 17h8c.417 0 .79-.259.937-.648l3-8a1 1 0 0 0-.115-.921zM17.307 15h-6.64l-2.5-6h11.39l-2.25 6z"></path>
+                                   <circle cx="10.5" cy="19.5" r="1.5"></circle>
+                                   <circle cx="17.5" cy="19.5" r="1.5"></circle>
+                               </svg>
+
                                @if($carrito && $carrito->itemsIntencionCompra)
-                                <span id="cartBadge" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
+                                <span id="cartBadge" class="absolute -top-1 -right-1 z-10 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;min-width:18px;text-align:center;">
                                     {{ $carrito->itemsIntencionCompra->where('es_seleccionado', 1)->count() }}
                                 </span>
                             @else
-                                <span id="cartBadge" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
+                                <span id="cartBadge" class="absolute -top-1 -right-1 z-10 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;min-width:18px;text-align:center;">
                                     0
                                 </span>
                             @endif
-
-                                <svg class="h-6 w-6 fill-primary hover:fill-hoverPrimary"
-                                     xmlns="http://www.w3.org/2000/svg"
-                                     viewBox="0 0 24 24"> 
-                                    <path d="M21.822 7.431A1 1 0 0 0 21 7H7.333L6.179 4.23A1.994 1.994 0 0 0 4.333 3H2v2h2.333l4.744 11.385A1 1 0 0 0 10 17h8c.417 0 .79-.259.937-.648l3-8a1 1 0 0 0-.115-.921zM17.307 15h-6.64l-2.5-6h11.39l-2.25 6z"></path>
-                                    <circle cx="10.5" cy="19.5" r="1.5"></circle>
-                                    <circle cx="17.5" cy="19.5" r="1.5"></circle>
-                                </svg>
                             </a>
         
                             @auth
@@ -194,12 +194,12 @@
                             <a href="{{ route('negociaciones.mis') }}"
                                class="relative flex items-center justify-center p-2 text-primary hover:text-hoverPrimary no-tooltip"
                                data-tooltip="Intercambios" title="Mis intercambios" data-astro-cid-pwmmw5ba>
-                                <span id="badgeIntercambios" class="absolute top-0 right-0 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;">
-                                    0
-                                </span>
                                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                 </svg>
+                                <span id="badgeIntercambios" class="absolute -top-1 -right-1 z-10 bg-secondary text-white rounded-full text-xs font-bold px-1.5 leading-none" style="font-size:10px;transition:transform .2s;min-width:18px;text-align:center;">
+                                    0
+                                </span>
                             </a>
                             <x-notificaciones />
                             @endauth
