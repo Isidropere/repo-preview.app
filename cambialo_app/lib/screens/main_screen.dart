@@ -245,9 +245,9 @@ class _MainScreenState extends State<MainScreen> {
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: [
               const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: kPrimary), label: 'Inicio'),
-              NavigationDestination(
-                icon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz_outlined)),
-                selectedIcon: Badge(isLabelVisible: _intercambiosCount > 0, label: Text('$_intercambiosCount'), child: const Icon(Icons.swap_horiz, color: kPrimary)),
+              const NavigationDestination(
+                icon: Icon(Icons.swap_horiz_outlined),
+                selectedIcon: Icon(Icons.swap_horiz, color: kPrimary),
                 label: 'Trueque',
               ),
               const NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront, color: kPrimary), label: 'Compra'),
