@@ -17,6 +17,15 @@
     $esProductoServicio = $negService->esProductoServicio($neg);
     $esProductoProducto = $negService->esProductoProducto($neg);
 
+    // Variables auxiliares para saber tipo de cada lado (usadas en bloques de pago)
+    $itemSolicitadoRef = \App\Models\Item::find($neg->receptor_item_id);
+    $itemsOfrecidosRef = $neg->items_ofrecidos
+        ? \App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get()
+        : collect();
+    $solicitadoEsServicio = $itemSolicitadoRef && $itemSolicitadoRef->id_categoria_item == 29;
+    $todosOfrecidosServicio = $itemsOfrecidosRef->isNotEmpty()
+        && $itemsOfrecidosRef->every(fn($i) => $i->id_categoria_item == 29);
+
     // ¿Requiere pago este usuario?
     if ($esServicioServicio) {
         $requierePago = false;
