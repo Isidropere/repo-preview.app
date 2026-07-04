@@ -503,7 +503,8 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
 
         final redirectUrl = body['redirect_url']?.toString();
         if (redirectUrl != null && redirectUrl.isNotEmpty) {
-          final Uri url = Uri.parse(redirectUrl);
+          final fixedRedirectUrl = ApiClient.fixImageUrl(redirectUrl);
+          final Uri url = Uri.parse(fixedRedirectUrl);
           if (await canLaunchUrl(url)) {
             await launchUrl(url, mode: LaunchMode.externalApplication);
             if (!mounted) return;

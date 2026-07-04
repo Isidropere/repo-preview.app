@@ -5,8 +5,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// URL base de la API cargada desde el archivo .env
-final String kBaseUrl = dotenv.env['API_URL']?.trim() ?? 'https://cambialord.com/api';
+String get kBaseUrl {
+  final url = dotenv.env['API_URL']?.trim() ?? 'https://cambialord.com/api';
+  if (!kIsWeb && (url.contains('127.0.0.1') || url.contains('localhost'))) {
+    return url.replaceAll('127.0.0.1', '10.0.2.2').replaceAll('localhost', '10.0.2.2');
+  }
+  return url;
+}
 
 // ── Cache en memoria ──────────────────────────────────────────────────────
 // Cachea respuestas GET públicas Y el token de auth para evitar
