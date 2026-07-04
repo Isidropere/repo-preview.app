@@ -183,7 +183,7 @@ class CheckoutService
 
     private function obtenerDireccionPredeterminada(int $userId): ?Direcciones
     {
-        return Direcciones::with('municipio')->where('id_user', $userId)
+        return Direcciones::with(['municipio', 'provincia'])->where('id_user', $userId)
             ->where('es_predeterminada', 1)
             ->first();
     }
@@ -294,7 +294,7 @@ class CheckoutService
                     'estado_anterior' => null,
                     'estado_nuevo'    => 'aprobado',
                     'nota'            => 'Pago procesado correctamente. Autorización: ' . ($resultadoPago['approval_code'] ?? 'N/A') .
-                                        ' | Dirección ID: ' . ($direccion?->id_direccion ?? 'N/A (servicio)'),
+                                        ' | Dirección: ' . ($direccion ? "{$direccion->calle}" . ($direccion->N_casa_edificio ? ", #{$direccion->N_casa_edificio}" : "") . ($direccion->municipio?->municipio ? ", {$direccion->municipio->municipio}" : "") . ($direccion->provincia?->provincia ? ", {$direccion->provincia->provincia}" : "") : 'N/A (servicio)'),
                     'id_admin'        => null,
                 ]);
 

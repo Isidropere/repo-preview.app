@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 import '../core/auth_service.dart';
@@ -66,6 +67,18 @@ class _MainScreenState extends State<MainScreen> {
     ApiClient.cartCountNotifier.addListener(_onCartCountChanged);
     _loadBadges();
     _badgeTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadBadges());
+    _requestNotificationPermission();
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    try {
+      final status = await Permission.notification.status;
+      if (status.isDenied) {
+        await Permission.notification.request();
+      }
+    } catch (e) {
+      debugPrint('Error requesting notification permission: $e');
+    }
   }
 
   void _onCartCountChanged() {

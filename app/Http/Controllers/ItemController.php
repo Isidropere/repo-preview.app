@@ -456,6 +456,27 @@ class ItemController extends Controller
     protected function guardarImagen($file, $itemId, $orden, $estado = 'pendiente')
     {
         $mime = $file->getClientMimeType();
+        if ($mime === 'application/octet-stream' || empty($mime)) {
+            $realMime = @mime_content_type($file->getRealPath());
+            if ($realMime) {
+                $mime = $realMime;
+            } else {
+                $ext = strtolower($file->getClientOriginalExtension());
+                $mimeMap = [
+                    'jpg'  => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png'  => 'image/png',
+                    'webp' => 'image/webp',
+                    'mp4'  => 'video/mp4',
+                    'mov'  => 'video/quicktime',
+                    'm4v'  => 'video/x-m4v'
+                ];
+                if (isset($mimeMap[$ext])) {
+                    $mime = $mimeMap[$ext];
+                }
+            }
+        }
+
         $isVideo = str_starts_with($mime, 'video/');
 
         $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];

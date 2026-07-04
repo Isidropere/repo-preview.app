@@ -102,38 +102,38 @@ class _CuentaScreenState extends State<CuentaScreen> {
   List<Map<String, dynamic>> get _opciones => [
     {
       'icon': Icons.add_circle_outline,
-      'title': 'Agregar talento',
-      'sub': 'Publica tus talentos',
+      'title': 'Agregar Talento o Servicio',
+      'sub': 'Publica y ofrece tus habilidades',
       'onTap': () => _checkHojaVidaYAgregarTalento(),
     },
     {
       'icon': Icons.star_outline,
-      'title': 'Gestionar talentos',
-      'sub': 'Administra tus talentos',
+      'title': 'Administrar Talentos',
+      'sub': 'Edita o actualiza tus servicios ofrecidos',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisTalentosScreen())),
     },
     {
       'icon': Icons.description_outlined,
-      'title': 'Hoja de Vida',
-      'sub': 'Tu perfil profesional',
+      'title': 'Mi Hoja de Vida (CV)',
+      'sub': 'Edita tu perfil profesional y laboral',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HojaVidaScreen())),
     },
     {
       'icon': Icons.add_box_outlined,
-      'title': 'Agregar productos',
-      'sub': 'Publica tus artículos',
+      'title': 'Agregar Producto',
+      'sub': 'Publica un artículo para venta o intercambio',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
     },
     {
       'icon': Icons.edit_outlined,
-      'title': 'Gestionar productos',
-      'sub': 'Elimina tus artículos',
+      'title': 'Administrar Productos',
+      'sub': 'Edita, pausa o elimina tus artículos',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisArticulosScreen())),
     },
     {
       'icon': Icons.location_on_outlined,
-      'title': 'Dirección',
-      'sub': 'Actualiza tu dirección preferida',
+      'title': 'Mis Direcciones',
+      'sub': 'Administra tus direcciones de envío',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DireccionesScreen())),
     },
     {
@@ -144,14 +144,14 @@ class _CuentaScreenState extends State<CuentaScreen> {
     },
     {
       'icon': Icons.shield_outlined,
-      'title': 'Modificar contraseña',
+      'title': 'Seguridad y Contraseña',
       'sub': 'Cambia tu contraseña de manera segura',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CambiarContrasenaScreen())),
     },
     {
       'icon': Icons.history,
-      'title': 'Historial general',
-      'sub': 'Revisa tus intercambios o compras',
+      'title': 'Historial General',
+      'sub': 'Revisa tus compras, ventas e intercambios',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistorialScreen())),
     },
     {

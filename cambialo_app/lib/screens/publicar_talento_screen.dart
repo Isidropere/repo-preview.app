@@ -42,6 +42,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
   bool _loadingConfig = true;
   bool _saving = false;
   String? _error;
+  int _estatus = 2; // Default to 2 (Pausado)
 
   @override
   void initState() {
@@ -143,6 +144,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
           _descCtrl.text = (data['presentacion'] ?? '').toString();
           _cantidadCtrl.text = (data['inventarios']?['cantidad'] ?? '1').toString();
           _tipoTrans = int.tryParse(data['tipo_trans']?.toString() ?? '') ?? 3;
+          _estatus = int.tryParse(data['estatus']?.toString() ?? '') ?? 2;
 
           // Cargar imágenes existentes
           final imgs = data['imagenes'] as List? ?? [];
@@ -180,14 +182,36 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
     }
   }
 
+  bool _isVideoPath(String path) {
+    final p = path.toLowerCase();
+    return p.endsWith('.mp4') || p.endsWith('.mov') || p.endsWith('.m4v') || p.endsWith('.3gp') || p.endsWith('.avi');
+  }
+
   Future<void> _pickMainImage() async {
+    _mostrarOpcionesMedia(isMain: true);
+  }
+
+  Future<void> _pickAdditionalImages() async {
+    _mostrarOpcionesMedia(isMain: false);
+  }
+
+  Future<void> _pickMainMediaFromSource(ImageSource source, {required bool isVideo}) async {
     try {
-      final XFile? picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
+      XFile? picked;
+      if (isVideo) {
+        picked = await _picker.pickVideo(
+          source: source,
+          maxDuration: const Duration(seconds: 30),
+        );
+      } else {
+        picked = await _picker.pickImage(
+          source: source,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageQuality: 85,
+        );
+      }
+
       if (picked != null) {
         setState(() {
           _mainImage = picked;
@@ -195,43 +219,202 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         });
       }
     } catch (e) {
-      setState(() => _error = 'Error al seleccionar imagen: $e');
+      setState(() => _error = 'Error al seleccionar archivo: $e');
     }
   }
 
-  Future<void> _pickAdditionalImages() async {
+  Future<void> _pickAdditionalMediaFromSource(ImageSource source, {required bool isVideo}) async {
     final totalActual = _existingImages.length + _additionalImages.length;
     if (totalActual >= 4) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Solo puedes tener hasta 4 imágenes opcionales.'),
+        content: Text('Solo puedes agregar hasta 4 archivos opcionales.'),
         backgroundColor: Colors.orange,
       ));
       return;
     }
 
     try {
-      final List<XFile> picked = await _picker.pickMultiImage(
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 80,
-      );
-      if (picked.isNotEmpty) {
-        setState(() {
-          final espacioDisponible = 4 - totalActual;
-          if (picked.length > espacioDisponible) {
-            _additionalImages.addAll(picked.take(espacioDisponible));
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Se agregaron $espacioDisponible imágenes. Límite de 4 opcionales alcanzado.'),
-              backgroundColor: Colors.orange,
-            ));
-          } else {
-            _additionalImages.addAll(picked);
+      if (isVideo) {
+        final XFile? picked = await _picker.pickVideo(
+          source: source,
+          maxDuration: const Duration(seconds: 30),
+        );
+        if (picked != null) {
+          setState(() {
+            _additionalImages.add(picked);
+          });
+        }
+      } else {
+        if (source == ImageSource.gallery) {
+          final List<XFile> picked = await _picker.pickMultiImage(
+            maxWidth: 1200,
+            maxHeight: 1200,
+            imageQuality: 80,
+          );
+          if (picked.isNotEmpty) {
+            setState(() {
+              final espacioDisponible = 4 - totalActual;
+              if (picked.length > espacioDisponible) {
+                _additionalImages.addAll(picked.take(espacioDisponible));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Se agregaron $espacioDisponible imágenes. Límite de 4 opcionales alcanzado.'),
+                  backgroundColor: Colors.orange,
+                ));
+              } else {
+                _additionalImages.addAll(picked);
+              }
+            });
           }
-        });
+        } else {
+          final XFile? picked = await _picker.pickImage(
+            source: ImageSource.camera,
+            maxWidth: 1200,
+            maxHeight: 1200,
+            imageQuality: 85,
+          );
+          if (picked != null) {
+            setState(() {
+              _additionalImages.add(picked);
+            });
+          }
+        }
       }
     } catch (e) {
-      setState(() => _error = 'Error al seleccionar imágenes: $e');
+      setState(() => _error = 'Error al seleccionar archivos: $e');
     }
+  }
+
+  void _mostrarOpcionesMedia({required bool isMain}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  isMain ? 'Seleccionar archivo principal' : 'Agregar archivo opcional',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: kTextDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Elige el tipo de archivo y origen',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: kTextGray,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.photo_library, color: kPrimary),
+                  ),
+                  title: const Text(
+                    'Imagen de Galería',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: kTextDark),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isMain) {
+                      _pickMainMediaFromSource(ImageSource.gallery, isVideo: false);
+                    } else {
+                      _pickAdditionalMediaFromSource(ImageSource.gallery, isVideo: false);
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kSecondary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.camera_alt, color: kSecondary),
+                  ),
+                  title: const Text(
+                    'Tomar Foto (Cámara)',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: kTextDark),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isMain) {
+                      _pickMainMediaFromSource(ImageSource.camera, isVideo: false);
+                    } else {
+                      _pickAdditionalMediaFromSource(ImageSource.camera, isVideo: false);
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.video_library, color: Colors.red),
+                  ),
+                  title: const Text(
+                    'Video de Galería',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: kTextDark),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isMain) {
+                      _pickMainMediaFromSource(ImageSource.gallery, isVideo: true);
+                    } else {
+                      _pickAdditionalMediaFromSource(ImageSource.gallery, isVideo: true);
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.videocam, color: Colors.deepOrange),
+                  ),
+                  title: const Text(
+                    'Grabar Video (Cámara)',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: kTextDark),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isMain) {
+                      _pickMainMediaFromSource(ImageSource.camera, isVideo: true);
+                    } else {
+                      _pickAdditionalMediaFromSource(ImageSource.camera, isVideo: true);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _publicarTalento() async {
@@ -256,6 +439,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         'tipo_trans': _tipoTrans.toString(),
         'id_categoria_item': '29', // Talentos
         'cantidad': (int.tryParse(_cantidadCtrl.text.trim()) ?? 1).toString(),
+        'estatus': _estatus.toString(),
       };
 
       if (isEdit) {
@@ -341,7 +525,22 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
         ApiClient.clearCache('/mis-items');
         Navigator.pop(context, true); // Retorna true para indicar que hubo cambios y recargar listado
       } else {
-        setState(() => _error = body['message'] ?? 'Error al procesar el talento.');
+        String errMsg = body['message'] ?? 'Error al procesar el talento.';
+        if (body['errors'] != null && body['errors'] is Map) {
+          final errs = body['errors'] as Map;
+          final List<String> messages = [];
+          errs.forEach((key, val) {
+            if (val is List) {
+              messages.addAll(val.map((e) => e.toString()));
+            } else {
+              messages.add(val.toString());
+            }
+          });
+          if (messages.isNotEmpty) {
+            errMsg = messages.join('\n');
+          }
+        }
+        setState(() => _error = errMsg);
       }
     } catch (e) {
       setState(() {
@@ -510,6 +709,16 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                 decoration: const InputDecoration(labelText: 'Descripción del talento *', hintText: 'Resume tus habilidades y lo que ofreces...', border: OutlineInputBorder()),
                 validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _estatus,
+                decoration: const InputDecoration(labelText: 'Estatus *', border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(value: 1, child: Text('Activo')),
+                  DropdownMenuItem(value: 2, child: Text('Pausado (Inactivo)')),
+                ],
+                onChanged: (val) => setState(() => _estatus = val ?? 2),
+              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -564,9 +773,25 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: kIsWeb
-                              ? Image.network(_mainImage!.path, width: double.infinity, height: 180, fit: BoxFit.cover)
-                              : Image.file(File(_mainImage!.path), width: double.infinity, height: 180, fit: BoxFit.cover),
+                          child: _isVideoPath(_mainImage!.path)
+                              ? Container(
+                                  width: double.infinity,
+                                  height: 180,
+                                  color: Colors.black,
+                                  child: const Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+                                        SizedBox(height: 8),
+                                        Text('Video Seleccionado', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : (kIsWeb
+                                  ? Image.network(_mainImage!.path, width: double.infinity, height: 180, fit: BoxFit.cover)
+                                  : Image.file(File(_mainImage!.path), width: double.infinity, height: 180, fit: BoxFit.cover)),
                         ),
                         Container(
                           decoration: BoxDecoration(
@@ -581,7 +806,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                               Icon(Icons.edit_outlined, color: Colors.white, size: 28),
                               SizedBox(height: 4),
                               Text(
-                                'Cambiar Imagen Principal',
+                                'Cambiar Archivo Principal',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                             ],
@@ -594,16 +819,32 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                _existingMainImageUrl!,
-                                width: double.infinity,
-                                height: 180,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: Colors.grey.shade100,
-                                  child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
-                                ),
-                              ),
+                              child: _isVideoPath(_existingMainImageUrl!)
+                                  ? Container(
+                                      width: double.infinity,
+                                      height: 180,
+                                      color: Colors.black,
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+                                            SizedBox(height: 8),
+                                            Text('Video Principal Guardado', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : Image.network(
+                                      _existingMainImageUrl!,
+                                      width: double.infinity,
+                                      height: 180,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Colors.grey.shade100,
+                                        child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                                      ),
+                                    ),
                             ),
                             Container(
                               decoration: BoxDecoration(
@@ -700,16 +941,23 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            img['image_url'],
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey.shade100,
-                              child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
-                            ),
-                          ),
+                          child: _isVideoPath(img['image_url'])
+                              ? Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.black87,
+                                  child: const Icon(Icons.play_circle_fill, color: Colors.white, size: 28),
+                                )
+                              : Image.network(
+                                  img['image_url'],
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.grey.shade100,
+                                    child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
+                                  ),
+                                ),
                         ),
                         Positioned(
                           right: 2,
@@ -742,9 +990,16 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: kIsWeb
-                              ? Image.network(img.path, width: 80, height: 80, fit: BoxFit.cover)
-                              : Image.file(File(img.path), width: 80, height: 80, fit: BoxFit.cover),
+                          child: _isVideoPath(img.path)
+                              ? Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.black87,
+                                  child: const Icon(Icons.play_circle_fill, color: Colors.white, size: 28),
+                                )
+                              : (kIsWeb
+                                  ? Image.network(img.path, width: 80, height: 80, fit: BoxFit.cover)
+                                  : Image.file(File(img.path), width: 80, height: 80, fit: BoxFit.cover)),
                         ),
                         Positioned(
                           right: 2,

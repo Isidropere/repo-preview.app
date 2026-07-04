@@ -203,6 +203,14 @@ class ItemApiController extends Controller
     /** POST /api/items — publicar artículo */
     public function store(Request $request)
     {
+        // Normalizar campos numéricos vacíos para evitar fallos en la validación
+        if ($request->has('descuento') && $request->input('descuento') === '') {
+            $request->merge(['descuento' => null]);
+        }
+        if ($request->has('valor') && $request->input('valor') === '') {
+            $request->merge(['valor' => null]);
+        }
+
         $data = $request->validate([
             'item'              => 'required|string|max:150',
             'presentacion'      => 'required|string',
@@ -222,6 +230,7 @@ class ItemApiController extends Controller
             'colors.*'          => 'exists:colors,id_color',
             'stock.*'           => 'nullable|integer|min:0',
             'cantidad'          => 'required|numeric|min:0',
+            'estatus'           => 'nullable|integer|in:1,2,3',
         ]);
 
         $itemData = [
@@ -233,7 +242,7 @@ class ItemApiController extends Controller
             'condicion'         => $data['condicion'],
             'tipo_trans'        => $data['tipo_trans'],
             'id_user'           => $request->user()->id,
-            'estatus'           => 0, // pendiente de aprobación
+            'estatus'           => $request->input('estatus', 1), // Por defecto Activo (1) si no viene
             'fecha'             => now(),
             'peso_lbs'          => $data['peso_lbs'] ?? 0,
             'alto_cm'           => $data['alto_cm'] ?? 0,
@@ -256,65 +265,65 @@ class ItemApiController extends Controller
             }
         }
 
-        $item = Item::create($itemData);
+        \DB::beginTransaction();
+        try {
+            $item = Item::create($itemData);
 
-        // Crear registro en el inventario
-        \App\Models\Inventario::create([
-            'id_item'  => $item->id_item,
-            'cantidad' => $data['cantidad'] ?? 1,
-            'fecha'    => now()
-        ]);
+            // Crear registro en el inventario
+            \App\Models\Inventario::create([
+                'id_item'  => $item->id_item,
+                'cantidad' => $data['cantidad'] ?? 1,
+                'fecha'    => now()
+            ]);
 
-        // ERP registrar entrada
-        if (app()->bound(\App\Services\ERPService::class)) {
-            app(\App\Services\ERPService::class)->registrarEntradaRegistroItem($item, (int) ($data['cantidad'] ?? 1));
-        }
-
-        // Registrar colores y stock
-        if ($request->has('colors')) {
-            $colorsWithStock = [];
-            foreach ($request->colors as $colorId) {
-                $stock = $request->stock[$colorId] ?? 0;
-                $colorsWithStock[$colorId] = ['stock' => $stock];
+            // ERP registrar entrada
+            if (app()->bound(\App\Services\ERPService::class)) {
+                app(\App\Services\ERPService::class)->registrarEntradaRegistroItem($item, (int) ($data['cantidad'] ?? 1));
             }
-            $item->colors()->sync($colorsWithStock);
-        }
 
-        // Procesar imagen principal (archivo local)
-        if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
-            try {
+            // Registrar colores y stock
+            if ($request->has('colors')) {
+                $colorsWithStock = [];
+                foreach ($request->colors as $colorId) {
+                    $stock = $request->stock[$colorId] ?? 0;
+                    $colorsWithStock[$colorId] = ['stock' => $stock];
+                }
+                $item->colors()->sync($colorsWithStock);
+            }
+
+            // Procesar imagen principal (archivo local)
+            if ($request->hasFile('imagen_principal') && $request->file('imagen_principal')->isValid()) {
                 $resultado = $this->guardarImagen($request->file('imagen_principal'), $item->id_item, 1);
                 if ($resultado['is_video']) {
                     $item->update(['tiene_video' => true]);
                 }
-            } catch (\Exception $e) {
-                \Log::error('Error al guardar imagen_principal en API: ' . $e->getMessage());
+            } 
+            // Si no hay archivo, pero sí URL ImgBB
+            elseif (!empty($data['image_url'])) {
+                $item->imagenes()->create([
+                    'nombre' => basename(parse_url($data['image_url'], PHP_URL_PATH)),
+                    'ruta'   => $data['image_url'],
+                    'estado' => 'pendiente',
+                ]);
             }
-        } 
-        // Si no hay archivo, pero sí URL ImgBB
-        elseif (!empty($data['image_url'])) {
-            $item->imagenes()->create([
-                'nombre' => basename(parse_url($data['image_url'], PHP_URL_PATH)),
-                'ruta'   => $data['image_url'],
-                'estado' => 'pendiente',
-            ]);
-        }
 
-        // Procesar imágenes adicionales (archivos locales)
-        if ($request->hasFile('imagenes')) {
-            $orden = 2;
-            foreach ($request->file('imagenes') as $file) {
-                if ($file && $file->isValid()) {
-                    try {
+            // Procesar imágenes adicionales (archivos locales)
+            if ($request->hasFile('imagenes')) {
+                $orden = 2;
+                foreach ($request->file('imagenes') as $file) {
+                    if ($file && $file->isValid()) {
                         $this->guardarImagen($file, $item->id_item, $orden++);
-                    } catch (\Exception $e) {
-                        \Log::error('Error al guardar imagen adicional en API: ' . $e->getMessage());
                     }
                 }
             }
-        }
 
-        return response()->json(['message' => 'Artículo publicado. Pendiente de aprobación.', 'item' => $item], 201);
+            \DB::commit();
+            return response()->json(['message' => 'Artículo publicado. Pendiente de aprobación.', 'item' => $item], 201);
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            \Log::error('Error al crear producto en API: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
     }
 
     /** GET /api/mis-items/{id} — detalle de item propio para edición */
@@ -336,7 +345,15 @@ class ItemApiController extends Controller
     {
         $item = Item::where('id_user', $request->user()->id)->findOrFail($id);
 
-        $data = $request->validate([
+        // Normalizar campos numéricos vacíos para evitar fallos en la validación
+        if ($request->has('descuento') && $request->input('descuento') === '') {
+            $request->merge(['descuento' => null]);
+        }
+        if ($request->has('valor') && $request->input('valor') === '') {
+            $request->merge(['valor' => null]);
+        }
+
+        $rules = [
             'item'              => 'required|string|max:150',
             'presentacion'      => 'required|string',
             'valor'             => 'required_if:tipo_trans,1,3|nullable|numeric|min:0',
@@ -346,17 +363,29 @@ class ItemApiController extends Controller
             'id_categoria_item' => 'required|integer|exists:categorias_item,id_categoria_item',
             'imagen_principal'  => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov|max:20480',
             'imagenes.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'peso_lbs'          => 'required|numeric|gt:0',
-            'alto_cm'           => 'required|numeric|gt:0',
-            'ancho_cm'          => 'required|numeric|gt:0',
-            'profundo_cm'       => 'required|numeric|gt:0',
             'colors'            => 'nullable|array',
             'colors.*'          => 'exists:colors,id_color',
             'stock.*'           => 'nullable|integer|min:0',
             'cantidad'          => 'required|numeric|min:0',
             'imagenes_existentes'=> 'nullable|array', // IDs de imágenes adicionales existentes que se conservan
             'imagenes_existentes.*' => 'integer',
-        ]);
+            'estatus'           => 'nullable|integer|in:1,2,3',
+        ];
+
+        // Solo requerir dimensiones si NO es de la categoría 29 (Talentos)
+        if ((int) $request->input('id_categoria_item') !== 29) {
+            $rules['peso_lbs']    = 'required|numeric|gt:0';
+            $rules['alto_cm']     = 'required|numeric|gt:0';
+            $rules['ancho_cm']    = 'required|numeric|gt:0';
+            $rules['profundo_cm'] = 'required|numeric|gt:0';
+        } else {
+            $rules['peso_lbs']    = 'nullable|numeric|min:0';
+            $rules['alto_cm']     = 'nullable|numeric|min:0';
+            $rules['ancho_cm']    = 'nullable|numeric|min:0';
+            $rules['profundo_cm'] = 'nullable|numeric|min:0';
+        }
+
+        $data = $request->validate($rules);
 
         if (isset($data['valor'])) {
             $data['valor'] = str_replace(',', '', $data['valor']);
@@ -391,6 +420,7 @@ class ItemApiController extends Controller
                 'alto_cm'           => $data['alto_cm'] ?? 0,
                 'ancho_cm'          => $data['ancho_cm'] ?? 0,
                 'profundo_cm'       => $data['profundo_cm'] ?? 0,
+                'estatus'           => $data['estatus'] ?? $item->estatus,
             ]);
 
             // Actualizar o crear registro en el inventario
@@ -479,6 +509,27 @@ class ItemApiController extends Controller
     protected function guardarImagen($file, $itemId, $orden, $estado = 'pendiente')
     {
         $mime = $file->getClientMimeType();
+        if ($mime === 'application/octet-stream' || empty($mime)) {
+            $realMime = @mime_content_type($file->getRealPath());
+            if ($realMime) {
+                $mime = $realMime;
+            } else {
+                $ext = strtolower($file->getClientOriginalExtension());
+                $mimeMap = [
+                    'jpg'  => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png'  => 'image/png',
+                    'webp' => 'image/webp',
+                    'mp4'  => 'video/mp4',
+                    'mov'  => 'video/quicktime',
+                    'm4v'  => 'video/x-m4v'
+                ];
+                if (isset($mimeMap[$ext])) {
+                    $mime = $mimeMap[$ext];
+                }
+            }
+        }
+
         $isVideo = str_starts_with($mime, 'video/');
 
         $allowedMimeTypes = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','video/quicktime','video/x-m4v'];
@@ -510,13 +561,36 @@ class ItemApiController extends Controller
     /** DELETE /api/items/{id} — eliminar artículo propio */
     public function destroy(Request $request, int $id)
     {
-        $item = Item::where('id_item', $id)
-            ->where('id_user', $request->user()->id)
-            ->firstOrFail();
+        \DB::beginTransaction();
+        try {
+            $item = Item::where('id_item', $id)
+                ->where('id_user', $request->user()->id)
+                ->firstOrFail();
 
-        $item->delete();
+            // 1. Desasociar colores
+            $item->colors()->detach();
 
-        return response()->json(['message' => 'Artículo eliminado.']);
+            // 2. Eliminar inventario
+            if ($item->inventarios) {
+                $item->inventarios->delete();
+            }
+
+            // 3. Eliminar imágenes físicas y registros
+            foreach ($item->todasLasImagenes as $imagen) {
+                \App\Helpers\ImageHelper::eliminar($imagen->ruta . '/' . $imagen->nombre);
+                $imagen->delete();
+            }
+
+            // 4. Eliminar el item
+            $item->delete();
+
+            \DB::commit();
+            return response()->json(['message' => 'Artículo eliminado con éxito.']);
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            \Log::error('Error al eliminar producto en API: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error al eliminar el artículo: ' . $e->getMessage()], 500);
+        }
     }
 
     /** POST /api/talentos — publicar talento con pago */

@@ -66,9 +66,36 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
         ) ??
         false;
     if (!ok) return;
-    await ApiClient.delete('/items/$idItem', auth: true);
-    ApiClient.clearCache('/mis-items');
-    _load();
+
+    setState(() => _loading = true);
+
+    try {
+      final res = await ApiClient.delete('/items/$idItem', auth: true);
+      if (res.statusCode == 200 || res.statusCode == 204) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Artículo eliminado exitosamente.'),
+          backgroundColor: Colors.green,
+        ));
+        ApiClient.clearCache('/mis-items');
+        _load();
+      } else {
+        setState(() => _loading = false);
+        if (!mounted) return;
+        final body = jsonDecode(res.body);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(body['message'] ?? 'Error al eliminar el artículo.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error al conectar con el servidor: $e'),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   String _formatDate(String? dateStr) {

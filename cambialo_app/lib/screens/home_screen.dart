@@ -73,9 +73,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startCarouselTimer() {
     _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_carouselCtrl.hasClients) {
-        int next = (_carouselCtrl.page!.round() + 1) % _carouselImages.length;
-        _carouselCtrl.animateToPage(next, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      if (_carouselCtrl.hasClients && _carouselCtrl.position.hasContentDimensions) {
+        try {
+          final page = _carouselCtrl.page;
+          if (page != null) {
+            int next = (page.round() + 1) % _carouselImages.length;
+            _carouselCtrl.animateToPage(next, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+          }
+        } catch (_) {
+          // Ignorar si el layout no está listo
+        }
       }
     });
   }

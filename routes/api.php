@@ -201,6 +201,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 'id_pago_compra'      => 'TAL-' . $talento->id_item . '-' . $talento->id,
                 'estatus'             => 'aprobado',
                 'total'               => (float) $talento->monto_pagado,
+                'impuestos'           => 0.00,
+                'costo_envio'         => 0.00,
                 'fecha'               => $talento->created_at ? $talento->created_at->toDateTimeString() : null,
                 'is_talent_registration' => true,
                 'pago_items'          => [

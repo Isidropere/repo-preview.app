@@ -201,14 +201,14 @@ class _ComprasTab extends StatelessWidget {
     }
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String label, String value, {bool isBold = false, Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: kTextGray)),
-          Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kTextDark)),
+          Text(label, style: TextStyle(fontSize: 11, color: kTextGray, fontWeight: isBold ? FontWeight.bold : null)),
+          Text(value, style: TextStyle(fontSize: 11, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: valueColor ?? kTextDark)),
         ],
       ),
     );
@@ -246,7 +246,7 @@ class _ComprasTab extends StatelessWidget {
                     _EstatusBadge(estatus: estatus),
                   ]),
                   const SizedBox(height: 4),
-                  Text(c['fecha'] ?? '', style: TextStyle(fontSize: 11, color: kTextGray)),
+                  Text(c['fecha'] ?? '', style: const TextStyle(fontSize: 11, color: kTextGray)),
                 ])),
                 Text('RD\$ ${c['total'] ?? 0}',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kPrimary)),
@@ -260,11 +260,61 @@ class _ComprasTab extends StatelessWidget {
                   Container(width: 40, height: 40, color: Colors.grey.shade100,
                       child: const Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 20)),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(pi['nombre_item'] ?? '',
-                      style: const TextStyle(fontSize: 12, color: kTextDark))),
-                  Text('x${pi['cantidad']}', style: TextStyle(fontSize: 12, color: kTextGray)),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(pi['nombre_item'] ?? '',
+                          style: const TextStyle(fontSize: 12, color: kTextDark, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 2),
+                      Text(
+                        double.tryParse(pi['descuento']?.toString() ?? '0')! > 0
+                            ? '${pi['cantidad']} x RD\$ ${double.tryParse(pi['precio_unitario']?.toString() ?? '0')?.toStringAsFixed(2)} (-RD\$ ${double.tryParse(pi['descuento']?.toString() ?? '0')?.toStringAsFixed(2)})'
+                            : '${pi['cantidad']} x RD\$ ${double.tryParse(pi['precio_unitario']?.toString() ?? '0')?.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 10, color: kTextGray),
+                      ),
+                    ],
+                  )),
+                  const SizedBox(width: 10),
+                  Text(
+                    'RD\$ ${double.tryParse(pi['subtotal']?.toString() ?? '0')?.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextDark),
+                  ),
                 ]),
               ))),
+
+            // Desglose de totales si aplica
+            Builder(
+              builder: (context) {
+                final double total = double.tryParse(c['total']?.toString() ?? '0') ?? 0;
+                final double impuestos = double.tryParse(c['impuestos']?.toString() ?? '0') ?? 0;
+                final double costoEnvio = double.tryParse(c['costo_envio']?.toString() ?? '0') ?? 0;
+                final double subtotal = total - impuestos - costoEnvio;
+
+                if (impuestos > 0 || costoEnvio > 0) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
+                    child: Column(
+                      children: [
+                        _infoRow('Subtotal de productos:', 'RD\$ ${subtotal.toStringAsFixed(2)}'),
+                        if (costoEnvio > 0)
+                          _infoRow('Costo de Envío:', 'RD\$ ${costoEnvio.toStringAsFixed(2)}'),
+                        if (impuestos > 0)
+                          _infoRow('Impuestos:', 'RD\$ ${impuestos.toStringAsFixed(2)}'),
+                        const Divider(height: 12, color: Color(0xFFEEEEEE)),
+                        _infoRow('Total Pagado:', 'RD\$ ${total.toStringAsFixed(2)}', isBold: true, valueColor: kPrimary),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
 
             // Detalles de Pago y descarga de factura
             if (hasInvoice) ...[
