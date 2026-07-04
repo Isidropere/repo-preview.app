@@ -185,7 +185,7 @@ class ItemApiController extends Controller
                 ->exists();
         }
 
-        $res = $this->appendImageUrl($item)->toArray();
+        $res = $this->appendImageUrl($item);
         $res['ya_en_carrito'] = $yaEnCarrito;
         $res['con_negociacion_activa'] = $conNegociacionActiva;
 
