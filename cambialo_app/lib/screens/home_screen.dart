@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _user = AuthService.currentUser;
     _initAll();
     _startCarouselTimer();
   }
@@ -95,15 +96,27 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /// Carga usuario e items en paralelo — antes era secuencial
+  /// Carga usuario e items de forma óptima
   Future<void> _initAll() async {
     setState(() { _loading = true; _error = false; });
     try {
-      // Usuario e items se cargan al mismo tiempo
+      final loggedIn = await AuthService.isLoggedIn();
+      
+      // 1. Cargar el usuario de la cache/SharedPreferences de inmediato
+      if (loggedIn) {
+        final cachedUser = await AuthService.me();
+        if (cachedUser != null && mounted) {
+          setState(() {
+            _user = cachedUser;
+          });
+        }
+      }
+
+      // 2. Cargar los items en paralelo y refrescar el usuario de fondo si es necesario
       final results = await Future.wait([
-        ApiClient.get('/items?tipo=2&page=1'),
-        ApiClient.get('/items?tipo=1&page=1'),
-        AuthService.me(),
+        ApiClient.get('/items?tipo=2&page=1', auth: loggedIn),
+        ApiClient.get('/items?tipo=1&page=1', auth: loggedIn),
+        if (loggedIn) AuthService.me(forceRefresh: true) else Future.value(null),
       ]);
       if (!mounted) return;
 
@@ -118,12 +131,14 @@ class _HomeScreenState extends State<HomeScreen> {
         if (ventaRes.statusCode == 200) {
           _venta = jsonDecode(ventaRes.body)['data'] ?? [];
         }
-        _user    = user;
+        if (user != null) {
+          _user = user;
+        }
         _loading = false;
       });
 
       // Notificaciones en background — no bloquean la UI
-      if (user != null) _loadBadges();
+      if (_user != null) _loadBadges();
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = true; });
     }
@@ -773,6 +788,9 @@ class _ProductCard extends StatelessWidget {
     final bool esIntercambio = transVal == 2 || transVal == 3;
     final bool esMio = currentUserId != null && currentUserId == itemUserId;
 
+    final bool yaEnCarrito = item['ya_en_carrito'] == true;
+    final bool conNegociacionActiva = item['con_negociacion_activa'] == true;
+
     Future<void> handleIntercambio() async {
       final loggedIn = await AuthService.isLoggedIn();
       if (!loggedIn) {
@@ -800,22 +818,36 @@ class _ProductCard extends StatelessWidget {
       if (!context.mounted) return;
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
+      String message = 'Error al agregar';
+      bool isSuccess = false;
       if (res.statusCode == 200) {
         try {
           final data = jsonDecode(res.body);
-          if (data['cart_count'] != null) {
-            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+          if (data['success'] == true) {
+            isSuccess = true;
+            message = data['message'] ?? '¡Agregado al carrito!';
+            if (data['cart_count'] != null) {
+              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+            } else {
+              ApiClient.cartCountNotifier.value++;
+            }
           } else {
-            ApiClient.cartCountNotifier.value++;
+            message = data['message'] ?? 'Error al agregar';
           }
         } catch (_) {
+          isSuccess = true;
           ApiClient.cartCountNotifier.value++;
         }
+      } else {
+        try {
+          final data = jsonDecode(res.body);
+          message = data['message'] ?? 'Error al agregar';
+        } catch (_) {}
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
-          backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
+          content: Text(message),
+          backgroundColor: isSuccess ? kPrimary : Colors.red,
         ));
       }
     }
@@ -865,6 +897,46 @@ class _ProductCard extends StatelessWidget {
                   width: double.infinity,
                 ),
               ),
+              if (yaEnCarrito || conNegociacionActiva || (int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? const Color(0xFFFEE2E2)
+                          : const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFFCA5A5)
+                            : const Color(0xFFBFDBFE),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        )
+                      ],
+                    ),
+                    child: Text(
+                      ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? 'AGOTADO'
+                          : (yaEnCarrito ? 'CARRITO' : 'NEGOCIACIÓN'),
+                      style: TextStyle(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.bold,
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF1D4ED8),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: 8,
                 right: 8,
@@ -936,48 +1008,74 @@ class _ProductCard extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      if (esVenta && !esMio) ...[
+                      if (yaEnCarrito || conNegociacionActiva) ...[
                         Expanded(
                           child: Container(
                             height: 32,
+                            alignment: Alignment.center,
                             margin: const EdgeInsets.only(right: 4),
-                            child: ElevatedButton(
-                              onPressed: handleAddToCart,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.zero,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFFBFDBFE),
+                                width: 1,
                               ),
-                              child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
+                            ),
+                            child: Text(
+                              yaEnCarrito ? 'EN CARRITO' : 'EN NEGOCIACIÓN',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1D4ED8),
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                      if (esIntercambio && !esMio) ...[
-                        Expanded(
-                          child: Container(
-                            height: 32,
-                            margin: const EdgeInsets.only(right: 4),
-                            child: OutlinedButton(
-                              onPressed: handleIntercambio,
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
-                                backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
-                                foregroundColor: const Color(0xFFC2410C),
-                                padding: EdgeInsets.zero,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ] else ...[
+                        if (esVenta && !esMio) ...[
+                          Expanded(
+                            child: Container(
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 4),
+                              child: ElevatedButton(
+                                onPressed: handleAddToCart,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
                               ),
-                              child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
                             ),
                           ),
-                        ),
+                        ],
+                        if (esIntercambio && !esMio) ...[
+                          Expanded(
+                            child: Container(
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 4),
+                              child: OutlinedButton(
+                                onPressed: handleIntercambio,
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
+                                  backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
+                                  foregroundColor: const Color(0xFFC2410C),
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                       Expanded(
                         child: Container(

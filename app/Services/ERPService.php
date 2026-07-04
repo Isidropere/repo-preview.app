@@ -261,11 +261,13 @@ class ERPService
                 }
 
                 foreach ($itemsADebitar as $idItem) {
+                    $cantOfrecida = $neg->getCantidadOfrecida($idItem);
+                    
                     InventarioMovimiento::create([
                         'id_item'         => $idItem,
                         'id_almacen'      => $almacen->id,
                         'tipo'            => 'salida',
-                        'cantidad'        => 1,
+                        'cantidad'        => $cantOfrecida,
                         'motivo'          => "Salida por intercambio (Trueque) #{$neg->id_negociacion}",
                         'referencia_tipo' => 'negociacion',
                         'referencia_id'   => $neg->id_negociacion,
@@ -273,8 +275,9 @@ class ERPService
                     
                     // También debemos debitar el Inventario real de estos items ofrecidos
                     $inv = \App\Models\Inventario::where('id_item', $idItem)->first();
-                    if ($inv && $inv->cantidad > 0) {
-                        $inv->decrement('cantidad');
+                    if ($inv) {
+                        $nuevaCantidad = max(0, $inv->cantidad - $cantOfrecida);
+                        $inv->update(['cantidad' => $nuevaCantidad]);
                     }
                 }
             });

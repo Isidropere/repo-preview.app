@@ -70,11 +70,19 @@ class NegociacionService
         // Validar que no exista negociación activa del mismo emisor por el mismo item
         $existente = Negociacion::where('usuario_emisor_id', $emisorId)
             ->where('receptor_item_id', $receptorItem->id_item)
-            ->whereNotIn('estado', ['rechazado', 'cancelado', 'completado'])
+            ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
             ->exists();
 
         if ($existente) {
             return $this->error('Ya tienes una negociación activa por este artículo.');
+        }
+
+        // No permitir si ya está en el carrito
+        $yaEnCarrito = \App\Models\ItemIntencionCompra::whereHas('carrito', fn($q) => $q->where('id_user', $emisorId))
+            ->where('id_item', $receptorItem->id_item)
+            ->exists();
+        if ($yaEnCarrito) {
+            return $this->error('Este artículo ya está en tu carrito. No puedes proponer un intercambio.');
         }
 
         // Validar que el paquete pertenezca al emisor
@@ -89,6 +97,18 @@ class NegociacionService
             }
         }
 
+        $itemsOfrecidos = !empty($datos['items_ofrecidos']) ? $datos['items_ofrecidos'] : [];
+        $cantidades = !empty($datos['cantidades_ofrecidas']) ? $datos['cantidades_ofrecidas'] : [];
+
+        $itemsConCantidad = [];
+        if (!empty($itemsOfrecidos)) {
+            foreach ($itemsOfrecidos as $idItem) {
+                $qty = isset($cantidades[$idItem]) ? (int) $cantidades[$idItem] : 1;
+                if ($qty < 1) $qty = 1;
+                $itemsConCantidad[$idItem] = $qty;
+            }
+        }
+
         $negociacion = Negociacion::create([
             'receptor_item_id'    => $receptorItem->id_item,
             'id_color'            => $datos['id_color'] ?? null,
@@ -99,7 +119,7 @@ class NegociacionService
             'monto_oferta'        => $datos['monto_oferta'] ?? null,
             'estado'              => 'Inicial',
             'fecha_creacion'      => now(),
-            'items_ofrecidos'     => !empty($datos['items_ofrecidos']) ? $datos['items_ofrecidos'] : null,
+            'items_ofrecidos'     => !empty($itemsConCantidad) ? $itemsConCantidad : null,
         ]);
 
         $this->crearMensaje(

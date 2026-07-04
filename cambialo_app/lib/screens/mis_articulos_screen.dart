@@ -35,9 +35,8 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
       final list = jsonDecode(res.body) as List;
       setState(() {
         _items = list.where((item) {
-          final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
           final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          return tipo != 2 && cat != 29;
+          return cat != 29;
         }).toList();
         _loading = false;
       });
@@ -49,15 +48,15 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
   Future<void> _eliminar(int idItem, String nombre) async {
     final ok = await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (dialogCtx) => AlertDialog(
             title: const Text('Eliminar artículo'),
             content: Text('¿Seguro que deseas eliminar "$nombre"?'),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
+                  onPressed: () => Navigator.pop(dialogCtx, false),
                   child: const Text('Cancelar')),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogCtx, true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
               ),

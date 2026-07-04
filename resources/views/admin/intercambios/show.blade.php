@@ -81,7 +81,8 @@ function btnCopiar(string $id, string $label = ''): string {
                 $txtIntercambio .= "Ofrecido por el Emisor:\n";
                 if ($itemsOfrecidos->count()) {
                     foreach ($itemsOfrecidos as $io) {
-                        $txtIntercambio .= "- {$io->item} | Valor: RD$ " . number_format($io->valor ?? 0, 2) . "\n";
+                        $qty = $intercambio->getCantidadOfrecida($io->id_item);
+                        $txtIntercambio .= "- {$io->item} (x{$qty}) | Valor: RD$ " . number_format($io->valor ?? 0, 2) . "\n";
                     }
                 } else {
                     $txtIntercambio .= "- Solo oferta económica\n";
@@ -252,7 +253,14 @@ function btnCopiar(string $id, string $label = ''): string {
                                                         </div>
                                                     @endif
                                                 </div>
+                                                @php $qtyIo = $intercambio->getCantidadOfrecida($io->id_item); @endphp
                                                 <h3 class="font-bold text-gray-950 text-sm line-clamp-2 min-h-[40px]">{{ $io->item }}</h3>
+                                                @if($qtyIo > 1)
+                                                <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full border border-orange-200 mt-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                                                    Cantidad: {{ $qtyIo }} unidades
+                                                </span>
+                                                @endif
                                                 <div class="text-[11px] text-gray-500 mt-2 space-y-0.5 text-left w-full border-t border-orange-100/50 pt-2">
                                                     <p>Dueño: <span class="font-medium text-gray-700">{{ $intercambio->usuario?->nombres ?? 'N/A' }}</span></p>
                                                     <p>Categoría: <span class="font-medium text-gray-700">{{ $io->categoria?->categoria ?? 'N/A' }}</span></p>

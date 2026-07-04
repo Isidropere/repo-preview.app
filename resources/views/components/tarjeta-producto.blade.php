@@ -16,7 +16,7 @@
             $userActiveNegociaciones = \App\Models\Negociacion::where(function($q) {
                   $q->where('usuario_emisor_id', auth()->id())
                     ->orWhere('usuario_receptor_id', auth()->id());
-              })
+               })
               ->whereNotIn('estado', ['rechazado', 'cancelado', 'completado'])
               ->get(['id_negociacion', 'receptor_item_id', 'items_ofrecidos', 'usuario_emisor_id', 'usuario_receptor_id', 'estado']);
               
@@ -43,6 +43,20 @@
     }
     $itemsInNegotiation = app('user_items_in_negotiation');
     $enNegociacion = isset($itemsInNegotiation[$item->id_item]);
+
+    // Cargar items en el carrito una sola vez por request
+    if (!app()->resolved('user_cart_items')) {
+        $cartList = [];
+        if (auth()->check()) {
+            $cartItems = \App\Models\ItemIntencionCompra::whereHas('carrito', function($q) {
+                $q->where('id_user', auth()->id());
+            })->pluck('id_item')->toArray();
+            $cartList = array_flip($cartItems);
+        }
+        app()->instance('user_cart_items', $cartList);
+    }
+    $cartItems = app('user_cart_items');
+    $enCarrito = isset($cartItems[$item->id_item]);
 @endphp
 <div class="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col">
 
@@ -56,23 +70,27 @@
         
         {{-- Contenedor de Badges Flotantes --}}
         <div class="absolute top-2 left-2 flex flex-col gap-1.5 z-10 pointer-events-none">
-            @if($stock <= 0)
-                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider border"
-                      style="background:#fee2e2; color:#ef4444; border-color:#fca5a5;">
-                    Agotado
+            @if($enCarrito)
+                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider border"
+                      style="background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">
+                    Carrito
                 </span>
-            @endif
-            @if($enNegociacion)
+            @elseif($enNegociacion)
                 @php
                     $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
                     $hashNeg = \App\Helpers\HashIdHelper::encode($idNeg);
                 @endphp
-                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('negociaciones.verChat', $hashNeg) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider flex items-center gap-1 transition-colors pointer-events-auto">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
-                    En Negociación
+                    Negociación
                 </a>
+            @elseif($stock <= 0)
+                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider border"
+                      style="background:#fee2e2; color:#ef4444; border-color:#fca5a5;">
+                    Agotado
+                </span>
             @endif
         </div>
 
@@ -105,8 +123,12 @@
         </div>
 
         <div class="mt-auto flex gap-1.5">
-            @if($stock <= 0)
-                <span style="flex:1;text-align:center;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;border-radius:0.5rem;padding:0.5rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Agotado</span>
+            @if($enCarrito)
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">En Carrito</div>
+            @elseif($enNegociacion)
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">En Negociación</div>
+            @elseif($stock <= 0)
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;border-radius:0.5rem;padding:0.5rem 0.6rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;box-sizing:border-box;">Agotado</div>
             @else
                 {{-- Agregar al carrito --}}
                 @if($esVenta)
@@ -123,35 +145,17 @@
 
                 {{-- Botón intercambio o Ver chat --}}
                 @if($esIntercambio && !$esMio)
-                    @if($enNegociacion)
-                        @php
-                            $idNeg = $itemsInNegotiation[$item->id_item]['id_negociacion'];
-                            $hashNeg = \App\Helpers\HashIdHelper::encode($idNeg);
-                        @endphp
-                        <a href="{{ route('negociaciones.verChat', $hashNeg) }}"
-                           class="flex items-center gap-1 border border-indigo-300 text-indigo-700 rounded-lg transition-colors flex-shrink-0"
-                           style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#f5f3ff;"
-                           onmouseover="this.style.background='#ede9fe'"
-                           onmouseout="this.style.background='#f5f3ff'"
-                           title="Ir a la negociación activa">
-                            <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                            </svg>
-                            Ver Chat
-                        </a>
-                    @else
-                        <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
-                                class="flex items-center gap-1 border border-orange-300 text-orange-700 rounded-lg transition-colors flex-shrink-0"
-                                style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#fff7ed;"
-                                onmouseover="this.style.background='#fed7aa'"
-                                onmouseout="this.style.background='#fff7ed'"
-                                title="Proponer intercambio">
-                            <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                            </svg>
-                            Intercambio
-                        </button>
-                    @endif
+                    <button onclick="abrirModalIntercambio({{ $item->id_item }}, '{{ addslashes($item->item) }}')"
+                            class="flex items-center gap-1 border border-orange-300 text-orange-700 rounded-lg transition-colors flex-shrink-0"
+                            style="padding:0.4rem 0.6rem; font-size:0.7rem; font-weight:700; background:#fff7ed;"
+                            onmouseover="this.style.background='#fed7aa'"
+                            onmouseout="this.style.background='#fff7ed'"
+                            title="Proponer intercambio">
+                        <svg style="width:0.75rem;height:0.75rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                        Intercambio
+                    </button>
                 @endif
             @endif
 

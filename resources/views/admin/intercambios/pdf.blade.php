@@ -169,7 +169,8 @@
                     <td>
                         @if($itemsOfrecidos->count())
                             @foreach($itemsOfrecidos as $io)
-                                • {{ $io->item }} (RD$ {{ number_format($io->valor ?? 0, 2) }})<br>
+                            @php $qtyPdf = $intercambio->getCantidadOfrecida($io->id_item); @endphp
+                                • {{ $io->item }}@if($qtyPdf > 1) (× {{ $qtyPdf }})@endif (RD$ {{ number_format($io->valor ?? 0, 2) }})<br>
                             @endforeach
                         @else
                             • Solo oferta económica

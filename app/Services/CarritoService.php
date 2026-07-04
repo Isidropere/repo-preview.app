@@ -109,6 +109,23 @@ class CarritoService
             return ['success' => false, 'message' => 'No puedes comprar tu propio artículo.'];
         }
 
+        // No permitir si ya está en el carrito
+        $yaEnCarrito = ItemIntencionCompra::whereHas('carrito', fn($q) => $q->where('id_user', $userId))
+            ->where('id_item', $idItem)
+            ->exists();
+        if ($yaEnCarrito) {
+            return ['success' => false, 'message' => 'Este artículo ya está en tu carrito.'];
+        }
+
+        // No permitir si tiene negociación activa
+        $conNegociacionActiva = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
+            ->where('receptor_item_id', $idItem)
+            ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
+            ->exists();
+        if ($conNegociacionActiva) {
+            return ['success' => false, 'message' => 'Ya tienes una negociación de intercambio activa por este artículo. No puedes agregarlo al carrito.'];
+        }
+
         // Determinar tipo de carrito según categoría del item
         $tipoCarrito = (int) $itemBase->id_categoria_item === 29 ? 'servicio' : 'producto';
 

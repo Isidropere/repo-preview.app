@@ -17,6 +17,8 @@ class MisTalentosScreen extends StatefulWidget {
 class _MisTalentosScreenState extends State<MisTalentosScreen> {
   List _talentos = [];
   bool _loading = true;
+  String? _errorMsg;
+  double _tarifa = 100.0; // Tarifa dinámica obtenida del servidor
 
   // Filtros de búsqueda (idénticos a la web)
   String _searchQuery = '';
@@ -29,28 +31,60 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
     _load();
   }
 
+  Future<void> _loadTarifa() async {
+    try {
+      final res = await ApiClient.get('/talentos/config', auth: true, useCache: false);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map;
+        final val = double.tryParse(data['monto_registro']?.toString() ?? '');
+        if (val != null) {
+          setState(() {
+            _tarifa = val;
+          });
+        }
+      }
+    } catch (e) {
+      print('DEBUG: Fallo al cargar tarifa de talento: $e');
+    }
+  }
+
   Future<void> _load() async {
-    setState(() => _loading = true);
-    final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
-    if (res.statusCode == 200) {
-      final list = jsonDecode(res.body) as List;
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+    await _loadTarifa();
+    try {
+      final res = await ApiClient.get('/mis-items', auth: true, useCache: false);
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        setState(() {
+          _talentos = list.where((item) {
+            final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
+            return cat == 29;
+          }).toList();
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _loading = false;
+          _errorMsg = 'Error del servidor: Código ${res.statusCode}';
+        });
+      }
+    } catch (e, stack) {
+      print('DEBUG ERROR: Fallo al cargar talentos: $e');
+      print(stack);
       setState(() {
-        _talentos = list.where((item) {
-          final tipo = int.tryParse(item['id_tipo_item']?.toString() ?? '');
-          final cat = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          return tipo == 2 || cat == 29;
-        }).toList();
         _loading = false;
+        _errorMsg = 'Error de conexión o datos: $e';
       });
-    } else {
-      setState(() => _loading = false);
     }
   }
 
   Future<void> _eliminar(int idItem, String nombre) async {
     final ok = await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (dialogCtx) => AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
@@ -112,12 +146,12 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(dialogCtx, false),
                 child: const Text('Cancelar',
                     style: TextStyle(color: Colors.grey, fontSize: 13)),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogCtx, true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
@@ -388,15 +422,36 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                 Expanded(
                   child: filteredTalentos.isEmpty
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.star_outline,
-                                  size: 56, color: Colors.grey.shade300),
-                              const SizedBox(height: 12),
-                              Text('No se encontraron talentos',
-                                  style: TextStyle(color: kTextGray)),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _errorMsg != null ? Icons.error_outline : Icons.star_outline,
+                                  size: 56,
+                                  color: _errorMsg != null ? Colors.red.shade300 : Colors.grey.shade300,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _errorMsg ?? 'No se encontraron talentos',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: kTextGray, fontSize: 14),
+                                ),
+                                if (_errorMsg != null) ...[
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: _load,
+                                    icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+                                    label: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kPrimary,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         )
                       : RefreshIndicator(
@@ -409,18 +464,20 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                               final item = filteredTalentos[i];
                               final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
                               final int statusVal = int.tryParse(item['estatus']?.toString() ?? '') ?? 0;
+                              final Map? inventario = item['inventarios'] as Map?;
+                              final int cantidad = int.tryParse(inventario?['cantidad']?.toString() ?? '') ?? 0;
 
                               // Mapeo exacto de estados de la web
                               final String statusText = statusVal == 1
                                   ? 'Activo'
                                   : (statusVal == 2
-                                      ? 'Inactivo'
-                                      : (statusVal == 0 ? 'Pendiente de Pago' : 'Pausado'));
+                                      ? 'Pausado'
+                                      : (statusVal == 0 ? 'Pendiente de Pago' : 'Inactivo'));
                               final Color badgeColor = statusVal == 1
                                   ? Colors.green
                                   : (statusVal == 2
-                                      ? Colors.red
-                                      : (statusVal == 0 ? Colors.orange : Colors.yellow.shade800));
+                                      ? Colors.orange
+                                      : (statusVal == 0 ? Colors.red.shade700 : Colors.grey));
 
                               final int transVal = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 0;
                               final String transText = transVal == 1
@@ -543,12 +600,27 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                                   ),
-                                                  Text(
-                                                    '$transText  |  $pubDate',
-                                                    style: TextStyle(
-                                                        fontSize: 10,
-                                                        color: Colors
-                                                            .grey.shade500),
+                                                  Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                    children: [
+                                                      Text(
+                                                        '$transText  |  $pubDate',
+                                                        style: TextStyle(
+                                                            fontSize: 10,
+                                                            color: Colors
+                                                                .grey.shade500),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        'Publicaciones: $cantidad',
+                                                        style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: cantidad <= 0
+                                                                ? Colors.red
+                                                                : Colors.grey.shade600),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -556,7 +628,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Acciones (Pagar/Editar/Eliminar)
+                                      // Acciones (Pagar/Recargar/Editar/Eliminar)
                                       if (statusVal == 0)
                                         IconButton(
                                           icon: const Icon(Icons.payment_outlined,
@@ -576,6 +648,13 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                               }
                                             }
                                           },
+                                        ),
+                                      if (cantidad <= 0)
+                                        IconButton(
+                                          icon: const Icon(Icons.add_circle_outline,
+                                              color: Colors.blue, size: 20),
+                                          tooltip: 'Aumentar Publicaciones',
+                                          onPressed: () => _mostrarDialogoRecarga(itemId, item['item'] ?? ''),
                                         ),
                                       IconButton(
                                         icon: const Icon(Icons.edit_outlined,
@@ -611,6 +690,97 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  void _mostrarDialogoRecarga(int itemId, String name) {
+    int cantidad = 1;
+    final double tarifa = _tarifa;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Aumentar Publicaciones', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Incrementa el inventario de publicaciones de: $name', style: const TextStyle(fontSize: 13, color: kTextGray)),
+                  const SizedBox(height: 16),
+                  const Text('CANTIDAD DE PUBLICACIONES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray)),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove, color: kTextGray),
+                          onPressed: cantidad > 1
+                              ? () => setDialogState(() => cantidad--)
+                              : null,
+                        ),
+                        Text(
+                          '$cantidad',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: kTextGray),
+                          onPressed: () => setDialogState(() => cantidad++),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Tarifa por publicación: RD\$ ${_formatPrice(tarifa)}', style: const TextStyle(fontSize: 11, color: kTextGray)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Total a Pagar: RD\$ ${_formatPrice(tarifa * cantidad)}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kSecondary),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final String rawPayUrl = '${kBaseUrl.replaceAll('/api', '')}/talento/pago/recargar-movil/$itemId?cantidad=$cantidad';
+                    final String fixedPayUrl = ApiClient.fixImageUrl(rawPayUrl);
+                    final Uri url = Uri.parse(fixedPayUrl);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('No se pudo abrir la pasarela de pago.'),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    }
+                  },
+                  child: const Text('Pagar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

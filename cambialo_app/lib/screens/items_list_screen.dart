@@ -70,7 +70,8 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
     }
 
     try {
-      final res = await ApiClient.get(path);
+      final loggedIn = await AuthService.isLoggedIn();
+      final res = await ApiClient.get(path, auth: loggedIn);
       if (!mounted) return;
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
@@ -298,6 +299,9 @@ class _ItemGridCard extends StatelessWidget {
     final bool esIntercambio = transVal == 2 || transVal == 3;
     final bool esMio = currentUserId != null && currentUserId == itemUserId;
 
+    final bool yaEnCarrito = item['ya_en_carrito'] == true;
+    final bool conNegociacionActiva = item['con_negociacion_activa'] == true;
+
     Future<void> handleIntercambio() async {
       final loggedIn = await AuthService.isLoggedIn();
       if (!loggedIn) {
@@ -325,22 +329,36 @@ class _ItemGridCard extends StatelessWidget {
       if (!context.mounted) return;
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
+      String message = 'Error al agregar';
+      bool isSuccess = false;
       if (res.statusCode == 200) {
         try {
           final data = jsonDecode(res.body);
-          if (data['cart_count'] != null) {
-            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+          if (data['success'] == true) {
+            isSuccess = true;
+            message = data['message'] ?? '¡Agregado al carrito!';
+            if (data['cart_count'] != null) {
+              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
+            } else {
+              ApiClient.cartCountNotifier.value++;
+            }
           } else {
-            ApiClient.cartCountNotifier.value++;
+            message = data['message'] ?? 'Error al agregar';
           }
         } catch (_) {
+          isSuccess = true;
           ApiClient.cartCountNotifier.value++;
         }
+      } else {
+        try {
+          final data = jsonDecode(res.body);
+          message = data['message'] ?? 'Error al agregar';
+        } catch (_) {}
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(res.statusCode == 200 ? '¡Agregado al carrito!' : 'Error al agregar'),
-          backgroundColor: res.statusCode == 200 ? kPrimary : Colors.red,
+          content: Text(message),
+          backgroundColor: isSuccess ? kPrimary : Colors.red,
         ));
       }
     }
@@ -388,6 +406,46 @@ class _ItemGridCard extends StatelessWidget {
                   width: double.infinity,
                 ),
               ),
+              if (yaEnCarrito || conNegociacionActiva || (int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? const Color(0xFFFEE2E2)
+                          : const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFFCA5A5)
+                            : const Color(0xFFBFDBFE),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        )
+                      ],
+                    ),
+                    child: Text(
+                      ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                          ? 'AGOTADO'
+                          : (yaEnCarrito ? 'CARRITO' : 'NEGOCIACIÓN'),
+                      style: TextStyle(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.bold,
+                        color: ((int.tryParse(item['stock']?.toString() ?? '') ?? 0) <= 0 && !yaEnCarrito && !conNegociacionActiva)
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF1D4ED8),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: 8,
                 right: 8,
@@ -459,48 +517,74 @@ class _ItemGridCard extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      if (esVenta && !esMio) ...[
+                      if (yaEnCarrito || conNegociacionActiva) ...[
                         Expanded(
                           child: Container(
                             height: 32,
+                            alignment: Alignment.center,
                             margin: const EdgeInsets.only(right: 4),
-                            child: ElevatedButton(
-                              onPressed: handleAddToCart,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.zero,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFFBFDBFE),
+                                width: 1,
                               ),
-                              child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
+                            ),
+                            child: Text(
+                              yaEnCarrito ? 'EN CARRITO' : 'EN NEGOCIACIÓN',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1D4ED8),
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                      if (esIntercambio && !esMio) ...[
-                        Expanded(
-                          child: Container(
-                            height: 32,
-                            margin: const EdgeInsets.only(right: 4),
-                            child: OutlinedButton(
-                              onPressed: handleIntercambio,
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
-                                backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
-                                foregroundColor: const Color(0xFFC2410C),
-                                padding: EdgeInsets.zero,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ] else ...[
+                        if (esVenta && !esMio) ...[
+                          Expanded(
+                            child: Container(
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 4),
+                              child: ElevatedButton(
+                                onPressed: handleAddToCart,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3B82F6), // Web blue #3b82f6
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Icon(Icons.shopping_cart, size: 16, color: Colors.white),
                               ),
-                              child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
                             ),
                           ),
-                        ),
+                        ],
+                        if (esIntercambio && !esMio) ...[
+                          Expanded(
+                            child: Container(
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 4),
+                              child: OutlinedButton(
+                                onPressed: handleIntercambio,
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFFFED7AA), width: 1), // Web border-orange-300 #fed7aa
+                                  backgroundColor: const Color(0xFFFFF7ED), // Web #fff7ed
+                                  foregroundColor: const Color(0xFFC2410C),
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Icon(Icons.swap_horiz, size: 18, color: Color(0xFFC2410C)), // Web text-orange-700 #c2410c
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                       Expanded(
                         child: Container(

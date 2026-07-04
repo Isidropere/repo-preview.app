@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import '../widgets/item_image.dart';
 import 'negociacion_detalle_screen.dart';
 
 /// Pantalla "Mis Intercambios" — lista negociaciones activas del usuario
@@ -95,16 +96,58 @@ class _NegList extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: kPrimary)),
+      builder: (_) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: kPrimary),
+                  SizedBox(height: 12),
+                  Text('Procesando...', style: TextStyle(fontSize: 13)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
-    final res = await ApiClient.post(path, {}, auth: true);
-    if (context.mounted) {
-      Navigator.pop(context); // close dialog
-      if (res.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Acción realizada con éxito'), backgroundColor: Colors.green));
-        onRefresh();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al realizar la acción'), backgroundColor: Colors.red));
+
+    try {
+      final res = await ApiClient.post(path, {}, auth: true);
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: false).pop(); // close only the dialog
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          final body = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Acción realizada con éxito'),
+            backgroundColor: Colors.green,
+          ));
+          onRefresh();
+        } else {
+          final body = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Error al realizar la acción'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: false).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error de conexión: $e'),
+          backgroundColor: Colors.red,
+        ));
       }
     }
   }
@@ -155,22 +198,21 @@ class _NegList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(children: [
-                    // Icono intercambio
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.08),
-                        shape: BoxShape.circle,
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 52, height: 52,
+                        color: Colors.grey.shade100,
+                        child: ItemImage(item: item),
                       ),
-                      child: const Icon(Icons.swap_horiz, color: kPrimary, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(
                           item['item'] ?? 'Artículo #${neg['id_negociacion']}',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -179,11 +221,102 @@ class _NegList extends StatelessWidget {
                           'Con: ${receptor['nombres'] ?? ''} ${receptor['apellidos'] ?? ''}',
                           style: TextStyle(fontSize: 11, color: kTextGray),
                         ),
-                        if (neg['monto_oferta'] != null && (neg['monto_oferta'] as num) > 0) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Oferta: RD\$ ${neg['monto_oferta']}',
-                            style: const TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Builder(builder: (context) {
+                              final esServServ = neg['es_servicio_servicio'] == true;
+                              final esProdServ = neg['es_producto_servicio'] == true;
+                              final label = esServServ
+                                  ? '🤝 Servicio ↔ Servicio'
+                                  : esProdServ
+                                      ? '📦🔧 Producto ↔ Servicio'
+                                      : '📦📦 Producto ↔ Producto';
+                              final color = esServServ
+                                  ? Colors.blue
+                                  : esProdServ
+                                      ? Colors.orange
+                                      : Colors.green;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: color.withOpacity(0.3)),
+                                ),
+                                child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color.shade700)),
+                              );
+                            }),
+                            if (neg['monto_oferta'] != null && (neg['monto_oferta'] as num) > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: kPrimary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: kPrimary.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  '+ RD\$ ${neg['monto_oferta']}',
+                                  style: const TextStyle(fontSize: 9, color: kPrimary, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (neg['items_ofrecidos_detalles'] != null && (neg['items_ofrecidos_detalles'] as List).isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text('Ofrece a cambio:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray)),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: (neg['items_ofrecidos_detalles'] as List).map((offeredItem) {
+                              final cantidadOfrecida = offeredItem['cantidad_ofrecida'] ?? 1;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: SizedBox(
+                                        width: 16, height: 16,
+                                        child: ItemImage(item: offeredItem),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        offeredItem['item'] ?? '',
+                                        style: const TextStyle(fontSize: 10, color: kTextDark, fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (cantidadOfrecida > 1) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: kPrimary,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          '× $cantidadOfrecida',
+                                          style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ],
                       ]),
@@ -225,12 +358,12 @@ class _NegList extends StatelessWidget {
     }
     // Emisor: contraoferta
     else if (rol == 'emisor' && estado == 'contraoferta') {
-      actions.add(_actionButton('Aceptar Contraoferta', Colors.green, () => _ejecutarAccion(context, id, '/negociaciones/$id/aceptar_contraoferta')));
+      actions.add(_actionButton('Aceptar Contraoferta', Colors.green, () => _ejecutarAccion(context, id, '/negociaciones/$id/aceptar-como-emisor')));
       actions.add(_actionButton('Rechazar', Colors.red, () => _ejecutarAccion(context, id, '/negociaciones/$id/rechazar'), isOutlined: true));
     }
     // Ambos: Aceptado y no confirmado (Aprobar intercambio)
     else if (estado == 'aceptado' && !miConfirmado) {
-      final path = rol == 'emisor' ? '/negociaciones/$id/confirmar_emisor' : '/negociaciones/$id/confirmar_receptor';
+      final path = rol == 'emisor' ? '/negociaciones/$id/confirmar-emisor' : '/negociaciones/$id/confirmar-receptor';
       actions.add(_actionButton('Aprobar Intercambio', Colors.orange, () => _ejecutarAccion(context, id, path)));
     }
     // Si hay que pagar, mostrar "Pagar Envío" (esto navega al detalle)

@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _remember    = false;
   bool _obscurePass = true;
   String? _error;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: '888336739336-ti3q4e2ejj4tuf6voeb36bbh5e2fua40.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );

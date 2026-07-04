@@ -732,11 +732,28 @@ class ItemController extends Controller
                 }
             }
 
+            $userId = auth()->id();
+            $yaEnCarrito = false;
+            $conNegociacionActiva = false;
+            
+            if ($userId) {
+                $yaEnCarrito = \App\Models\ItemIntencionCompra::whereHas('carrito', function ($q) use ($userId) {
+                    $q->where('id_user', $userId);
+                })->where('id_item', $item->id_item)->exists();
+                
+                $conNegociacionActiva = \App\Models\Negociacion::where('usuario_emisor_id', $userId)
+                    ->where('receptor_item_id', $item->id_item)
+                    ->whereIn('estado', ['Inicial', 'aceptado', 'contraoferta'])
+                    ->exists();
+            }
+
             return view('productos.producto-detalle', [
                 'item'               => $item,
                 'relatedItems'       => $relatedItems,
                 'configTarifa29'     => $configTarifa29,
                 'hojaVidaProveedor'  => $hojaVidaProveedor,
+                'yaEnCarrito'        => $yaEnCarrito,
+                'conNegociacionActiva' => $conNegociacionActiva,
             ]);
 
         } catch (Throwable $e) {
@@ -2039,6 +2056,7 @@ class ItemController extends Controller
                 ->whereHas('inventarios', function ($q) {
                     $q->where('cantidad', '>', 0);
                 })
+                ->with(['inventarios:id_item,cantidad'])
                 ->get(['id_item', 'item', 'valor', 'tipo_trans', 'condicion']);
 
             Log::info('Items del usuario obtenidos correctamente', [

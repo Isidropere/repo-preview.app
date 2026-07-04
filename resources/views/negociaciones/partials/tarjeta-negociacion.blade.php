@@ -17,6 +17,15 @@
     $esProductoServicio = $negService->esProductoServicio($neg);
     $esProductoProducto = $negService->esProductoProducto($neg);
 
+    // Variables auxiliares para saber tipo de cada lado (usadas en bloques de pago)
+    $itemSolicitadoRef = \App\Models\Item::find($neg->receptor_item_id);
+    $itemsOfrecidosRef = $neg->items_ofrecidos
+        ? \App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get()
+        : collect();
+    $solicitadoEsServicio = $itemSolicitadoRef && $itemSolicitadoRef->id_categoria_item == 29;
+    $todosOfrecidosServicio = $itemsOfrecidosRef->isNotEmpty()
+        && $itemsOfrecidosRef->every(fn($i) => $i->id_categoria_item == 29);
+
     // ¿Requiere pago este usuario?
     if ($esServicioServicio) {
         $requierePago = false;
@@ -107,8 +116,13 @@
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Productos ofrecidos a cambio:</p>
         <div class="flex flex-wrap gap-2">
             @foreach(\App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() as $io)
-            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-lg border border-blue-100">
-                {{ $io->item }} @if($io->valor) · RD$ {{ number_format($io->valor, 2) }} @endif
+            @php $cantidadIo = $neg->getCantidadOfrecida($io->id_item); @endphp
+            <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-lg border border-blue-100">
+                {{ $io->item }}
+                @if($cantidadIo > 1)
+                <span class="inline-flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[20px]">× {{ $cantidadIo }}</span>
+                @endif
+                @if($io->valor) <span class="text-blue-500">· RD$ {{ number_format($io->valor, 2) }}</span> @endif
             </span>
             @endforeach
         </div>

@@ -63,7 +63,12 @@ class CarritoController extends Controller
         );
 
         if ($request->wantsJson()) {
-            return response()->json($resultado);
+            $status = $resultado['success'] ? 200 : 422;
+            return response()->json($resultado, $status);
+        }
+
+        if (!$resultado['success']) {
+            return back()->with('error', $resultado['message']);
         }
 
         return redirect()->route('carrito.show')->with('success', $resultado['message']);

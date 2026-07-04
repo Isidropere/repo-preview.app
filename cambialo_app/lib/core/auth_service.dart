@@ -11,6 +11,9 @@ const Duration        _userCacheTtl = Duration(minutes: 5);
 class AuthService {
   static bool adultosAceptado = false;
 
+  /// Retorna de inmediato el usuario en caché si está disponible en memoria (0ms)
+  static Map<String, dynamic>? get currentUser => _cachedUser;
+
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final res = await ApiClient.post('/auth/login', {'email': email, 'password': password});

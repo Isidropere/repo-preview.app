@@ -91,6 +91,9 @@
                                     {{ $item->views_count ?? 0 }}
                                 </span>
                                 <span>{{ $item->fecha ? \Carbon\Carbon::parse($item->fecha)->format('d/m/Y') : '' }}</span>
+                                <span class="px-2 py-0.5 rounded font-semibold {{ ($item->inventarios?->cantidad ?? 0) <= 0 ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-gray-100 text-gray-600' }}">
+                                    Publicaciones: {{ $item->inventarios?->cantidad ?? 0 }}
+                                </span>
                             </div>
                         </div>
 
@@ -101,6 +104,12 @@
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                                 Pagar
                             </a>
+                            @endif
+                            @if(($item->inventarios?->cantidad ?? 0) <= 0)
+                            <button type="button" onclick="mostrarModalRecarga({{ $item->id_item }}, '{{ addslashes($item->item) }}')" class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all" title="Aumentar Publicaciones">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Aumentar
+                            </button>
                             @endif
                             <a href="{{ route('items.VerDetalle', $item->slug) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -171,6 +180,39 @@ function confirmDelete(btn) {
     document.getElementById('modalEliminarTalento').classList.remove('hidden');
 }
 function abrirImagen(src) { if (!src) return; document.getElementById('imgLightboxSrc').src = src; document.getElementById('imgLightbox').classList.remove('hidden'); }
+
+let activeRecargaItemId = null;
+const tarifaPublicacion = {{ \App\Models\ConfigTarifaCategoria29::vigente()->monto_registro }};
+function mostrarModalRecarga(id, name) {
+    activeRecargaItemId = id;
+    document.getElementById('recargaTalentoName').textContent = 'Incrementa el inventario de publicaciones de: ' + name;
+    document.getElementById('recargaCantidadInput').value = 1;
+    updateRecargaTotal();
+    document.getElementById('modalRecargaTalento').classList.remove('hidden');
+}
+function decRecarga() {
+    const input = document.getElementById('recargaCantidadInput');
+    let val = parseInt(input.value) || 1;
+    if (val > 1) {
+        input.value = val - 1;
+        updateRecargaTotal();
+    }
+}
+function incRecarga() {
+    const input = document.getElementById('recargaCantidadInput');
+    let val = parseInt(input.value) || 1;
+    input.value = val + 1;
+    updateRecargaTotal();
+}
+function updateRecargaTotal() {
+    const val = parseInt(document.getElementById('recargaCantidadInput').value) || 1;
+    const total = val * tarifaPublicacion;
+    document.getElementById('recargaTotalText').textContent = 'RD$ ' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function procederRecarga() {
+    const val = parseInt(document.getElementById('recargaCantidadInput').value) || 1;
+    window.location.href = `/talento/pago/recargar/${activeRecargaItemId}?cantidad=${val}`;
+}
 </script>
 
 {{-- Modal confirmación eliminar talento --}}
@@ -201,6 +243,39 @@ function abrirImagen(src) { if (!src) return; document.getElementById('imgLightb
                 onclick="document.getElementById('modalEliminarTalento').classList.add('hidden'); window._deleteForm.submit();"
                 class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-bold transition-colors">
                 Sí, eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Recarga Talentos --}}
+<div id="modalRecargaTalento" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800">Aumentar Publicaciones</h3>
+        </div>
+        <p class="text-sm text-gray-500 mb-4 font-medium" id="recargaTalentoName"></p>
+        <div class="mb-5">
+            <label class="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Cantidad de Publicaciones</label>
+            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
+                <button type="button" onclick="decRecarga()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 font-bold transition-all">-</button>
+                <input type="number" id="recargaCantidadInput" value="1" min="1" class="w-full text-center py-2 border-0 bg-transparent text-gray-800 font-semibold focus:outline-none" readonly>
+                <button type="button" onclick="incRecarga()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 font-bold transition-all">+</button>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Tarifa por publicación: <strong class="text-primary">RD$ {{ number_format(\App\Models\ConfigTarifaCategoria29::vigente()->monto_registro, 2) }}</strong></p>
+            <p class="text-sm font-semibold text-gray-700 mt-3">Total a Pagar: <strong class="text-secondary" id="recargaTotalText">RD$ {{ number_format(\App\Models\ConfigTarifaCategoria29::vigente()->monto_registro, 2) }}</strong></p>
+        </div>
+        <div class="flex gap-3">
+            <button type="button" onclick="document.getElementById('modalRecargaTalento').classList.add('hidden')" class="flex-1 border-2 border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Cancelar
+            </button>
+            <button type="button" onclick="procederRecarga()" class="flex-1 bg-primary hover:bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm">
+                Pagar
             </button>
         </div>
     </div>

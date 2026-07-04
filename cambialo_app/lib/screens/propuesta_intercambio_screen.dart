@@ -26,6 +26,7 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
 
   List _misItems = [];
   final Set<int> _itemsSeleccionados = {};
+  final Map<int, int> _cantidadesOfrecidas = {};
   bool _loading = true;
   bool _enviando = false;
   String _error = '';
@@ -89,6 +90,11 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
     }
     if (_itemsSeleccionados.isNotEmpty) {
       body['items_ofrecidos'] = _itemsSeleccionados.toList();
+      final Map<String, int> cantidadesJson = {};
+      for (var id in _itemsSeleccionados) {
+        cantidadesJson[id.toString()] = _cantidadesOfrecidas[id] ?? 1;
+      }
+      body['cantidades_ofrecidas'] = cantidadesJson;
     }
 
     final res = await ApiClient.post('/negociaciones', body, auth: true);
@@ -258,6 +264,9 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                         final id = ApiClient.parseInt(item['id_item']) ?? 0;
                         final isService = ApiClient.parseInt(item['id_categoria_item']) == 29;
                         final isSelected = _itemsSeleccionados.contains(id);
+                        final inventario = item['inventarios'];
+                        final int stockMax = inventario != null ? ApiClient.parseInt(inventario['cantidad']) ?? 0 : 0;
+                        final int qtyActual = _cantidadesOfrecidas[id] ?? 1;
 
                         return CheckboxListTile(
                           value: isSelected,
@@ -265,8 +274,10 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                             setState(() {
                               if (val == true) {
                                 _itemsSeleccionados.add(id);
+                                _cantidadesOfrecidas[id] = 1;
                               } else {
                                 _itemsSeleccionados.remove(id);
+                                _cantidadesOfrecidas.remove(id);
                               }
                             });
                           },
@@ -298,9 +309,73 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                               ),
                             ],
                           ),
-                          subtitle: Text(
-                            'Valor estimado: RD\$ ${item['valor'] ?? 0}',
-                            style: const TextStyle(fontSize: 11, color: kPrimary),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Valor estimado: RD\$ ${item['valor'] ?? 0}',
+                                    style: const TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Disponible: $stockMax',
+                                    style: TextStyle(fontSize: 11, color: kTextGray, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                              if (isSelected) ...[
+                                const SizedBox(height: 8),
+                                const Divider(height: 1),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Cant. a ofrecer: ',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: kTextDark),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        _qtyButton(
+                                          icon: Icons.remove,
+                                          onPressed: qtyActual <= 1
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    _cantidadesOfrecidas[id] = qtyActual - 1;
+                                                  });
+                                                },
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                                          child: Text(
+                                            '$qtyActual',
+                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextDark),
+                                          ),
+                                        ),
+                                        _qtyButton(
+                                          icon: Icons.add,
+                                          onPressed: qtyActual >= stockMax
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    _cantidadesOfrecidas[id] = qtyActual + 1;
+                                                  });
+                                                },
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      'Quedan: ${stockMax - qtyActual}',
+                                      style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         );
                       },
@@ -365,6 +440,25 @@ class _PropuestaIntercambioScreenState extends State<PropuestaIntercambioScreen>
                 ),
               ]),
             ),
+    );
+  }
+
+  Widget _qtyButton({required IconData icon, VoidCallback? onPressed}) {
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: onPressed == null ? Colors.grey.shade100 : kPrimary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: onPressed == null ? Colors.grey.shade200 : kPrimary.withOpacity(0.2)),
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 14),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+        color: onPressed == null ? Colors.grey : kPrimary,
+        onPressed: onPressed,
+      ),
     );
   }
 }
