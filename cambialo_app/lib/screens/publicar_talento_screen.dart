@@ -726,6 +726,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                 'Cantidad de servicios *',
                 required: true,
                 keyboardType: TextInputType.number,
+                enabled: widget.itemId == null,
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Este campo es obligatorio';
                   final qty = int.tryParse(v);
@@ -733,6 +734,13 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                   return null;
                 },
               ),
+              if (widget.itemId != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Nota: La cantidad de servicios no se puede modificar una vez publicada.',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ],
               const SizedBox(height: 16),
               
               // Descripción con contador
@@ -1271,7 +1279,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
       );
 
   Widget _campo(TextEditingController ctrl, String label,
-      {bool required = false, TextInputType? keyboardType, int maxLines = 1, String? Function(String?)? validator}) {
+      {bool required = false, TextInputType? keyboardType, int maxLines = 1, String? Function(String?)? validator, bool enabled = true}) {
     IconData? prefixIcon;
     if (label.contains('Nombre')) {
       prefixIcon = Icons.star_outline;
@@ -1285,15 +1293,24 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
       controller: ctrl,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+      enabled: enabled,
+      style: TextStyle(
+        fontSize: 14,
+        color: enabled ? kTextDark : Colors.grey.shade600,
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: kPrimary, size: 20) : null,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: enabled ? kPrimary : Colors.grey, size: 20) : null,
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
         ),
