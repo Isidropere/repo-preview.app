@@ -179,6 +179,31 @@ class _NegList extends StatelessWidget {
                           'Con: ${receptor['nombres'] ?? ''} ${receptor['apellidos'] ?? ''}',
                           style: TextStyle(fontSize: 11, color: kTextGray),
                         ),
+                        const SizedBox(height: 4),
+                        // Tipo de intercambio
+                        Builder(builder: (context) {
+                          final esServServ = neg['es_servicio_servicio'] == true;
+                          final esProdServ = neg['es_producto_servicio'] == true;
+                          final label = esServServ
+                              ? '🤝 Servicio ↔ Servicio'
+                              : esProdServ
+                                  ? '📦🔧 Producto ↔ Servicio'
+                                  : '📦📦 Producto ↔ Producto';
+                          final color = esServServ
+                              ? Colors.blue
+                              : esProdServ
+                                  ? Colors.orange
+                                  : Colors.green;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: color.withOpacity(0.3)),
+                            ),
+                            child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color.shade700)),
+                          );
+                        }),
                         if (neg['monto_oferta'] != null && (neg['monto_oferta'] as num) > 0) ...[
                           const SizedBox(height: 2),
                           Text(
@@ -225,12 +250,12 @@ class _NegList extends StatelessWidget {
     }
     // Emisor: contraoferta
     else if (rol == 'emisor' && estado == 'contraoferta') {
-      actions.add(_actionButton('Aceptar Contraoferta', Colors.green, () => _ejecutarAccion(context, id, '/negociaciones/$id/aceptar_contraoferta')));
+      actions.add(_actionButton('Aceptar Contraoferta', Colors.green, () => _ejecutarAccion(context, id, '/negociaciones/$id/aceptar-como-emisor')));
       actions.add(_actionButton('Rechazar', Colors.red, () => _ejecutarAccion(context, id, '/negociaciones/$id/rechazar'), isOutlined: true));
     }
     // Ambos: Aceptado y no confirmado (Aprobar intercambio)
     else if (estado == 'aceptado' && !miConfirmado) {
-      final path = rol == 'emisor' ? '/negociaciones/$id/confirmar_emisor' : '/negociaciones/$id/confirmar_receptor';
+      final path = rol == 'emisor' ? '/negociaciones/$id/confirmar-emisor' : '/negociaciones/$id/confirmar-receptor';
       actions.add(_actionButton('Aprobar Intercambio', Colors.orange, () => _ejecutarAccion(context, id, path)));
     }
     // Si hay que pagar, mostrar "Pagar Envío" (esto navega al detalle)

@@ -22,19 +22,33 @@ class NegociacionApiController extends Controller
             ->whereNotIn('estado', ['cancelado'])
             ->with([
                 'item.imagenes:id_imagen,id_item,nombre,ruta',
+                'item.categoria:id_categoria_item,categoria',
                 'usuarioReceptor:id,nombres,apellidos',
             ])
             ->orderByDesc('id_negociacion')
-            ->get();
+            ->get()
+            ->map(function ($neg) {
+                $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
+                $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
+                $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
+                return $neg;
+            });
 
         $comoReceptor = Negociacion::where('usuario_receptor_id', $userId)
             ->whereNotIn('estado', ['cancelado'])
             ->with([
                 'item.imagenes:id_imagen,id_item,nombre,ruta',
+                'item.categoria:id_categoria_item,categoria',
                 'usuario:id,nombres,apellidos',
             ])
             ->orderByDesc('id_negociacion')
-            ->get();
+            ->get()
+            ->map(function ($neg) {
+                $neg->es_servicio_servicio = $this->negociacionService->esServicioServicio($neg);
+                $neg->es_producto_servicio = $this->negociacionService->esProductoServicio($neg);
+                $neg->es_producto_producto = $this->negociacionService->esProductoProducto($neg);
+                return $neg;
+            });
 
         return response()->json([
             'como_emisor'   => $comoEmisor,
