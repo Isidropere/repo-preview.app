@@ -95,16 +95,58 @@ class _NegList extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: kPrimary)),
+      builder: (_) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: kPrimary),
+                  SizedBox(height: 12),
+                  Text('Procesando...', style: TextStyle(fontSize: 13)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
-    final res = await ApiClient.post(path, {}, auth: true);
-    if (context.mounted) {
-      Navigator.pop(context); // close dialog
-      if (res.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Acción realizada con éxito'), backgroundColor: Colors.green));
-        onRefresh();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al realizar la acción'), backgroundColor: Colors.red));
+
+    try {
+      final res = await ApiClient.post(path, {}, auth: true);
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: false).pop(); // close only the dialog
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          final body = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Acción realizada con éxito'),
+            backgroundColor: Colors.green,
+          ));
+          onRefresh();
+        } else {
+          final body = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(body['message'] ?? 'Error al realizar la acción'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: false).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error de conexión: $e'),
+          backgroundColor: Colors.red,
+        ));
       }
     }
   }
