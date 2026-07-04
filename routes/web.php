@@ -434,6 +434,7 @@ Route::match(['get', 'post'], '/talento/pago/aprobado', [\App\Http\Controllers\T
 Route::match(['get', 'post'], '/talento/pago/declinado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoDeclinado'])->name('talento.pago.declinado');
 Route::match(['get', 'post'], '/talento/pago/cancelado', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'pagoCancelado'])->name('talento.pago.cancelado');
 Route::get('/talento/pago/iniciar-movil/{id_item}', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'iniciarPagoMovil'])->name('talento.pago.iniciar-movil');
+Route::get('/talento/pago/recargar-movil/{id_item}', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'iniciarRecargaMovil'])->name('talento.pago.recargar-movil');
 
 // Callbacks de pago de negociaciones (envío) AZUL
 Route::match(['get', 'post'], '/negociaciones/pago/aprobado', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'pagoAprobado'])->name('negociaciones.pago.aprobado');
@@ -447,6 +448,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('pago.redirect.iniciar');
 
     Route::get('/talento/pago/iniciar/{id_item}', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'iniciarPagoWeb'])->name('talento.pago.iniciar');
+    Route::get('/talento/pago/recargar/{id_item}', [\App\Http\Controllers\TalentoPagoRedirectController::class, 'iniciarRecargaWeb'])->name('talento.pago.recargar');
     Route::get('/negociaciones/pago/iniciar/{id_negociacion}', [\App\Http\Controllers\NegociacionPagoRedirectController::class, 'iniciarPagoWeb'])->name('negociaciones.pago.iniciar');
 });
 

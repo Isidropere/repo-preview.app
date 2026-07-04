@@ -132,6 +132,7 @@ class TalentoPagoRedirectController extends Controller
         $orderNumber = $request->input('OrderNumber');
         $parts = explode('-', $orderNumber);
         $itemId = isset($parts[1]) ? (int)$parts[1] : null;
+        $isRecharge = ($parts[0] === 'TALREC');
 
         $item = Item::where('id_item', $itemId)->first();
         if (!$item) {
@@ -139,19 +140,33 @@ class TalentoPagoRedirectController extends Controller
             return $this->mostrarVistaResultado(false, 'No se encontró el talento asociado a este pago.');
         }
 
-        if ($item->estatus == 1) {
+        if ($item->estatus == 1 && !$isRecharge) {
             return $this->mostrarVistaResultado(true, '¡El talento ya ha sido publicado con éxito!', $item);
         }
 
         try {
-            DB::transaction(function () use ($item, $request) {
+            DB::transaction(function () use ($item, $request, $parts, $isRecharge) {
+                $cantidad = $isRecharge ? (int)($parts[2] ?? 1) : 1;
+
+                if ($isRecharge) {
+                    if ($item->inventarios) {
+                        $item->inventarios->increment('cantidad', $cantidad);
+                    } else {
+                        \App\Models\Inventario::create([
+                            'id_item' => $item->id_item,
+                            'cantidad' => $cantidad,
+                            'fecha' => now(),
+                        ]);
+                    }
+                }
+
                 // Cambiar el talento a activo
                 $item->update(['estatus' => 1]);
 
                 // Registrar pago del talento
                 $config = ConfigTarifaCategoria29::vigente();
-                $cantidad = (int)($item->inventarios?->cantidad ?? 1);
-                $monto = (float) $config->monto_registro * $cantidad;
+                $cantidadMonto = $isRecharge ? $cantidad : (int)($item->inventarios?->cantidad ?? 1);
+                $monto = (float) $config->monto_registro * $cantidadMonto;
 
                 $pagoTalento = PagoRegistroTalento::create([
                     'id_item'        => $item->id_item,
@@ -159,7 +174,7 @@ class TalentoPagoRedirectController extends Controller
                     'transaction_id' => $request->input('RRN') ?? $request->input('AuthorizationCode') ?? 'REDIRECT_AZUL_' . time(),
                     'monto_pagado'   => $monto,
                     'estatus'        => 'aprobado',
-                    'notas'          => 'Pago procesado vía redirección AZUL. Código Autorización: ' . $request->input('AuthorizationCode'),
+                    'notas'          => ($isRecharge ? "Recarga de {$cantidad} publicaciones" : "Pago registro talento") . ' procesado vía redirección AZUL. Código Autorización: ' . $request->input('AuthorizationCode'),
                 ]);
 
                 // Generar Contabilidad (Asiento y Caja)
@@ -266,5 +281,102 @@ class TalentoPagoRedirectController extends Controller
         } else {
             return redirect()->route('items.admintalento')->with('error', $message);
         }
+    }
+
+    public function iniciarRecargaWeb(Request $request, int $id_item)
+    {
+        $userId = auth()->id();
+        $cantidad = (int) $request->query('cantidad', 1);
+        if ($cantidad < 1) $cantidad = 1;
+
+        $item = Item::where('id_item', $id_item)->where('id_user', $userId)->first();
+        if (!$item) {
+            return redirect()->route('items.admintalento')->with('error', 'No se encontró el talento especificado.');
+        }
+
+        return $this->procesarRedireccionRecarga($item, $userId, 'azul_talento_web', $cantidad);
+    }
+
+    public function iniciarRecargaMovil(Request $request, int $id_item)
+    {
+        $cantidad = (int) $request->query('cantidad', 1);
+        if ($cantidad < 1) $cantidad = 1;
+
+        $item = Item::where('id_item', $id_item)->first();
+        if (!$item) {
+            return response('Talento no encontrado.', 404);
+        }
+
+        return $this->procesarRedireccionRecarga($item, $item->id_user, 'azul_talento_movil', $cantidad);
+    }
+
+    private function procesarRedireccionRecarga(Item $item, int $userId, string $provider, int $cantidad)
+    {
+        if ((int)$item->id_categoria_item !== 29) {
+            return redirect()->route('items.admintalento')->with('error', 'El ítem seleccionado no es de la categoría de talentos.');
+        }
+
+        $config = ConfigTarifaCategoria29::vigente();
+        $monto = (float) $config->monto_registro * $cantidad;
+
+        if ($monto <= 0) {
+            if ($item->inventarios) {
+                $item->inventarios->increment('cantidad', $cantidad);
+            } else {
+                \App\Models\Inventario::create([
+                    'id_item' => $item->id_item,
+                    'cantidad' => $cantidad,
+                    'fecha' => now(),
+                ]);
+            }
+            $item->update(['estatus' => 1]);
+
+            $isMobile = ($provider === 'azul_talento_movil');
+            if ($isMobile) {
+                return view('pago.resultado_movil', [
+                    'success' => true,
+                    'message' => 'Publicaciones aumentadas con éxito.',
+                    'title'   => 'Recarga de Talento'
+                ]);
+            }
+            return redirect()->route('items.admintalento')->with('success', 'Publicaciones aumentadas correctamente.');
+        }
+
+        $isMobile = ($provider === 'azul_talento_movil');
+        $queryParam = $isMobile ? '?mobile=1' : '';
+
+        $approvedUrl = route('talento.pago.aprobado') . $queryParam;
+        $declinedUrl = route('talento.pago.declinado') . $queryParam;
+        $cancelUrl   = route('talento.pago.cancelado') . $queryParam;
+
+        $clientHost = request()->getHttpHost();
+        $approvedUrl = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $approvedUrl);
+        $declinedUrl = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $declinedUrl);
+        $cancelUrl   = str_replace(['127.0.0.1:8000', 'localhost:8000', '127.0.0.1', 'localhost'], $clientHost, $cancelUrl);
+
+        $orderNumber = 'TALREC-' . $item->id_item . '-' . $cantidad . '-' . time();
+        $azulData = $this->azulProvider->generarCamposFormulario($monto, $orderNumber, [
+            'approved_url' => $approvedUrl,
+            'declined_url' => $declinedUrl,
+            'cancel_url'   => $cancelUrl,
+        ]);
+
+        DB::table('logs_pagos')->insert([
+            'id_user'          => $userId,
+            'custom_order_id'  => $orderNumber,
+            'provider'         => $provider,
+            'transaction_type' => 'talento_init',
+            'amount'           => $monto,
+            'request_payload'  => json_encode($azulData['fields']),
+            'response_payload' => json_encode([]),
+            'is_success'       => true,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        return view('pago.redirect', [
+            'url'    => $azulData['url'],
+            'fields' => $azulData['fields']
+        ]);
     }
 }

@@ -445,6 +445,8 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                               final item = filteredTalentos[i];
                               final int itemId = int.tryParse(item['id_item']?.toString() ?? '') ?? 0;
                               final int statusVal = int.tryParse(item['estatus']?.toString() ?? '') ?? 0;
+                              final Map? inventario = item['inventarios'] as Map?;
+                              final int cantidad = int.tryParse(inventario?['cantidad']?.toString() ?? '') ?? 0;
 
                               // Mapeo exacto de estados de la web
                               final String statusText = statusVal == 1
@@ -579,12 +581,27 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                                   ),
-                                                  Text(
-                                                    '$transText  |  $pubDate',
-                                                    style: TextStyle(
-                                                        fontSize: 10,
-                                                        color: Colors
-                                                            .grey.shade500),
+                                                  Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                    children: [
+                                                      Text(
+                                                        '$transText  |  $pubDate',
+                                                        style: TextStyle(
+                                                            fontSize: 10,
+                                                            color: Colors
+                                                                .grey.shade500),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        'Publicaciones: $cantidad',
+                                                        style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: cantidad <= 0
+                                                                ? Colors.red
+                                                                : Colors.grey.shade600),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -592,7 +609,7 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Acciones (Pagar/Editar/Eliminar)
+                                      // Acciones (Pagar/Recargar/Editar/Eliminar)
                                       if (statusVal == 0)
                                         IconButton(
                                           icon: const Icon(Icons.payment_outlined,
@@ -612,6 +629,13 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                               }
                                             }
                                           },
+                                        ),
+                                      if (cantidad <= 0)
+                                        IconButton(
+                                          icon: const Icon(Icons.add_circle_outline,
+                                              color: Colors.blue, size: 20),
+                                          tooltip: 'Aumentar Publicaciones',
+                                          onPressed: () => _mostrarDialogoRecarga(itemId, item['item'] ?? ''),
                                         ),
                                       IconButton(
                                         icon: const Icon(Icons.edit_outlined,
@@ -647,6 +671,97 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  void _mostrarDialogoRecarga(int itemId, String name) {
+    int cantidad = 1;
+    const double tarifa = 150.0; // Tarifa por publicación para previsualización
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Aumentar Publicaciones', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Incrementa el inventario de publicaciones de: $name', style: const TextStyle(fontSize: 13, color: kTextGray)),
+                  const SizedBox(height: 16),
+                  const Text('CANTIDAD DE PUBLICACIONES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextGray)),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove, color: kTextGray),
+                          onPressed: cantidad > 1
+                              ? () => setDialogState(() => cantidad--)
+                              : null,
+                        ),
+                        Text(
+                          '$cantidad',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: kTextGray),
+                          onPressed: () => setDialogState(() => cantidad++),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Tarifa por publicación: RD\$ ${_formatPrice(tarifa)}', style: const TextStyle(fontSize: 11, color: kTextGray)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Total a Pagar: RD\$ ${_formatPrice(tarifa * cantidad)}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kSecondary),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final String rawPayUrl = '${kBaseUrl.replaceAll('/api', '')}/talento/pago/recargar-movil/$itemId?cantidad=$cantidad';
+                    final String fixedPayUrl = ApiClient.fixImageUrl(rawPayUrl);
+                    final Uri url = Uri.parse(fixedPayUrl);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('No se pudo abrir la pasarela de pago.'),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    }
+                  },
+                  child: const Text('Pagar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
