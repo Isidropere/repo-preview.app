@@ -64,8 +64,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/agregartalentos.svg" alt="Agregar talento" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Agregar un nuevo talento</h2>
-                        <p class="text-sm text-gray-500">Publica tus talentos</p>
+                        <h2 class="text-xl font-medium">Agregar Talento o Servicio</h2>
+                        <p class="text-sm text-gray-500">Publica y ofrece tus habilidades</p>
                     </div>
                 </a>
 
@@ -73,8 +73,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <svg class="w-12 h-12 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
-                        <h2 class="text-xl font-medium">Mi Hoja de Vida</h2>
-                        <p class="text-sm text-gray-500">{{ auth()->user()->hojaVida ? 'Edita tu perfil profesional' : 'Completa tu perfil profesional' }}</p>
+                        <h2 class="text-xl font-medium">Mi Hoja de Vida (CV)</h2>
+                        <p class="text-sm text-gray-500">{{ auth()->user()->hojaVida ? 'Edita tu perfil profesional y laboral' : 'Completa tu perfil profesional y laboral' }}</p>
                     </div>
                 </a>
 
@@ -82,8 +82,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/talentos.svg" alt="Talentos" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Administrar tus talentos</h2>
-                        <p class="text-sm text-gray-500">Gestiona tus talentos</p>
+                        <h2 class="text-xl font-medium">Administrar Talentos</h2>
+                        <p class="text-sm text-gray-500">Edita o actualiza tus servicios ofrecidos</p>
                     </div>
                 </a>
 
@@ -91,8 +91,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <svg class="w-12 h-12 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                     <div>
-                        <h2 class="text-xl font-medium">Mis Ventas de Talentos</h2>
-                        <p class="text-sm text-gray-500">Aprueba o rechaza solicitudes de servicio</p>
+                        <h2 class="text-xl font-medium">Mis Ventas de Servicios</h2>
+                        <p class="text-sm text-gray-500">Gestiona tus solicitudes de servicio recibidas</p>
                     </div>
                 </a>
 
@@ -100,8 +100,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/addProduct.svg" alt="Agregar producto" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Agregar productos</h2>
-                        <p class="text-sm text-gray-500">Publica tus articulos</p>
+                        <h2 class="text-xl font-medium">Agregar Producto</h2>
+                        <p class="text-sm text-gray-500">Publica un artículo para venta o intercambio</p>
                     </div>
                 </a>
 
@@ -109,8 +109,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/editProduct.svg" alt="Gestionar productos" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Gestionar productos</h2>
-                        <p class="text-sm text-gray-500">Elimina tus articulos</p>
+                        <h2 class="text-xl font-medium">Administrar Productos</h2>
+                        <p class="text-sm text-gray-500">Edita, pausa o elimina tus artículos</p>
                     </div>
                 </a>
 
@@ -118,8 +118,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/EditLocation.svg" alt="Direcciones" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Direccion</h2>
-                        <p class="text-sm text-gray-500">Actualiza y guarda tu direccion preferida</p>
+                        <h2 class="text-xl font-medium">Mis Direcciones</h2>
+                        <p class="text-sm text-gray-500">Administra tus direcciones de envío</p>
                     </div>
                 </a>
 
@@ -127,8 +127,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/ShieldPlus.svg" alt="Seguridad" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Modificacion de contrasena</h2>
-                        <p class="text-sm text-gray-500">Cambia tu contrasena de manera segura</p>
+                        <h2 class="text-xl font-medium">Seguridad y Contraseña</h2>
+                        <p class="text-sm text-gray-500">Cambia tu contraseña de manera segura</p>
                     </div>
                 </a>
 
@@ -137,8 +137,8 @@
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/History.svg" alt="Historial" loading="lazy" width="48" height="48">
                     <div>
-                        <h2 class="text-xl font-medium">Historial general</h2>
-                        <p class="text-sm text-gray-500">Revisa tus intercambios o compras pasadas</p>
+                        <h2 class="text-xl font-medium">Historial General</h2>
+                        <p class="text-sm text-gray-500">Revisa tus compras, ventas e intercambios</p>
                     </div>
                 </a>
 

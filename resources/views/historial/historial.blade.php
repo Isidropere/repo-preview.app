@@ -165,6 +165,32 @@
                             @endforelse
                         </div>
 
+                        {{-- Desglose de totales si aplica --}}
+                        @if((float) $pago->impuestos > 0 || (float) $pago->costo_envio > 0)
+                        <div class="px-5 py-3.5 border-t border-gray-100 flex flex-col items-end text-xs text-gray-500 gap-1.5 bg-gray-50/20">
+                            <div class="flex justify-between w-full max-w-[280px]">
+                                <span>Subtotal de productos:</span>
+                                <span class="font-medium text-gray-700">RD$ {{ number_format($pago->total - $pago->impuestos - $pago->costo_envio, 2) }}</span>
+                            </div>
+                            @if((float) $pago->costo_envio > 0)
+                            <div class="flex justify-between w-full max-w-[280px]">
+                                <span>Costo de Envío:</span>
+                                <span class="font-medium text-gray-700">RD$ {{ number_format($pago->costo_envio, 2) }}</span>
+                            </div>
+                            @endif
+                            @if((float) $pago->impuestos > 0)
+                            <div class="flex justify-between w-full max-w-[280px]">
+                                <span>Impuestos:</span>
+                                <span class="font-medium text-gray-700">RD$ {{ number_format($pago->impuestos, 2) }}</span>
+                            </div>
+                            @endif
+                            <div class="flex justify-between w-full max-w-[280px] border-t border-gray-200 pt-1.5 font-bold text-sm text-primary">
+                                <span>Total Pagado:</span>
+                                <span>RD$ {{ number_format($pago->total, 2) }}</span>
+                            </div>
+                        </div>
+                        @endif
+
                         {{-- Detalles de Pago y Descarga de Factura --}}
                         <div class="px-5 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-gray-600">
                             <div>

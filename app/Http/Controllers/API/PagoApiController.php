@@ -47,11 +47,11 @@ class PagoApiController extends Controller
         if (!$esServicio) {
             if (!$idDireccion) {
                 // intentamos obtener la predeterminada
-                $direccion = \App\Models\Direcciones::with('municipio')->where('id_user', $userId)
+                $direccion = \App\Models\Direcciones::with(['municipio', 'provincia'])->where('id_user', $userId)
                     ->where('es_predeterminada', 1)
                     ->first();
             } else {
-                $direccion = \App\Models\Direcciones::with('municipio')->where('id_user', $userId)
+                $direccion = \App\Models\Direcciones::with(['municipio', 'provincia'])->where('id_user', $userId)
                     ->where('id_direccion', $idDireccion)
                     ->first();
             }
@@ -156,7 +156,7 @@ class PagoApiController extends Controller
                     'id_pago_compra'  => $pagoCompra->id_pago_compra,
                     'estado_anterior' => null,
                     'estado_nuevo'    => 'pendiente',
-                    'nota'            => 'Pago redireccionado móvil iniciado.',
+                    'nota'            => 'Pago redireccionado móvil iniciado. Dirección: ' . ($direccion ? "{$direccion->calle}" . ($direccion->N_casa_edificio ? ", #{$direccion->N_casa_edificio}" : "") . ($direccion->municipio?->municipio ? ", {$direccion->municipio->municipio}" : "") . ($direccion->provincia?->provincia ? ", {$direccion->provincia->provincia}" : "") : 'N/A'),
                     'id_admin'        => null,
                 ]);
 

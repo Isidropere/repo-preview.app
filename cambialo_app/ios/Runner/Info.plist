@@ -51,6 +51,8 @@
 	<string>Requerimos acceso a tu galería de fotos para que puedas subir las imágenes de los productos que deseas intercambiar o vender.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Requerimos acceso a la cámara para tomar fotos de tus productos directamente desde la app.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Requerimos acceso al micrófono para grabar videos con audio de tus productos directamente desde la app.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

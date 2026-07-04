@@ -59,7 +59,7 @@ class PagoRedirectController extends Controller
         // 3. Validar dirección de envío (solo para productos)
         $direccion = null;
         if (!$esServicio) {
-            $direccion = Direcciones::with('municipio')->where('id_user', $userId)
+            $direccion = Direcciones::with(['municipio', 'provincia'])->where('id_user', $userId)
                 ->where('es_predeterminada', 1)
                 ->first();
             if (!$direccion) {
@@ -168,7 +168,7 @@ class PagoRedirectController extends Controller
                     'id_pago_compra'  => $pagoCompra->id_pago_compra,
                     'estado_anterior' => null,
                     'estado_nuevo'    => 'pendiente',
-                    'nota'            => 'Pago redireccionado iniciado. Dirección: ' . ($direccion?->id_direccion ?? 'N/A'),
+                    'nota'            => 'Pago redireccionado iniciado. Dirección: ' . ($direccion ? "{$direccion->calle}" . ($direccion->N_casa_edificio ? ", #{$direccion->N_casa_edificio}" : "") . ($direccion->municipio?->municipio ? ", {$direccion->municipio->municipio}" : "") . ($direccion->provincia?->provincia ? ", {$direccion->provincia->provincia}" : "") : 'N/A'),
                     'id_admin'        => null,
                 ]);
 
