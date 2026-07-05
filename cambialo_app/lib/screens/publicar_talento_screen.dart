@@ -512,7 +512,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               content: Text('Redirigiendo a la pasarela de pago seguro...'),
               backgroundColor: Colors.blue,
             ));
+            ApiClient.clearCache('/mis-items');
             Navigator.pop(context, true);
+            return;
           } else {
             setState(() => _error = 'No se pudo abrir la pasarela de pago.');
             return;

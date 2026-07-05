@@ -11,7 +11,6 @@ import 'publicar_articulo_screen.dart';
 import 'direcciones_screen.dart';
 import 'cambiar_contrasena_screen.dart';
 import 'editar_perfil_screen.dart';
-import 'tarjetas_screen.dart';
 import 'hoja_vida_screen.dart';
 import 'publicar_talento_screen.dart';
 import 'mis_talentos_screen.dart';
@@ -141,12 +140,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'sub': 'Administra tus direcciones de envío',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DireccionesScreen())),
     },
-    {
-      'icon': Icons.credit_card_outlined,
-      'title': 'Métodos de pago',
-      'sub': 'Gestiona tus tarjetas guardadas',
-      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TarjetasScreen())),
-    },
+
     {
       'icon': Icons.shield_outlined,
       'title': 'Seguridad y Contraseña',
