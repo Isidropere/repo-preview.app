@@ -100,9 +100,12 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
           _cantidadCtrl.text = (item['inventarios']?['cantidad'] ?? '1').toString();
           _descCtrl.text = (item['presentacion'] ?? '').toString();
           _idCategoria = int.tryParse(item['id_categoria_item']?.toString() ?? '');
-          _condicion = int.tryParse(item['condicion']?.toString() ?? '') ?? 1;
-          _tipoTrans = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 1;
-          _estatus = int.tryParse(item['estatus']?.toString() ?? '') ?? 2;
+          final parsedCondicion = int.tryParse(item['condicion']?.toString() ?? '') ?? 1;
+          _condicion = (parsedCondicion >= 1 && parsedCondicion <= 4) ? parsedCondicion : 1;
+          final parsedTipoTrans = int.tryParse(item['tipo_trans']?.toString() ?? '') ?? 1;
+          _tipoTrans = (parsedTipoTrans >= 1 && parsedTipoTrans <= 3) ? parsedTipoTrans : 1;
+          final parsedEstatus = int.tryParse(item['estatus']?.toString() ?? '') ?? 2;
+          _estatus = (parsedEstatus == 1 || parsedEstatus == 2) ? parsedEstatus : 2;
 
           // Dimensions
           _pesoCtrl.text = (item['peso_lbs'] ?? '').toString();

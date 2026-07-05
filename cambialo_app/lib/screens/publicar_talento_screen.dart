@@ -143,8 +143,10 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
           _precioCtrl.text = (data['valor'] ?? '0').toString();
           _descCtrl.text = (data['presentacion'] ?? '').toString();
           _cantidadCtrl.text = (data['inventarios']?['cantidad'] ?? '1').toString();
-          _tipoTrans = int.tryParse(data['tipo_trans']?.toString() ?? '') ?? 3;
-          _estatus = int.tryParse(data['estatus']?.toString() ?? '') ?? 2;
+          final parsedTipoTrans = int.tryParse(data['tipo_trans']?.toString() ?? '') ?? 3;
+          _tipoTrans = (parsedTipoTrans >= 1 && parsedTipoTrans <= 3) ? parsedTipoTrans : 3;
+          final parsedEstatus = int.tryParse(data['estatus']?.toString() ?? '') ?? 2;
+          _estatus = (parsedEstatus == 1 || parsedEstatus == 2) ? parsedEstatus : 2;
 
           // Cargar imágenes existentes
           final imgs = data['imagenes'] as List? ?? [];
