@@ -1345,7 +1345,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                         items: const [
                           DropdownMenuItem(value: 1, child: Text('Venta')),
                           DropdownMenuItem(value: 2, child: Text('Intercambio')),
-                          DropdownMenuItem(value: 3, child: Text('Venta o Intercambio')),
+                          DropdownMenuItem(value: 3, child: Text('Ambos')),
                         ],
                         onChanged: (v) => setState(() => _tipoTrans = v),
                       ),
