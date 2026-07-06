@@ -692,7 +692,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                               ),
                             ),
                             Text(
-                              '${(_step / 3.0 * 100).toInt()}% completado',
+                              '${(_step / 3.0 * 100).toInt()}%',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,

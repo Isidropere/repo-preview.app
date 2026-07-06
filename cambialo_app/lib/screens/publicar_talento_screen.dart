@@ -633,7 +633,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                               ),
                             ),
                             Text(
-                              '${(_step / (isEdit ? 2.0 : 3.0) * 100).toInt()}% completado',
+                              '${(_step / (isEdit ? 2.0 : 3.0) * 100).toInt()}%',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -717,7 +717,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                         ),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 3, child: Text('Venta o Canje')),
+                        DropdownMenuItem(value: 3, child: Text('Ambos')),
                         DropdownMenuItem(value: 2, child: Text('Solo Canje')),
                         DropdownMenuItem(value: 1, child: Text('Solo Venta')),
                       ],
@@ -1201,17 +1201,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Monto de publicación', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimary)),
+                  const Text('Monto:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimary)),
                   Text('RD\$ ${_totalFinal.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: kPrimary)),
                 ],
-              ),
-            ),
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                'Tarifa RD\$ ${_montoRegistro.toStringAsFixed(2)} × ${int.tryParse(_cantidadCtrl.text) ?? 1} servicio(s)',
-                style: const TextStyle(fontSize: 11, color: kTextGray, fontWeight: FontWeight.w500),
               ),
             ),
             const SizedBox(height: 20),
