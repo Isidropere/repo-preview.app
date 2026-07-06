@@ -1575,7 +1575,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     ),
                     child: _saving
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text(widget.itemId != null ? 'Guardar cambios' : 'Publicar producto', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                        : Text(widget.itemId != null ? 'Guardar cambios' : 'Publicar', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
