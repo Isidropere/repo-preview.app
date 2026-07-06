@@ -767,68 +767,59 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Cantidad y Categoría en fila
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: _campo(_cantidadCtrl, 'Cantidad *', required: true, keyboardType: TextInputType.number),
+              // Categoría dropdown
+              DropdownButtonFormField<int>(
+                value: _idCategoria,
+                style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  labelText: 'Categoría *',
+                  labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  prefixIcon: const Icon(Icons.category_outlined, color: kPrimary, size: 20),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<int>(
-                      value: _idCategoria,
-                      style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
-                      decoration: InputDecoration(
-                        labelText: 'Categoría *',
-                        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                        prefixIcon: const Icon(Icons.category_outlined, color: kPrimary, size: 20),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                  ),
+                ),
+                items: _categorias.map<DropdownMenuItem<int>>((c) =>
+                  DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: (v) {
+                  setState(() => _idCategoria = v);
+                  if (v == 11) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        title: const Row(
+                          children: [
+                            Icon(Icons.warning, color: Colors.orange),
+                            SizedBox(width: 8),
+                            Text('Categoría Adultos'),
+                          ],
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: kPrimary, width: 2),
-                        ),
+                        content: const Text('Has seleccionado la categoría Adultos. Recuerda que el contenido debe ser exclusivo para mayores de 18 años.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Entendido'),
+                          ),
+                        ],
                       ),
-                      items: _categorias.map<DropdownMenuItem<int>>((c) =>
-                        DropdownMenuItem(value: ApiClient.parseInt(c['id_categoria_item']) ?? 0, child: Text(c['categoria'].toString(), overflow: TextOverflow.ellipsis))).toList(),
-                      onChanged: (v) {
-                        setState(() => _idCategoria = v);
-                        if (v == 11) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              title: const Row(
-                                children: [
-                                  Icon(Icons.warning, color: Colors.orange),
-                                  SizedBox(width: 8),
-                                  Text('Categoría Adultos'),
-                                ],
-                              ),
-                              content: const Text('Has seleccionado la categoría Adultos. Recuerda que el contenido debe ser exclusivo para mayores de 18 años.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Entendido'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
-                      validator: (v) => v == null ? 'Selecciona una categoría' : null,
-                    ),
-                  ),
-                ],
+                    );
+                  }
+                },
+                validator: (v) => v == null ? 'Selecciona una categoría' : null,
               ),
+              const SizedBox(height: 16),
+
+              // Cantidad
+              _campo(_cantidadCtrl, 'Cantidad *', required: true, keyboardType: TextInputType.number),
               
               if (_error.isNotEmpty) ...[
                 const SizedBox(height: 16),
