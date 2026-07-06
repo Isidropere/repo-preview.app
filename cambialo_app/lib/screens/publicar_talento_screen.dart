@@ -1275,7 +1275,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                     ),
                     child: _saving
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Proceder al Pago Seguro', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                        : const Text('Pagar con Azul', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
