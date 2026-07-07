@@ -30,6 +30,12 @@ class _TransporteScreenState extends State<TransporteScreen> {
   final _entregaCtrl = TextEditingController();
   final _entregaAddressCtrl = TextEditingController();
 
+  // Búsqueda y Scroll / Paginación
+  final _searchCtrl = TextEditingController();
+  final _scrollController = ScrollController();
+  String _searchQuery = '';
+  int _visibleCount = 15;
+
   // Coordenadas para cálculo de distancia
   LatLng? _latLngOrigen;
   LatLng? _latLngDestino;
@@ -63,6 +69,11 @@ class _TransporteScreenState extends State<TransporteScreen> {
   void initState() {
     super.initState();
     _loadUserAndCatalog();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+        _loadMoreArticulos();
+      }
+    });
   }
 
   @override
@@ -76,6 +87,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
     _recogidaAddressCtrl.dispose();
     _entregaCtrl.dispose();
     _entregaAddressCtrl.dispose();
+    _searchCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -170,7 +183,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
     int countArticulos = 0;
 
     _selectedSizes.forEach((artId, sizesMap) {
-      final article = _articulos.firstWhere((a) => a['id'] == artId);
+      final article = _articulos.firstWhere((a) => a['id'] == artId, orElse: () => null);
+      if (article == null) return;
       sizesMap.forEach((sizeKey, isSelected) {
         if (isSelected == true) {
           final qty = _quantities[artId]?[sizeKey] ?? 1;
@@ -304,6 +318,23 @@ class _TransporteScreenState extends State<TransporteScreen> {
     }
   }
 
+  List _getFilteredArticulos() {
+    if (_searchQuery.isEmpty) return _articulos;
+    return _articulos.where((art) {
+      final name = art['nombre']?.toString().toLowerCase() ?? '';
+      return name.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
+  void _loadMoreArticulos() {
+    final filtered = _getFilteredArticulos();
+    if (_visibleCount < filtered.length) {
+      setState(() {
+        _visibleCount = min(filtered.length, _visibleCount + 15);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -317,6 +348,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
       body: _loadingCatalog
           ? const Center(child: CircularProgressIndicator(color: kPrimary))
           : SingleChildScrollView(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
@@ -428,6 +460,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
                     const SizedBox(height: 4),
                     const Text('Marque los artículos y especifique cantidad por tamaño.', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     const SizedBox(height: 12),
+                    _buildSelectedChips(),
+                    _buildSearchBar(),
                     _buildInventoryList(),
                     const SizedBox(height: 24),
                     _buildPricingPanel(),
@@ -527,55 +561,178 @@ class _TransporteScreenState extends State<TransporteScreen> {
     );
   }
 
-  Widget _buildInventoryList() {
-    if (_articulos.isEmpty) {
-      return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('No hay artículos disponibles.')));
-    }
-
-    return Column(
-      children: _articulos.map((art) {
-        final int artId = art['id'];
-        final bool isExpanded = _selectedSizes.containsKey(artId) && 
-            _selectedSizes[artId]!.values.contains(true);
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          child: Column(
-            children: [
-              CheckboxListTile(
-                title: Text(art['nombre'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                value: isExpanded,
-                onChanged: (val) {
-                  setState(() {
-                    if (val == true) {
-                      _selectedSizes[artId] = {'pequeno': true, 'mediano': false, 'grande': false};
-                      _quantities[artId] = {'pequeno': 1, 'mediano': 1, 'grande': 1};
-                    } else {
-                      _selectedSizes.remove(artId);
-                      _quantities.remove(artId);
-                    }
-                  });
-                  _recalculateDistanceAndTotal();
-                },
-              ),
-              if (isExpanded)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                  child: Column(
-                    children: [
-                      _buildSizeRow(artId, 'pequeno', 'Pequeño', art['precio_pequeno']),
-                      const SizedBox(height: 8),
-                      _buildSizeRow(artId, 'mediano', 'Mediano', art['precio_mediano']),
-                      const SizedBox(height: 8),
-                      _buildSizeRow(artId, 'grande', 'Grande', art['precio_grande']),
-                    ],
-                  ),
-                )
-            ],
+  Widget _buildSelectedChips() {
+    final List<Widget> chips = [];
+    _selectedSizes.forEach((artId, sizesMap) {
+      final article = _articulos.firstWhere((a) => a['id'] == artId, orElse: () => null);
+      if (article == null) return;
+      
+      final List<String> sizesDesc = [];
+      sizesMap.forEach((sizeKey, isSelected) {
+        if (isSelected == true) {
+          final qty = _quantities[artId]?[sizeKey] ?? 1;
+          sizesDesc.add("$qty ${sizeKey[0].toUpperCase()}${sizeKey.substring(1, 3)}");
+        }
+      });
+      
+      if (sizesDesc.isNotEmpty) {
+        chips.add(
+          Chip(
+            label: Text(
+              "${article['nombre']} (${sizesDesc.join(', ')})",
+              style: const TextStyle(fontSize: 11),
+            ),
+            onDeleted: () {
+              setState(() {
+                _selectedSizes.remove(artId);
+                _quantities.remove(artId);
+                _recalculateDistanceAndTotal();
+              });
+            },
+            deleteIcon: const Icon(Icons.close, size: 14),
+            backgroundColor: Colors.blue.shade50,
           ),
         );
-      }).toList(),
+      }
+    });
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Artículos Seleccionados:',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kPrimary),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: chips,
+          ),
+          const Divider(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: TextFormField(
+        controller: _searchCtrl,
+        decoration: InputDecoration(
+          hintText: 'Buscar artículo...',
+          prefixIcon: const Icon(Icons.search, color: kPrimary),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchCtrl.clear();
+                    setState(() {
+                      _searchQuery = '';
+                      _visibleCount = 15;
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        ),
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val.trim();
+            _visibleCount = 15; // reset pagination
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildInventoryList() {
+    final filtered = _getFilteredArticulos();
+    if (filtered.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: Text('No se encontraron artículos.', style: TextStyle(color: kTextGray, fontSize: 13)),
+          ),
+        ),
+      );
+    }
+
+    final visibleList = filtered.take(_visibleCount).toList();
+
+    return Column(
+      children: [
+        ...visibleList.map((art) {
+          final int artId = art['id'];
+          final bool isExpanded = _selectedSizes.containsKey(artId) && 
+              _selectedSizes[artId]!.values.contains(true);
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              children: [
+                CheckboxListTile(
+                  title: Text(art['nombre'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  value: isExpanded,
+                  onChanged: (val) {
+                    setState(() {
+                      if (val == true) {
+                        _selectedSizes[artId] = {'pequeno': true, 'mediano': false, 'grande': false};
+                        _quantities[artId] = {'pequeno': 1, 'mediano': 1, 'grande': 1};
+                      } else {
+                        _selectedSizes.remove(artId);
+                        _quantities.remove(artId);
+                      }
+                    });
+                    _recalculateDistanceAndTotal();
+                  },
+                ),
+                if (isExpanded)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                    child: Column(
+                      children: [
+                        _buildSizeRow(artId, 'pequeno', 'Pequeño', art['precio_pequeno']),
+                        const SizedBox(height: 8),
+                        _buildSizeRow(artId, 'mediano', 'Mediano', art['precio_mediano']),
+                        const SizedBox(height: 8),
+                        _buildSizeRow(artId, 'grande', 'Grande', art['precio_grande']),
+                      ],
+                    ),
+                  )
+              ],
+            ),
+          );
+        }).toList(),
+        if (_visibleCount < filtered.length)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
