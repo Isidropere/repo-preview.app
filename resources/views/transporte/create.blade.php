@@ -127,7 +127,7 @@
                                         <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                                             <div class="flex items-center gap-1.5 min-w-0">
                                                 <input type="checkbox" name="articulos[{{ $art->id }}][pequeno]" id="size-peq-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'peq')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Pequeño</span>
+                                                <span class="text-[11px] text-gray-700 font-medium">Peq</span>
                                             </div>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 @if(($art->precio_pequeno ?? 0) > 0)
@@ -141,7 +141,7 @@
                                         <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                                             <div class="flex items-center gap-1.5 min-w-0">
                                                 <input type="checkbox" name="articulos[{{ $art->id }}][mediano]" id="size-med-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'med')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Mediano</span>
+                                                <span class="text-[11px] text-gray-700 font-medium">Med</span>
                                             </div>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 @if(($art->precio_mediano ?? 0) > 0)
@@ -155,7 +155,7 @@
                                         <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                                             <div class="flex items-center gap-1.5 min-w-0">
                                                 <input type="checkbox" name="articulos[{{ $art->id }}][grande]" id="size-gra-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'gra')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Grande</span>
+                                                <span class="text-[11px] text-gray-700 font-medium">Gra</span>
                                             </div>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 @if(($art->precio_grande ?? 0) > 0)
