@@ -762,7 +762,9 @@ class _TransporteScreenState extends State<TransporteScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Izquierda: checkbox + label en columna con precio debajo
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Checkbox(
               value: isChecked,
@@ -773,22 +775,29 @@ class _TransporteScreenState extends State<TransporteScreen> {
                 _recalculateDistanceAndTotal();
               },
             ),
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-            if (price > 0)
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Text(
-                  'RD\$ ${price.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
-                ),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                if (price > 0)
+                  Text(
+                    'RD\$ ${price.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+              ],
+            ),
           ],
         ),
+        // Derecha: controles de cantidad (solo cuando está marcado)
         if (isChecked)
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline, size: 20, color: Colors.redAccent),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: qty > 1
                     ? () {
                         setState(() {
@@ -801,6 +810,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
               Text(qty.toString(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: () {
                   setState(() {
                     _quantities[artId]![sizeKey] = qty + 1;
