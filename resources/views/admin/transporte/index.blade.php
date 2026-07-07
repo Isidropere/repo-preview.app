@@ -298,21 +298,21 @@
                     </div>
                     
                     <!-- Fila 2: Precios por Tamaño y Botón -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Pequeño (RD$)</label>
-                            <input type="number" name="precio_pequeno" step="0.01" min="0" placeholder="Ej: 100.00" class="w-full max-w-[160px] px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div class="w-[110px]">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Pequeño</label>
+                            <input type="number" name="precio_pequeno" step="0.01" min="0" placeholder="Ej: 100.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Mediano (RD$)</label>
-                            <input type="number" name="precio_mediano" step="0.01" min="0" placeholder="Ej: 200.00" class="w-full max-w-[160px] px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
+                        <div class="w-[110px]">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Mediano</label>
+                            <input type="number" name="precio_mediano" step="0.01" min="0" placeholder="Ej: 200.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Grande (RD$)</label>
-                            <input type="number" name="precio_grande" step="0.01" min="0" placeholder="Ej: 300.00" class="w-full max-w-[160px] px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
+                        <div class="w-[110px]">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Grande</label>
+                            <input type="number" name="precio_grande" step="0.01" min="0" placeholder="Ej: 300.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <div>
-                            <button type="submit" class="w-full bg-blue-600 text-white px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow h-[32px] md:h-[34px]">
+                        <div class="w-[160px]">
+                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow h-[32px]">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 Agregar Artículo
                             </button>
