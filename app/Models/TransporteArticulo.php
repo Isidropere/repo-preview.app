@@ -15,6 +15,9 @@ class TransporteArticulo extends Model
         'nombre',
         'categoria',
         'precio_base',
+        'precio_pequeno',
+        'precio_mediano',
+        'precio_grande',
         'estatus',
     ];
 

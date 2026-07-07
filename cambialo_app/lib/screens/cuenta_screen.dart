@@ -17,6 +17,7 @@ import 'mis_talentos_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'notificaciones_screen.dart';
 import 'items_list_screen.dart';
+import 'transporte_screen.dart';
 import '../widgets/footer_widget.dart';
 
 /// Pantalla "Tu cuenta" — fiel al diseño web de Cambialord
@@ -158,6 +159,12 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'title': 'Mis intercambios',
       'sub': 'Gestiona tus propuestas activas',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisIntercambiosScreen())),
+    },
+    {
+      'icon': Icons.local_shipping_outlined,
+      'title': 'Solicitud de Transporte',
+      'sub': 'Cotiza y solicita servicio de mudanza o acarreo',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransporteScreen())),
     },
     {
       'icon': Icons.gavel_outlined,

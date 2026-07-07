@@ -120,6 +120,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/hoja-vida',  [HojaVidaApiController::class, 'show']);
     Route::post('/hoja-vida', [HojaVidaApiController::class, 'store']);
 
+    // Transporte y Mudanza
+    Route::get('/transporte/articulos', [\App\Http\Controllers\API\TransporteApiController::class, 'articulos']);
+    Route::post('/transporte/solicitar', [\App\Http\Controllers\API\TransporteApiController::class, 'solicitar']);
+
     // Talentos
     Route::get('/talentos/config', function () {
         return response()->json([

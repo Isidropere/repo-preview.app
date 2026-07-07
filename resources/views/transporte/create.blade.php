@@ -113,32 +113,56 @@
                             @foreach($articulos as $art)
                                 <div class="articulo-item flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
                                      data-category="{{ $art->categoria }}" 
-                                     data-precio="{{ $art->precio_base ?? 0 }}"
+                                     data-precio-peq="{{ $art->precio_pequeno ?? 0 }}"
+                                     data-precio-med="{{ $art->precio_mediano ?? 0 }}"
+                                     data-precio-gra="{{ $art->precio_grande ?? 0 }}"
                                      style="display: none;">
                                     <div class="flex items-center gap-2 min-w-0">
-                                        <input type="checkbox" name="articulos[{{ $art->id }}]" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer flex-shrink-0" onchange="toggleCantidad({{ $art->id }})">
+                                        <input type="checkbox" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer flex-shrink-0" onchange="toggleArticuloSizes({{ $art->id }})">
                                         <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer leading-snug" title="{{ $art->nombre }}">{{ $art->nombre }}</label>
-                                        @if($art->precio_base > 0)
-                                            <span class="text-[10px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_base, 2) }}</span>
-                                        @endif
                                     </div>
-                                    <div class="flex flex-col gap-2 mt-2">
-                                        <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full">
-                                            <span class="text-[10px] text-gray-500 font-bold w-12">Cant:</span>
-                                            <input type="number" name="cantidades[{{ $art->id }}]" id="cant-{{ $art->id }}" value="1" min="1" disabled class="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
-                                        </div>
-                                        <div class="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full overflow-hidden">
-                                            <span class="text-[9px] text-gray-500 font-bold w-8 flex-shrink-0">Dim:</span>
-                                            <div class="grid grid-cols-4 gap-1 w-full">
-                                                <input type="number" name="dim1[{{ $art->id }}]" id="dim1-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Largo">
-                                                <input type="number" name="dim2[{{ $art->id }}]" id="dim2-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Ancho">
-                                                <input type="number" name="dim3[{{ $art->id }}]" id="dim3-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Alto">
-                                                <input type="number" name="dim4[{{ $art->id }}]" id="dim4-{{ $art->id }}" value="0" min="0" disabled class="w-full px-0.5 py-1 border border-gray-300 rounded text-center text-[10px] focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100 min-w-0" title="Profundidad/Otro">
+                                    
+                                    <div class="flex flex-col gap-2 mt-2 pl-6 hidden" id="sizes-container-{{ $art->id }}">
+                                        <!-- Pequeño -->
+                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <input type="checkbox" name="articulos[{{ $art->id }}][pequeno]" id="size-peq-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'peq')">
+                                                <span class="text-[11px] text-gray-700 font-medium">Pequeño</span>
+                                            </div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                @if(($art->precio_pequeno ?? 0) > 0)
+                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_pequeno, 2) }}</span>
+                                                @endif
+                                                <input type="number" name="cantidades[{{ $art->id }}][pequeno]" id="cant-peq-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-full">
-                                            <span class="text-[10px] text-gray-500 font-bold w-12">Peso:</span>
-                                            <input type="text" name="pesos[{{ $art->id }}]" id="peso-{{ $art->id }}" placeholder="Ej: 5kg" disabled class="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100">
+                                        
+                                        <!-- Mediano -->
+                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <input type="checkbox" name="articulos[{{ $art->id }}][mediano]" id="size-med-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'med')">
+                                                <span class="text-[11px] text-gray-700 font-medium">Mediano</span>
+                                            </div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                @if(($art->precio_mediano ?? 0) > 0)
+                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_mediano, 2) }}</span>
+                                                @endif
+                                                <input type="number" name="cantidades[{{ $art->id }}][mediano]" id="cant-med-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Grande -->
+                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <input type="checkbox" name="articulos[{{ $art->id }}][grande]" id="size-gra-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'gra')">
+                                                <span class="text-[11px] text-gray-700 font-medium">Grande</span>
+                                            </div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                @if(($art->precio_grande ?? 0) > 0)
+                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_grande, 2) }}</span>
+                                                @endif
+                                                <input type="number" name="cantidades[{{ $art->id }}][grande]" id="cant-gra-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -410,10 +434,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let totalArticulos = 0;
         let countArticulos = 0;
-        document.querySelectorAll('.articulo-checkbox:checked').forEach(cb => {
+        
+        document.querySelectorAll('.size-checkbox:checked').forEach(cb => {
             let parent = cb.closest('.articulo-item');
-            let cant = parseInt(parent.querySelector('input[type="number"]').value) || 1;
-            let precio = parent.getAttribute('data-precio') || 0;
+            let sizeKey = cb.id.split('-')[1]; // 'peq', 'med', 'gra'
+            let qtyInputId = 'cant-' + sizeKey + '-' + cb.id.split('-')[2];
+            let cant = parseInt(document.getElementById(qtyInputId).value) || 1;
+            
+            let priceAttr = 'data-precio-' + sizeKey;
+            let precio = parent.getAttribute(priceAttr) || 0;
+            
             totalArticulos += (parseFloat(precio) * cant);
             countArticulos += cant;
         });
@@ -489,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             items.forEach(item => {
                 const checkbox = item.querySelector('.articulo-checkbox');
                 checkbox.checked = false;
-                window.toggleCantidad(checkbox.id.split('-')[1]);
+                window.toggleArticuloSizes(checkbox.id.split('-')[1]);
                 item.style.display = 'none';
             });
             window.calcularTotal();
@@ -513,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Si solo no coincide con la búsqueda, lo ocultamos pero mantenemos el estado
                 if (!matchesCategory) {
                     checkbox.checked = false;
-                    window.toggleCantidad(checkbox.id.split('-')[1]);
+                    window.toggleArticuloSizes(checkbox.id.split('-')[1]);
                 }
                 item.style.display = 'none';
             }
@@ -526,37 +556,37 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selectServicio.value) filterArticles();
 });
 
-// Función global accesible desde los checkboxes inline
-window.toggleCantidad = function(id) {
-    const checkbox = document.getElementById('art-' + id);
-    const quantityInput = document.getElementById('cant-' + id);
-    const d1 = document.getElementById('dim1-' + id);
-    const d2 = document.getElementById('dim2-' + id);
-    const d3 = document.getElementById('dim3-' + id);
-    const d4 = document.getElementById('dim4-' + id);
-    const pesoInput = document.getElementById('peso-' + id);
+window.toggleArticuloSizes = function(id) {
+    const mainCheckbox = document.getElementById('art-' + id);
+    const container = document.getElementById('sizes-container-' + id);
     
-    if (checkbox.checked) {
-        quantityInput.removeAttribute('disabled');
-        d1.removeAttribute('disabled');
-        d2.removeAttribute('disabled');
-        d3.removeAttribute('disabled');
-        d4.removeAttribute('disabled');
-        pesoInput.removeAttribute('disabled');
-        quantityInput.focus();
+    if (mainCheckbox.checked) {
+        container.classList.remove('hidden');
     } else {
-        quantityInput.setAttribute('disabled', 'disabled');
-        d1.setAttribute('disabled', 'disabled');
-        d2.setAttribute('disabled', 'disabled');
-        d3.setAttribute('disabled', 'disabled');
-        d4.setAttribute('disabled', 'disabled');
-        pesoInput.setAttribute('disabled', 'disabled');
-        quantityInput.value = '1';
-        d1.value = '0';
-        d2.value = '0';
-        d3.value = '0';
-        d4.value = '0';
-        pesoInput.value = '';
+        container.classList.add('hidden');
+        // Uncheck all sizes and disable inputs
+        const sizeCheckboxes = container.querySelectorAll('.size-checkbox');
+        sizeCheckboxes.forEach(cb => {
+            cb.checked = false;
+            let sizeKey = cb.id.split('-')[1]; // 'peq', 'med', 'gra'
+            let qtyInput = document.getElementById('cant-' + sizeKey + '-' + id);
+            qtyInput.setAttribute('disabled', 'disabled');
+            qtyInput.value = '1';
+        });
+    }
+    window.calcularTotal();
+};
+
+window.toggleSizeQuantity = function(id, sizeKey) {
+    const sizeCheckbox = document.getElementById('size-' + sizeKey + '-' + id);
+    const qtyInput = document.getElementById('cant-' + sizeKey + '-' + id);
+    
+    if (sizeCheckbox.checked) {
+        qtyInput.removeAttribute('disabled');
+        qtyInput.focus();
+    } else {
+        qtyInput.setAttribute('disabled', 'disabled');
+        qtyInput.value = '1';
     }
     window.calcularTotal();
 };

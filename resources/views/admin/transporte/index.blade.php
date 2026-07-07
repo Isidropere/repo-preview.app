@@ -191,21 +191,31 @@
                                             @if(count($sol->articulos) > 0)
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                                                     @foreach($sol->articulos as $art)
+                                                        @php
+                                                            $dimsObj = json_decode($art->pivot->dimensiones, true);
+                                                            $isJson = is_array($dimsObj);
+                                                        @endphp
                                                         <div class="flex flex-col p-3 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
                                                             <div class="flex justify-between items-center mb-2">
                                                                 <span class="text-xs font-semibold text-gray-800">{{ $art->nombre }}</span>
                                                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">x{{ $art->pivot->cantidad }}</span>
                                                             </div>
-                                                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-gray-500">
-                                                                @if($art->pivot->dimensiones)
-                                                                    <p><strong>Dim:</strong> {{ $art->pivot->dimensiones }}</p>
+                                                            <div class="flex flex-col gap-1 text-[10px] text-gray-500">
+                                                                @if($isJson)
+                                                                    @foreach($dimsObj as $sizeKey => $data)
+                                                                        <p><strong class="capitalize">{{ $sizeKey }}:</strong> {{ $data['cantidad'] }} u. (RD$ {{ number_format($data['precio'], 2) }})</p>
+                                                                    @endforeach
+                                                                @else
+                                                                    @if($art->pivot->dimensiones)
+                                                                        <p><strong>Dim:</strong> {{ $art->pivot->dimensiones }}</p>
+                                                                    @endif
                                                                 @endif
+                                                                
                                                                 @if($art->pivot->peso)
                                                                     <p><strong>Peso:</strong> {{ $art->pivot->peso }} kg</p>
                                                                 @endif
                                                                 @if($art->pivot->precio_unitario > 0)
-                                                                    <p><strong>Unit:</strong> RD$ {{ number_format($art->pivot->precio_unitario, 2) }}</p>
-                                                                    <p class="text-blue-600 font-bold"><strong>Sub:</strong> RD$ {{ number_format($art->pivot->subtotal, 2) }}</p>
+                                                                    <p class="text-blue-600 font-bold mt-1"><strong>Subtotal:</strong> RD$ {{ number_format($art->pivot->subtotal, 2) }}</p>
                                                                 @endif
                                                             </div>
                                                         </div>
@@ -269,27 +279,35 @@
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Agregar Nuevo Artículo al Catálogo
                 </h3>
-                <form action="{{ route('admin.erp.transporte.articulos.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <form action="{{ route('admin.erp.transporte.articulos.store') }}" method="POST" style="display: flex !important; flex-wrap: wrap !important; align-items: flex-end !important; gap: 16px !important; width: 100% !important;">
                     @csrf
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Nombre del Artículo <span class="text-red-500">*</span></label>
-                        <input type="text" name="nombre" required placeholder="Ej: Sofá, Nevera, Cajas, Pallet..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <div style="flex: 1 1 200px !important; min-width: 200px !important;">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5" style="white-space: nowrap !important; display: block !important;">Nombre<span class="text-red-500" style="margin-left: 2px !important; color: #ef4444 !important;">*</span></label>
+                        <input type="text" name="nombre" required placeholder="Ej: Sofá, Nevera..." class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]" style="height: 32px !important;">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Categoría del Servicio <span class="text-red-500">*</span></label>
-                        <select name="categoria" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="ambos">Ambos (Transporte y Mudanza)</option>
-                            <option value="mudanza">Solo Mudanza Residencial/Comercial</option>
-                            <option value="transporte">Solo Transporte de Carga</option>
+                    <div style="width: 180px !important; flex-shrink: 0 !important;">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5" style="white-space: nowrap !important; display: block !important;">Categoría<span class="text-red-500" style="margin-left: 2px !important; color: #ef4444 !important;">*</span></label>
+                        <select name="categoria" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]" style="height: 32px !important;">
+                            <option value="ambos">Ambos</option>
+                            <option value="mudanza">Solo Mudanza</option>
+                            <option value="transporte">Solo Transporte</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio Base (RD$)</label>
-                        <input type="number" name="precio_base" step="0.01" min="0" placeholder="Ej: 500.00" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <div style="width: 90px !important; flex-shrink: 0 !important;">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5" style="white-space: nowrap !important; display: block !important;">Pequeño</label>
+                        <input type="number" name="precio_pequeno" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]" style="height: 32px !important;">
                     </div>
-                    <div>
-                        <button type="submit" class="w-full bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <div style="width: 90px !important; flex-shrink: 0 !important;">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5" style="white-space: nowrap !important; display: block !important;">Mediano</label>
+                        <input type="number" name="precio_mediano" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]" style="height: 32px !important;">
+                    </div>
+                    <div style="width: 90px !important; flex-shrink: 0 !important;">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5" style="white-space: nowrap !important; display: block !important;">Grande</label>
+                        <input type="number" name="precio_grande" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]" style="height: 32px !important;">
+                    </div>
+                    <div style="width: 150px !important; flex-shrink: 0 !important;">
+                        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 shadow" style="height: 32px !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Agregar Artículo
                         </button>
                     </div>
@@ -308,7 +326,9 @@
                             <tr>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">ID</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Artículo</th>
-                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Precio (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Peq (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Med (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Gra (RD$)</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Categoría</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Estatus</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b text-center w-36">Acciones</th>
@@ -325,7 +345,13 @@
                                             <input type="text" name="nombre" value="{{ $art->nombre }}" required class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-xs">
                                     </td>
                                     <td class="px-6 py-4">
-                                            <input type="number" name="precio_base" step="0.01" min="0" value="{{ $art->precio_base }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[100px]">
+                                            <input type="number" name="precio_pequeno" step="0.01" min="0" value="{{ $art->precio_pequeno }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                            <input type="number" name="precio_mediano" step="0.01" min="0" value="{{ $art->precio_mediano }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                            <input type="number" name="precio_grande" step="0.01" min="0" value="{{ $art->precio_grande }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
                                     </td>
                                     <td class="px-6 py-4">
                                             <select name="categoria" class="px-2 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-xs font-semibold text-gray-700 bg-transparent focus:bg-white transition-all">

@@ -71,11 +71,15 @@ class AdminTransporteController extends Controller
             'limite_articulos_mudanza' => 'required|integer|min:0',
         ]);
 
-        \App\Models\TransporteConfiguracion::set('precio_km_transporte', $request->precio_km_transporte);
-        \App\Models\TransporteConfiguracion::set('precio_km_mudanza', $request->precio_km_mudanza);
-        \App\Models\TransporteConfiguracion::set('limite_articulos_mudanza', $request->limite_articulos_mudanza);
+        try {
+            \App\Models\TransporteConfiguracion::set('precio_km_transporte', $request->precio_km_transporte);
+            \App\Models\TransporteConfiguracion::set('precio_km_mudanza', $request->precio_km_mudanza);
+            \App\Models\TransporteConfiguracion::set('limite_articulos_mudanza', $request->limite_articulos_mudanza);
 
-        return back()->with('success', '¡Configuraciones globales actualizadas con éxito!');
+            return redirect()->route('admin.erp.transporte.index')->with('success', '¡Configuraciones globales actualizadas con éxito!');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.erp.transporte.index')->withErrors(['error' => 'Error al guardar la configuración: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -152,12 +156,18 @@ class AdminTransporteController extends Controller
             'nombre' => 'required|string|max:255',
             'categoria' => 'required|in:transporte,mudanza,ambos',
             'precio_base' => 'nullable|numeric|min:0',
+            'precio_pequeno' => 'nullable|numeric|min:0',
+            'precio_mediano' => 'nullable|numeric|min:0',
+            'precio_grande' => 'nullable|numeric|min:0',
         ]);
 
         TransporteArticulo::create([
             'nombre' => $request->nombre,
             'categoria' => $request->categoria,
             'precio_base' => $request->precio_base ?? 0,
+            'precio_pequeno' => $request->precio_pequeno ?? 0,
+            'precio_mediano' => $request->precio_mediano ?? 0,
+            'precio_grande' => $request->precio_grande ?? 0,
             'estatus' => true,
         ]);
 
@@ -173,6 +183,9 @@ class AdminTransporteController extends Controller
             'nombre' => 'required|string|max:255',
             'categoria' => 'required|in:transporte,mudanza,ambos',
             'precio_base' => 'nullable|numeric|min:0',
+            'precio_pequeno' => 'nullable|numeric|min:0',
+            'precio_mediano' => 'nullable|numeric|min:0',
+            'precio_grande' => 'nullable|numeric|min:0',
             'estatus' => 'required|boolean',
         ]);
 
@@ -181,6 +194,9 @@ class AdminTransporteController extends Controller
             'nombre' => $request->nombre,
             'categoria' => $request->categoria,
             'precio_base' => $request->precio_base ?? 0,
+            'precio_pequeno' => $request->precio_pequeno ?? 0,
+            'precio_mediano' => $request->precio_mediano ?? 0,
+            'precio_grande' => $request->precio_grande ?? 0,
             'estatus' => $request->estatus,
         ]);
 
