@@ -282,11 +282,11 @@
                 <form action="{{ route('admin.erp.transporte.articulos.store') }}" method="POST" class="flex flex-wrap items-end gap-4">
                     @csrf
                     <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Nombre <span class="text-red-500">*</span></label>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 whitespace-nowrap">Nombre<span class="text-red-500 ml-0.5">*</span></label>
                         <input type="text" name="nombre" required placeholder="Ej: Sofá, Nevera..." class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
                     </div>
                     <div class="w-[180px]">
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Categoría <span class="text-red-500">*</span></label>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 whitespace-nowrap">Categoría<span class="text-red-500 ml-0.5">*</span></label>
                         <select name="categoria" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
                             <option value="ambos">Ambos</option>
                             <option value="mudanza">Solo Mudanza</option>
