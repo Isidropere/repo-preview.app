@@ -47,8 +47,14 @@ class AdminTransporteController extends Controller
 
         $solicitudes = $query->paginate(20)->appends($request->all());
         
-        // Obtener el catálogo completo de artículos para la pestaña de gestión del admin
-        $articulos = TransporteArticulo::orderBy('nombre', 'asc')->get();
+        // Paginación y Filtrado del catálogo de artículos para la pestaña de gestión del admin
+        $articulosQuery = TransporteArticulo::orderBy('nombre', 'asc');
+        
+        if ($request->filled('buscar_articulo')) {
+            $articulosQuery->where('nombre', 'LIKE', '%' . $request->buscar_articulo . '%');
+        }
+
+        $articulos = $articulosQuery->paginate(20, ['*'], 'page_articulos')->appends($request->all());
 
         // Obtener configuraciones globales
         $config = [
@@ -57,7 +63,13 @@ class AdminTransporteController extends Controller
             'limite_articulos_mudanza' => \App\Models\TransporteConfiguracion::get('limite_articulos_mudanza', 5),
         ];
 
-        return view('admin.transporte.index', compact('solicitudes', 'articulos', 'config'));
+        // Determinar pestaña activa por defecto
+        $activeTab = 'solicitudes';
+        if ($request->has('page_articulos') || $request->has('buscar_articulo')) {
+            $activeTab = 'catalogo';
+        }
+
+        return view('admin.transporte.index', compact('solicitudes', 'articulos', 'config', 'activeTab'));
     }
 
     /**

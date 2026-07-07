@@ -40,15 +40,15 @@
         <!-- Pestañas de Navegación -->
         <div class="mb-6 border-b border-gray-200">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                <button type="button" onclick="switchTab('solicitudes')" id="tab-solicitudes" class="border-blue-600 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all">
+                <button type="button" onclick="switchTab('solicitudes')" id="tab-solicitudes" class="{{ $activeTab == 'solicitudes' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-semibold' }} whitespace-nowrap py-4 px-1 border-b-2 text-sm flex items-center gap-2 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     Solicitudes de Servicio
                 </button>
-                <button type="button" onclick="switchTab('catalogo')" id="tab-catalogo" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 transition-all">
+                <button type="button" onclick="switchTab('catalogo')" id="tab-catalogo" class="{{ $activeTab == 'catalogo' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-semibold' }} whitespace-nowrap py-4 px-1 border-b-2 text-sm flex items-center gap-2 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     Catálogo de Artículos
                 </button>
-                <button type="button" onclick="switchTab('configuracion')" id="tab-configuracion" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 transition-all">
+                <button type="button" onclick="switchTab('configuracion')" id="tab-configuracion" class="{{ $activeTab == 'configuracion' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-semibold' }} whitespace-nowrap py-4 px-1 border-b-2 text-sm flex items-center gap-2 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Configuraciones Globales
                 </button>
@@ -56,7 +56,7 @@
         </div>
 
         <!-- SECCIÓN 1: SOLICITUDES DE SERVICIO -->
-        <div id="section-solicitudes" class="transition-all">
+        <div id="section-solicitudes" class="{{ $activeTab == 'solicitudes' ? '' : 'hidden' }} transition-all">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                 <div class="p-4 bg-gray-50 border-b border-gray-100">
                     <form action="{{ route('admin.erp.transporte.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
@@ -272,7 +272,7 @@
         </div>
 
         <!-- SECCIÓN 2: CATÁLOGO DE ARTÍCULOS (CRUD) -->
-        <div id="section-catalogo" class="hidden transition-all">
+        <div id="section-catalogo" class="{{ $activeTab == 'catalogo' ? '' : 'hidden' }} transition-all">
             <!-- Formulario para agregar artículo -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -316,9 +316,23 @@
 
             <!-- Listado de artículos con edición inline -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Catálogo Activo</h3>
-                    <span class="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">{{ count($articulos) }} Artículos</span>
+                <div class="p-4 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Catálogo Activo</h3>
+                        <span class="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">{{ $articulos->total() }} Artículos</span>
+                    </div>
+                    <form action="{{ route('admin.erp.transporte.index') }}" method="GET" class="flex gap-2 w-full sm:w-auto">
+                        @if(request('buscar')) <input type="hidden" name="buscar" value="{{ request('buscar') }}"> @endif
+                        @if(request('estado')) <input type="hidden" name="estado" value="{{ request('estado') }}"> @endif
+                        @if(request('desde')) <input type="hidden" name="desde" value="{{ request('desde') }}"> @endif
+                        @if(request('hasta')) <input type="hidden" name="hasta" value="{{ request('hasta') }}"> @endif
+                        
+                        <input type="text" name="buscar_articulo" value="{{ request('buscar_articulo') }}" placeholder="Filtrar por nombre..." class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 h-[32px]">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 h-[32px]">Buscar</button>
+                        @if(request('buscar_articulo'))
+                            <a href="{{ route('admin.erp.transporte.index', request()->except(['buscar_articulo', 'page_articulos'])) }}" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 flex items-center justify-center h-[32px]">Limpiar</a>
+                        @endif
+                    </form>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -395,11 +409,16 @@
                         </tbody>
                     </table>
                 </div>
+                @if($articulos->hasPages())
+                    <div class="p-4 bg-gray-50 border-t border-gray-100">
+                        {{ $articulos->links() }}
+                    </div>
+                @endif
             </div>
         </div>
 
         <!-- SECCIÓN 3: CONFIGURACIONES GLOBALES -->
-        <div id="section-configuracion" class="hidden transition-all">
+        <div id="section-configuracion" class="{{ $activeTab == 'configuracion' ? '' : 'hidden' }} transition-all">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl mx-auto">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>

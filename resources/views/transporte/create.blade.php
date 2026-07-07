@@ -500,14 +500,31 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCalculations();
     });
 
-    // Lógica de Filtrado y Reactividad para Transporte y Mudanzas
+    // Lógica de Filtrado, Paginación por Scroll y Reactividad para Transporte y Mudanzas
     const selectServicio = document.getElementById('tipo_servicio');
     const searchInput = document.getElementById('search-articulos');
     const container = document.getElementById('checklist-articulos-container');
+    const listContainer = document.getElementById('checklist-articulos-list');
     const items = document.querySelectorAll('.articulo-item');
+
+    let matchingItems = []; // Almacena los elementos que coinciden con los filtros actuales
+    let visibleCount = 10;   // Cantidad inicial de artículos a mostrar
 
     function normalizar(texto) {
         return (texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
+    function updateVisibleItems() {
+        // Ocultar todos los artículos primero
+        items.forEach(item => {
+            item.style.display = 'none';
+        });
+
+        // Mostrar solo los primeros 'visibleCount' que coinciden
+        const toShow = matchingItems.slice(0, visibleCount);
+        toShow.forEach(item => {
+            item.style.display = 'flex';
+        });
     }
 
     function filterArticles() {
@@ -522,11 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.toggleArticuloSizes(checkbox.id.split('-')[1]);
                 item.style.display = 'none';
             });
+            matchingItems = [];
             window.calcularTotal();
             return;
         }
 
         container.classList.remove('hidden');
+        matchingItems = [];
 
         items.forEach(item => {
             const cat = item.getAttribute('data-category');
@@ -536,20 +555,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchesCategory = (cat === selectedValue || cat === 'ambos');
             const matchesSearch = nombre.includes(searchTerm);
 
-            if (matchesCategory && matchesSearch) {
-                item.style.display = 'flex';
+            if (matchesCategory) {
+                if (matchesSearch) {
+                    matchingItems.push(item);
+                }
             } else {
-                // Solo desmarcar si NO coincide con la categoría (regla de integridad del servicio)
-                // Si solo no coincide con la búsqueda, lo ocultamos pero mantenemos el estado
-                if (!matchesCategory) {
+                // Desmarcar si el artículo ya no pertenece a la categoría elegida
+                if (checkbox.checked) {
                     checkbox.checked = false;
                     window.toggleArticuloSizes(checkbox.id.split('-')[1]);
                 }
-                item.style.display = 'none';
             }
         });
+
+        visibleCount = 10; // Reiniciar contador al buscar o cambiar tipo
+        updateVisibleItems();
         window.calcularTotal();
     }
+
+    // Listener de scroll para el contenedor de artículos (Lazy Loading)
+    listContainer.addEventListener('scroll', function() {
+        if (listContainer.scrollTop + listContainer.clientHeight >= listContainer.scrollHeight - 50) {
+            if (visibleCount < matchingItems.length) {
+                visibleCount += 10;
+                updateVisibleItems();
+            }
+        }
+    });
 
     selectServicio.addEventListener('change', filterArticles);
     searchInput.addEventListener('input', filterArticles);
