@@ -279,44 +279,37 @@
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Agregar Nuevo Artículo al Catálogo
                 </h3>
-                <form action="{{ route('admin.erp.transporte.articulos.store') }}" method="POST" class="space-y-4">
+                <form action="{{ route('admin.erp.transporte.articulos.store') }}" method="POST" class="flex flex-wrap items-end gap-4">
                     @csrf
-                    <!-- Fila 1: Información General -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Nombre <span class="text-red-500">*</span></label>
-                            <input type="text" name="nombre" required placeholder="Ej: Sofá, Nevera, Cajas..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Categoría <span class="text-red-500">*</span></label>
-                            <select name="categoria" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="ambos">Ambos (Transporte y Mudanza)</option>
-                                <option value="mudanza">Solo Mudanza</option>
-                                <option value="transporte">Solo Transporte</option>
-                            </select>
-                        </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" name="nombre" required placeholder="Ej: Sofá, Nevera..." class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
                     </div>
-                    
-                    <!-- Fila 2: Precios por Tamaño y Botón -->
-                    <div class="flex flex-wrap items-end gap-4">
-                        <div class="w-[110px]">
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Pequeño</label>
-                            <input type="number" name="precio_pequeno" step="0.01" min="0" placeholder="Ej: 100.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="w-[110px]">
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Mediano</label>
-                            <input type="number" name="precio_mediano" step="0.01" min="0" placeholder="Ej: 200.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="w-[110px]">
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Grande</label>
-                            <input type="number" name="precio_grande" step="0.01" min="0" placeholder="Ej: 300.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="w-[160px]">
-                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow h-[32px]">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Agregar Artículo
-                            </button>
-                        </div>
+                    <div class="w-[180px]">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Categoría <span class="text-red-500">*</span></label>
+                        <select name="categoria" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
+                            <option value="ambos">Ambos</option>
+                            <option value="mudanza">Solo Mudanza</option>
+                            <option value="transporte">Solo Transporte</option>
+                        </select>
+                    </div>
+                    <div class="w-[90px]">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Pequeño</label>
+                        <input type="number" name="precio_pequeno" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
+                    </div>
+                    <div class="w-[90px]">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Mediano</label>
+                        <input type="number" name="precio_mediano" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
+                    </div>
+                    <div class="w-[90px]">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Grande</label>
+                        <input type="number" name="precio_grande" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500 h-[32px]">
+                    </div>
+                    <div class="w-[150px]">
+                        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 shadow h-[32px]">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Agregar Artículo
+                        </button>
                     </div>
                 </form>
             </div>
