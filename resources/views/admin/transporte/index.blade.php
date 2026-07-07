@@ -326,9 +326,9 @@
                             <tr>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">ID</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Artículo</th>
-                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">Peq (RD$)</th>
-                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">Med (RD$)</th>
-                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-24">Gra (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Peq (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Med (RD$)</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b w-32">Gra (RD$)</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Categoría</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Estatus</th>
                                 <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b text-center w-36">Acciones</th>
@@ -345,13 +345,13 @@
                                             <input type="text" name="nombre" value="{{ $art->nombre }}" required class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-xs">
                                     </td>
                                     <td class="px-6 py-4">
-                                            <input type="number" name="precio_pequeno" step="0.01" min="0" value="{{ $art->precio_pequeno }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[80px]">
+                                            <input type="number" name="precio_pequeno" step="0.01" min="0" value="{{ $art->precio_pequeno }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
                                     </td>
                                     <td class="px-6 py-4">
-                                            <input type="number" name="precio_mediano" step="0.01" min="0" value="{{ $art->precio_mediano }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[80px]">
+                                            <input type="number" name="precio_mediano" step="0.01" min="0" value="{{ $art->precio_mediano }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
                                     </td>
                                     <td class="px-6 py-4">
-                                            <input type="number" name="precio_grande" step="0.01" min="0" value="{{ $art->precio_grande }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[80px]">
+                                            <input type="number" name="precio_grande" step="0.01" min="0" value="{{ $art->precio_grande }}" class="px-3 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-sm font-semibold text-gray-800 bg-transparent focus:bg-white transition-all w-full max-w-[120px]">
                                     </td>
                                     <td class="px-6 py-4">
                                             <select name="categoria" class="px-2 py-1 border border-transparent hover:border-gray-300 rounded focus:border-blue-500 text-xs font-semibold text-gray-700 bg-transparent focus:bg-white transition-all">
