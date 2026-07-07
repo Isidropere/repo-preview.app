@@ -117,18 +117,38 @@
             <tbody>
                 @php $totalBase = 0; @endphp
                 @foreach($solicitud->articulos as $art)
-                    @php $totalBase += $art->pivot->subtotal; @endphp
+                    @php 
+                        $totalBase += $art->pivot->subtotal;
+                        $dimsObj = json_decode($art->pivot->dimensiones, true);
+                        $isJson = is_array($dimsObj);
+                    @endphp
                     <tr>
                         <td>{{ $art->nombre }}</td>
                         <td style="text-transform: capitalize; color: #666;">
-                            {{ $art->categoria == 'ambos' ? 'Ambos servicios' : $art->categoria }}
+                            {{ $art->categoria == 'ambos' ? 'Ambos' : $art->categoria }}
                         </td>
                         <td style="text-align: center; font-weight: bold; color: #004085;">
                             {{ $art->pivot->cantidad }}
                         </td>
-                        <td>{{ $art->pivot->dimensiones ?: 'N/A' }}</td>
+                        <td>
+                            @if($isJson)
+                                @php $parts = []; @endphp
+                                @foreach($dimsObj as $sizeKey => $data)
+                                    @php $parts[] = ucfirst($sizeKey) . ": " . $data['cantidad'] . " u. (RD$ " . number_format($data['precio'], 2) . ")"; @endphp
+                                @endforeach
+                                {!! implode('<br>', $parts) !!}
+                            @else
+                                {{ $art->pivot->dimensiones ?: 'N/A' }}
+                            @endif
+                        </td>
                         <td>{{ $art->pivot->peso ? $art->pivot->peso . 'kg' : 'N/A' }}</td>
-                        <td style="text-align: right;">RD$ {{ number_format($art->pivot->precio_unitario, 2) }}</td>
+                        <td style="text-align: right;">
+                            @if($isJson)
+                                -
+                            @else
+                                RD$ {{ number_format($art->pivot->precio_unitario, 2) }}
+                            @endif
+                        </td>
                         <td style="text-align: right; font-weight: bold;">RD$ {{ number_format($art->pivot->subtotal, 2) }}</td>
                     </tr>
                 @endforeach

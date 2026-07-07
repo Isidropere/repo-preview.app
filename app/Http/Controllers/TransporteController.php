@@ -71,29 +71,38 @@ class TransporteController extends Controller
             // Obtener precios base de los artículos para guardarlos en el histórico del pivot
             $articulosCatalogo = TransporteArticulo::whereIn('id', array_keys($request->articulos))->get()->keyBy('id');
 
-            foreach ($request->articulos as $articuloId => $value) {
-                // Si el checkbox está marcado
-                if ($value == '1' || $value === 'on' || $value === true) {
-                    $articulo = $articulosCatalogo->get($articuloId);
-                    $cantidad = intval($request->input("cantidades.{$articuloId}", 1));
-                    
-                    // Concatenar las 4 dimensiones solicitadas
-                    $d1 = $request->input("dim1.{$articuloId}", 0);
-                    $d2 = $request->input("dim2.{$articuloId}", 0);
-                    $d3 = $request->input("dim3.{$articuloId}", 0);
-                    $d4 = $request->input("dim4.{$articuloId}", 0);
-                    $dimensiones = "{$d1}x{$d2}x{$d3}x{$d4}";
+            foreach ($request->articulos as $articuloId => $sizes) {
+                $articulo = $articulosCatalogo->get($articuloId);
+                if (!$articulo || !is_array($sizes)) continue;
 
-                    $peso = $request->input("pesos.{$articuloId}");
-                    $precioUnitario = $articulo ? $articulo->precio_base : 0;
-                    $countArticulosTotal += $cantidad;
-                    
+                $itemSubtotal = 0;
+                $itemCantidad = 0;
+                $dimensionesArr = [];
+
+                foreach ($sizes as $sizeKey => $value) {
+                    if ($value == '1' || $value === 'on' || $value === true) {
+                        $qty = max(1, intval($request->input("cantidades.{$articuloId}.{$sizeKey}", 1)));
+                        $priceField = "precio_" . ($sizeKey == 'pequeno' ? 'pequeno' : ($sizeKey == 'mediano' ? 'mediano' : 'grande'));
+                        $price = $articulo ? floatval($articulo->$priceField) : 0;
+                        
+                        $itemSubtotal += $price * $qty;
+                        $itemCantidad += $qty;
+                        
+                        $dimensionesArr[$sizeKey] = [
+                            'cantidad' => $qty,
+                            'precio' => $price
+                        ];
+                    }
+                }
+
+                if ($itemCantidad > 0) {
+                    $countArticulosTotal += $itemCantidad;
                     $syncData[$articuloId] = [
-                        'cantidad' => max(1, $cantidad),
-                        'dimensiones' => $dimensiones,
-                        'peso' => is_numeric($peso) ? $peso : null,
-                        'precio_unitario' => $precioUnitario,
-                        'subtotal' => $precioUnitario * $cantidad
+                        'cantidad' => $itemCantidad,
+                        'dimensiones' => json_encode($dimensionesArr),
+                        'peso' => null,
+                        'precio_unitario' => $itemSubtotal / $itemCantidad,
+                        'subtotal' => $itemSubtotal
                     ];
                 }
             }
