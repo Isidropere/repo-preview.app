@@ -32,9 +32,10 @@ class _TransporteScreenState extends State<TransporteScreen> {
 
   // Búsqueda y Scroll / Paginación
   final _searchCtrl = TextEditingController();
-  final _scrollController = ScrollController();
+  final _scrollController = ScrollController(); // Scroll principal del formulario
+  final _listViewScrollController = ScrollController(); // Scroll interno de la lista de artículos
   String _searchQuery = '';
-  int _visibleCount = 15;
+  int _visibleCount = 10; // Carga inicial de 10 artículos
 
   // Coordenadas para cálculo de distancia
   LatLng? _latLngOrigen;
@@ -69,8 +70,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
   void initState() {
     super.initState();
     _loadUserAndCatalog();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+    _listViewScrollController.addListener(() {
+      if (_listViewScrollController.position.pixels >= _listViewScrollController.position.maxScrollExtent - 150) {
         _loadMoreArticulos();
       }
     });
@@ -89,6 +90,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
     _entregaAddressCtrl.dispose();
     _searchCtrl.dispose();
     _scrollController.dispose();
+    _listViewScrollController.dispose();
     super.dispose();
   }
 
@@ -330,7 +332,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
     final filtered = _getFilteredArticulos();
     if (_visibleCount < filtered.length) {
       setState(() {
-        _visibleCount = min(filtered.length, _visibleCount + 15);
+        _visibleCount = min(filtered.length, _visibleCount + 10);
       });
     }
   }
@@ -634,7 +636,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
                     _searchCtrl.clear();
                     setState(() {
                       _searchQuery = '';
-                      _visibleCount = 15;
+                      _visibleCount = 10;
                     });
                   },
                 )
@@ -654,7 +656,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
         onChanged: (val) {
           setState(() {
             _searchQuery = val.trim();
-            _visibleCount = 15; // reset pagination
+            _visibleCount = 10; // reset pagination
           });
         },
       ),
@@ -664,32 +666,59 @@ class _TransporteScreenState extends State<TransporteScreen> {
   Widget _buildInventoryList() {
     final filtered = _getFilteredArticulos();
     if (filtered.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
-            child: Text('No se encontraron artículos.', style: TextStyle(color: kTextGray, fontSize: 13)),
-          ),
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade200),
         ),
+        child: const Text('No se encontraron artículos.', style: TextStyle(color: kTextGray, fontSize: 13)),
       );
     }
 
     final visibleList = filtered.take(_visibleCount).toList();
 
-    return Column(
-      children: [
-        ...visibleList.map((art) {
+    return Container(
+      height: 350, // Altura fija de viewport de artículos
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: ListView.builder(
+        controller: _listViewScrollController,
+        padding: const EdgeInsets.all(8),
+        itemCount: visibleList.length + (_visibleCount < filtered.length ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == visibleList.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+
+          final art = visibleList[index];
           final int artId = art['id'];
           final bool isExpanded = _selectedSizes.containsKey(artId) && 
               _selectedSizes[artId]!.values.contains(true);
 
           return Card(
-            margin: const EdgeInsets.only(bottom: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0.5,
             child: Column(
               children: [
                 CheckboxListTile(
-                  title: Text(art['nombre'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  title: Text(art['nombre'] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   value: isExpanded,
                   onChanged: (val) {
                     setState(() {
@@ -706,13 +735,13 @@ class _TransporteScreenState extends State<TransporteScreen> {
                 ),
                 if (isExpanded)
                   Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                    padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
                     child: Column(
                       children: [
                         _buildSizeRow(artId, 'pequeno', 'Pequeño', art['precio_pequeno']),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         _buildSizeRow(artId, 'mediano', 'Mediano', art['precio_mediano']),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         _buildSizeRow(artId, 'grande', 'Grande', art['precio_grande']),
                       ],
                     ),
@@ -720,19 +749,8 @@ class _TransporteScreenState extends State<TransporteScreen> {
               ],
             ),
           );
-        }).toList(),
-        if (_visibleCount < filtered.length)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
-              ),
-            ),
-          ),
-      ],
+        },
+      ),
     );
   }
 
