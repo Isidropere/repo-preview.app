@@ -159,6 +159,43 @@ class AuthApiController extends Controller
         return response()->json(['message' => 'Sesión cerrada.']);
     }
 
+    /** POST /api/auth/delete_account */
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        if (empty($user->google_id)) {
+            $request->validate([
+                'password' => 'required|string'
+            ]);
+
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json(['message' => 'Contraseña incorrecta'], 400);
+            }
+        }
+
+        try {
+            // Eliminar dependencias
+            \App\Models\Articulo::where('user_id', $user->id)->delete();
+            \App\Models\Talento::where('id_usuario', $user->id)->delete();
+            
+            // Eliminar el usuario
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cuenta y datos eliminados permanentemente.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la cuenta.'
+            ], 500);
+        }
+    }
+
+
     /** GET /api/auth/me */
     public function me(Request $request)
     {

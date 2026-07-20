@@ -434,6 +434,23 @@ class _CuentaScreenState extends State<CuentaScreen> {
                 ]),
               ]),
             ),
+            
+            // Delete account section
+            const SizedBox(height: 24),
+            Center(
+              child: TextButton.icon(
+                onPressed: _mostrarConfirmacionEliminarCuenta,
+                icon: const Icon(Icons.delete_forever, color: Colors.red),
+                label: const Text('Eliminar mi cuenta y datos', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: Colors.red.withOpacity(0.05),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
             const FooterWidget(),
           ]),
         ),
@@ -453,19 +470,92 @@ class _CuentaScreenState extends State<CuentaScreen> {
         if (tieneHoja) {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const PublicarTalentoScreen()));
         } else {
-          _mostrarDialogoRequerirHojaVida();
+          _error('Aún no tienes hoja de vida para agregar talentos.');
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al verificar tu perfil profesional.'), backgroundColor: Colors.red)
-        );
+        _error('Aún no tienes hoja de vida para agregar talentos.');
       }
     } catch (e) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error de conexión con el servidor.'), backgroundColor: Colors.red)
-      );
+      _error('No se pudo verificar la hoja de vida.');
     }
+  }
+
+  Future<void> _mostrarConfirmacionEliminarCuenta() async {
+    final passwordCtrl = TextEditingController();
+    bool isGoogleUser = _user!['google_id'] != null && _user!['google_id'].toString().isNotEmpty;
+
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.red),
+          SizedBox(width: 8),
+          Expanded(child: Text('Eliminar cuenta', style: TextStyle(color: Colors.red))),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Esta acción es irreversible. Se eliminarán permanentemente tus datos, publicaciones, artículos y talentos.'),
+            if (!isGoogleUser) ...[
+              const SizedBox(height: 16),
+              const Text('Para continuar, ingresa tu contraseña:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: passwordCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Tu contraseña',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar definitivamente', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!isGoogleUser && passwordCtrl.text.isEmpty) {
+        _error('Debes ingresar tu contraseña para eliminar la cuenta.');
+        return;
+      }
+      
+      setState(() => _loading = true);
+      final res = await AuthService.deleteAccount(isGoogleUser ? null : passwordCtrl.text);
+      if (res['success']) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tu cuenta ha sido eliminada.'), backgroundColor: Colors.green),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (_) => false,
+        );
+      } else {
+        setState(() => _loading = false);
+        _error(res['message']);
+      }
+    }
+  }
+
+  void _error(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
   void _mostrarDialogoRequerirHojaVida() {

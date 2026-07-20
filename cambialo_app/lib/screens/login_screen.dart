@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
@@ -290,10 +291,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(height: 12),
 
                               // Olvidaste / Recordarme Row
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       SizedBox(
                                         height: 24,
@@ -321,12 +324,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       );
                                     },
-                                    child: const Text(
-                                      '¿Olvidaste tu contraseña?',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: kPrimary,
-                                        fontWeight: FontWeight.bold,
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 4.0),
+                                      child: Text(
+                                        '¿Olvidaste tu contraseña?',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: kPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),

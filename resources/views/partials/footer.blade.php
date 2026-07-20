@@ -42,6 +42,7 @@
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('legal.terminos') }}">Términos y Condiciones</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('legal.privacidad') }}">Política de Privacidad</a></p>
                     <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('legal.devoluciones') }}">Devoluciones y Cancelaciones</a></p>
+                    <p><a class="inline-flex gap-x-2 text-gray-600 hover:text-primary transition-colors" href="{{ route('borrar_cuenta') }}">Eliminar Cuenta y Datos</a></p>
                 </div>
             </div>
         </div>
