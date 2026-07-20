@@ -178,6 +178,25 @@ class AuthService {
       return {'success': false, 'message': 'No se pudo conectar al servidor.'};
     }
   }
+  static Future<Map<String, dynamic>> deleteAccount(String? password) async {
+    try {
+      final res = await ApiClient.post('/auth/delete_account', {
+        if (password != null && password.isNotEmpty) 'password': password,
+      }, auth: true);
+      
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        await logout(); // Limpiar sesión local al borrar
+        return {'success': true};
+      }
+      return {
+        'success': false,
+        'message': body['message'] ?? 'Error al eliminar la cuenta.'
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor.'};
+    }
+  }
 
   static Future<Map<String, dynamic>> sendPasswordResetEmail(String email) async {
     try {

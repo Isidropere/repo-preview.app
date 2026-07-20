@@ -39,6 +39,7 @@ Route::prefix('auth')->group(function () {
         Route::post('/cambiar-contrasena', [AuthApiController::class, 'cambiarContrasena']);
         Route::post('/profile',            [AuthApiController::class, 'updateProfile']);
         Route::post('/adultos/verificar',  [AuthApiController::class, 'verificarCredencialesAdultos']);
+        Route::post('/delete_account',     [AuthApiController::class, 'deleteAccount']);
     });
 });
 

@@ -263,6 +263,31 @@ Route::get('/sobre-nosotros', function () {
     return view('sobre-nosotros.about');
 })->name('about');
 
+Route::get('/borrar-cuenta', function () {
+    return view('borrar_cuenta');
+})->name('borrar_cuenta');
+
+Route::post('/borrar-cuenta', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ]);
+
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+        return back()->with('error', 'Credenciales incorrectas. No se pudo eliminar la cuenta.');
+    }
+
+    try {
+        \App\Models\Articulo::where('user_id', $user->id)->delete();
+        \App\Models\Talento::where('id_usuario', $user->id)->delete();
+        $user->delete();
+        return back()->with('success', 'Tu cuenta y todos tus datos han sido eliminados permanentemente.');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Ocurrió un error al intentar eliminar la cuenta.');
+    }
+})->name('borrar_cuenta.process');
+
 Route::get('/contactanos', function () {
     return view('contactanos.contact');
 })->name('cont');

@@ -25,6 +25,7 @@ import '../widgets/item_image.dart';
 import '../widgets/footer_widget.dart';
 import '../widgets/categorias_drawer.dart';
 import '../widgets/ticker_banner_widget.dart';
+import '../widgets/adulto_verification_dialog.dart';
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _intercambiosCount = 0;
   int _notifCount = 0;
   final _searchCtrl = TextEditingController();
+
+  // Strip de categorías dinámico
+  List<dynamic> _stripCategorias = [];
+  bool _stripLoading = true;
 
   // Carrusel
   final PageController _carouselCtrl = PageController();
@@ -70,6 +75,37 @@ class _HomeScreenState extends State<HomeScreen> {
     _user = AuthService.currentUser;
     _initAll();
     _startCarouselTimer();
+    _loadStripCategorias();
+  }
+
+  Future<void> _loadStripCategorias() async {
+    try {
+      final res = await ApiClient.get('/categorias');
+      if (res.statusCode == 200 && mounted) {
+        final List<dynamic> data = jsonDecode(res.body);
+        final isLoggedIn = await AuthService.isLoggedIn();
+        final filtered = data.where((c) {
+          final id = ApiClient.parseInt(c['id_categoria_item']) ?? 0;
+          if (id == 11 && !isLoggedIn) return false;
+          return true;
+        }).toList();
+        filtered.sort((a, b) =>
+            (a['categoria'] ?? '')
+                .toString()
+                .toLowerCase()
+                .compareTo((b['categoria'] ?? '').toString().toLowerCase()));
+        if (mounted) {
+          setState(() {
+            _stripCategorias = filtered;
+            _stripLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _stripLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _stripLoading = false);
+    }
   }
 
   void _startCarouselTimer() {
@@ -276,6 +312,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
+                    ),
+
+                    // Strip de categorías
+                    _CategoriasStrip(
+                      categorias: _stripCategorias,
+                      loading: _stripLoading,
                     ),
 
                     // Carrusel
@@ -589,6 +631,186 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 }
 
+// ── Strip horizontal de categorías ────────────────────────────────────────────
+class _CategoriasStrip extends StatefulWidget {
+  final List<dynamic> categorias;
+  final bool loading;
+
+  const _CategoriasStrip({required this.categorias, required this.loading});
+
+  @override
+  State<_CategoriasStrip> createState() => _CategoriasStripState();
+}
+
+class _CategoriasStripState extends State<_CategoriasStrip> {
+  final ScrollController _scrollCtrl = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  IconData _icon(int id) {
+    switch (id) {
+      case 1:  return Icons.music_note_outlined;
+      case 2:  return Icons.kitchen_outlined;
+      case 3:  return Icons.electrical_services_outlined;
+      case 4:  return Icons.sports_esports_outlined;
+      case 5:  return Icons.chair_outlined;
+      case 6:  return Icons.directions_car_outlined;
+      case 7:  return Icons.handyman_outlined;
+      case 8:  return Icons.diamond_outlined;
+      case 9:  return Icons.menu_book_outlined;
+      case 10: return Icons.category_outlined;
+      case 11: return Icons.eighteen_up_rating_outlined;
+      case 13: return Icons.spa_outlined;
+      case 14: return Icons.color_lens_outlined;
+      case 15: return Icons.sports_soccer_outlined;
+      case 16: return Icons.home_outlined;
+      case 17: return Icons.yard_outlined;
+      case 19: return Icons.phone_android_outlined;
+      case 20: return Icons.child_care_outlined;
+      case 21: return Icons.museum_outlined;
+      case 22: return Icons.baby_changing_station_outlined;
+      case 23: return Icons.pets_outlined;
+      case 24: return Icons.computer_outlined;
+      case 25: return Icons.library_books_outlined;
+      case 26: return Icons.woman_2_outlined;
+      case 27: return Icons.man_2_outlined;
+      case 28: return Icons.business_center_outlined;
+      case 29: return Icons.star_outline;
+      default: return Icons.category_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Construir lista: "Todo" primero + categorías de la API
+    final items = <Map<String, dynamic>>[
+      {'id': null, 'label': 'Todo', 'icon': Icons.apps_rounded},
+      if (!widget.loading)
+        ...widget.categorias.map((c) => {
+              'id': ApiClient.parseInt(c['id_categoria_item']),
+              'label': (c['categoria'] ?? '').toString(),
+              'icon': _icon(ApiClient.parseInt(c['id_categoria_item']) ?? 0),
+            }),
+    ];
+
+    // Chips skeleton si está cargando
+    final skeletonCount = widget.loading ? 7 : 0;
+
+    return SizedBox(
+      height: 46,
+      child: GestureDetector(
+        // Drag horizontal manual — bypassa completamente el conflicto de gestos
+        // con el SingleChildScrollView vertical padre
+        onHorizontalDragUpdate: (details) {
+          if (!_scrollCtrl.hasClients) return;
+          final newOffset = (_scrollCtrl.offset - details.delta.dx)
+              .clamp(0.0, _scrollCtrl.position.maxScrollExtent);
+          _scrollCtrl.jumpTo(newOffset);
+        },
+        child: ListView(
+          controller: _scrollCtrl,
+          scrollDirection: Axis.horizontal,
+          // NeverScrollable: el GestureDetector de arriba controla el scroll
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: [
+            // Skeletons mientras carga
+            if (skeletonCount > 0)
+              ...List.generate(
+                skeletonCount,
+                (_) => Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  width: 80,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              )
+            else
+              // Chips reales
+              ...items.map((item) {
+                final bool isTodo = item['id'] == null;
+                return GestureDetector(
+                  onTap: () async {
+                    if (isTodo) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ItemsListScreen()),
+                      );
+                    } else {
+                      final int catId = item['id'] as int;
+                      // Categoría adulto (id==11): requiere verificación igual que el drawer
+                      if (catId == 11) {
+                        final ok = await AdultoVerificationDialog.showVerification(context);
+                        if (!ok) return;
+                      }
+                      if (!context.mounted) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ItemsListScreen(
+                            categoriaId: catId,
+                            title: item['label'] as String,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: isTodo ? kPrimary : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isTodo ? kPrimary : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 14,
+                          color: isTodo ? Colors.white : kPrimary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          item['label'] as String,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isTodo ? Colors.white : kTextDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoriesGlobe extends StatefulWidget {
   final List categorias;
   const _CategoriesGlobe({required this.categorias});
@@ -596,7 +818,6 @@ class _CategoriesGlobe extends StatefulWidget {
   @override
   State<_CategoriesGlobe> createState() => _CategoriesGlobeState();
 }
-
 class _CategoriesGlobeState extends State<_CategoriesGlobe> {
   int _currentIndex = 0;
 
@@ -972,8 +1193,8 @@ class _ProductCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['item'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextDark)),
+                      Text(item['item'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark)),
                       const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
