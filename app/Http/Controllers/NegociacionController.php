@@ -286,7 +286,7 @@ class NegociacionController extends Controller
                     if ($resultado['success']) {
                         $costoEnvioPorNeg[$neg->id_negociacion] = $resultado['costo_envio_total'] ?? 0;
                     } else {
-                        $costoEnvioPorNeg[$neg->id_negociacion] = ($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' ? 'MISSING_DELIVERY_TARIFF' : 0;
+                        $costoEnvioPorNeg[$neg->id_negociacion] = (($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' || ($resultado['error_code'] ?? null) === 'ZONA_NO_CONTEMPLADA') ? 'MISSING_DELIVERY_TARIFF' : 0;
                     }
                 } else {
                     $costoEnvioPorNeg[$neg->id_negociacion] = 0;

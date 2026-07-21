@@ -106,8 +106,8 @@ class NegociacionPagoRedirectController extends Controller
                 (float) ($neg->item->ancho_cm ?? 0),
                 (float) ($neg->item->profundo_cm ?? 0)
             );
-            if (!$resultado['success'] && ($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
-                return redirect()->route('negociaciones.mis')->with('error', 'El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espere a que el administrador defina el costo de envío.');
+            if (!$resultado['success'] && (($resultado['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' || ($resultado['error_code'] ?? null) === 'ZONA_NO_CONTEMPLADA')) {
+                return redirect()->route('negociaciones.mis')->with('error', $resultado['message'] ?? 'Actualmente no está contemplado viajar a esa zona del país.');
             }
             $montoACobrar = $resultado['success'] ? ($resultado['costo_envio_total'] ?? 0) : 0;
         }

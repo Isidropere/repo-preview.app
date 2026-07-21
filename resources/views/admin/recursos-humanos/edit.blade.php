@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Editar Vacante | Recursos Humanos | CambialóRD')
 

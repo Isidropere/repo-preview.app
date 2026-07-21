@@ -128,8 +128,8 @@ class CheckoutService
             $pueblo = $direccion->municipio->municipio ?? '';
             $resultadoDelivery = $deliveryService->calcular($pueblo, 'persona', $montoTotal, $maxPeso, $maxAlto, $maxAncho, $maxProfundo);
             
-            if (!$resultadoDelivery['success'] && ($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF') {
-                return $this->error('El sistema espera por una definición para el cálculo de Análisis de costos de envío. Por favor, espera a que el administrador defina el costo de envío.');
+            if (!$resultadoDelivery['success'] && (($resultadoDelivery['error_code'] ?? null) === 'MISSING_DELIVERY_TARIFF' || ($resultadoDelivery['error_code'] ?? null) === 'ZONA_NO_CONTEMPLADA')) {
+                return $this->error($resultadoDelivery['message'] ?? 'Actualmente no está contemplado viajar a esa zona del país.');
             }
             
             $costoEnvio = $resultadoDelivery['success'] ? (float) ($resultadoDelivery['costo_envio_total'] ?? 0) : 0;

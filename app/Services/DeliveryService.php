@@ -57,8 +57,31 @@ class DeliveryService
         }
 
         $zonaEncontrada = $this->buscarZonaPorPueblo($pueblo);
+        
+        // Buscar el municipio en la base de datos usando coincidencias (como hace buscarZonaPorPueblo)
+        $municipiosDb = \App\Models\Municipio::with('provincia')->get();
+        $municipioModel = null;
+        foreach ($municipiosDb as $mun) {
+            $munName = strtolower(trim($mun->municipio));
+            if (str_contains($munName, $pueblo) || str_contains($pueblo, $munName)) {
+                $municipioModel = $mun;
+                break;
+            }
+        }
 
-        if (!$zonaEncontrada) {
+        // Verificamos estatus activo
+        $isMunicipioInactivo = false;
+        if ($municipioModel) {
+            // Si lo encuentra, verificar que tanto el municipio como la provincia estén activos
+            if (!$municipioModel->activo_entrega || ($municipioModel->provincia && !$municipioModel->provincia->activo_entrega)) {
+                $isMunicipioInactivo = true;
+            }
+        } else {
+            // Si el pueblo no existe en la tabla de municipios, se considera inactivo por seguridad
+            $isMunicipioInactivo = true;
+        }
+
+        if (!$zonaEncontrada || $isMunicipioInactivo) {
             $user = auth()->user() ?? auth('sanctum')->user();
             if ($user) {
                 $userName = trim(($user->nombres ?? '') . ' ' . ($user->apellidos ?? ''));
@@ -101,12 +124,32 @@ class DeliveryService
                         event(new \App\Events\NuevaNotificacion($notifMensaje, $admin->id));
                     }
                 }
+                
+                // Guardar el registro de zona no contemplada
+                try {
+                    \App\Models\ZonaNoContempladaRequest::create([
+                        'user_id' => $user->id,
+                        'pueblo'  => $pueblo,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Ignorar si falla la inserción
+                }
+            } else {
+                // Si no hay usuario autenticado (guest?), igual lo guardamos
+                try {
+                    \App\Models\ZonaNoContempladaRequest::create([
+                        'user_id' => null,
+                        'pueblo'  => $pueblo,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Ignorar
+                }
             }
 
             return [
                 'success' => false,
-                'error_code' => 'MISSING_DELIVERY_TARIFF',
-                'message' => 'No se pudo calcular el envío'
+                'error_code' => 'ZONA_NO_CONTEMPLADA',
+                'message' => 'Actualmente no está contemplado viajar a esa zona del país.'
             ];
         }
 

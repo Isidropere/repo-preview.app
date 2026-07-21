@@ -13,7 +13,7 @@ class Provincia extends Model
     protected $primaryKey = 'id_provincia';
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $fillable = ['id_provincia', 'provincia'];
+    protected $fillable = ['id_provincia', 'provincia', 'activo_entrega'];
 
     public function municipios()
     {
