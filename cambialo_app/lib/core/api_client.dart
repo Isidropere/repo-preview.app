@@ -262,6 +262,22 @@ class ApiClient {
   }
 
   /// Invalida manualmente una ruta del cache (tras mutaciones)
+  static bool hasCache(String path, {bool auth = false}) {
+    final cacheKey = auth ? '__auth__$path' : path;
+    return _cache.containsKey(cacheKey);
+  }
+
+  static String? getCache(String path, {bool auth = false}) {
+    final cacheKey = auth ? '__auth__$path' : path;
+    return _cache[cacheKey];
+  }
+
+  static void setCache(String path, String data, {bool auth = false}) {
+    final cacheKey = auth ? '__auth__$path' : path;
+    _cache[cacheKey] = data;
+    _cacheTimes[cacheKey] = DateTime.now();
+  }
+
   static void clearCache([String? path]) {
     if (path != null) {
       _cache.remove(path);

@@ -63,7 +63,9 @@
         <!-- Sidebar -->
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0 bg-white">
-                <img src="{{ asset('imgs/logoTypes/header-logo.png') }}" alt="Logo" class="h-12 object-contain" style="max-width: 100%;">
+                <a href="{{ url('/') }}" title="Volver al inicio" class="flex items-center w-full h-full">
+                    <img src="{{ asset('imgs/logoTypes/header-logo.png') }}" alt="Logo" class="h-12 object-contain transition-transform hover:scale-105" style="max-width: 100%;">
+                </a>
             </div>
 
             <div class="p-4 flex-1">

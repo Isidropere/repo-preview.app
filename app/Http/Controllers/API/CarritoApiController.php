@@ -47,6 +47,12 @@ class CarritoApiController extends Controller
                 }
             }
         }
+        // Adjuntar municipioDefault
+        $resultado['data']['municipioDefault'] = $request->user()
+            ->direcciones()
+            ->with('municipio')
+            ->where('es_predeterminada', 1)
+            ->first()?->municipio?->municipio ?? '';
 
         // Return the full structured data for the mobile app
         return response()->json($resultado['data']);

@@ -6,6 +6,7 @@ import 'negociacion_detalle_screen.dart';
 import 'historial_screen.dart';
 import 'mis_talentos_screen.dart';
 import 'mis_intercambios_screen.dart';
+import 'mis_ventas_talentos_screen.dart';
 
 class NotificacionesScreen extends StatefulWidget {
   const NotificacionesScreen({super.key});
@@ -83,7 +84,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     } else if (esServicio) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const MisTalentosScreen()),
+        MaterialPageRoute(builder: (_) => const MisVentasTalentosScreen()),
       );
     } else if (esCompra) {
       Navigator.pushReplacement(

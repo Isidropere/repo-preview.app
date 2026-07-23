@@ -1415,10 +1415,10 @@ document.addEventListener('DOMContentLoaded', () => {
         '<td style="padding:10px 12px;font-size:.78rem;max-width:160px;" title="' + pueblos.replace(/"/g, '') + '">' + corto + '</td>' +
         '<td style="padding:10px 12px;">' + (z.dias_entrega || '-') + '</td>' +
         '<td style="padding:10px 12px;"><span style="padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600;background:' + (z.activo ? '#d1fae5' : '#fee2e2') + ';color:' + (z.activo ? '#065f46' : '#991b1b') + ';">' + (z.activo ? 'Activa' : 'Inactiva') + '</span></td>' +
-        '<td style="padding:10px 12px;"><div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-          '<button onclick="editarZona(' + JSON.stringify(z).replace(/"/g, '&quot;') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;">Editar</button>' +
-          '<button onclick="toggleZona(' + z.id + ',' + (z.activo ? 'false' : 'true') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">' + (z.activo ? 'Desactivar' : 'Activar') + '</button>' +
+        '<td style="padding:10px 12px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
           '<button onclick="eliminarZona(' + z.id + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #ef4444;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer;">Eliminar</button>' +
+          '<button onclick="toggleZona(' + z.id + ',' + (z.activo ? 'false' : 'true') + ')" style="font-size:.75rem;padding:4px 10px;border:1px solid #f59e0b;border-radius:5px;background:#fffbeb;color:#92400e;cursor:pointer;">' + (z.activo ? 'Desactivar' : 'Activar') + '</button>' +
+          '<button onclick="editarZona(' + JSON.stringify(z).replace(/"/g, '&quot;') + ')" style="grid-column:span 2;font-size:.75rem;padding:4px 10px;border:1px solid #3b82f6;border-radius:5px;background:#eff6ff;color:#1d4ed8;cursor:pointer;width:100%;">Editar</button>' +
         '</div></td></tr>';
     }).join('');
   }

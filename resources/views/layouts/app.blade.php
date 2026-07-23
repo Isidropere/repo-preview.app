@@ -517,7 +517,7 @@
         errDiv.style.display = 'none';
 
         try {
-            const res = await fetch('{{ route("adultos.verificar") }}', {
+            const res = await fetch('{{ route("adultos.verificar", [], false) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -654,7 +654,7 @@
     window.syncCartIndicators = async function() {
         @guest return; @endguest
         try {
-            const res = await fetch('{{ route("carrito.item_ids") }}');
+            const res = await fetch('{{ route("carrito.item_ids", [], false) }}');
             const itemIds = await res.json();
             
             document.querySelectorAll('[id^="add-to-cart-"]').forEach(btn => {

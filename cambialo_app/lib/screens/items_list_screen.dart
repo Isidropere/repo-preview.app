@@ -327,6 +327,9 @@ class _ItemGridCard extends StatelessWidget {
         if (result != true) return;
       }
       if (!context.mounted) return;
+      // Actualización optimista rápida del badge
+      ApiClient.cartCountNotifier.value++;
+
       final res = await ApiClient.post('/carrito/agregar',
           {'id_item': itemId, 'cantidad': 1}, auth: true);
       String message = 'Error al agregar';
@@ -338,18 +341,18 @@ class _ItemGridCard extends StatelessWidget {
             isSuccess = true;
             message = data['message'] ?? '¡Agregado al carrito!';
             if (data['cart_count'] != null) {
-              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
-            } else {
-              ApiClient.cartCountNotifier.value++;
+              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? ApiClient.cartCountNotifier.value;
             }
           } else {
             message = data['message'] ?? 'Error al agregar';
+            if (ApiClient.cartCountNotifier.value > 0) ApiClient.cartCountNotifier.value--;
           }
         } catch (_) {
           isSuccess = true;
-          ApiClient.cartCountNotifier.value++;
         }
       } else {
+        // Revertir en caso de error HTTP
+        if (ApiClient.cartCountNotifier.value > 0) ApiClient.cartCountNotifier.value--;
         try {
           final data = jsonDecode(res.body);
           message = data['message'] ?? 'Error al agregar';

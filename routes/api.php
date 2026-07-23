@@ -67,6 +67,9 @@ Route::get('/ayuda/{slug}', function ($slug) {
     return response()->json($pagina);
 });
 
+// ── Calculo de Envío ────────────────────────────────────────────────────
+Route::get('/delivery/calcular', [\App\API\DeliveryZonaController::class, 'calcular']);
+
 // ── Rutas protegidas ──────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -78,6 +81,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id_item}',  [CarritoApiController::class, 'eliminar']);
         Route::put('/{itemIntencionId}/cantidad', [CarritoApiController::class, 'actualizarCantidad']);
         Route::put('/{itemIntencionId}/seleccion', [CarritoApiController::class, 'marcarSeleccionado']);
+        
+        // Rutas para negociaciones y paquetes en carrito
+        Route::get('/getnegociaciones/{itemId}', [\App\Http\Controllers\NegociacionController::class, 'getNegociaciones']);
+        Route::post('/savenegociaciones', [\App\Http\Controllers\NegociacionController::class, 'store']);
+        Route::get('/items-usuario', [\App\Http\Controllers\ItemController::class, 'getItemsUsuario']);
+        Route::post('/crearPaquete', [\App\Http\Controllers\PaqueteController::class, 'crearPaquete']);
+        Route::put('/editarPaquete/{id}', [\App\Http\Controllers\PaqueteController::class, 'editarPaquete']);
     });
 
     // Mis artículos (CRUD)
@@ -332,6 +342,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Solicitudes de servicio (aprobación previa al pago de talentos)
     Route::post('/solicitudes-servicio/enviar', [\App\Http\Controllers\SolicitudServicioController::class, 'enviarDesdeCarrito']);
     Route::get('/solicitudes-servicio/estado/{idItem}', [\App\Http\Controllers\SolicitudServicioController::class, 'estadoItem']);
+    Route::get('/solicitudes-servicio/mis-ventas-talentos', [\App\Http\Controllers\SolicitudServicioController::class, 'misVentasTalentosJson']);
+    Route::post('/solicitudes-servicio/{id}/aprobar-json', [\App\Http\Controllers\SolicitudServicioController::class, 'aprobarJson']);
+    Route::post('/solicitudes-servicio/{id}/rechazar-json', [\App\Http\Controllers\SolicitudServicioController::class, 'rechazarJson']);
 
     // Tarjetas de pago
     Route::prefix('tarjetas')->group(function () {
