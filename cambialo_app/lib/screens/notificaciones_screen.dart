@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
-import 'negociacion_detalle_screen.dart';
 import 'historial_screen.dart';
-import 'mis_talentos_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'mis_ventas_talentos_screen.dart';
 
@@ -66,25 +64,21 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
 
     if (!mounted) return;
 
-    final bool esServicio = msg.contains('[Servicio]') || msg.toLowerCase().contains('talento') || msg.toLowerCase().contains('servicio');
-    final bool esVenta = msg.contains('[Venta]') || (msg.toLowerCase().contains('orden #') && !msg.contains('[Compra]'));
-    final bool esCompra = msg.contains('[Compra]') || msg.toLowerCase().contains('tu orden #');
-    final bool esIntercambio = msg.contains('[Intercambio]') || msg.toLowerCase().contains('intercambio') || msg.toLowerCase().contains('negociaci') || msg.toLowerCase().contains('propuesta');
+    final msgLower = msg.toLowerCase();
+    final bool esServicio = msg.contains('[Servicio]') || msgLower.contains('talento') || msgLower.contains('servicio');
+    final bool esIntercambio = msg.contains('[Intercambio]') || msgLower.contains('intercambio') || msgLower.contains('negociaci') || msgLower.contains('propuesta');
+    final bool esCompra = msg.contains('[Compra]') || msgLower.contains('tu orden #');
+    final bool esVenta = msg.contains('[Venta]') || (msgLower.contains('orden #') && !msg.contains('[Compra]'));
 
-    if (esIntercambio && idOferta != null) {
+    if (esServicio) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => NegociacionDetalleScreen(negociacionId: ApiClient.parseInt(idOferta) ?? 0)),
+        MaterialPageRoute(builder: (_) => const MisVentasTalentosScreen()),
       );
     } else if (esIntercambio) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MisIntercambiosScreen()),
-      );
-    } else if (esServicio) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MisVentasTalentosScreen()),
       );
     } else if (esCompra) {
       Navigator.pushReplacement(
