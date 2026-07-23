@@ -245,6 +245,10 @@
                                                 <img src="/imgs/dropdown_icons/account.png" class="h-8 w-8 rounded-full mr-4" alt="Mi cuenta" loading="lazy" width="32" height="32">
                                                 Mi cuenta
                                             </a>
+                                            <a class="flex gap-x-3.5 py-2 md:px-3 w-full items-center justify-left rounded-lg hover:bg-gray-100 focus:outline-none hover:underline transition-all" href="{{ route('solicitudes.index') }}" data-astro-cid-pwmmw5ba>
+                                                <svg class="h-8 w-8 mr-4 flex-shrink-0 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="padding: 2px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                                Mis Ventas de Servicios
+                                            </a>
 
                                             @if(Auth::user()->isAdmin || Auth::user()->isSuperAdmin || Auth::user()->isContable)
                                             <a class="flex gap-x-3.5 py-2 md:px-3 w-full items-center justify-left rounded-lg hover:bg-gray-100 focus:outline-none hover:underline transition-all text-primary" href="{{ route('admin.index') }}">
