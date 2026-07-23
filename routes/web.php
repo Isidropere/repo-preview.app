@@ -706,11 +706,6 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de administración (solo para admin)
     Route::middleware('role:3')->group(function () {
         Route::apiResource('categorias-item', CategoriaItemController::class)->except(['index', 'show']);
-        
-        // Zonas de Envío (Provincias y Municipios)
-        Route::get('/admin/delivery/zonas', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'index'])->name('admin.delivery.zonas');
-        Route::post('/admin/delivery/zonas/provincia/{id}/toggle', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'toggleProvincia'])->name('admin.delivery.zonas.toggleProvincia');
-        Route::post('/admin/delivery/zonas/municipio/{id}/toggle', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'toggleMunicipio'])->name('admin.delivery.zonas.toggleMunicipio');
     });
 
     // Rutas de cuenta
@@ -929,6 +924,11 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/estadisticas/data', [AdminStatsController::class, 'data'])->name('stats.data');
     Route::post('/estadisticas/delivery-config/{clave}', [\App\API\DeliveryZonaController::class, 'updateConfig'])->name('stats.delivery.config');
     Route::post('/estadisticas/categorias/{id}/aplica-impuesto', [AdminStatsController::class, 'updateCategoriaAplicaImpuesto'])->name('stats.categorias.aplica_impuesto');
+
+    // UI - Zonas de Envío (Provincias y Municipios)
+    Route::get('/delivery/zonas', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'index'])->name('delivery.zonas');
+    Route::post('/delivery/zonas/provincia/{id}/toggle', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'toggleProvincia'])->name('delivery.zonas.toggleProvincia');
+    Route::post('/delivery/zonas/municipio/{id}/toggle', [\App\Http\Controllers\Admin\AdminDeliveryZonasController::class, 'toggleMunicipio'])->name('delivery.zonas.toggleMunicipio');
 
     // CRUD Zonas de Delivery
     Route::get('/delivery-zonas', function () {
