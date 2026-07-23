@@ -14,6 +14,7 @@ import 'editar_perfil_screen.dart';
 import 'hoja_vida_screen.dart';
 import 'publicar_talento_screen.dart';
 import 'mis_talentos_screen.dart';
+import 'mis_ventas_talentos_screen.dart';
 import 'mis_intercambios_screen.dart';
 import 'notificaciones_screen.dart';
 import 'items_list_screen.dart';
@@ -116,6 +117,12 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'title': 'Administrar Talentos',
       'sub': 'Edita o actualiza tus servicios ofrecidos',
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisTalentosScreen())),
+    },
+    {
+      'icon': Icons.request_quote_outlined,
+      'title': 'Mis Ventas de Servicios',
+      'sub': 'Gestiona tus solicitudes de servicio recibidas',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisVentasTalentosScreen())),
     },
     {
       'icon': Icons.description_outlined,
