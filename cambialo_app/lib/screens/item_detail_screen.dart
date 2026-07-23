@@ -50,20 +50,26 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       if (result != true) return;
     }
     setState(() => _addingToCart = true);
+    
+    // Actualización optimista rápida del badge
+    ApiClient.cartCountNotifier.value++;
+
     final res = await ApiClient.post('/carrito/agregar',
         {'id_item': widget.itemId, 'cantidad': 1}, auth: true);
     setState(() => _addingToCart = false);
+    
     if (!mounted) return;
     if (res.statusCode == 200) {
       try {
         final data = jsonDecode(res.body);
         if (data['cart_count'] != null) {
-          ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
-        } else {
-          ApiClient.cartCountNotifier.value++;
+          ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? ApiClient.cartCountNotifier.value;
         }
-      } catch (_) {
-        ApiClient.cartCountNotifier.value++;
+      } catch (_) {}
+    } else {
+      // Revertir en caso de error
+      if (ApiClient.cartCountNotifier.value > 0) {
+        ApiClient.cartCountNotifier.value--;
       }
     }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(

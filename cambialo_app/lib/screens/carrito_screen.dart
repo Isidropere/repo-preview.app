@@ -9,6 +9,7 @@ import 'login_screen.dart';
 import 'publicar_articulo_screen.dart';
 import 'items_list_screen.dart';
 import '../widgets/footer_widget.dart';
+import '../widgets/negociaciones_modal.dart';
 // import 'negociacion_detalle_screen.dart';
 
 class CarritoScreen extends StatefulWidget {
@@ -22,6 +23,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
   bool  _loading   = true;
   bool  _loggedIn  = false;
   bool  _vaciando  = false;
+  
+  double _costoEnvio = 0.0;
+  String _diasEnvio = "";
+  bool _calculandoEnvio = false;
 
   @override
   void initState() {
@@ -49,6 +54,20 @@ class _CarritoScreenState extends State<CarritoScreen> {
     }
     
     try {
+      // Intentar cargar desde caché rápido para pintar UI de inmediato
+      if (ApiClient.hasCache('/carrito', auth: true)) {
+        final cached = ApiClient.getCache('/carrito', auth: true);
+        if (cached != null) {
+          final parsed = jsonDecode(cached);
+          setState(() { _data = parsed; _loading = false; });
+          try {
+            final todosItems = (parsed['todosLosItems'] as List?) ?? [];
+            ApiClient.cartCountNotifier.value = todosItems.length;
+          } catch (_) {}
+        }
+      }
+
+      // Consulta de fondo para datos frescos (sin bloquear si ya hay cache)
       final res = await ApiClient.get('/carrito', auth: true, useCache: false);
       if (!mounted) return;
       if (res.statusCode == 200) {
@@ -58,6 +77,11 @@ class _CarritoScreenState extends State<CarritoScreen> {
           final todosItems = (parsed['todosLosItems'] as List?) ?? [];
           ApiClient.cartCountNotifier.value = todosItems.length;
         } catch (_) {}
+        // Actualizar cache manualmente para la próxima vez
+        ApiClient.setCache('/carrito', res.body, auth: true);
+        
+        // Recalcular envío después de cargar
+        _recalcularEnvio();
       } else {
         setState(() => _loading = false);
       }
@@ -66,7 +90,70 @@ class _CarritoScreenState extends State<CarritoScreen> {
     }
   }
 
+  Future<void> _recalcularEnvio() async {
+    final todosItems = (_data?['todosLosItems'] as List?) ?? [];
+    final totales = _data?['totales'] as Map<String, dynamic>? ?? {};
+    final totalEstimado = double.tryParse(totales['total_estimado']?.toString() ?? '0') ?? 0.0;
+    final municipio = _data?['municipioDefault']?.toString() ?? '';
+
+    if (municipio.isEmpty || totalEstimado <= 0) {
+      setState(() { _costoEnvio = 0.0; _diasEnvio = ""; });
+      return;
+    }
+
+    double maxPeso = 0;
+    double maxAlto = 0;
+    double maxAncho = 0;
+    double maxProfundo = 0;
+
+    for (final itemIntencion in todosItems) {
+      if (itemIntencion['es_seleccionado'] == 1 || itemIntencion['es_seleccionado'] == true) {
+        final item = itemIntencion['item'];
+        if (item != null) {
+          final cantidad = int.tryParse(itemIntencion['cantidad']?.toString() ?? '1') ?? 1;
+          final peso = double.tryParse(item['peso_lbs']?.toString() ?? '0') ?? 0;
+          final alto = double.tryParse(item['alto_cm']?.toString() ?? '0') ?? 0;
+          final ancho = double.tryParse(item['ancho_cm']?.toString() ?? '0') ?? 0;
+          final profundo = double.tryParse(item['profundo_cm']?.toString() ?? '0') ?? 0;
+
+          maxPeso += peso * cantidad;
+          if (alto * cantidad > maxAlto) maxAlto = alto * cantidad;
+          if (ancho > maxAncho) maxAncho = ancho;
+          if (profundo > maxProfundo) maxProfundo = profundo;
+        }
+      }
+    }
+
+    setState(() => _calculandoEnvio = true);
+    try {
+      final qs = '?pueblo=${Uri.encodeComponent(municipio)}&valor_articulo=$totalEstimado&peso_lbs=$maxPeso&alto_cm=$maxAlto&ancho_cm=$maxAncho&profundo_cm=$maxProfundo';
+      final res = await ApiClient.get('/delivery/calcular$qs'); // It uses API prefix by default
+      if (res.statusCode == 200) {
+        final d = jsonDecode(res.body);
+        final costo = double.tryParse(d['costo_envio_total']?.toString() ?? '0') ?? 0.0;
+        if (mounted) {
+          setState(() {
+            _costoEnvio = costo;
+            if (d['dias_habiles'] != null) {
+              _diasEnvio = '🚚 Entrega estimada: ~${d['dias_habiles']} días hábiles';
+            } else {
+              _diasEnvio = "";
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() { _costoEnvio = 0.0; _diasEnvio = ""; });
+    } finally {
+      if (mounted) setState(() => _calculandoEnvio = false);
+    }
+  }
+
   Future<void> _eliminar(int idItem) async {
+    // Actualizar badge inmediatamente
+    if (ApiClient.cartCountNotifier.value > 0) {
+      ApiClient.cartCountNotifier.value--;
+    }
     await ApiClient.delete('/carrito/$idItem', auth: true);
     ApiClient.clearCache('/carrito');
     _load();
@@ -76,6 +163,8 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final ok = await _confirmar('¿Vaciar carrito?', '¿Seguro que deseas eliminar todos los artículos?');
     if (!ok) return;
     setState(() => _vaciando = true);
+    // Vaciar badge inmediatamente
+    ApiClient.cartCountNotifier.value = 0;
     await ApiClient.delete('/carrito/vaciar', auth: true);
     ApiClient.clearCache('/carrito');
     await _load();
@@ -186,7 +275,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
     for (var item in items) {
        bool esSel = ApiClient.parseBool(item['es_seleccionado']);
        final itemData = item['item'] as Map? ?? {};
-       final isServicio = (itemData['id_categoria_item'] == 29);
+       final isServicio = (itemData['id_categoria_item'].toString() == '29');
        final estadoSolicitud = item['estado_solicitud']?.toString();
        if (isServicio && estadoSolicitud != 'aprobada') {
          continue; // Saltar servicios no aprobados
@@ -205,18 +294,15 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final itemData = item['item'] as Map? ?? {};
     final int itemId = int.tryParse(itemData['id_item'].toString()) ?? 0;
 
-    if (estadoActual == 'pendiente_aprobacion') {
-      showDialog(
+    if (['aprobada', 'rechazada', 'pendiente'].contains(estadoActual)) {
+      await showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('⏳ Solicitud en espera'),
-          content: const Text(
-            'Ya has enviado la solicitud de aprobación para este servicio. '
-            'Debes esperar a que el proveedor responda antes de proceder al pago.',
-          ),
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: const Text('Estado de tu solicitud'),
+          content: Text('La solicitud para este servicio se encuentra: ${(estadoActual ?? '').toUpperCase()}'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Entendido'),
             ),
           ],
@@ -247,7 +333,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
 
     final bool? confirmar = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('Solicitar aprobación'),
         content: Text(
           '¿Deseas enviar la solicitud de aprobación al proveedor para la fecha: $fechaStr?\n\n'
@@ -255,11 +341,11 @@ class _CarritoScreenState extends State<CarritoScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             child: const Text('Enviar solicitud', style: TextStyle(color: Colors.white)),
           ),
@@ -309,13 +395,13 @@ class _CarritoScreenState extends State<CarritoScreen> {
   Future<bool> _confirmar(String titulo, String msg) async {
     return await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (BuildContext dialogContext) => AlertDialog(
         title: Text(titulo),
         content: Text(msg),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancelar')),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
           ),
@@ -326,17 +412,53 @@ class _CarritoScreenState extends State<CarritoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final itemCount = (_data?['todosLosItems'] as List?)?.length ?? 0;
     return Scaffold(
-      backgroundColor: kBgLight,
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Carrito'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'Carrito ($itemCount)',
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        leading: itemCount > 0 ? InkWell(
+          onTap: () {
+            final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
+            final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
+              if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
+              return ApiClient.parseBool(i['es_seleccionado']);
+            });
+            _toggleSeleccionarTodos(!todosSeleccionados);
+          },
+          child: Row(
+            children: [
+              const SizedBox(width: 12),
+              Builder(
+                builder: (context) {
+                  final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
+                  final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
+                    if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
+                    return ApiClient.parseBool(i['es_seleccionado']);
+                  });
+                  return Icon(todosSeleccionados ? Icons.check_circle : Icons.circle_outlined, 
+                    color: todosSeleccionados ? kPrimary : Colors.grey.shade400, size: 22);
+                }
+              ),
+              const SizedBox(width: 4),
+              const Text('Todos', style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ) : const SizedBox(),
+        leadingWidth: 100,
         actions: [
           if (_data != null && (_data!['todosLosItems'] as List).isNotEmpty)
             _vaciando
                 ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red)))
-                : TextButton(
+                : IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.black, size: 26),
                     onPressed: _vaciar,
-                    child: const Text('Vaciar', style: TextStyle(color: Colors.red)),
                   ),
         ],
       ),
@@ -378,25 +500,35 @@ class _CarritoScreenState extends State<CarritoScreen> {
 
     final carritos = _data?['carritos'] as List? ?? [];
     
-    // Agrupar items por tipo usando los carritos si es posible, o filtrando todosLosItems
+    // Para el botón de checkout (CheckoutScreen) necesitamos el objeto carrito
     final Map<String, dynamic>? carritoProducto = carritos.cast<Map<String,dynamic>?>().firstWhere((c) => c?['tipo'] == 'producto', orElse: () => null);
     final Map<String, dynamic>? carritoServicio = carritos.cast<Map<String,dynamic>?>().firstWhere((c) => c?['tipo'] == 'servicio', orElse: () => null);
 
-    final itemsProducto = carritoProducto?['items_intencion_compra'] as List? ?? [];
-    final itemsServicio = carritoServicio?['items_intencion_compra'] as List? ?? [];
+    // Filtrar todosLosItems en lugar de usar solo el primer carrito (para soportar múltiples vendedores)
+    final List<dynamic> itemsProducto = todosLosItems.where((i) {
+      final itemData = i['item'] as Map? ?? {};
+      return itemData['id_categoria_item'].toString() != '29';
+    }).toList();
+    
+    final List<dynamic> itemsServicio = todosLosItems.where((i) {
+      final itemData = i['item'] as Map? ?? {};
+      return itemData['id_categoria_item'].toString() == '29';
+    }).toList();
 
     final totales = _data?['totales'] ?? {};
     final double totalArticulos = double.tryParse((totales['total_articulos'] ?? 0).toString()) ?? 0.0;
     final double totalDescuento = double.tryParse((totales['total_descuento'] ?? 0).toString()) ?? 0.0;
     final double totalImpuestos = double.tryParse((totales['total_impuestos'] ?? 0).toString()) ?? 0.0;
     final double totalEstimado = double.tryParse((totales['total_estimado'] ?? 0).toString()) ?? 0.0;
-    final double envio = 0.0; // Todo: integrar calculo de envio
-    final double granTotal = totalEstimado + totalImpuestos + envio;
+    final numTotalItems = (totales['total_articulos'] as num?)?.toInt() ?? 0;
+    
+    // El granTotal incluye impuestos pero ahora le sumamos _costoEnvio
+    final double granTotal = totalEstimado + totalImpuestos + _costoEnvio;
 
     // Verificar si todos están seleccionados (para servicios, solo consideramos los aprobados)
     bool todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
       final itemData = i['item'] as Map? ?? {};
-      final isServicio = (itemData['id_categoria_item'] == 29);
+      final isServicio = (itemData['id_categoria_item'].toString() == '29');
       if (isServicio) {
         return i['estado_solicitud']?.toString() != 'aprobada' || ApiClient.parseBool(i['es_seleccionado']);
       }
@@ -414,18 +546,6 @@ class _CarritoScreenState extends State<CarritoScreen> {
           child: ListView(
             padding: const EdgeInsets.all(12),
             children: [
-              // Checkbox Seleccionar todos
-              Row(
-                children: [
-                  Checkbox(
-                    value: todosSeleccionados,
-                    activeColor: kPrimary,
-                    onChanged: (val) => _toggleSeleccionarTodos(val ?? false),
-                  ),
-                  const Text('Seleccionar todos', style: TextStyle(fontWeight: FontWeight.w500)),
-                ],
-              ),
-              const SizedBox(height: 12),
 
               // Sección Productos
               if (itemsProducto.isNotEmpty) ...[
@@ -454,133 +574,125 @@ class _CarritoScreenState extends State<CarritoScreen> {
                 ...itemsServicio.map((item) => _buildItemCard(item, esServicio: true)).toList(),
                 const SizedBox(height: 24),
               ],
-              Container(
-                color: kPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                child: Column(children: [
-                  const Text(
-                    '¿Quieres intercambiar o vender un producto?\n¡Hazlo con nosotros!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    ElevatedButton(
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
-                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                      child: const Text('Vender', style: TextStyle(color: Colors.white)),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
-                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                      child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
-                    ),
-                  ]),
-                ]),
-              ),
-              const FooterWidget(),
+              const SizedBox(height: 12),
             ],
           ),
         ),
       ),
       
-      // Resumen del Pedido (Bottom Sheet fijo)
+      // Barra inferior Temu Style
       Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, -2))],
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Resumen del Pedido', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Total de artículos:', style: TextStyle(color: kTextGray)),
-              Text(totalArticulos.toStringAsFixed(2)),
-            ]),
-            const SizedBox(height: 4),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Descuento:', style: TextStyle(color: kTextGray)),
-              Text('-${totalDescuento.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
-            ]),
-            const SizedBox(height: 4),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Envío:', style: TextStyle(color: kTextGray)),
-              Text('RD\$ ${envio.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
-            ]),
-            const SizedBox(height: 4),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Impuestos:', style: TextStyle(color: kTextGray)),
-              Text('RD\$ ${totalImpuestos.toStringAsFixed(2)}', style: const TextStyle(color: kTextGray)),
-            ]),
-            const Divider(height: 24),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Total estimado:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text('RD\$ ${granTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kPrimary)),
-            ]),
-            const SizedBox(height: 16),
-            const Text('¿Qué deseas pagar?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-                onPressed: totalSeleccionadosProductos > 0 ? () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => CheckoutScreen(carrito: carritoProducto!),
-                  ));
-                } : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                label: Text('Pagar Productos ($totalSeleccionadosProductos)', style: const TextStyle(color: Colors.white, fontSize: 14)),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: Icon(
-                  totalSeleccionadosServicios > 0 ? Icons.payment : Icons.access_time,
-                  color: totalSeleccionadosServicios > 0 ? Colors.white : kTextGray,
-                  size: 18,
-                ),
-                onPressed: totalSeleccionadosServicios > 0 ? () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => CheckoutScreen(carrito: carritoServicio!),
-                  ));
-                } : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kSecondary,
-                  disabledBackgroundColor: Colors.grey.shade100,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                label: Text(
-                  totalSeleccionadosServicios > 0
-                      ? 'Pagar Servicios aprobados ($totalSeleccionadosServicios)'
-                      : 'Servicios pendientes de aprobación',
-                  style: TextStyle(
-                    color: totalSeleccionadosServicios > 0 ? Colors.white : kTextGray,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Alineado a la izquierda
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 2),
+                          child: Text('Total: ', style: TextStyle(fontSize: 12)),
+                        ),
+                        Flexible(
+                          child: Text('\$${granTotal.toStringAsFixed(2)}', 
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: kPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (totalImpuestos > 0)
+                      Text('Impuestos: \$${totalImpuestos.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                    if (_costoEnvio > 0)
+                      Text('Envío: \$${_costoEnvio.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                    if (_diasEnvio.isNotEmpty)
+                      Text(_diasEnvio, style: const TextStyle(color: kPrimary, fontSize: 10)),
+                    if (totalDescuento > 0)
+                      Text('Ahorras \$${totalDescuento.toStringAsFixed(2)}', style: const TextStyle(color: kPrimary, fontSize: 11)),
+                  ],
                 ),
               ),
-            ),
-          ]
+              const SizedBox(width: 12),
+              
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Botón Productos
+                  if (itemsProducto.isNotEmpty || itemsServicio.isEmpty)
+                    ElevatedButton(
+                      onPressed: totalSeleccionadosProductos > 0 ? () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => CheckoutScreen(carrito: carritoProducto!)));
+                      } : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        totalSeleccionadosProductos > 0 ? 'Pagar Productos ($totalSeleccionadosProductos)' : 'Hacer pedido (0)', 
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)
+                      ),
+                    ),
+                  
+                  if (itemsProducto.isNotEmpty && itemsServicio.isNotEmpty)
+                    const SizedBox(height: 8),
+
+                  // Botón Servicios
+                  if (itemsServicio.isNotEmpty)
+                    ElevatedButton(
+                      onPressed: totalSeleccionadosServicios > 0 ? () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => CheckoutScreen(carrito: carritoServicio!)));
+                      } : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        totalSeleccionadosServicios > 0 ? 'Proceder al Pago de Servicios ($totalSeleccionadosServicios)' : 'Proceder al Pago de Servicios (0)', 
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ]);
   }
 
+
+  Widget _buildPillTab(String text, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.transparent : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
+      ),
+      child: Text(text, style: TextStyle(color: isSelected ? Colors.black : Colors.grey.shade700, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
+    );
+  }
+
   Widget _buildItemCard(Map item, {required bool esServicio}) {
+
     final itemData = item['item'] as Map? ?? {};
     final double valor = double.tryParse((itemData['valor'] ?? 0).toString()) ?? 0.0;
     final int cantidad = int.tryParse((item['cantidad'] ?? 1).toString()) ?? 1;
@@ -605,21 +717,32 @@ class _CarritoScreenState extends State<CarritoScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Checkbox
-          Checkbox(
-            value: esServicio ? (estadoSolicitud == 'aprobada' && esSeleccionado) : esSeleccionado,
-            activeColor: esServicio ? kSecondary : kPrimary,
-            onChanged: (val) {
-              if (esServicio) {
-                if (estadoSolicitud == 'aprobada') {
-                  _marcarSeleccionado(item, val ?? false);
-                } else {
-                  _gestionarSolicitudServicio(item, estadoSolicitud);
-                }
-              } else {
-                _marcarSeleccionado(item, val ?? false);
-              }
+          // Checkbox circular estilo Temu
+          InkWell(
+            onTap: () {
+               final val = !esSeleccionado;
+               if (esServicio) {
+                 if (estadoSolicitud == 'aprobada') {
+                   _marcarSeleccionado(item, val);
+                 } else {
+                   _gestionarSolicitudServicio(item, estadoSolicitud);
+                 }
+               } else {
+                 _marcarSeleccionado(item, val);
+               }
             },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, top: 32, right: 8, bottom: 32),
+              child: Icon(
+                esServicio 
+                  ? (estadoSolicitud == 'aprobada' && esSeleccionado ? Icons.check_circle : Icons.circle_outlined)
+                  : (esSeleccionado ? Icons.check_circle : Icons.circle_outlined),
+                color: esServicio 
+                  ? (estadoSolicitud == 'aprobada' && esSeleccionado ? kSecondary : Colors.grey.shade400)
+                  : (esSeleccionado ? kPrimary : Colors.grey.shade400),
+                size: 22,
+              ),
+            ),
           ),
           
           // Image
@@ -768,12 +891,20 @@ class _CarritoScreenState extends State<CarritoScreen> {
                       if (itemData['intercambio'] == 1 || esServicio)
                         ElevatedButton.icon(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ir a negociar')));
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => NegociacionesModal(
+                                itemId: int.tryParse(itemData['id_item']?.toString() ?? '0') ?? 0,
+                                itemName: itemData['item'] ?? 'Artículo',
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.handshake, color: Colors.white, size: 14),
                           label: const Text('Negociar', style: TextStyle(color: Colors.white, fontSize: 11)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: kSecondary,
+                            backgroundColor: kPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                             minimumSize: const Size(0, 28),
                           ),

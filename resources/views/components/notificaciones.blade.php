@@ -79,7 +79,7 @@ document.addEventListener('click', (e) => {
 async function cargarNotificaciones() {
     if (!document.getElementById('listaNotificaciones')) return;
     try {
-        const resp = await fetch("{{ route('notificaciones.listar') }}");
+        const resp = await fetch("{{ route('notificaciones.listar', [], false) }}");
         const data = await resp.json();
         const mensajes = data.mensajes || [];
         const lista    = document.getElementById('listaNotificaciones');
@@ -338,7 +338,7 @@ document.addEventListener('click', async function (e) {
     }
 
     try {
-        const resp = await fetch('{{ route('carrito.save_negociaciones') }}', {
+        const resp = await fetch('{{ route('carrito.save_negociaciones', [], false) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

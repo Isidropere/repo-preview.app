@@ -50,7 +50,12 @@ class CarritoService
         }
 
         // Combinar items de todos los carritos para la vista
-        $todosLosItems = $carritos->flatMap(fn($c) => $c->itemsIntencionCompra);
+        $todosLosItems = collect();
+        foreach ($carritos as $c) {
+            foreach ($c->itemsIntencionCompra as $item) {
+                $todosLosItems->push($item);
+            }
+        }
 
         // Enriquecer items de tipo servicio con información de solicitudes y proveedores
         foreach ($todosLosItems as $itemIntencion) {

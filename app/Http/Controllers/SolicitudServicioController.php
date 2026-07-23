@@ -35,6 +35,30 @@ class SolicitudServicioController extends Controller
     }
 
     /**
+     * GET /solicitudes-servicio/mis-ventas-talentos (JSON) — Panel del proveedor
+     */
+    public function misVentasTalentosJson(): \Illuminate\Http\JsonResponse
+    {
+        $userId = auth()->id();
+
+        $solicitudes = SolicitudServicio::where('id_proveedor', $userId)
+            ->with([
+                'comprador.direcciones' => fn($q) => $q->where('es_predeterminada', 1)->with(['municipio', 'provincia']),
+                'item.imagenes',
+            ])
+            ->orderByDesc('fecha_creacion')
+            ->get();
+
+        $pendientes = $solicitudes->where('estado', 'pendiente_aprobacion')->values();
+        $procesadas = $solicitudes->whereIn('estado', ['aprobada', 'rechazada', 'pagada'])->values();
+
+        return response()->json([
+            'pendientes' => $pendientes,
+            'procesadas' => $procesadas,
+        ]);
+    }
+
+    /**
      * POST /solicitudes-servicio/{id}/aprobar
      */
     public function aprobar(int $id): RedirectResponse

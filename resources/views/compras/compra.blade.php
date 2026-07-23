@@ -121,7 +121,7 @@ async function addToCart(id_item, btn) {
     if (txt) txt.textContent = '...';
 
     try {
-        const res = await fetch('{{ route("carrito.agregar") }}', {
+        const res = await fetch('{{ route("carrito.agregar", [], false) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
