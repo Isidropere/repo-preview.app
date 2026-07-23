@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Detalle de Intercambio #' . \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion))
 
