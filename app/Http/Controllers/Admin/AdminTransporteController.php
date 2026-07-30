@@ -61,6 +61,16 @@ class AdminTransporteController extends Controller
             'precio_km_transporte' => \App\Models\TransporteConfiguracion::get('precio_km_transporte', 50),
             'precio_km_mudanza' => \App\Models\TransporteConfiguracion::get('precio_km_mudanza', 100),
             'limite_articulos_mudanza' => \App\Models\TransporteConfiguracion::get('limite_articulos_mudanza', 5),
+            'latitud_base' => \App\Models\TransporteConfiguracion::get('latitud_base', 18.4861),
+            'longitud_base' => \App\Models\TransporteConfiguracion::get('longitud_base', -69.9312),
+            'precio_camion_pequeno' => \App\Models\TransporteConfiguracion::get('precio_camion_pequeno', 1500),
+            'precio_camion_mediano' => \App\Models\TransporteConfiguracion::get('precio_camion_mediano', 3000),
+            'precio_camion_grande' => \App\Models\TransporteConfiguracion::get('precio_camion_grande', 5000),
+            'precio_por_persona' => \App\Models\TransporteConfiguracion::get('precio_por_persona', 500),
+            'precio_km_operacion' => \App\Models\TransporteConfiguracion::get('precio_km_operacion', 50),
+            'peso_base_maximo' => \App\Models\TransporteConfiguracion::get('peso_base_maximo', 40),
+            'intervalo_peso_extra' => \App\Models\TransporteConfiguracion::get('intervalo_peso_extra', 20),
+            'precio_peso_extra' => \App\Models\TransporteConfiguracion::get('precio_peso_extra', 50),
         ];
 
         // Determinar pestaña activa por defecto
@@ -81,12 +91,32 @@ class AdminTransporteController extends Controller
             'precio_km_transporte' => 'required|numeric|min:0',
             'precio_km_mudanza' => 'required|numeric|min:0',
             'limite_articulos_mudanza' => 'required|integer|min:0',
+            'latitud_base' => 'required|numeric',
+            'longitud_base' => 'required|numeric',
+            'precio_camion_pequeno' => 'required|numeric|min:0',
+            'precio_camion_mediano' => 'required|numeric|min:0',
+            'precio_camion_grande' => 'required|numeric|min:0',
+            'precio_por_persona' => 'required|numeric|min:0',
+            'precio_km_operacion' => 'required|numeric|min:0',
+            'peso_base_maximo' => 'required|numeric|min:0',
+            'intervalo_peso_extra' => 'required|numeric|min:1',
+            'precio_peso_extra' => 'required|numeric|min:0',
         ]);
 
         try {
             \App\Models\TransporteConfiguracion::set('precio_km_transporte', $request->precio_km_transporte);
             \App\Models\TransporteConfiguracion::set('precio_km_mudanza', $request->precio_km_mudanza);
             \App\Models\TransporteConfiguracion::set('limite_articulos_mudanza', $request->limite_articulos_mudanza);
+            \App\Models\TransporteConfiguracion::set('latitud_base', $request->latitud_base);
+            \App\Models\TransporteConfiguracion::set('longitud_base', $request->longitud_base);
+            \App\Models\TransporteConfiguracion::set('precio_camion_pequeno', $request->precio_camion_pequeno);
+            \App\Models\TransporteConfiguracion::set('precio_camion_mediano', $request->precio_camion_mediano);
+            \App\Models\TransporteConfiguracion::set('precio_camion_grande', $request->precio_camion_grande);
+            \App\Models\TransporteConfiguracion::set('precio_por_persona', $request->precio_por_persona);
+            \App\Models\TransporteConfiguracion::set('precio_km_operacion', $request->precio_km_operacion);
+            \App\Models\TransporteConfiguracion::set('peso_base_maximo', $request->peso_base_maximo);
+            \App\Models\TransporteConfiguracion::set('intervalo_peso_extra', $request->intervalo_peso_extra);
+            \App\Models\TransporteConfiguracion::set('precio_peso_extra', $request->precio_peso_extra);
 
             return redirect()->route('admin.erp.transporte.index')->with('success', '¡Configuraciones globales actualizadas con éxito!');
         } catch (\Exception $e) {

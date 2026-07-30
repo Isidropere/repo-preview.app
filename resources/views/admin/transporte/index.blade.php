@@ -449,11 +449,81 @@
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-gray-100">
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Límite de Artículos para Auto-Mudanza <span class="text-red-500">*</span></label>
-                        <div class="flex items-center gap-4">
-                            <input type="number" name="limite_articulos_mudanza" value="{{ $config['limite_articulos_mudanza'] }}" required class="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                            <span class="text-xs text-gray-500">Si el cliente marca más de este número de artículos, se cobrará automáticamente como <strong>Mudanza</strong>.</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                        <div class="col-span-full mb-2">
+                            <h4 class="text-sm font-bold text-gray-800">Precios de Camiones</h4>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Pequeño <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_camion_pequeno" step="0.01" value="{{ $config['precio_camion_pequeno'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Mediano <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_camion_mediano" step="0.01" value="{{ $config['precio_camion_mediano'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Grande <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_camion_grande" step="0.01" value="{{ $config['precio_camion_grande'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Personal Adicional (Precio p/Persona) <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_por_persona" step="0.01" value="{{ $config['precio_por_persona'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                        <div class="col-span-full mb-2">
+                            <h4 class="text-sm font-bold text-gray-800">Punto 0 de Operación</h4>
+                            <p class="mt-1 text-[10px] text-gray-400">Coordenadas GPS de la base operativa. El sistema calculará el costo de trayecto desde este punto hasta el punto de recogida A.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Latitud Base <span class="text-red-500">*</span></label>
+                            <input type="text" name="latitud_base" value="{{ $config['latitud_base'] }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Longitud Base <span class="text-red-500">*</span></label>
+                            <input type="text" name="longitud_base" value="{{ $config['longitud_base'] }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="col-span-full">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio por KM de Operación (Base -> Recogida) <span class="text-red-500">*</span></label>
+                            <div class="flex w-1/2">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_km_operacion" step="0.01" value="{{ $config['precio_km_operacion'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+                        <div class="col-span-full mb-2">
+                            <h4 class="text-sm font-bold text-gray-800">Cargos Extra por Peso (Transporte)</h4>
+                            <p class="mt-1 text-[10px] text-gray-400">Si el peso de la carga excede el límite configurado, se sumará el cargo adicional por cada intervalo extra de peso.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Peso Máximo Base (lbs) <span class="text-red-500">*</span></label>
+                            <input type="number" name="peso_base_maximo" step="0.01" value="{{ $config['peso_base_maximo'] ?? 40 }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Intervalo Peso Extra (lbs) <span class="text-red-500">*</span></label>
+                            <input type="number" name="intervalo_peso_extra" step="0.01" value="{{ $config['intervalo_peso_extra'] ?? 20 }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Precio por Intervalo Extra <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
+                                <input type="number" name="precio_peso_extra" step="0.01" value="{{ $config['precio_peso_extra'] ?? 50 }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
                         </div>
                     </div>
 

@@ -67,7 +67,8 @@ class Item extends Model
         'valor',
         'descuento',
         'presentacion',
-        'tiene_video'
+        'tiene_video',
+        'estado_aprobacion'
     ];
 
     public function categoria()

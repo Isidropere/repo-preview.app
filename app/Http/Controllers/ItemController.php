@@ -108,7 +108,8 @@ class ItemController extends Controller
                 'condicion' => $validatedData['condicion'],
                 'tipo_trans' => $validatedData['tipo_trans'],
                 'id_user' => auth()->id(),
-                'estatus' => 1,
+                'estatus' => 0, // Inactivo hasta que se apruebe
+                'estado_aprobacion' => 'pendiente',
                 'fecha' => now(),
                 'peso_lbs' => $validatedData['peso_lbs'] ?? 0,
                 'alto_cm' => $validatedData['alto_cm'] ?? 0,
@@ -353,7 +354,8 @@ class ItemController extends Controller
                 'condicion' => $validatedData['condicion'],
                 'tipo_trans' => $validatedData['tipo_trans'],
                 'id_user' => auth()->id(),
-                'estatus' => 1,
+                'estatus' => 0, // Inactivo hasta que se apruebe
+                'estado_aprobacion' => 'pendiente',
                 'fecha' => now(),
                 'peso_lbs' => $validatedData['peso_lbs'] ?? 0,
                 'alto_cm' => $validatedData['alto_cm'] ?? 0,
@@ -1726,6 +1728,18 @@ class ItemController extends Controller
                     ]);
                 }
 
+            $dimensionesCambiaron = (
+                (float)($validated['peso_lbs'] ?? 0) != (float)$item->peso_lbs ||
+                (float)($validated['alto_cm'] ?? 0) != (float)$item->alto_cm ||
+                (float)($validated['ancho_cm'] ?? 0) != (float)$item->ancho_cm ||
+                (float)($validated['profundo_cm'] ?? 0) != (float)$item->profundo_cm
+            );
+
+            if ($dimensionesCambiaron) {
+                $validated['estado_aprobacion'] = 'pendiente';
+                $validated['estatus'] = 0;
+            }
+
             $item->update($validated);
 
             // ── Imagen principal ──
@@ -1768,7 +1782,10 @@ class ItemController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('items.user')->with('success', 'Talento actualizado exitosamente');
+            $msgSuccess = isset($dimensionesCambiaron) && $dimensionesCambiaron
+                ? 'Producto actualizado. Debido a cambios en las dimensiones o peso, ha pasado a revisión.'
+                : 'Producto actualizado exitosamente.';
+            return redirect()->route('items.user')->with('success', $msgSuccess);
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -1857,6 +1874,18 @@ class ItemController extends Controller
                 $validated['valor'] = str_replace(',', '', $validated['valor']);
             }
 
+            $dimensionesCambiaron = (
+                (float)($validated['peso_lbs'] ?? 0) != (float)$item->peso_lbs ||
+                (float)($validated['alto_cm'] ?? 0) != (float)$item->alto_cm ||
+                (float)($validated['ancho_cm'] ?? 0) != (float)$item->ancho_cm ||
+                (float)($validated['profundo_cm'] ?? 0) != (float)$item->profundo_cm
+            );
+
+            if ($dimensionesCambiaron) {
+                $validated['estado_aprobacion'] = 'pendiente';
+                $validated['estatus'] = 0;
+            }
+
             // Actualizar datos del item
             $item->update($validated);
 
@@ -1900,7 +1929,10 @@ class ItemController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('items.admintalento')->with('success', 'Talento actualizado exitosamente');
+            $msgSuccess = isset($dimensionesCambiaron) && $dimensionesCambiaron
+                ? 'Talento actualizado. Debido a cambios en las dimensiones o peso, ha pasado a revisión.'
+                : 'Talento actualizado exitosamente';
+            return redirect()->route('items.user.talento')->with('success', $msgSuccess);
 
         } catch (\Throwable $e) {
             DB::rollBack();

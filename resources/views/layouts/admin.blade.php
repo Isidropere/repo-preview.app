@@ -78,7 +78,7 @@
                     @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
                     <a href="{{ route('admin.imagenes.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-primary/10 hover:text-primary transition-colors text-gray-700">
                         <i class="fas fa-images w-5 text-center"></i>
-                        Aprobación de Fotos
+                        Centro de Aprobaciones
                     </a>
                     @endif
                 </nav>

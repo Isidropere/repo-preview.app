@@ -886,6 +886,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::post('/perfiles/aprobar-todas', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarTodosPerfiles'])->name('perfiles.aprobarTodas');
             Route::post('/perfiles/{id}/aprobar',  [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarPerfil'])->name('perfiles.aprobar');
             Route::post('/perfiles/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarPerfil'])->name('perfiles.rechazar');
+            
+            // Rutas para aprobación de carga de productos
+            Route::post('/productos/{id}/aprobar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'aprobarProducto'])->name('productos.aprobar');
+            Route::post('/productos/{id}/rechazar', [\App\Http\Controllers\Admin\AdminImagenesController::class, 'rechazarProducto'])->name('productos.rechazar');
         });
 
         // Administración de Páginas de Ayuda y Tutoriales

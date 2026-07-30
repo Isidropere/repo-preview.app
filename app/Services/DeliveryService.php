@@ -195,19 +195,35 @@ class DeliveryService
         $sobredimensionado = DB::table('delivery_config')->where('clave', 'sobredimensionado')->first();
         if ($sobredimensionado) {
             $minPeso = (float) ($sobredimensionado->min_peso_lbs ?? 0);
+            $intervaloPeso = (float) ($sobredimensionado->intervalo_peso_lbs ?? 0);
             $minAlto = (float) ($sobredimensionado->min_alto_cm ?? 0);
             $minAncho = (float) ($sobredimensionado->min_ancho_cm ?? 0);
             $minProfundo = (float) ($sobredimensionado->min_profundo_cm ?? 0);
             $montoRecargo = (float) ($sobredimensionado->recargo_monto ?? 0);
 
+            // Calcular recargo por sobrepeso escalonado
+            if ($minPeso > 0 && $peso > $minPeso) {
+                if ($intervaloPeso > 0) {
+                    $exceso = $peso - $minPeso;
+                    $intervalos = ceil($exceso / $intervaloPeso);
+                    $recargo += $intervalos * $montoRecargo;
+                } else {
+                    $recargo += $montoRecargo;
+                }
+                $recargoAplicado = true;
+            }
+
+            // Calcular recargo fijo por sobredimensionado
             if (
-                ($minPeso > 0 && $peso > $minPeso) ||
                 ($minAlto > 0 && $alto > $minAlto) ||
                 ($minAncho > 0 && $ancho > $minAncho) ||
                 ($minProfundo > 0 && $profundo > $minProfundo)
             ) {
-                $recargo = $montoRecargo;
+                $recargo += $montoRecargo;
                 $recargoAplicado = true;
+            }
+
+            if ($recargoAplicado) {
                 $costoTotal = round($costoTotal + $recargo, 2);
             }
         }

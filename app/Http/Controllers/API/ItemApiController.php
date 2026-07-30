@@ -514,6 +514,21 @@ class ItemApiController extends Controller
 
         \DB::beginTransaction();
         try {
+            $dimensionesCambiaron = (
+                (float)($data['peso_lbs'] ?? 0) != (float)$item->peso_lbs ||
+                (float)($data['alto_cm'] ?? 0) != (float)$item->alto_cm ||
+                (float)($data['ancho_cm'] ?? 0) != (float)$item->ancho_cm ||
+                (float)($data['profundo_cm'] ?? 0) != (float)$item->profundo_cm
+            );
+
+            $nuevoEstatus = $data['estatus'] ?? $item->estatus;
+            $nuevoEstadoAprobacion = $item->estado_aprobacion;
+
+            if ($dimensionesCambiaron) {
+                $nuevoEstatus = 0;
+                $nuevoEstadoAprobacion = 'pendiente';
+            }
+
             // Actualizar datos del Item
             $item->update([
                 'item'              => $data['item'],
@@ -527,7 +542,8 @@ class ItemApiController extends Controller
                 'alto_cm'           => $data['alto_cm'] ?? 0,
                 'ancho_cm'          => $data['ancho_cm'] ?? 0,
                 'profundo_cm'       => $data['profundo_cm'] ?? 0,
-                'estatus'           => $data['estatus'] ?? $item->estatus,
+                'estatus'           => $nuevoEstatus,
+                'estado_aprobacion' => $nuevoEstadoAprobacion,
             ]);
 
             // Actualizar o crear registro en el inventario
@@ -605,7 +621,10 @@ class ItemApiController extends Controller
             }
 
             \DB::commit();
-            return response()->json(['message' => 'Artículo actualizado exitosamente. Pendiente de aprobación.']);
+            $msg = $dimensionesCambiaron 
+                ? 'El producto fue actualizado. Debido a cambios en dimensiones o peso, ha pasado a revisión.'
+                : 'Artículo actualizado exitosamente.';
+            return response()->json(['message' => $msg]);
         } catch (\Throwable $e) {
             \DB::rollBack();
             \Log::error('Error al actualizar producto en API: ' . $e->getMessage());

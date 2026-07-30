@@ -56,14 +56,28 @@ class _TransporteScreenState extends State<TransporteScreen> {
   double _precioKmTransporte = 50.0;
   double _precioKmMudanza = 100.0;
   int _limiteArticulosMudanza = 5;
+  double _latitudBase = 18.4861;
+  double _longitudBase = -69.9312;
+  double _precioCamionPeq = 1500.0;
+  double _precioCamionMed = 3000.0;
+  double _precioCamionGra = 5000.0;
+  double _precioPersona = 500.0;
+  double _precioKmOperacion = 50.0;
+  double _pesoBaseMaximo = 40.0;
+  double _intervaloPesoExtra = 20.0;
+  double _precioPesoExtra = 50.0;
 
-  // Estado de selección de artículos
-  // id_articulo -> {pequeno: bool, mediano: bool, grande: bool}
-  final Map<int, Map<String, bool>> _selectedSizes = {};
-  // id_articulo -> {pequeno: int, mediano: int, grande: int}
-  final Map<int, Map<String, int>> _quantities = {};
+  // Variables para la vista de Mudanza
+  String _camionTamano = 'mediano';
+  final _cantidadPersonasCtrl = TextEditingController(text: '2');
 
-  double _distancia = 0.0;
+  // Variables para la vista de Transporte
+  final _cantidadProductosCtrl = TextEditingController(text: '1');
+  final _pesoCargaCtrl = TextEditingController();
+  final _dimensionesCargaCtrl = TextEditingController();
+
+  double _distanciaAB = 0.0;
+  double _distanciaBaseA = 0.0;
   double _totalEstimado = 0.0;
 
   @override
@@ -91,6 +105,10 @@ class _TransporteScreenState extends State<TransporteScreen> {
     _searchCtrl.dispose();
     _scrollController.dispose();
     _listViewScrollController.dispose();
+    _cantidadPersonasCtrl.dispose();
+    _cantidadProductosCtrl.dispose();
+    _pesoCargaCtrl.dispose();
+    _dimensionesCargaCtrl.dispose();
     super.dispose();
   }
 
@@ -104,17 +122,26 @@ class _TransporteScreenState extends State<TransporteScreen> {
       _telefonoCtrl.text = user['telefono'] ?? '';
     }
 
-    // 2. Cargar catálogo de artículos
+    // 2. Cargar configuración de tarifas
     try {
       final res = await ApiClient.get('/transporte/articulos', auth: true);
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
-          _articulos = data['articulos'] ?? [];
           final config = data['configuracion'] ?? {};
           _precioKmTransporte = double.tryParse(config['precio_km_transporte']?.toString() ?? '50.0') ?? 50.0;
           _precioKmMudanza = double.tryParse(config['precio_km_mudanza']?.toString() ?? '100.0') ?? 100.0;
           _limiteArticulosMudanza = ApiClient.parseInt(config['limite_articulos_mudanza']) ?? 5;
+          _latitudBase = double.tryParse(config['latitud_base']?.toString() ?? '18.4861') ?? 18.4861;
+          _longitudBase = double.tryParse(config['longitud_base']?.toString() ?? '-69.9312') ?? -69.9312;
+          _precioCamionPeq = double.tryParse(config['precio_camion_pequeno']?.toString() ?? '1500.0') ?? 1500.0;
+          _precioCamionMed = double.tryParse(config['precio_camion_mediano']?.toString() ?? '3000.0') ?? 3000.0;
+          _precioCamionGra = double.tryParse(config['precio_camion_grande']?.toString() ?? '5000.0') ?? 5000.0;
+          _precioPersona = double.tryParse(config['precio_por_persona']?.toString() ?? '500.0') ?? 500.0;
+          _precioKmOperacion = double.tryParse(config['precio_km_operacion']?.toString() ?? '50.0') ?? 50.0;
+          _pesoBaseMaximo = double.tryParse(config['peso_base_maximo']?.toString() ?? '40.0') ?? 40.0;
+          _intervaloPesoExtra = double.tryParse(config['intervalo_peso_extra']?.toString() ?? '20.0') ?? 20.0;
+          _precioPesoExtra = double.tryParse(config['precio_peso_extra']?.toString() ?? '50.0') ?? 50.0;
           _loadingCatalog = false;
         });
       }
@@ -170,43 +197,60 @@ class _TransporteScreenState extends State<TransporteScreen> {
   }
 
   void _recalculateDistanceAndTotal() {
+    if (_latLngOrigen != null) {
+      _distanciaBaseA = _calculateDistance(
+        _latitudBase,
+        _longitudBase,
+        _latLngOrigen!.latitude,
+        _latLngOrigen!.longitude,
+      );
+    } else {
+      _distanciaBaseA = 0.0;
+    }
+
     if (_latLngOrigen != null && _latLngDestino != null) {
-      _distancia = _calculateDistance(
+      _distanciaAB = _calculateDistance(
         _latLngOrigen!.latitude,
         _latLngOrigen!.longitude,
         _latLngDestino!.latitude,
         _latLngDestino!.longitude,
       );
     } else {
-      _distancia = 0.0;
+      _distanciaAB = 0.0;
     }
 
-    double totalArticulos = 0.0;
-    int countArticulos = 0;
+    String tipoTemp = _tipoServicio;
+    int cantProductos = int.tryParse(_cantidadProductosCtrl.text) ?? 0;
 
-    _selectedSizes.forEach((artId, sizesMap) {
-      final article = _articulos.firstWhere((a) => a['id'] == artId, orElse: () => null);
-      if (article == null) return;
-      sizesMap.forEach((sizeKey, isSelected) {
-        if (isSelected == true) {
-          final qty = _quantities[artId]?[sizeKey] ?? 1;
-          final priceField = "precio_" + (sizeKey == 'pequeno' ? 'pequeno' : (sizeKey == 'mediano' ? 'mediano' : 'grande'));
-          final price = double.tryParse(article[priceField]?.toString() ?? '0') ?? 0.0;
-          totalArticulos += price * qty;
-          countArticulos += qty;
-        }
-      });
-    });
+    if (tipoTemp == 'transporte' && cantProductos > _limiteArticulosMudanza) {
+      tipoTemp = 'mudanza';
+    }
 
-    double precioKm = _precioKmTransporte;
-    if (countArticulos > _limiteArticulosMudanza) {
-      _tipoServicio = 'mudanza';
-      precioKm = _precioKmMudanza;
+    double estimado = 0.0;
+    if (tipoTemp == 'mudanza') {
+      double camionPrice = 0.0;
+      if (_camionTamano == 'pequeno') camionPrice = _precioCamionPeq;
+      else if (_camionTamano == 'mediano') camionPrice = _precioCamionMed;
+      else if (_camionTamano == 'grande') camionPrice = _precioCamionGra;
+
+      int cantPersonas = int.tryParse(_cantidadPersonasCtrl.text) ?? 2;
+      double personasPrice = cantPersonas * _precioPersona;
+      double costoBaseA = _distanciaBaseA * _precioKmOperacion;
+      double costoAB = _distanciaAB * _precioKmMudanza;
+
+      estimado = camionPrice + personasPrice + costoBaseA + costoAB;
     } else {
-      precioKm = (_tipoServicio == 'mudanza') ? _precioKmMudanza : _precioKmTransporte;
+      estimado = _distanciaAB * _precioKmTransporte;
+      double pesoCarga = double.tryParse(_pesoCargaCtrl.text) ?? 0.0;
+      if (pesoCarga > _pesoBaseMaximo && _intervaloPesoExtra > 0) {
+        double pesoExcedente = pesoCarga - _pesoBaseMaximo;
+        double intervalosAdicionales = (pesoExcedente / _intervaloPesoExtra).ceilToDouble();
+        double cargoExtra = intervalosAdicionales * _precioPesoExtra;
+        estimado += cargoExtra;
+      }
     }
 
-    _totalEstimado = totalArticulos + (_distancia * precioKm);
+    _totalEstimado = estimado;
     setState(() {});
   }
 
@@ -267,32 +311,14 @@ class _TransporteScreenState extends State<TransporteScreen> {
       'punto_entrega': _entregaCtrl.text.trim(),
       'punto_entrega_address': _entregaAddressCtrl.text.trim(),
       'piso_destino': _pisoDestino,
-      'distancia_km': _distancia,
+      'distancia_km': _distanciaAB,
       'precio_estimado_total': _totalEstimado,
+      'camion_tamano': _tipoServicio == 'mudanza' ? _camionTamano : null,
+      'cantidad_personas': _tipoServicio == 'mudanza' ? int.tryParse(_cantidadPersonasCtrl.text) : null,
+      'cantidad_productos_transporte': _tipoServicio == 'transporte' ? int.tryParse(_cantidadProductosCtrl.text) : null,
+      'peso_carga': _tipoServicio == 'transporte' ? double.tryParse(_pesoCargaCtrl.text) : null,
+      'dimensiones_carga': _tipoServicio == 'transporte' ? _dimensionesCargaCtrl.text.trim() : null,
     };
-
-    final Map<String, Map<String, dynamic>> articulosJson = {};
-    final Map<String, Map<String, int>> cantidadesJson = {};
-
-    _selectedSizes.forEach((artId, sizesMap) {
-      final Map<String, dynamic> activeSizes = {};
-      final Map<String, int> activeQtys = {};
-
-      sizesMap.forEach((sizeKey, isSelected) {
-        if (isSelected == true) {
-          activeSizes[sizeKey] = true;
-          activeQtys[sizeKey] = _quantities[artId]?[sizeKey] ?? 1;
-        }
-      });
-
-      if (activeSizes.isNotEmpty) {
-        articulosJson[artId.toString()] = activeSizes;
-        cantidadesJson[artId.toString()] = activeQtys;
-      }
-    });
-
-    body['articulos'] = articulosJson;
-    body['cantidades'] = cantidadesJson;
 
     try {
       final res = await ApiClient.post('/transporte/solicitar', body, auth: true);
@@ -458,13 +484,9 @@ class _TransporteScreenState extends State<TransporteScreen> {
                       ),
                     ]),
                     const SizedBox(height: 24),
-                    _buildSectionHeader('4. Inventario de Carga'),
-                    const SizedBox(height: 4),
-                    const Text('Marque los artículos y especifique cantidad por tamaño.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    _buildSectionHeader('4. Detalles de la Carga'),
                     const SizedBox(height: 12),
-                    _buildSelectedChips(),
-                    _buildSearchBar(),
-                    _buildInventoryList(),
+                    _buildDynamicForm(),
                     const SizedBox(height: 24),
                     _buildPricingPanel(),
                     const SizedBox(height: 30),
@@ -563,266 +585,74 @@ class _TransporteScreenState extends State<TransporteScreen> {
     );
   }
 
-  Widget _buildSelectedChips() {
-    final List<Widget> chips = [];
-    _selectedSizes.forEach((artId, sizesMap) {
-      final article = _articulos.firstWhere((a) => a['id'] == artId, orElse: () => null);
-      if (article == null) return;
-      
-      final List<String> sizesDesc = [];
-      sizesMap.forEach((sizeKey, isSelected) {
-        if (isSelected == true) {
-          final qty = _quantities[artId]?[sizeKey] ?? 1;
-          sizesDesc.add("$qty ${sizeKey[0].toUpperCase()}${sizeKey.substring(1, 3)}");
-        }
-      });
-      
-      if (sizesDesc.isNotEmpty) {
-        chips.add(
-          Chip(
-            label: Text(
-              "${article['nombre']} (${sizesDesc.join(', ')})",
-              style: const TextStyle(fontSize: 11),
-            ),
-            onDeleted: () {
-              setState(() {
-                _selectedSizes.remove(artId);
-                _quantities.remove(artId);
-                _recalculateDistanceAndTotal();
-              });
-            },
-            deleteIcon: const Icon(Icons.close, size: 14),
-            backgroundColor: Colors.blue.shade50,
+  Widget _buildDynamicForm() {
+    if (_tipoServicio == 'mudanza') {
+      return _buildCard([
+        DropdownButtonFormField<String>(
+          value: _camionTamano,
+          decoration: const InputDecoration(
+            labelText: 'Tamaño del Camión',
+            labelStyle: TextStyle(fontSize: 14, color: kTextGray),
+            border: UnderlineInputBorder(),
           ),
-        );
-      }
-    });
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Artículos Seleccionados:',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kPrimary),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: chips,
-          ),
-          const Divider(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextFormField(
-        controller: _searchCtrl,
-        decoration: InputDecoration(
-          hintText: 'Buscar artículo...',
-          prefixIcon: const Icon(Icons.search, color: kPrimary),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchCtrl.clear();
-                    setState(() {
-                      _searchQuery = '';
-                      _visibleCount = 10;
-                    });
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-        ),
-        onChanged: (val) {
-          setState(() {
-            _searchQuery = val.trim();
-            _visibleCount = 10; // reset pagination
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildInventoryList() {
-    final filtered = _getFilteredArticulos();
-    if (filtered.isEmpty) {
-      return Container(
-        height: 200,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: const Text('No se encontraron artículos.', style: TextStyle(color: kTextGray, fontSize: 13)),
-      );
-    }
-
-    final visibleList = filtered.take(_visibleCount).toList();
-
-    return Container(
-      height: 350, // Altura fija de viewport de artículos
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ListView.builder(
-        controller: _listViewScrollController,
-        padding: const EdgeInsets.all(8),
-        itemCount: visibleList.length + (_visibleCount < filtered.length ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == visibleList.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-
-          final art = visibleList[index];
-          final int artId = art['id'];
-          final bool isExpanded = _selectedSizes.containsKey(artId) && 
-              _selectedSizes[artId]!.values.contains(true);
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0.5,
-            child: Column(
-              children: [
-                CheckboxListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  title: Text(art['nombre'] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  value: isExpanded,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _selectedSizes[artId] = {'pequeno': true, 'mediano': false, 'grande': false};
-                        _quantities[artId] = {'pequeno': 1, 'mediano': 1, 'grande': 1};
-                      } else {
-                        _selectedSizes.remove(artId);
-                        _quantities.remove(artId);
-                      }
-                    });
-                    _recalculateDistanceAndTotal();
-                  },
-                ),
-                if (isExpanded)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-                    child: Column(
-                      children: [
-                        _buildSizeRow(artId, 'pequeno', 'Pequeño', art['precio_pequeno']),
-                        const SizedBox(height: 6),
-                        _buildSizeRow(artId, 'mediano', 'Mediano', art['precio_mediano']),
-                        const SizedBox(height: 6),
-                        _buildSizeRow(artId, 'grande', 'Grande', art['precio_grande']),
-                      ],
-                    ),
-                  )
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSizeRow(int artId, String sizeKey, String label, dynamic priceRaw) {
-    final double price = double.tryParse(priceRaw?.toString() ?? '0') ?? 0.0;
-    final bool isChecked = _selectedSizes[artId]?[sizeKey] ?? false;
-    final int qty = _quantities[artId]?[sizeKey] ?? 1;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Izquierda: checkbox + label en columna con precio debajo
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Checkbox(
-              value: isChecked,
-              onChanged: (val) {
-                setState(() {
-                  _selectedSizes[artId]![sizeKey] = val ?? false;
-                });
-                _recalculateDistanceAndTotal();
-              },
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                if (price > 0)
-                  Text(
-                    'RD\$ ${price.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
-                  ),
-              ],
-            ),
+          items: const [
+            DropdownMenuItem(value: 'pequeno', child: Text('Pequeño')),
+            DropdownMenuItem(value: 'mediano', child: Text('Mediano')),
+            DropdownMenuItem(value: 'grande', child: Text('Grande')),
           ],
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _camionTamano = val);
+              _recalculateDistanceAndTotal();
+            }
+          },
         ),
-        // Derecha: controles de cantidad (solo cuando está marcado)
-        if (isChecked)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline, size: 20, color: Colors.redAccent),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: qty > 1
-                    ? () {
-                        setState(() {
-                          _quantities[artId]![sizeKey] = qty - 1;
-                        });
-                        _recalculateDistanceAndTotal();
-                      }
-                    : null,
-              ),
-              Text(qty.toString(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () {
-                  setState(() {
-                    _quantities[artId]![sizeKey] = qty + 1;
-                  });
-                  _recalculateDistanceAndTotal();
-                },
-              ),
-            ],
-          )
-      ],
-    );
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _cantidadPersonasCtrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Cantidad de Personas (Ayudantes)',
+            labelStyle: TextStyle(fontSize: 14, color: kTextGray),
+            border: UnderlineInputBorder(),
+          ),
+          onChanged: (val) => _recalculateDistanceAndTotal(),
+        ),
+      ]);
+    } else {
+      return _buildCard([
+        TextFormField(
+          controller: _cantidadProductosCtrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Cantidad de Productos',
+            labelStyle: TextStyle(fontSize: 14, color: kTextGray),
+            border: UnderlineInputBorder(),
+          ),
+          onChanged: (val) => _recalculateDistanceAndTotal(),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _pesoCargaCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Peso Total Estimado (Libras o Kg)',
+            labelStyle: TextStyle(fontSize: 14, color: kTextGray),
+            border: UnderlineInputBorder(),
+          ),
+          onChanged: (val) => _recalculateDistanceAndTotal(),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _dimensionesCargaCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Dimensiones (Largo x Ancho x Alto)',
+            labelStyle: TextStyle(fontSize: 14, color: kTextGray),
+            border: UnderlineInputBorder(),
+          ),
+        ),
+      ]);
+    }
   }
 
   Widget _buildPricingPanel() {
@@ -841,7 +671,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Distancia Estimada:', style: TextStyle(fontSize: 13, color: kTextGray, fontWeight: FontWeight.bold)),
-              Text('${_distancia.toStringAsFixed(2)} km', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('${_distanciaAB.toStringAsFixed(2)} km', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 8),

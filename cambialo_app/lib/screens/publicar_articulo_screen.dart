@@ -580,9 +580,10 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         if (!mounted) return;
-        final msg = widget.itemId != null 
+        final body = jsonDecode(res.body);
+        final msg = body['message'] ?? (widget.itemId != null 
             ? 'Artículo actualizado exitosamente.'
-            : 'Artículo publicado. Pendiente de aprobación.';
+            : 'Artículo publicado. Pendiente de aprobación.');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(msg),
           backgroundColor: Colors.green,

@@ -38,16 +38,16 @@ class AdminComprasService
     /**
      * Datos del panel principal con todas las pestañas.
      */
-    public function obtenerDatosPanelPrincipal(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null): array
+    public function obtenerDatosPanelPrincipal(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null): array
     {
         return [
-            'compras'                    => $this->queryCompras($tab, $estatus, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_compras')->withQueryString(),
-            'ventas'                     => $this->queryVentas($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
-            'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
+            'compras'                    => $this->queryCompras($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_compras')->withQueryString(),
+            'ventas'                     => $this->queryVentas($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
+            'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
             'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
             'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ii')->withQueryString(),
-            'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
-            'ventasConfirmadas'          => $this->queryVentasConfirmadas($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_vc')->withQueryString(),
+            'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
+            'ventasConfirmadas'          => $this->queryVentasConfirmadas($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_vc')->withQueryString(),
             'totalCompras'               => PagoCompra::count(),
             'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
             'totalIntercambios'          => Negociacion::count(),
@@ -114,7 +114,7 @@ class AdminComprasService
     // Queries privadas
     // ───────────────────────────────────────────────────────
 
-    private function queryCompras(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    private function queryCompras(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = PagoCompra::with(['pagoItems.item.imagenes', 'carrito.usuario'])
             ->orderByDesc('id_pago_compra');
@@ -128,14 +128,16 @@ class AdminComprasService
                         ->where('nombres', 'like', "%$buscar%")
                         ->orWhere('email', 'like', "%$buscar%")));
             }
-            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
-            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
+            if ($fechaDesde) $query->whereDate('fecha', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha', '<=', $fechaHasta);
+            if ($provincia) $query->whereHas('direccion', fn($q) => $q->where('id_provincia', $provincia));
+            if ($municipio) $query->whereHas('direccion', fn($q) => $q->where('id_municipio', $municipio));
         }
 
         return $query;
     }
 
-    private function queryVentas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    private function queryVentas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = PagoCompra::with(['pagoItems.item.imagenes', 'pagoItems.item.usuario', 'carrito.usuario'])
             ->whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
@@ -152,14 +154,16 @@ class AdminComprasService
                         ->where('nombres', 'like', "%$buscar%")
                         ->orWhere('email', 'like', "%$buscar%")));
             }
-            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
-            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
+            if ($fechaDesde) $query->whereDate('fecha', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha', '<=', $fechaHasta);
+            if ($provincia) $query->whereHas('direccion', fn($q) => $q->where('id_provincia', $provincia));
+            if ($municipio) $query->whereHas('direccion', fn($q) => $q->where('id_municipio', $municipio));
         }
 
         return $query;
     }
 
-    private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
             ->orderByDesc('id_negociacion');
@@ -176,6 +180,16 @@ class AdminComprasService
             }
             if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
             if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
+            if ($provincia) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario.direcciones', fn($q2) => $q2->where('id_provincia', $provincia))
+                    ->orWhereHas('usuarioReceptor.direcciones', fn($q2) => $q2->where('id_provincia', $provincia)));
+            }
+            if ($municipio) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario.direcciones', fn($q2) => $q2->where('id_municipio', $municipio))
+                    ->orWhereHas('usuarioReceptor.direcciones', fn($q2) => $q2->where('id_municipio', $municipio)));
+            }
         }
 
         return $query;
@@ -220,7 +234,7 @@ class AdminComprasService
         return $query;
     }
 
-    private function queryIntercambiosConfirmados(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    private function queryIntercambiosConfirmados(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = Negociacion::with(['item.imagenes', 'item.categoria', 'usuario', 'usuarioReceptor'])
             ->where(function ($q) {
@@ -249,12 +263,22 @@ class AdminComprasService
             }
             if ($fechaDesde) $query->whereDate('fecha_creacion', '>=', $fechaDesde);
             if ($fechaHasta) $query->whereDate('fecha_creacion', '<=', $fechaHasta);
+            if ($provincia) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario.direcciones', fn($q2) => $q2->where('id_provincia', $provincia))
+                    ->orWhereHas('usuarioReceptor.direcciones', fn($q2) => $q2->where('id_provincia', $provincia)));
+            }
+            if ($municipio) {
+                $query->where(fn($q) => $q
+                    ->whereHas('usuario.direcciones', fn($q2) => $q2->where('id_municipio', $municipio))
+                    ->orWhereHas('usuarioReceptor.direcciones', fn($q2) => $q2->where('id_municipio', $municipio)));
+            }
         }
 
         return $query;
     }
 
-    private function queryVentasConfirmadas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null)
+    private function queryVentasConfirmadas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = PagoCompra::with([
             'pagoItems.item.imagenes',
@@ -276,8 +300,10 @@ class AdminComprasService
                     ->orWhereHas('pagoItems.item', fn($q2) => $q2
                         ->where('item', 'like', "%$buscar%")));
             }
-            if ($fechaDesde) $query->whereDate('created_at', '>=', $fechaDesde);
-            if ($fechaHasta) $query->whereDate('created_at', '<=', $fechaHasta);
+            if ($fechaDesde) $query->whereDate('fecha', '>=', $fechaDesde);
+            if ($fechaHasta) $query->whereDate('fecha', '<=', $fechaHasta);
+            if ($provincia) $query->whereHas('direccion', fn($q) => $q->where('id_provincia', $provincia));
+            if ($municipio) $query->whereHas('direccion', fn($q) => $q->where('id_municipio', $municipio));
         }
 
         return $query;

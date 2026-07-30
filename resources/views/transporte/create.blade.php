@@ -94,85 +94,45 @@
                         </select>
                     </div>
 
-                    <!-- Checklist Dinámico de Artículos -->
-                    <div id="checklist-articulos-container" class="mt-2 hidden">
-                        <label class="form-label text-gray-800 mb-2">Selecciona los artículos que deseas transportar / mudar <span class="text-red-500">*</span></label>
-                        <p class="text-xs text-gray-500 mb-4 font-medium">Marca las casillas correspondientes y ajusta la cantidad de cada artículo.</p>
-                        
-                        <!-- Buscador de Artículos -->
-                        <div class="mb-4">
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                                </span>
-                                <input type="text" id="search-articulos" placeholder="Buscar artículo (ej: Nevera, Cama, Caja...)" class="form-input pl-10 bg-white" autocomplete="off">
+                    <!-- Formularios Dinámicos según Servicio -->
+                    
+                    <!-- Mudanza -->
+                    <div id="mudanza-container" class="hidden mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Detalles de la Mudanza</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label">Tamaño del Camión <span class="text-red-500">*</span></label>
+                                <select name="camion_tamano" id="camion_tamano" class="form-input" onchange="calcularTotal()">
+                                    <option value="">-- Selecciona Tamaño --</option>
+                                    <option value="pequeno">Pequeño (Camioneta / Furgoneta)</option>
+                                    <option value="mediano">Mediano (Camión Cama Corta)</option>
+                                    <option value="grande">Grande (Camión Cama Larga)</option>
+                                </select>
                             </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto p-4 border border-gray-200 rounded-xl bg-gray-50" id="checklist-articulos-list">
-                            @foreach($articulos as $art)
-                                <div class="articulo-item flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 transition-all" 
-                                     data-category="{{ $art->categoria }}" 
-                                     data-precio-peq="{{ $art->precio_pequeno ?? 0 }}"
-                                     data-precio-med="{{ $art->precio_mediano ?? 0 }}"
-                                     data-precio-gra="{{ $art->precio_grande ?? 0 }}"
-                                     style="display: none;">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <input type="checkbox" id="art-{{ $art->id }}" class="articulo-checkbox w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer flex-shrink-0" onchange="toggleArticuloSizes({{ $art->id }})">
-                                        <label for="art-{{ $art->id }}" class="text-sm font-semibold text-gray-700 select-none cursor-pointer leading-snug" title="{{ $art->nombre }}">{{ $art->nombre }}</label>
-                                    </div>
-                                    
-                                    <div class="flex flex-col gap-2 mt-2 pl-6 hidden" id="sizes-container-{{ $art->id }}">
-                                        <!-- Pequeño -->
-                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
-                                            <div class="flex items-center gap-1.5 min-w-0">
-                                                <input type="checkbox" name="articulos[{{ $art->id }}][pequeno]" id="size-peq-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'peq')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Peq</span>
-                                            </div>
-                                            <div class="flex items-center gap-1 flex-shrink-0">
-                                                @if(($art->precio_pequeno ?? 0) > 0)
-                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_pequeno, 2) }}</span>
-                                                @endif
-                                                <input type="number" name="cantidades[{{ $art->id }}][pequeno]" id="cant-peq-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Mediano -->
-                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
-                                            <div class="flex items-center gap-1.5 min-w-0">
-                                                <input type="checkbox" name="articulos[{{ $art->id }}][mediano]" id="size-med-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'med')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Med</span>
-                                            </div>
-                                            <div class="flex items-center gap-1 flex-shrink-0">
-                                                @if(($art->precio_mediano ?? 0) > 0)
-                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_mediano, 2) }}</span>
-                                                @endif
-                                                <input type="number" name="cantidades[{{ $art->id }}][mediano]" id="cant-med-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Grande -->
-                                        <div class="flex items-center justify-between gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
-                                            <div class="flex items-center gap-1.5 min-w-0">
-                                                <input type="checkbox" name="articulos[{{ $art->id }}][grande]" id="size-gra-{{ $art->id }}" class="size-checkbox w-3.5 h-3.5 text-blue-500 rounded cursor-pointer" onchange="toggleSizeQuantity({{ $art->id }}, 'gra')">
-                                                <span class="text-[11px] text-gray-700 font-medium">Gra</span>
-                                            </div>
-                                            <div class="flex items-center gap-1 flex-shrink-0">
-                                                @if(($art->precio_grande ?? 0) > 0)
-                                                    <span class="text-[9px] bg-green-100 text-green-700 px-1 py-0.5 rounded font-bold">RD$ {{ number_format($art->precio_grande, 2) }}</span>
-                                                @endif
-                                                <input type="number" name="cantidades[{{ $art->id }}][grande]" id="cant-gra-{{ $art->id }}" value="1" min="1" disabled class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-100" onchange="calcularTotal()">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+                            <div>
+                                <label class="form-label">Cantidad de Personas (Ayudantes) <span class="text-red-500">*</span></label>
+                                <input type="number" name="cantidad_personas" id="cantidad_personas" class="form-input" value="2" min="1" onchange="calcularTotal()">
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="form-label">Dimensiones y Detalles de la Carga (Opcional)</label>
-                        <textarea name="dimensiones_carga" class="form-input" rows="4" placeholder="Describe qué objetos deseas mover, peso aproximado, tamaño o cantidad de cajas...">{{ old('dimensiones_carga') }}</textarea>
+                    <!-- Transporte -->
+                    <div id="transporte-container" class="hidden mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Detalles de la Carga</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="form-label">Cantidad de Productos <span class="text-red-500">*</span></label>
+                                <input type="number" name="cantidad_productos_transporte" id="cantidad_productos_transporte" class="form-input" min="1" placeholder="Ej: 3" onchange="verificarLimiteTransporte()">
+                            </div>
+                            <div>
+                                <label class="form-label">Peso Total Estimado (Libras) <span class="text-red-500">*</span></label>
+                                <input type="number" name="peso_carga" id="peso_carga" class="form-input" step="0.01" min="0" placeholder="Ej: 45.5" oninput="calcularTotal()">
+                            </div>
+                            <div>
+                                <label class="form-label">Dimensiones (L x A x A) <span class="text-red-500">*</span></label>
+                                <input type="text" name="dimensiones_carga" class="form-input" placeholder="Ej: 1m x 2m x 1.5m">
+                            </div>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
                         <div>
@@ -256,7 +216,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const CONFIG = {
         precio_km_transporte: {{ $config['precio_km_transporte'] ?? 50 }},
         precio_km_mudanza: {{ $config['precio_km_mudanza'] ?? 100 }},
-        limite_mudanza: {{ $config['limite_articulos_mudanza'] ?? 5 }}
+        limite_mudanza: {{ $config['limite_articulos_mudanza'] ?? 5 }},
+        latitud_base: {{ $config['latitud_base'] ?? 18.4861 }},
+        longitud_base: {{ $config['longitud_base'] ?? -69.9312 }},
+        precio_camion_pequeno: {{ $config['precio_camion_pequeno'] ?? 1500 }},
+        precio_camion_mediano: {{ $config['precio_camion_mediano'] ?? 3000 }},
+        precio_camion_grande: {{ $config['precio_camion_grande'] ?? 5000 }},
+        precio_por_persona: {{ $config['precio_por_persona'] ?? 500 }},
+        precio_km_operacion: {{ $config['precio_km_operacion'] ?? 50 }},
+        peso_base_maximo: {{ $config['peso_base_maximo'] ?? 40 }},
+        intervalo_peso_extra: {{ $config['intervalo_peso_extra'] ?? 20 }},
+        precio_peso_extra: {{ $config['precio_peso_extra'] ?? 50 }}
     };
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -384,6 +354,23 @@ document.addEventListener('DOMContentLoaded', function() {
         searchTimerB = setTimeout(() => geocodeSearch(this.value.trim(), suggestionsB, 'B'), 400);
     });
 
+    // Prevenir submit con Enter y seleccionar la primera opción
+    searchA.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = suggestionsA.querySelector('.geo-suggestion-item');
+            if (first) first.click();
+        }
+    });
+
+    searchB.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = suggestionsB.querySelector('.geo-suggestion-item');
+            if (first) first.click();
+        }
+    });
+
     // Cerrar sugerencias al hacer clic fuera
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.geo-wrapper')) {
@@ -408,66 +395,129 @@ document.addEventListener('DOMContentLoaded', function() {
     function toRad(Value) { return Value * Math.PI / 180; }
 
     function updateCalculations() {
-        // Distancia
-        let dist = 0;
+        // Distancia A->B
+        let distAB = 0;
+        let distBaseA = 0;
+
         if(markerA && markerB) {
             let llA = markerA.getLatLng();
             let llB = markerB.getLatLng();
-            dist = calcCrow(llA.lat, llA.lng, llB.lat, llB.lng);
+            distAB = calcCrow(llA.lat, llA.lng, llB.lat, llB.lng);
             
             // Dibujar linea si no existe
             if(window.routeLine) map.removeLayer(window.routeLine);
             window.routeLine = L.polyline([llA, llB], {color: 'purple', weight: 4, dashArray: '10, 10'}).addTo(map);
             map.fitBounds(window.routeLine.getBounds(), {padding: [50, 50]});
         }
-        document.getElementById('distancia_km').value = dist.toFixed(2);
-        document.getElementById('distancia-display').innerText = dist.toFixed(2) + ' km';
+        
+        if (markerA) {
+            let llA = markerA.getLatLng();
+            distBaseA = calcCrow(CONFIG.latitud_base, CONFIG.longitud_base, llA.lat, llA.lng);
+        }
 
-        window.calcularTotal(dist);
+        document.getElementById('distancia_km').value = distAB.toFixed(2);
+        
+        let distanciaText = distAB.toFixed(2) + ' km';
+        if (document.getElementById('tipo_servicio').value === 'mudanza' && markerA) {
+            distanciaText = `Base->A: ${distBaseA.toFixed(2)}km | A->B: ${distAB.toFixed(2)}km`;
+        }
+        
+        document.getElementById('distancia-display').innerText = distanciaText;
+
+        window.calcularTotal(distAB, distBaseA);
     }
 
-    // Exponer calcularTotal para que sea llamado cuando cambian cantidades
-    window.calcularTotal = function(distancia = null) {
-        if(distancia === null) {
-            distancia = parseFloat(document.getElementById('distancia_km').value) || 0;
+    window.calcularTotal = function(distanciaAB = null, distanciaBaseA = null) {
+        if(distanciaAB === null) {
+            distanciaAB = parseFloat(document.getElementById('distancia_km').value) || 0;
+        }
+        if(distanciaBaseA === null && markerA) {
+            let llA = markerA.getLatLng();
+            distanciaBaseA = calcCrow(CONFIG.latitud_base, CONFIG.longitud_base, llA.lat, llA.lng);
+        } else if (distanciaBaseA === null) {
+            distanciaBaseA = 0;
         }
         
-        let totalArticulos = 0;
-        let countArticulos = 0;
-        
-        document.querySelectorAll('.size-checkbox:checked').forEach(cb => {
-            let parent = cb.closest('.articulo-item');
-            let sizeKey = cb.id.split('-')[1]; // 'peq', 'med', 'gra'
-            let qtyInputId = 'cant-' + sizeKey + '-' + cb.id.split('-')[2];
-            let cant = parseInt(document.getElementById(qtyInputId).value) || 1;
-            
-            let priceAttr = 'data-precio-' + sizeKey;
-            let precio = parent.getAttribute(priceAttr) || 0;
-            
-            totalArticulos += (parseFloat(precio) * cant);
-            countArticulos += cant;
-        });
+        const tipoServicio = document.getElementById('tipo_servicio').value;
+        let totalFinal = 0;
+        let desglose = '';
 
-        // Auto-detección de Mudanza por cantidad de artículos
-        const selectTipo = document.querySelector('select[name="tipo_servicio"]');
-        let precioKM = CONFIG.precio_km_transporte;
-
-        if (countArticulos > CONFIG.limite_mudanza) {
-            if (selectTipo.value !== 'mudanza') {
-                selectTipo.value = 'mudanza';
+        if (tipoServicio === 'mudanza') {
+            // Precio de camión
+            let camionPrice = 0;
+            const tamano = document.getElementById('camion_tamano').value;
+            if (tamano === 'pequeno') camionPrice = CONFIG.precio_camion_pequeno;
+            else if (tamano === 'mediano') camionPrice = CONFIG.precio_camion_mediano;
+            else if (tamano === 'grande') camionPrice = CONFIG.precio_camion_grande;
+            
+            // Precio de personas
+            let personas = parseInt(document.getElementById('cantidad_personas').value) || 0;
+            let personasPrice = personas * CONFIG.precio_por_persona;
+            
+            // Precio por distancias
+            let costoBaseA = distanciaBaseA * CONFIG.precio_km_operacion;
+            let costoAB = distanciaAB * CONFIG.precio_km_mudanza;
+            
+            totalFinal = camionPrice + personasPrice + costoBaseA + costoAB;
+            desglose = `Camión: ${camionPrice} | Personal: ${personasPrice} | Ruta Base: ${costoBaseA.toFixed(2)} | Ruta A->B: ${costoAB.toFixed(2)}`;
+        } else if (tipoServicio === 'transporte') {
+            totalFinal = distanciaAB * CONFIG.precio_km_transporte;
+            desglose = `Tarifa Distancia: RD$ ${totalFinal.toFixed(2)}`;
+            
+            let pesoInput = document.getElementById('peso_carga');
+            if (pesoInput) {
+                let peso = parseFloat(pesoInput.value) || 0;
+                if (peso > CONFIG.peso_base_maximo && CONFIG.intervalo_peso_extra > 0) {
+                    let pesoExtra = peso - CONFIG.peso_base_maximo;
+                    let intervalos = Math.ceil(pesoExtra / CONFIG.intervalo_peso_extra);
+                    let cargoPeso = intervalos * CONFIG.precio_peso_extra;
+                    totalFinal += cargoPeso;
+                    desglose += ` | Cargo por Sobrepeso: RD$ ${cargoPeso.toFixed(2)}`;
+                }
             }
-            precioKM = CONFIG.precio_km_mudanza;
-        } else {
-            precioKM = (selectTipo.value === 'mudanza') ? CONFIG.precio_km_mudanza : CONFIG.precio_km_transporte;
         }
-
-        let totalFinal = totalArticulos + (distancia * precioKM);
         
         document.getElementById('precio_estimado_total').value = totalFinal.toFixed(2);
         document.getElementById('precio-display').innerText = 'RD$ ' + totalFinal.toLocaleString('es-DO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        
-        document.getElementById('precio-display').title = `Tarifa: RD$ ${precioKM}/km`;
+        document.getElementById('precio-display').title = desglose;
     };
+    
+    window.verificarLimiteTransporte = function() {
+        const selectServicio = document.getElementById('tipo_servicio');
+        const cantidadInput = document.getElementById('cantidad_productos_transporte');
+        const cant = parseInt(cantidadInput.value) || 0;
+        
+        if (selectServicio.value === 'transporte' && cant > CONFIG.limite_mudanza) {
+            alert("Superaste el límite de transporte, por favor llena el formulario de mudanza");
+            selectServicio.value = 'mudanza';
+            handleServicioChange();
+        }
+    };
+
+    function handleServicioChange() {
+        const val = document.getElementById('tipo_servicio').value;
+        const cMudanza = document.getElementById('mudanza-container');
+        const cTransporte = document.getElementById('transporte-container');
+        
+        if (val === 'mudanza') {
+            cMudanza.classList.remove('hidden');
+            cTransporte.classList.add('hidden');
+        } else if (val === 'transporte') {
+            cTransporte.classList.remove('hidden');
+            cMudanza.classList.add('hidden');
+        } else {
+            cMudanza.classList.add('hidden');
+            cTransporte.classList.add('hidden');
+        }
+        
+        // Re-calcular total si hay mapa listo
+        updateCalculations();
+    }
+
+    document.getElementById('tipo_servicio').addEventListener('change', handleServicioChange);
+    
+    // Ejecutar al cargar por si hay un old() value
+    handleServicioChange();
 
     // Clic en el mapa: poner marcador + reverse geocode para mostrar dirección
     map.on('click', function(e) {
@@ -499,128 +549,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         updateCalculations();
     });
-
-    // Lógica de Filtrado, Paginación por Scroll y Reactividad para Transporte y Mudanzas
-    const selectServicio = document.getElementById('tipo_servicio');
-    const searchInput = document.getElementById('search-articulos');
-    const container = document.getElementById('checklist-articulos-container');
-    const listContainer = document.getElementById('checklist-articulos-list');
-    const items = document.querySelectorAll('.articulo-item');
-
-    let matchingItems = []; // Almacena los elementos que coinciden con los filtros actuales
-    let visibleCount = 10;   // Cantidad inicial de artículos a mostrar
-
-    function normalizar(texto) {
-        return (texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    function updateVisibleItems() {
-        // Ocultar todos los artículos primero
-        items.forEach(item => {
-            item.style.display = 'none';
-        });
-
-        // Mostrar solo los primeros 'visibleCount' que coinciden
-        const toShow = matchingItems.slice(0, visibleCount);
-        toShow.forEach(item => {
-            item.style.display = 'flex';
-        });
-    }
-
-    function filterArticles() {
-        const selectedValue = selectServicio.value;
-        const searchTerm = normalizar(searchInput.value.trim());
-        
-        if (!selectedValue) {
-            container.classList.add('hidden');
-            items.forEach(item => {
-                const checkbox = item.querySelector('.articulo-checkbox');
-                checkbox.checked = false;
-                window.toggleArticuloSizes(checkbox.id.split('-')[1]);
-                item.style.display = 'none';
-            });
-            matchingItems = [];
-            window.calcularTotal();
-            return;
-        }
-
-        container.classList.remove('hidden');
-        matchingItems = [];
-
-        items.forEach(item => {
-            const cat = item.getAttribute('data-category');
-            const nombre = normalizar(item.querySelector('label').innerText);
-            const checkbox = item.querySelector('.articulo-checkbox');
-            
-            const matchesCategory = (cat === selectedValue || cat === 'ambos');
-            const matchesSearch = nombre.includes(searchTerm);
-
-            if (matchesCategory) {
-                if (matchesSearch) {
-                    matchingItems.push(item);
-                }
-            } else {
-                // Desmarcar si el artículo ya no pertenece a la categoría elegida
-                if (checkbox.checked) {
-                    checkbox.checked = false;
-                    window.toggleArticuloSizes(checkbox.id.split('-')[1]);
-                }
-            }
-        });
-
-        visibleCount = 10; // Reiniciar contador al buscar o cambiar tipo
-        updateVisibleItems();
-        window.calcularTotal();
-    }
-
-    // Listener de scroll para el contenedor de artículos (Lazy Loading)
-    listContainer.addEventListener('scroll', function() {
-        if (listContainer.scrollTop + listContainer.clientHeight >= listContainer.scrollHeight - 50) {
-            if (visibleCount < matchingItems.length) {
-                visibleCount += 10;
-                updateVisibleItems();
+    
+    // Add form submit validator
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (document.getElementById('tipo_servicio').value === 'transporte') {
+            const cant = parseInt(document.getElementById('cantidad_productos_transporte').value) || 0;
+            if (cant > CONFIG.limite_mudanza) {
+                e.preventDefault();
+                alert("Superaste el límite de transporte, por favor llena el formulario de mudanza");
+                document.getElementById('tipo_servicio').value = 'mudanza';
+                handleServicioChange();
             }
         }
     });
 
-    selectServicio.addEventListener('change', filterArticles);
-    searchInput.addEventListener('input', filterArticles);
-    if (selectServicio.value) filterArticles();
 });
-
-window.toggleArticuloSizes = function(id) {
-    const mainCheckbox = document.getElementById('art-' + id);
-    const container = document.getElementById('sizes-container-' + id);
-    
-    if (mainCheckbox.checked) {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-        // Uncheck all sizes and disable inputs
-        const sizeCheckboxes = container.querySelectorAll('.size-checkbox');
-        sizeCheckboxes.forEach(cb => {
-            cb.checked = false;
-            let sizeKey = cb.id.split('-')[1]; // 'peq', 'med', 'gra'
-            let qtyInput = document.getElementById('cant-' + sizeKey + '-' + id);
-            qtyInput.setAttribute('disabled', 'disabled');
-            qtyInput.value = '1';
-        });
-    }
-    window.calcularTotal();
-};
-
-window.toggleSizeQuantity = function(id, sizeKey) {
-    const sizeCheckbox = document.getElementById('size-' + sizeKey + '-' + id);
-    const qtyInput = document.getElementById('cant-' + sizeKey + '-' + id);
-    
-    if (sizeCheckbox.checked) {
-        qtyInput.removeAttribute('disabled');
-        qtyInput.focus();
-    } else {
-        qtyInput.setAttribute('disabled', 'disabled');
-        qtyInput.value = '1';
-    }
-    window.calcularTotal();
-};
 </script>
 @endpush
