@@ -125,7 +125,7 @@
                         {{-- Row 2: Filtros y Botones --}}
                         <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center flex-wrap">
 
-                        @if($tab === 'compras')
+                        @if(in_array($tab, ['compras', 'ventas']))
                         <div>
                             <select name="estatus" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="">Todos los estados</option>
