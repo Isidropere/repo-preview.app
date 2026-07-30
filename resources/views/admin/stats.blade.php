@@ -877,6 +877,7 @@ function abrirModalDelivery() {
 
   const sobredimLabels = {
     min_peso_lbs: 'Peso Mínimo (lbs)',
+    intervalo_peso_lbs: 'Intervalo de Exceso (lbs)',
     min_alto_cm: 'Alto Mínimo (cm)',
     min_ancho_cm: 'Ancho Mínimo (cm)',
     min_profundo_cm: 'Profundidad Mínima (cm)',

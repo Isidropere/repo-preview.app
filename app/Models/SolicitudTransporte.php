@@ -30,6 +30,11 @@ class SolicitudTransporte extends Model
         'precio_estimado_total',
         'dimensiones_carga',
         'estado',
+        'camion_tamano',
+        'cantidad_personas',
+        'distancia_base_a_origen',
+        'cantidad_productos_transporte',
+        'peso_carga',
     ];
 
     protected $casts = [

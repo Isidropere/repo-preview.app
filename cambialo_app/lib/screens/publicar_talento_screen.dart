@@ -522,8 +522,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
             return;
           }
         } else {
+          final msg = body['message'] ?? (isEdit ? '¡Talento actualizado con éxito!' : '¡Talento publicado con éxito!');
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(isEdit ? '¡Talento actualizado con éxito!' : '¡Talento publicado con éxito!'),
+            content: Text(msg),
             backgroundColor: Colors.green,
           ));
         }

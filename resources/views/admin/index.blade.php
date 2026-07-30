@@ -112,14 +112,18 @@
                        {{-- Filtros --}}
                 @if($tab !== 'envio')
                 <div class="p-4 border-b border-gray-50 bg-gray-50">
-                    <form method="GET" action="{{ route('admin.index') }}" class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+                    <form method="GET" action="{{ route('admin.index') }}" class="flex flex-col gap-4">
                         <input type="hidden" name="tab" value="{{ $tab }}">
                         
-                        <div class="flex-1">
+                        {{-- Row 1: Buscar --}}
+                        <div class="w-full">
                             <input type="text" name="buscar" value="{{ request('buscar') }}"
                                    placeholder="Buscar..."
                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
+
+                        {{-- Row 2: Filtros y Botones --}}
+                        <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center flex-wrap">
 
                         @if($tab === 'compras')
                         <div>
@@ -141,6 +145,35 @@
                         </div>
                         @endif
 
+                        <div class="flex items-center gap-2 min-w-[150px]">
+                            <select name="provincia" id="provincia-filter" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Todas las provincias</option>
+                                @foreach($provincias ?? [] as $prov)
+                                    <option value="{{ $prov->id_provincia }}" {{ request('provincia') == $prov->id_provincia ? 'selected' : '' }}>
+                                        {{ $prov->provincia }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2 min-w-[150px]">
+                            <select name="municipio" id="municipio-filter" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" {{ request('provincia') ? '' : 'disabled' }}>
+                                <option value="">Todos los municipios</option>
+                                @if(request('provincia') && isset($provincias))
+                                    @php
+                                        $provinciaObj = collect($provincias)->firstWhere('id_provincia', request('provincia'));
+                                    @endphp
+                                    @if($provinciaObj)
+                                        @foreach($provinciaObj->municipios as $mun)
+                                            <option value="{{ $mun->id_municipio }}" {{ request('municipio') == $mun->id_municipio ? 'selected' : '' }}>
+                                                {{ $mun->municipio }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                @endif
+                            </select>
+                        </div>
+
                         @if($tab !== 'intencion_compra')
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
@@ -158,13 +191,14 @@
                             <button type="submit" class="bg-primary hover:bg-hoverPrimary text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                                 Filtrar
                             </button>
-                            @if(request('buscar') || request('estatus') || request('fecha_desde') || request('fecha_hasta'))
+                            @if(request('buscar') || request('estatus') || request('fecha_desde') || request('fecha_hasta') || request('provincia') || request('municipio'))
                             <a href="{{ route('admin.index', ['tab' => $tab]) }}"
                                class="border border-gray-200 text-gray-600 hover:bg-gray-100 px-5 py-2 rounded-lg text-sm font-medium transition-colors text-center flex items-center justify-center">
                                 Limpiar
                             </a>
                             @endif
                         </div>
+                        </div> {{-- /Row 2 --}}
                     </form>
                 </div>
                 @endif
@@ -209,6 +243,36 @@
         @if(session('download_pdf_url'))
             window.open("{{ session('download_pdf_url') }}", "_blank");
         @endif
+
+        // Lógica para el filtro de provincia y municipio
+        const provinciaSelect = document.getElementById('provincia-filter');
+        const municipioSelect = document.getElementById('municipio-filter');
+        const provinciasData = @json($provincias ?? []);
+
+        if (provinciaSelect && municipioSelect) {
+            provinciaSelect.addEventListener('change', function() {
+                const provId = this.value;
+                municipioSelect.innerHTML = '<option value="">Todos los municipios</option>';
+                
+                if (!provId) {
+                    municipioSelect.disabled = true;
+                    return;
+                }
+
+                municipioSelect.disabled = false;
+                const selectedProv = provinciasData.find(p => p.id_provincia == provId);
+                
+                if (selectedProv && selectedProv.municipios) {
+                    selectedProv.municipios.forEach(mun => {
+                        const option = document.createElement('option');
+                        option.value = mun.id_municipio;
+                        option.textContent = mun.municipio;
+                        // No need to set selected here since this is a dynamic change triggered by user
+                        municipioSelect.appendChild(option);
+                    });
+                }
+            });
+        }
 
         @if($tab === 'envio')
         // Cargar zonas de envío (solo lectura)

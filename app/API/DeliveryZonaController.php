@@ -64,6 +64,7 @@ class DeliveryZonaController extends Controller
                 'min_alto_cm'      => 'sometimes|numeric|min:0',
                 'min_ancho_cm'     => 'sometimes|numeric|min:0',
                 'min_profundo_cm'  => 'sometimes|numeric|min:0',
+                'intervalo_peso_lbs'=> 'sometimes|numeric|min:0',
                 'recargo_monto'    => 'sometimes|numeric|min:0',
             ]);
         } else {

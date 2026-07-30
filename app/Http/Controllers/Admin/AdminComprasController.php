@@ -8,6 +8,7 @@ use App\Models\PagoCompra;
 use App\Events\NuevaNotificacion;
 use App\Services\AdminComprasService;
 use Illuminate\Http\Request;
+use App\Models\Provincia;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
@@ -60,6 +61,8 @@ class AdminComprasController extends Controller
             'buscar'      => 'nullable|string|max:100',
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d',
+            'provincia'   => 'nullable|string',
+            'municipio'   => 'nullable|string',
         ]);
 
         $data = $this->adminComprasService->obtenerDatosPanelPrincipal(
@@ -67,8 +70,12 @@ class AdminComprasController extends Controller
             $request->estatus,
             $request->buscar,
             $request->fecha_desde,
-            $request->fecha_hasta
+            $request->fecha_hasta,
+            $request->provincia,
+            $request->municipio
         );
+
+        $data['provincias'] = Provincia::with('municipios')->orderBy('provincia')->get();
 
         return view('admin.index', $data);
     }
