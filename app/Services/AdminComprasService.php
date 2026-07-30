@@ -42,7 +42,7 @@ class AdminComprasService
     {
         return [
             'compras'                    => $this->queryCompras($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_compras')->withQueryString(),
-            'ventas'                     => $this->queryVentas($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
+            'ventas'                     => $this->queryVentas($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
             'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
             'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
             'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ii')->withQueryString(),
@@ -137,13 +137,14 @@ class AdminComprasService
         return $query;
     }
 
-    private function queryVentas(string $tab, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
+    private function queryVentas(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
         $query = PagoCompra::with(['pagoItems.item.imagenes', 'pagoItems.item.usuario', 'carrito.usuario'])
             ->whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
             ->orderByDesc('id_pago_compra');
 
         if ($tab === 'ventas') {
+            if ($estatus) $query->where('estatus', $estatus);
             if ($buscar) {
                 $query->where(fn($q) => $q
                     ->where('id_pago_compra', 'like', "%$buscar%")
