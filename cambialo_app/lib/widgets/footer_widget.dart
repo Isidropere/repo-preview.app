@@ -290,6 +290,7 @@ class FooterWidget extends StatelessWidget {
       url,
       height: height,
       fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
     );
   }
