@@ -10,6 +10,7 @@ use App\Models\TransporteCamion;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Events\NuevaNotificacion;
 use Illuminate\Support\Facades\DB;
+use App\Models\Message;
 
 class AdminTransporteController extends Controller
 {
@@ -139,11 +140,11 @@ class AdminTransporteController extends Controller
         if ($solicitud->id_usuario) {
             $mensaje = "Tu solicitud de transporte y mudanza para el día {$solicitud->fecha_servicio->format('d/m/Y')} ha sido APROBADA.";
             
-            DB::table('notificaciones')->insert([
-                'id_usuario' => $solicitud->id_usuario,
-                'mensaje' => $mensaje,
-                'leida' => 0,
-                'fecha_envio' => now()
+            Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $solicitud->id_usuario,
+                'mensaje'     => $mensaje,
+                'leido'       => 0,
             ]);
             
             event(new NuevaNotificacion($mensaje, $solicitud->id_usuario));
@@ -166,11 +167,11 @@ class AdminTransporteController extends Controller
         if ($solicitud->id_usuario) {
             $mensaje = "Tu solicitud de transporte y mudanza para el día {$solicitud->fecha_servicio->format('d/m/Y')} ha sido RECHAZADA.";
             
-            DB::table('notificaciones')->insert([
-                'id_usuario' => $solicitud->id_usuario,
-                'mensaje' => $mensaje,
-                'leida' => 0,
-                'fecha_envio' => now()
+            Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $solicitud->id_usuario,
+                'mensaje'     => $mensaje,
+                'leido'       => 0,
             ]);
             
             event(new NuevaNotificacion($mensaje, $solicitud->id_usuario));
