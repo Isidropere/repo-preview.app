@@ -59,8 +59,8 @@
         <div id="section-solicitudes" class="{{ $activeTab == 'solicitudes' ? '' : 'hidden' }} transition-all">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                 <div class="p-4 bg-gray-50 border-b border-gray-100">
-                    <form action="{{ route('admin.erp.transporte.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
-                        <div class="flex-1 min-w-[250px]">
+                    <form action="{{ route('admin.erp.transporte.index') }}" method="GET" class="flex flex-col md:flex-row md:flex-wrap gap-4 items-center">
+                        <div class="flex-1 w-full" style="min-width: 250px;">
                             <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar por nombre, correo, cédula, teléfono o ID..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="w-full md:w-48">
