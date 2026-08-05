@@ -556,7 +556,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <button onclick="editCamion({{ $camion->id }}, '{{ addslashes($camion->nombre) }}', {{ $camion->medida_pies }}, {{ $camion->precio_base }}, {{ $camion->activo ? 'true' : 'false' }})" class="text-blue-600 hover:text-blue-800 p-1">Editar</button>
-                                        <form action="{{ route('transporte.camiones.destroy', $camion->id) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Seguro que deseas eliminar este camión?');">
+                                        <form action="{{ route('admin.erp.transporte.camiones.destroy', $camion->id) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Seguro que deseas eliminar este camión?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-800 p-1 ml-2">Eliminar</button>
@@ -583,7 +583,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <form action="{{ route('transporte.camiones.store') }}" method="POST">
+        <form action="{{ route('admin.erp.transporte.camiones.store') }}" method="POST">
             @csrf
             <div class="p-6 space-y-4">
                 <div>
@@ -655,7 +655,7 @@
 @push('scripts')
 <script>
     function editCamion(id, nombre, medida, precio, activo) {
-        document.getElementById('form-edit-camion').action = '/transporte/camiones/' + id;
+        document.getElementById('form-edit-camion').action = '/admin/erp/transporte/camiones/' + id;
         document.getElementById('edit_camion_nombre').value = nombre;
         document.getElementById('edit_camion_medida').value = medida;
         document.getElementById('edit_camion_precio').value = precio;
