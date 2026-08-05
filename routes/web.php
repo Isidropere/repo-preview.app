@@ -836,6 +836,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateArticulo'])->name('transporte.articulos.update');
         Route::delete('/transporte/articulos/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyArticulo'])->name('transporte.articulos.destroy');
         Route::put('/transporte/config', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateConfig'])->name('transporte.config.update');
+        Route::post('/transporte/camiones', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'storeCamion'])->name('transporte.camiones.store');
+        Route::put('/transporte/camiones/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateCamion'])->name('transporte.camiones.update');
+        Route::delete('/transporte/camiones/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyCamion'])->name('transporte.camiones.destroy');
 
         // Cuentas CRUD
         Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');

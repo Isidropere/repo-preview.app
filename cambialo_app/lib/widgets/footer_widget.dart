@@ -201,7 +201,6 @@ class FooterWidget extends StatelessWidget {
                     _buildCardLogo('$baseUrl/imgs/Visa_Brandmark_Blue_RGB_2021.png', height: 20),
                     _buildCardLogo('$baseUrl/imgs/mastercard-logo.png', height: 20),
                     _buildCardLogo('$baseUrl/imgs/visa-secure_blu_2021_dkbg.png', height: 26),
-                    _buildCardLogo('$baseUrl/imgs/mastercardidentitycheck.png', height: 26),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(

@@ -104,9 +104,11 @@
                                 <label class="form-label">Tamaño del Camión <span class="text-red-500">*</span></label>
                                 <select name="camion_tamano" id="camion_tamano" class="form-input" onchange="calcularTotal()">
                                     <option value="">-- Selecciona Tamaño --</option>
-                                    <option value="pequeno">Pequeño (Camioneta / Furgoneta)</option>
-                                    <option value="mediano">Mediano (Camión Cama Corta)</option>
-                                    <option value="grande">Grande (Camión Cama Larga)</option>
+                                    @foreach($camiones as $camion)
+                                        <option value="{{ $camion->nombre }}" data-precio="{{ $camion->precio_base }}">
+                                            {{ $camion->nombre }} ({{ $camion->medida_pies }} pies)
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
@@ -445,10 +447,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tipoServicio === 'mudanza') {
             // Precio de camión
             let camionPrice = 0;
-            const tamano = document.getElementById('camion_tamano').value;
-            if (tamano === 'pequeno') camionPrice = CONFIG.precio_camion_pequeno;
-            else if (tamano === 'mediano') camionPrice = CONFIG.precio_camion_mediano;
-            else if (tamano === 'grande') camionPrice = CONFIG.precio_camion_grande;
+            const camionSelect = document.getElementById('camion_tamano');
+            if (camionSelect.selectedIndex > 0) {
+                camionPrice = parseFloat(camionSelect.options[camionSelect.selectedIndex].getAttribute('data-precio')) || 0;
+            }
             
             // Precio de personas
             let personas = parseInt(document.getElementById('cantidad_personas').value) || 0;

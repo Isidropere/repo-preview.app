@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SolicitudTransporte;
 use App\Models\TransporteArticulo;
+use App\Models\TransporteCamion;
 use Illuminate\Support\Facades\Auth;
 
 class TransporteController extends Controller
@@ -32,7 +33,9 @@ class TransporteController extends Controller
             'precio_peso_extra' => \App\Models\TransporteConfiguracion::get('precio_peso_extra', 50),
         ];
 
-        return view('transporte.create', compact('articulos', 'config'));
+        $camiones = TransporteCamion::where('activo', true)->orderBy('medida_pies', 'asc')->get();
+
+        return view('transporte.create', compact('articulos', 'config', 'camiones'));
     }
 
     /**
@@ -57,7 +60,7 @@ class TransporteController extends Controller
             'distancia_km' => 'nullable|numeric',
             'precio_estimado_total' => 'nullable|numeric',
             'dimensiones_carga' => 'nullable|string|max:1000',
-            'camion_tamano' => 'nullable|string|in:pequeno,mediano,grande',
+            'camion_tamano' => 'nullable|string|max:150',
             'cantidad_personas' => 'nullable|integer|min:1',
             'cantidad_productos_transporte' => 'nullable|integer|min:1',
             'peso_carga' => 'nullable|numeric|min:0',
