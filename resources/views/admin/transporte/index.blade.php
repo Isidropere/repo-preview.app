@@ -454,25 +454,7 @@
                             <h4 class="text-sm font-bold text-gray-800">Precios de Camiones</h4>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Pequeño <span class="text-red-500">*</span></label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
-                                <input type="number" name="precio_camion_pequeno" step="0.01" value="{{ $config['precio_camion_pequeno'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Mediano <span class="text-red-500">*</span></label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
-                                <input type="number" name="precio_camion_mediano" step="0.01" value="{{ $config['precio_camion_mediano'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Camión Grande <span class="text-red-500">*</span></label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">RD$</span>
-                                <input type="number" name="precio_camion_grande" step="0.01" value="{{ $config['precio_camion_grande'] }}" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
+                            <p class="text-xs text-gray-500 italic mt-4">Los camiones (tipos, precios y medidas) se administran en la sección de abajo.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Personal Adicional (Precio p/Persona) <span class="text-red-500">*</span></label>
@@ -535,13 +517,152 @@
                     </div>
                 </form>
             </div>
-        </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Camiones Disponibles (Mudanza)</h3>
+                        <p class="text-xs text-gray-500 mt-1">Configura los tamaños, medidas y precios base de los camiones para el servicio de mudanza.</p>
+                    </div>
+                    <button onclick="document.getElementById('modal-add-camion').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Agregar Camión
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3">Nombre</th>
+                                <th class="px-4 py-3 text-center">Tamaño (Pies)</th>
+                                <th class="px-4 py-3 text-right">Precio Base</th>
+                                <th class="px-4 py-3 text-center">Estado</th>
+                                <th class="px-4 py-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($camiones as $camion)
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-semibold text-gray-900">{{ $camion->nombre }}</td>
+                                    <td class="px-4 py-3 text-center">{{ $camion->medida_pies }} pies</td>
+                                    <td class="px-4 py-3 text-right text-gray-900 font-bold">RD$ {{ number_format($camion->precio_base, 2) }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($camion->activo)
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">ACTIVO</span>
+                                        @else
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-full">INACTIVO</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <button onclick="editCamion({{ $camion->id }}, '{{ addslashes($camion->nombre) }}', {{ $camion->medida_pies }}, {{ $camion->precio_base }}, {{ $camion->activo ? 'true' : 'false' }})" class="text-blue-600 hover:text-blue-800 p-1">Editar</button>
+                                        <form action="{{ route('admin.erp.transporte.camiones.destroy', $camion->id) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Seguro que deseas eliminar este camión?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1 ml-2">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">No hay camiones configurados.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
     </div>
 </div>
+<!-- Modal Agregar Camion -->
+<div id="modal-add-camion" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-800">Agregar Camión</h3>
+            <button onclick="document.getElementById('modal-add-camion').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form action="{{ route('admin.erp.transporte.camiones.store') }}" method="POST">
+            @csrf
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre / Tipo <span class="text-red-500">*</span></label>
+                    <input type="text" name="nombre" required placeholder="Ej: Camión Cama Larga" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Medida (Pies) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" name="medida_pies" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio Base <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" name="precio_base" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" name="activo" id="activo_add" value="1" checked class="w-4 h-4 text-blue-600 rounded border-gray-300">
+                    <label for="activo_add" class="ml-2 text-sm font-semibold text-gray-700">Activo (Disponible para solicitudes)</label>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('modal-add-camion').classList.add('hidden')" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">Guardar Camión</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Camion -->
+<div id="modal-edit-camion" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-800">Editar Camión</h3>
+            <button onclick="document.getElementById('modal-edit-camion').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="form-edit-camion" action="" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre / Tipo <span class="text-red-500">*</span></label>
+                    <input type="text" name="nombre" id="edit_camion_nombre" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Medida (Pies) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" name="medida_pies" id="edit_camion_medida" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio Base <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" name="precio_base" id="edit_camion_precio" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" name="activo" id="edit_camion_activo" value="1" class="w-4 h-4 text-blue-600 rounded border-gray-300">
+                    <label for="edit_camion_activo" class="ml-2 text-sm font-semibold text-gray-700">Activo (Disponible para solicitudes)</label>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('modal-edit-camion').classList.add('hidden')" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">Actualizar Camión</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
+
 
 @push('scripts')
 <script>
+    function editCamion(id, nombre, medida, precio, activo) {
+        document.getElementById('form-edit-camion').action = '/admin/erp/transporte/camiones/' + id;
+        document.getElementById('edit_camion_nombre').value = nombre;
+        document.getElementById('edit_camion_medida').value = medida;
+        document.getElementById('edit_camion_precio').value = precio;
+        document.getElementById('edit_camion_activo').checked = activo;
+        document.getElementById('modal-edit-camion').classList.remove('hidden');
+    }
+
     // Manejo del sistema de pestañas (Tabs)
     function switchTab(tab) {
         const tabSol = document.getElementById('tab-solicitudes');

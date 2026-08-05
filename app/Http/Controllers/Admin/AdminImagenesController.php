@@ -130,14 +130,6 @@ class AdminImagenesController extends Controller
                 'mensaje' => $mensaje,
                 'leido' => false,
             ]);
-            try {
-                DB::table('notificaciones')->insert([
-                    'id_usuario' => $item->id_user,
-                    'mensaje' => $mensaje,
-                    'leida' => 0,
-                    'fecha_envio' => now()
-                ]);
-            } catch (\Exception $e) {}
 
             return back()->with('success', 'Producto aprobado correctamente.');
         } catch (ModelNotFoundException $e) {
@@ -162,14 +154,6 @@ class AdminImagenesController extends Controller
                 'mensaje' => $mensaje,
                 'leido' => false,
             ]);
-            try {
-                DB::table('notificaciones')->insert([
-                    'id_usuario' => $item->id_user,
-                    'mensaje' => $mensaje,
-                    'leida' => 0,
-                    'fecha_envio' => now()
-                ]);
-            } catch (\Exception $e) {}
 
             return back()->with('success', 'Producto rechazado.');
         } catch (ModelNotFoundException $e) {

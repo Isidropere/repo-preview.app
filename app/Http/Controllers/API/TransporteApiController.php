@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TransporteArticulo;
 use App\Models\TransporteConfiguracion;
 use App\Models\SolicitudTransporte;
+use App\Models\TransporteCamion;
 use Illuminate\Http\Request;
 
 class TransporteApiController extends Controller
@@ -33,8 +34,11 @@ class TransporteApiController extends Controller
             'precio_peso_extra' => floatval(TransporteConfiguracion::get('precio_peso_extra', 50)),
         ];
 
+        $camiones = TransporteCamion::where('activo', true)->orderBy('medida_pies', 'asc')->get();
+
         return response()->json([
             'articulos' => $articulos,
+            'camiones' => $camiones,
             'configuracion' => $configuracion
         ]);
     }

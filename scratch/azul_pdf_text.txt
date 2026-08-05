@@ -1,0 +1,214 @@
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+<form action="https://pruebas.azul.com.do/PaymentPage/" method="post" id="paymentForm" 
+name="paymentForm"> 
+  <input type="hidden" id="MerchantId" name="MerchantId" value="99999999999"> 
+  <input type="hidden" id="MerchantName" name="MerchantName" value="Comercio prueba"> 
+  <input type="hidden" id="MerchantType" name="MerchantType" value="ECommerce"> 
+  <input type="hidden" id="CurrencyCode" name="CurrencyCode" value="$"> 
+  <input type="hidden" id="OrderNumber" name="OrderNumber" value="1234"> 
+  <input type="hidden" id="Amount" name="Amount" value="15000"> 
+  <input type="hidden" id="ITBIS" name="ITBIS" value="2057"> 
+  <input type="hidden" id="ApprovedUrl" name="ApprovedUrl" 
+value="https://comercioprueba.com/aprobada/"> 
+  <input type="hidden" id="DeclinedUrl" name="DeclinedUrl" 
+value="https://comercioprueba.com/declinada/"> 
+  <input type="hidden" id="CancelUrl" name="CancelUrl" value="https://comercioprueba.com/cancelada/"> 
+  <input type="hidden" id="UseCustomField1" name="UseCustomField1" value="0"> 
+  <input type="hidden" id="CustomField1Label" name="CustomField1Label" value=""> 
+  <input type="hidden" id="CustomField1Value" name="CustomField1Value" value=""> 
+  <input type="hidden" id="UseCustomField2" name="UseCustomField2" value="0"> 
+  <input type="hidden" id="CustomField2Label" name="CustomField2Label" value=""> 
+  <input type="hidden" id="CustomField2Value" name="CustomField2Value" value=""> 
+  <input type="hidden" id="AuthHash" name="AuthHash" value="<?"> 
+  <input type="submit" name="submit" value="Enviar" style="font-size: 20px;"> 
+</form> 
+
+
+MerchantId + MerchantName + MerchantType + CurrencyCode + OrderNumber + Amount + ITBIS + ApprovedUrl + 
+DeclinedUrl + CancelUrl + UseCustomField1 + CustomField1Label + CustomField1Value + UseCustomField2 + 
+CustomField2Label + CustomField2Value + AuthKey 
+OrderNumber + Amount + AuthorizationCode + DateTime + ResponseCode + ISOCode + ResponseMessage + 
+ErrorDescription + RRN + AuthKey 
+var all = new StringBuilder(); 
+all.Append(MerchantId); 
+all.Append(MerchantName); 
+all.Append(MerchantType); 
+all.Append(currencyString); 
+all.Append(OrderNumber); 
+all.Append(Tools.Misc.DecimalToFixedString(Amount)); 
+all.Append(Tools.Misc.DecimalToFixedString(Itbis)); 
+all.Append(ApprovedUrl); 
+all.Append(DeclinedUrl); 
+all.Append(CancelUrl); 
+all.Append(Tools.Misc.BoolToNumeric(UseCustomField1)); 
+all.Append(CustomField1Label); 
+all.Append(CustomField1Value); 
+all.Append(Tools.Misc.BoolToNumeric(UseCustomField2)); 
+all.Append(CustomField2Label); 
+all.Append(CustomField2Value); 
+all.Append(AuthKey);  //Popocionado por SDP (no viaja en el POST) 
+textToHashBytes = Encoding.Unicode.GetBytes(all.tostring())  
+ 
+hashResult = encryptor.ComputeHash(textToHashBytes); 
+//Siendo encriptor del tipo System.Security.Cryptography. HMACSHA512()  
+ 
+//Para hacer la conversión de bytes a string. 
+for (int i = 0; i < hashResult.Length; i++) 
+txtHash.Text += string.Format("{0:x2}", hashResult[i]); 
+function calculateAuthHashResponse() { 
+$response_string = $this->ipn_data['OrderNumber'] 
+.$this->ipn_data['Amount'] 
+.$this->ipn_data['AuthorizationCode'] 
+.$this->ipn_data['DateTime'] 
+.$this->ipn_data['ResponseCode'] 
+.$this->ipn_data['IsoCode'] 
+.$this->ipn_data['ResponseMessage'] 
+.$this->ipn_data['ErrorDescription'] 
+.$this->ipn_data['RRN'] 
+.$this->auth_key; 
+$response_string = mb_convert_encoding($response_string, 'UTF-16LE', 'ASCII'); 
+$authHashGenerado = hash_hmac('sha512',$response_string,$authKey); 
+$authHashRecibido = $this->input->get('AuthHash'); 
+
+
+
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+ 
+ 
+
+
+
+
+ 
+ 
+
+
+
+
+
+ 
+ 
+
+ 
+ 
+
+ 
+
+ 
+ 
+ 
+
+
+ 
+ 
+
+
+&IsoCode=00&ResponseMessage=APROBADA&ErrorDescription=&CardNumber=554941...8810&DataVaultToken=734016F
+2-00E5-4611-948C-8179FB2B8C74&DataVaultExpiration=201912&DataVaultBrand=MASTERCARD&AuthHash=jkhsakdhsa 
+ljhdls 
+https://pagos.azul.com.do/PaymentPage/?Datavault=1 
+
+
+
+
+ 
+ 
+
+
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+https://tusitioweb.com.do/ApprovedUrl&OrderNumber=20240313102037&Amount=1500&Itbis=000&AuthorizationCo
+de=OK0190&DateTime=20240313102158&ResponseCode=ISO8583&IsoCode=00&ResponseMessage=APROBADA&ErrorDescri
+ption=&RRN=2024031310220044297821&AuthHash=0c74518efef3b144d4f845b2a346d11eb31acfe6276e1b42ceb131609d0
+11589836f18fd3a36077d60c8f68cfc888f59b29129df65c3dfdf8b6295344bf468fe &CustomOrderId=&CardNumber=542418
+02****1732&DataVaultToken=&DataVaultExpiration=&DataVaultBrand=&AzulOrderId=44297821&DCCOffered=1&DCCA
+pplied=1&DCCCurrency=840&DCCCurrencyAlpha=USD&DCCExchangeRate=00185&DCCMarkup=500&DCCAmount=028&Discou
+nted= 
+
+
+
+ 
+ 
+ 
+
+
+
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+

@@ -58,9 +58,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
   int _limiteArticulosMudanza = 5;
   double _latitudBase = 18.4861;
   double _longitudBase = -69.9312;
-  double _precioCamionPeq = 1500.0;
-  double _precioCamionMed = 3000.0;
-  double _precioCamionGra = 5000.0;
+  List<dynamic> _camiones = [];
   double _precioPersona = 500.0;
   double _precioKmOperacion = 50.0;
   double _pesoBaseMaximo = 40.0;
@@ -68,7 +66,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
   double _precioPesoExtra = 50.0;
 
   // Variables para la vista de Mudanza
-  String _camionTamano = 'mediano';
+  String? _camionTamano;
   final _cantidadPersonasCtrl = TextEditingController(text: '2');
 
   // Variables para la vista de Transporte
@@ -134,9 +132,10 @@ class _TransporteScreenState extends State<TransporteScreen> {
           _limiteArticulosMudanza = ApiClient.parseInt(config['limite_articulos_mudanza']) ?? 5;
           _latitudBase = double.tryParse(config['latitud_base']?.toString() ?? '18.4861') ?? 18.4861;
           _longitudBase = double.tryParse(config['longitud_base']?.toString() ?? '-69.9312') ?? -69.9312;
-          _precioCamionPeq = double.tryParse(config['precio_camion_pequeno']?.toString() ?? '1500.0') ?? 1500.0;
-          _precioCamionMed = double.tryParse(config['precio_camion_mediano']?.toString() ?? '3000.0') ?? 3000.0;
-          _precioCamionGra = double.tryParse(config['precio_camion_grande']?.toString() ?? '5000.0') ?? 5000.0;
+          _camiones = data['camiones'] ?? [];
+          if (_camiones.isNotEmpty) {
+            _camionTamano = _camiones[0]['nombre'];
+          }
           _precioPersona = double.tryParse(config['precio_por_persona']?.toString() ?? '500.0') ?? 500.0;
           _precioKmOperacion = double.tryParse(config['precio_km_operacion']?.toString() ?? '50.0') ?? 50.0;
           _pesoBaseMaximo = double.tryParse(config['peso_base_maximo']?.toString() ?? '40.0') ?? 40.0;
@@ -229,9 +228,12 @@ class _TransporteScreenState extends State<TransporteScreen> {
     double estimado = 0.0;
     if (tipoTemp == 'mudanza') {
       double camionPrice = 0.0;
-      if (_camionTamano == 'pequeno') camionPrice = _precioCamionPeq;
-      else if (_camionTamano == 'mediano') camionPrice = _precioCamionMed;
-      else if (_camionTamano == 'grande') camionPrice = _precioCamionGra;
+      if (_camionTamano != null) {
+        final camion = _camiones.firstWhere((c) => c['nombre'] == _camionTamano, orElse: () => null);
+        if (camion != null) {
+          camionPrice = double.tryParse(camion['precio_base']?.toString() ?? '0.0') ?? 0.0;
+        }
+      }
 
       int cantPersonas = int.tryParse(_cantidadPersonasCtrl.text) ?? 2;
       double personasPrice = cantPersonas * _precioPersona;
@@ -595,11 +597,12 @@ class _TransporteScreenState extends State<TransporteScreen> {
             labelStyle: TextStyle(fontSize: 14, color: kTextGray),
             border: UnderlineInputBorder(),
           ),
-          items: const [
-            DropdownMenuItem(value: 'pequeno', child: Text('Pequeño')),
-            DropdownMenuItem(value: 'mediano', child: Text('Mediano')),
-            DropdownMenuItem(value: 'grande', child: Text('Grande')),
-          ],
+          items: _camiones.map<DropdownMenuItem<String>>((camion) {
+            return DropdownMenuItem<String>(
+              value: camion['nombre'],
+              child: Text('${camion['nombre']} (${camion['medida_pies']} pies)'),
+            );
+          }).toList(),
           onChanged: (val) {
             if (val != null) {
               setState(() => _camionTamano = val);

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SolicitudTransporte;
 use App\Models\TransporteArticulo;
+use App\Models\TransporteCamion;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Events\NuevaNotificacion;
 use Illuminate\Support\Facades\DB;
+use App\Models\Message;
 
 class AdminTransporteController extends Controller
 {
@@ -79,7 +81,9 @@ class AdminTransporteController extends Controller
             $activeTab = 'catalogo';
         }
 
-        return view('admin.transporte.index', compact('solicitudes', 'articulos', 'config', 'activeTab'));
+        $camiones = TransporteCamion::orderBy('medida_pies', 'asc')->get();
+
+        return view('admin.transporte.index', compact('solicitudes', 'articulos', 'config', 'activeTab', 'camiones'));
     }
 
     /**
@@ -136,11 +140,11 @@ class AdminTransporteController extends Controller
         if ($solicitud->id_usuario) {
             $mensaje = "Tu solicitud de transporte y mudanza para el día {$solicitud->fecha_servicio->format('d/m/Y')} ha sido APROBADA.";
             
-            DB::table('notificaciones')->insert([
-                'id_usuario' => $solicitud->id_usuario,
-                'mensaje' => $mensaje,
-                'leida' => 0,
-                'fecha_envio' => now()
+            Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $solicitud->id_usuario,
+                'mensaje'     => $mensaje,
+                'leido'       => 0,
             ]);
             
             event(new NuevaNotificacion($mensaje, $solicitud->id_usuario));
@@ -163,11 +167,11 @@ class AdminTransporteController extends Controller
         if ($solicitud->id_usuario) {
             $mensaje = "Tu solicitud de transporte y mudanza para el día {$solicitud->fecha_servicio->format('d/m/Y')} ha sido RECHAZADA.";
             
-            DB::table('notificaciones')->insert([
-                'id_usuario' => $solicitud->id_usuario,
-                'mensaje' => $mensaje,
-                'leida' => 0,
-                'fecha_envio' => now()
+            Message::create([
+                'id_emisor'   => null,
+                'id_receptor' => $solicitud->id_usuario,
+                'mensaje'     => $mensaje,
+                'leido'       => 0,
             ]);
             
             event(new NuevaNotificacion($mensaje, $solicitud->id_usuario));
@@ -254,6 +258,61 @@ class AdminTransporteController extends Controller
         $articulo->delete();
 
         return back()->with('success', '¡Artículo eliminado con éxito del catálogo!');
+    }
+
+    /**
+     * Agrega un nuevo camión a la configuración
+     */
+    public function storeCamion(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'medida_pies' => 'required|numeric|min:0',
+            'precio_base' => 'required|numeric|min:0',
+        ]);
+
+        TransporteCamion::create([
+            'nombre' => $request->nombre,
+            'medida_pies' => $request->medida_pies,
+            'precio_base' => $request->precio_base,
+            'activo' => $request->has('activo'),
+        ]);
+
+        return back()->with('success', '¡Camión creado con éxito!');
+    }
+
+    /**
+     * Actualiza un camión existente
+     */
+    public function updateCamion(Request $request, $id)
+    {
+        $camion = TransporteCamion::findOrFail($id);
+        
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'medida_pies' => 'required|numeric|min:0',
+            'precio_base' => 'required|numeric|min:0',
+        ]);
+
+        $camion->update([
+            'nombre' => $request->nombre,
+            'medida_pies' => $request->medida_pies,
+            'precio_base' => $request->precio_base,
+            'activo' => $request->has('activo'),
+        ]);
+
+        return back()->with('success', '¡Camión actualizado con éxito!');
+    }
+
+    /**
+     * Elimina un camión
+     */
+    public function destroyCamion($id)
+    {
+        $camion = TransporteCamion::findOrFail($id);
+        $camion->delete();
+
+        return back()->with('success', '¡Camión eliminado con éxito!');
     }
 }
 

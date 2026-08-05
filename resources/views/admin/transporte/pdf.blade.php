@@ -67,7 +67,7 @@
             </tr>
             <tr>
                 <td class="label">Fecha Solicitada:</td>
-                <td class="value">{{ $solicitud->fecha_servicio->format('d de F, Y') }}</td>
+                <td class="value">{{ $solicitud->fecha_servicio->format('d/m/Y') }}</td>
             </tr>
         </table>
     </div>
