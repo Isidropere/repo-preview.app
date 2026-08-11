@@ -58,7 +58,7 @@
     $cartItems = app('user_cart_items');
     $enCarrito = isset($cartItems[$item->id_item]);
 @endphp
-<div class="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col">
+<div class="bg-white rounded-2xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col h-full">
 
     <div class="relative overflow-hidden block">
         <a href="{{ route('producto.detalle', $item->slug) }}" class="block">
