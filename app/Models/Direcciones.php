@@ -9,6 +9,17 @@ class Direcciones extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::saved(function ($direccion) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+
+        static::deleted(function ($direccion) {
+            \Illuminate\Support\Facades\Cache::flush();
+        });
+    }
+
     // Configuración básica del modelo
     protected $table = 'direcciones';
     protected $primaryKey = 'id_direccion';

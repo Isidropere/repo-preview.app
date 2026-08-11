@@ -44,6 +44,7 @@
                            style="flex:1 1 0%; min-width:0; padding:2px 5px; font-size:11px; width:100%;"
                            placeholder="Buscar..."
                            value="{{ request('q') }}"
+                           onkeydown="if(event.key === 'Enter') this.form.submit();"
                            required>
                     <button type="submit"
                             class="flex-shrink-0 bg-primary text-white rounded-r-md hover:bg-hoverPrimary"
@@ -91,6 +92,7 @@
                                            class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-secondary focus:border-secondary truncate" 
                                            placeholder="Buscar Productos, Marcas y más..."
                                            value="{{ request('q') }}"
+                                           onkeydown="if(event.key === 'Enter') this.form.submit();"
                                            required>
                                     <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-primary hover:bg-hoverPrimary focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 hidden md:flex">
                                         Buscar
