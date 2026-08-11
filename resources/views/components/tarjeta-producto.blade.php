@@ -105,8 +105,8 @@
     </div>
 
     <div class="p-4 flex flex-col flex-1">
-        <a href="{{ route('producto.detalle', $item->slug) }}" class="hover:text-blue-600 transition-colors">
-            <h2 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1 leading-snug">
+        <a href="{{ route('producto.detalle', $item->slug) }}" class="hover:text-blue-600 transition-colors block">
+            <h2 class="text-sm font-semibold text-gray-900 truncate mb-1 leading-snug" title="{{ $item->item }}">
                 {{ $item->item }}
             </h2>
         </a>
