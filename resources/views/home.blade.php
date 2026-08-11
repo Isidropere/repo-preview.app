@@ -273,8 +273,8 @@
                                     </div>
                                     <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
                                         <div>
-                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
-                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 line-clamp-2 leading-snug">{{ $prod->item }}</h3>
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors block">
+                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 truncate leading-snug" title="{{ $prod->item }}">{{ $prod->item }}</h3>
                                             </a>
                                         </div>
                                         <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
@@ -414,8 +414,8 @@
                                     </div>
                                     <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between">
                                         <div>
-                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors">
-                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 line-clamp-2 leading-snug">{{ $prod->item }}</h3>
+                                            <a href="{{ route('producto.detalle', $prod->slug) }}" class="hover:text-primary transition-colors block">
+                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 truncate leading-snug" title="{{ $prod->item }}">{{ $prod->item }}</h3>
                                             </a>
                                         </div>
                                         <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
