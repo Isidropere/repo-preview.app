@@ -74,8 +74,13 @@
     {{-- Cabecera --}}
     <div class="flex items-start justify-between gap-3 mb-4">
         <div class="flex items-center gap-3">
-            <img src="{{ $imgSrc }}" alt="{{ $neg->item?->item }}"
-                 class="w-14 h-14 rounded-xl object-cover border border-gray-100 flex-shrink-0" loading="lazy" width="56" height="56">
+            @if($neg->item)
+            <a href="{{ route('producto.detalle', $neg->item->slug) }}?from=intercambios" class="flex-shrink-0 block hover:opacity-80 transition-opacity">
+                <img src="{{ $imgSrc }}" alt="{{ $neg->item->item }}" class="w-14 h-14 rounded-xl object-cover border border-gray-100" loading="lazy" width="56" height="56">
+            </a>
+            @else
+            <img src="{{ $imgSrc }}" alt="Producto eliminado" class="w-14 h-14 rounded-xl object-cover border border-gray-100 flex-shrink-0" loading="lazy" width="56" height="56">
+            @endif
             <div>
                 <p class="font-semibold text-gray-800 text-sm">{{ $neg->item?->item ?? 'Producto eliminado' }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">
@@ -117,13 +122,13 @@
         <div class="flex flex-wrap gap-2">
             @foreach(\App\Models\Item::whereIn('id_item', $neg->items_ofrecidos)->get() as $io)
             @php $cantidadIo = $neg->getCantidadOfrecida($io->id_item); @endphp
-            <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-lg border border-blue-100">
+            <a href="{{ route('producto.detalle', $io->slug) }}?from=intercambios" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
                 {{ $io->item }}
                 @if($cantidadIo > 1)
                 <span class="inline-flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[20px]">× {{ $cantidadIo }}</span>
                 @endif
                 @if($io->valor) <span class="text-blue-500">· RD$ {{ number_format($io->valor, 2) }}</span> @endif
-            </span>
+            </a>
             @endforeach
         </div>
     </div>
