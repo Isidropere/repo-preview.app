@@ -23,7 +23,10 @@
 <div style="min-height:100vh;background:#f1f5f9;padding:2rem 0;">
 <div style="max-width:1140px;margin:0 auto;padding:0 1.25rem;">
 
-    @include('components.btn-volver', ['backUrl' => route('home')])
+    @php
+        $backUrl = request('from') === 'intercambios' ? route('negociaciones.mis') : route('home');
+    @endphp
+    @include('components.btn-volver', ['backUrl' => $backUrl])
 
     {{-- Breadcrumb --}}
     <nav style="display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;color:#94a3b8;margin-bottom:1.25rem;flex-wrap:wrap;">
