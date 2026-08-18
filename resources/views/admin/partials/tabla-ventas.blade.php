@@ -15,6 +15,7 @@
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Comprador</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Artículos</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Vendedor(es)</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Dirección (Recogida / Entrega)</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Envío est.</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
@@ -81,6 +82,21 @@
                     @empty
                         <span class="text-gray-400 text-xs">Sin datos</span>
                     @endforelse
+                </td>
+                <td class="px-4 py-3 text-xs">
+                    @php
+                        $dirEntrega = $venta->direccion;
+                        $strEntrega = $dirEntrega ? ($dirEntrega->municipio->municipio ?? '') . ', ' . ($dirEntrega->provincia->provincia ?? '') : 'N/A';
+                        $dirRecogidaStr = 'N/A';
+                        if ($primerItem && $primerItem->item && $primerItem->item->usuario) {
+                            $dirRec = $primerItem->item->usuario->direcciones->first();
+                            if ($dirRec) {
+                                $dirRecogidaStr = ($dirRec->municipio->municipio ?? '') . ', ' . ($dirRec->provincia->provincia ?? '');
+                            }
+                        }
+                    @endphp
+                    <div class="mb-1" title="Punto de Recogida"><span class="font-semibold text-gray-500">R:</span> {{ $dirRecogidaStr }}</div>
+                    <div title="Punto de Entrega"><span class="font-semibold text-gray-500">E:</span> {{ $strEntrega }}</div>
                 </td>
                 <td class="px-4 py-3 font-semibold text-gray-800">RD$ {{ number_format($venta->total ?? 0, 2) }}</td>
                 <td class="px-4 py-3">

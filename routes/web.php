@@ -649,6 +649,14 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/actualizar-perfil', [UserController::class, 'updateProfile'])->name('update-profile');
     Route::post('/cambiar-contrasena', [UserController::class, 'updatePassword'])->name('password.update.profile');
 
+    // BILLETERA WEB VENDEDOR
+    Route::prefix('mi-billetera')->name('billetera.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BilleteraController::class, 'index'])->name('index');
+        Route::post('/cuentas', [\App\Http\Controllers\BilleteraController::class, 'agregarCuenta'])->name('cuentas.store');
+        Route::delete('/cuentas/{id}', [\App\Http\Controllers\BilleteraController::class, 'eliminarCuenta'])->name('cuentas.destroy');
+        Route::post('/retiros', [\App\Http\Controllers\BilleteraController::class, 'solicitarRetiro'])->name('retiros.store');
+    });
+
     // Direcciones
     Route::post('/direccion/predeterminada/{id}', [DireccionesController::class, 'marcarComoPredeterminada']);
     Route::resource('direcciones', DireccionesController::class)->parameters([
@@ -826,8 +834,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/contabilidad/asientos/{id}/detalle', [ERPController::class, 'detalleAsiento'])->name('contabilidad.asiento.detalle');
         Route::get('/contabilidad/reportes', [ERPController::class, 'reportesFinancieros'])->name('contabilidad.reportes');
         Route::get('/contabilidad/reportes/{tipo}/pdf', [ERPController::class, 'descargarReportePdf'])->name('contabilidad.reportes.pdf');
-        
-        // Transporte
+    });
+
+    // Transporte (Accesible por admin Y superadmin)
+    Route::prefix('erp')->name('erp.')->group(function () {
         Route::get('/transporte', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'index'])->name('transporte.index');
         Route::post('/transporte/{id}/aprobar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'aprobar'])->name('transporte.aprobar');
         Route::post('/transporte/{id}/rechazar', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'rechazar'])->name('transporte.rechazar');
@@ -839,7 +849,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/transporte/camiones', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'storeCamion'])->name('transporte.camiones.store');
         Route::put('/transporte/camiones/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'updateCamion'])->name('transporte.camiones.update');
         Route::delete('/transporte/camiones/{id}', [\App\Http\Controllers\Admin\AdminTransporteController::class, 'destroyCamion'])->name('transporte.camiones.destroy');
+    });
 
+    Route::middleware('superadmin_or_contable')->prefix('erp')->name('erp.')->group(function () {
         // Cuentas CRUD
         Route::post('/contabilidad/cuentas', [ERPController::class, 'storeCuenta'])->name('contabilidad.cuentas.store');
         Route::put('/contabilidad/cuentas/{id}', [ERPController::class, 'updateCuenta'])->name('contabilidad.cuentas.update');
@@ -854,6 +866,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // --- RUTAS ADMINISTRATIVAS GENERALES (Solo Admin o Super Admin) ---
     Route::middleware('admin_or_superadmin')->group(function () {
+
         // Compras
         Route::get('/compras', [AdminComprasController::class, 'indexCompras'])->name('compras.index');
         Route::get('/compras/{id}', [AdminComprasController::class, 'showCompra'])->name('compras.show');
@@ -908,6 +921,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'updateStep'])->name('update_step');
             Route::delete('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'destroyStep'])->name('destroy_step');
         });
+    });
+});
+
+// Rutas exclusivas de superadmin
+Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    // Pagos a Vendedores (Solo Super Admin)
+    Route::prefix('pagos-vendedores')->name('pagos_vendedores.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminPagosVendedoresController::class, 'index'])->name('index');
+        Route::post('/{id}/pagar', [\App\Http\Controllers\Admin\AdminPagosVendedoresController::class, 'pagar'])->name('pagar');
+        Route::post('/{id}/rechazar', [\App\Http\Controllers\Admin\AdminPagosVendedoresController::class, 'rechazar'])->name('rechazar');
+    });
+
+    // Motivos de Devolución (CRUD Super Admin)
+    Route::resource('motivos-devolucion', \App\Http\Controllers\Admin\AdminMotivosDevolucionController::class)->names('motivos_devolucion');
+
 
         // Recursos Humanos (Gestión de Empleos)
         Route::prefix('recursos-humanos')->name('recursos-humanos.')->group(function () {
@@ -918,13 +946,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/{id}', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'update'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AdminRecursosHumanosController::class, 'destroy'])->name('destroy');
         });
-    });
-});
-
-// Rutas exclusivas de superadmin
-Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
-    // Motivos de Devolución (CRUD Super Admin)
-    Route::resource('motivos-devolucion', \App\Http\Controllers\Admin\AdminMotivosDevolucionController::class)->names('motivos_devolucion');
 
     // Dashboard de estadísticas
     Route::get('/estadisticas', [AdminStatsController::class, 'index'])->name('stats.index');

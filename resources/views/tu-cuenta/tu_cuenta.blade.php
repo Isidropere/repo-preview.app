@@ -132,8 +132,18 @@
                     </div>
                 </a>
 
+                <!-- Enlace a Mi Billetera -->
+                <a href="{{ route('billetera.index') }}"
+                   class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
+                    <img src="/imgs/icons/premium.svg" alt="Mi Billetera" loading="lazy" width="48" height="48">
+                    <div>
+                        <h2 class="text-xl font-medium">Mi Billetera</h2>
+                        <p class="text-sm text-gray-500">Gestiona tus ganancias y retiros</p>
+                    </div>
+                </a>
+
                 <a href="{{ route('historial') }}"
-                   style="grid-column: span 2 / span 2;"
+                   style="grid-column: span 1 / span 1;"
                    class="flex gap-x-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition-all duration-300 p-4 shadow-md">
                     <img src="/imgs/icons/History.svg" alt="Historial" loading="lazy" width="48" height="48">
                     <div>

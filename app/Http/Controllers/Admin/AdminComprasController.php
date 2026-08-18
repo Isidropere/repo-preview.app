@@ -38,25 +38,11 @@ class AdminComprasController extends Controller
     {
         $user = auth()->user();
         if ($user->isContableUser() && !$user->isAdmin && !$user->isSuperAdmin) {
-            return view('admin.index', [
-                'tab'                       => 'erp',
-                'totalCompras'              => 0,
-                'totalVentas'               => 0,
-                'totalIntercambios'         => 0,
-                'totalIntencionCompra'      => 0,
-                'totalIntencionIntercambio' => 0,
-                'compras'                   => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'ventas'                    => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'intercambios'              => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'intencionCompra'           => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'intencionIntercambio'      => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'estadosCompra'             => [],
-                'estadosIntercambio'        => [],
-            ]);
+            return redirect()->route('admin.erp.contabilidad');
         }
 
         $request->validate([
-            'tab'         => 'nullable|string|in:compras,ventas,intercambios,intencion_compra,intencion_intercambio,envio,intercambios_confirmados',
+            'tab'         => 'nullable|string|in:compras,ventas,intercambios,envio,intercambios_confirmados',
             'estatus'     => 'nullable|string|max:50',
             'buscar'      => 'nullable|string|max:100',
             'fecha_desde' => 'nullable|date_format:Y-m-d',
@@ -178,7 +164,7 @@ class AdminComprasController extends Controller
             event(new NuevaNotificacion($texto, $comprador->id));
         }
 
-        return redirect()->route('admin.compras.show', $id)
+        return redirect()->back()
             ->with('success', 'Tracking enviado correctamente.');
     }
 
@@ -192,6 +178,8 @@ class AdminComprasController extends Controller
             'trazabilidad.admin',
             'tarjeta',
             'proveedorPago',
+            'direccion.provincia',
+            'direccion.municipio',
         ])->findOrFail($id);
 
         $estados = AdminComprasService::ESTADOS_COMPRA;
@@ -311,14 +299,29 @@ class AdminComprasController extends Controller
     public function descargarPdf($id)
     {
         $compra = PagoCompra::with([
-            'pagoItems.item',
+            'pagoItems.item.usuario.direcciones.provincia',
+            'pagoItems.item.usuario.direcciones.municipio',
             'carrito.usuario',
             'direccion.provincia',
             'direccion.municipio',
         ])->findOrFail($id);
 
+        if (request()->has('preview')) {
+            return view('admin.compras.pdf', compact('compra'));
+        }
+
         $pdf = Pdf::loadView('admin.compras.pdf', compact('compra'));
         
+        if (request()->has('save_to_desktop')) {
+            $desktopPath = 'C:\\Users\\iperez\\Desktop\\solicitudes transporte';
+            if (!file_exists($desktopPath)) {
+                mkdir($desktopPath, 0777, true);
+            }
+            $fileName = "envio-orden-{$id}.pdf";
+            $pdf->save($desktopPath . '\\' . $fileName);
+            return response()->json(['success' => true, 'message' => 'El PDF se ha guardado correctamente en: ' . $desktopPath . '\\' . $fileName]);
+        }
+
         return $pdf->download("envio-orden-{$id}.pdf");
     }
 
@@ -350,8 +353,22 @@ class AdminComprasController extends Controller
 
         $hashedId = \App\Helpers\HashIdHelper::encode($realId);
 
+        if (request()->has('preview')) {
+            return view('admin.intercambios.pdf', compact('intercambio', 'itemsOfrecidos', 'hashedId'));
+        }
+
         $pdf = Pdf::loadView('admin.intercambios.pdf', compact('intercambio', 'itemsOfrecidos', 'hashedId'));
         
+        if (request()->has('save_to_desktop')) {
+            $desktopPath = 'C:\\Users\\iperez\\Desktop\\solicitudes transporte';
+            if (!file_exists($desktopPath)) {
+                mkdir($desktopPath, 0777, true);
+            }
+            $fileName = "detalle-intercambio-{$hashedId}.pdf";
+            $pdf->save($desktopPath . '\\' . $fileName);
+            return response()->json(['success' => true, 'message' => 'El PDF se ha guardado correctamente en: ' . $desktopPath . '\\' . $fileName]);
+        }
+
         return $pdf->download("detalle-intercambio-{$hashedId}.pdf");
     }
 }

@@ -107,7 +107,64 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Dirección de Entrega</div>
+        <div class="section-title">Puntos de Recogida (Vendedores)</div>
+        @php
+            $sellersList = collect();
+            foreach($compra->pagoItems as $pi) {
+                if ($pi->item && $pi->item->usuario) {
+                    $seller = $pi->item->usuario;
+                    if (!$sellersList->has($seller->id)) {
+                        $dir = $seller->direcciones->first();
+                        $sellersList->put($seller->id, [
+                            'seller' => $seller,
+                            'dir' => $dir
+                        ]);
+                    }
+                }
+            }
+        @endphp
+
+        @if($sellersList->count() > 0)
+            @foreach($sellersList as $data)
+                @php 
+                    $seller = $data['seller'];
+                    $dir = $data['dir']; 
+                @endphp
+                <p style="margin: 5px 0; font-weight:bold; color: #444;">Vendedor: {{ $seller->nombres }} {{ $seller->apellidos ?? '' }} (Tel: {{ $seller->telefono ?? 'N/A' }})</p>
+                @if($dir)
+                <table class="grid" style="margin-bottom: 10px;">
+                    <tr>
+                        <td class="label">Calle:</td>
+                        <td colspan="3">
+                            {{ $dir->calle }}
+                            @if($dir->N_casa_edificio) #{{ $dir->N_casa_edificio }}@endif
+                            @if($dir->apto), Apto {{ $dir->apto }}@endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Sector:</td>
+                        <td>{{ $dir->sector ?? 'N/A' }}</td>
+                        <td class="label">Municipio:</td>
+                        <td>{{ $dir->municipio->municipio ?? $dir->id_municipio ?? 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Provincia:</td>
+                        <td>{{ $dir->provincia->provincia ?? $dir->id_provincia ?? 'N/A' }}</td>
+                        <td class="label">Referencia:</td>
+                        <td>{{ $dir->referencia ?? 'N/A' }}</td>
+                    </tr>
+                </table>
+                @else
+                <p style="font-style: italic; color: #999; margin-bottom: 10px;">El vendedor no tiene dirección registrada.</p>
+                @endif
+            @endforeach
+        @else
+            <p>No se encontraron vendedores para esta orden.</p>
+        @endif
+    </div>
+
+    <div class="section">
+        <div class="section-title">Dirección de Entrega (Comprador)</div>
         @if($compra->direccion)
             @php $dir = $compra->direccion; @endphp
             <table class="grid">

@@ -188,11 +188,26 @@ class AdminTransporteController extends Controller
     public function generarPdf($id)
     {
         $solicitud = SolicitudTransporte::with('articulos')->findOrFail($id);
+        
+        // Si es preview, retornamos directamente la vista HTML para evitar problemas de navegadores sin lector PDF
+        if (request()->has('preview')) {
+            return view('admin.transporte.pdf', compact('solicitud'));
+        }
+
         $pdf = Pdf::loadView('admin.transporte.pdf', compact('solicitud'));
+
+        if (request()->has('save_to_desktop')) {
+            $desktopPath = 'C:\\Users\\iperez\\Desktop\\solicitudes transporte';
+            if (!file_exists($desktopPath)) {
+                mkdir($desktopPath, 0777, true);
+            }
+            $fileName = 'solicitud_transporte_' . $solicitud->id . '.pdf';
+            $pdf->save($desktopPath . '\\' . $fileName);
+            return response()->json(['success' => true, 'message' => 'El PDF se ha guardado correctamente en: ' . $desktopPath . '\\' . $fileName]);
+        }
         
         return $pdf->download('solicitud_transporte_' . $solicitud->id . '.pdf');
     }
-
     /**
      * Guarda un nuevo artículo en el catálogo.
      */

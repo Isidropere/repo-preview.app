@@ -147,4 +147,35 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(\App\Models\HojaVida::class, 'id_user', 'id');
     }
+
+    public function cuentasBancarias()
+    {
+        return $this->hasMany(CuentaBancariaUsuario::class, 'id_usuario', 'id');
+    }
+
+    public function retiros()
+    {
+        return $this->hasMany(RetiroVendedor::class, 'id_usuario', 'id');
+    }
+
+    public function getBalanceDisponibleAttribute(): float
+    {
+        $ingresos = \Illuminate\Support\Facades\DB::table('pago_items')
+            ->join('items', 'pago_items.id_item', '=', 'items.id_item')
+            ->join('pagos_compra', 'pago_items.id_pago_compra', '=', 'pagos_compra.id_pago_compra')
+            ->where('items.id_user', $this->id)
+            ->where('pagos_compra.estatus', 'entregado') // El dinero se libera cuando el producto es entregado
+            ->sum('pago_items.subtotal');
+
+        // TODO: En un futuro, si la comisión > 0, se debe descontar el % de comisión de la plataforma aquí.
+        // Por ahora, la comisión es 0%.
+
+        // Egresos: Suma de retiros solicitados (que no hayan sido rechazados)
+        $egresos = \Illuminate\Support\Facades\DB::table('retiros_vendedor')
+            ->where('id_usuario', $this->id)
+            ->whereIn('estado', ['pendiente', 'procesando', 'pagado'])
+            ->sum('monto');
+
+        return (float) ($ingresos - $egresos);
+    }
 }

@@ -201,9 +201,9 @@
     @endphp
     @if($dirEmisor || $dirReceptor)
     <div class="section">
-        <div class="section-title">Direcciones de Envío</div>
+        <div class="section-title">Direcciones de Recogida y Entrega</div>
         <div class="half-width" style="margin-right: 4%;">
-            <h4 style="margin: 0 0 5px 0;">Emisor (Recibe Solicitado)</h4>
+            <h4 style="margin: 0 0 5px 0;">Emisor (Punto de Recogida / Entrega)</h4>
             @if($dirEmisor)
                 <p style="margin: 0; line-height: 1.3; font-size: 10px;">
                     Calle: {{ $dirEmisor->calle }}@if($dirEmisor->N_casa_edificio) #{{ $dirEmisor->N_casa_edificio }}@endif @if($dirEmisor->apto), Apto {{ $dirEmisor->apto }}@endif<br>
@@ -217,7 +217,7 @@
             @endif
         </div>
         <div class="half-width">
-            <h4 style="margin: 0 0 5px 0;">Receptor (Recibe Ofrecidos)</h4>
+            <h4 style="margin: 0 0 5px 0;">Receptor (Punto de Recogida / Entrega)</h4>
             @if($dirReceptor)
                 <p style="margin: 0; line-height: 1.3; font-size: 10px;">
                     Calle: {{ $dirReceptor->calle }}@if($dirReceptor->N_casa_edificio) #{{ $dirReceptor->N_casa_edificio }}@endif @if($dirReceptor->apto), Apto {{ $dirReceptor->apto }}@endif<br>
