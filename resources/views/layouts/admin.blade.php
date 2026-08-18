@@ -69,12 +69,21 @@
             </div>
 
             <div class="p-4 flex-1">
+                @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-2">Principal</div>
                 <nav class="space-y-1 mb-6">
                     <a href="{{ route('admin.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-primary/10 hover:text-primary transition-colors text-gray-700">
                         <i class="fas fa-home w-5 text-center"></i>
                         Dashboard
                     </a>
+                    
+                    @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
+                    <a href="{{ route('admin.erp.transporte.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-gray-700">
+                        <i class="fas fa-truck w-5 text-center text-indigo-500"></i>
+                        Transporte
+                    </a>
+                    @endif
+
                     @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
                     <a href="{{ route('admin.imagenes.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-primary/10 hover:text-primary transition-colors text-gray-700">
                         <i class="fas fa-images w-5 text-center"></i>
@@ -82,6 +91,7 @@
                     </a>
                     @endif
                 </nav>
+                @endif
 
                 @if(auth()->user()->isSuperAdminUser() || auth()->user()->isContableUser())
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">ERP Empresarial</div>
@@ -98,10 +108,6 @@
                         <i class="fas fa-cash-register w-5 text-center text-amber-500"></i>
                         Cuadre de Caja
                     </a>
-                    <a href="{{ route('admin.erp.transporte.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-gray-700">
-                        <i class="fas fa-truck w-5 text-center text-indigo-500"></i>
-                        Transporte
-                    </a>
                     <a href="{{ route('admin.erp.historial') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-gray-700">
                         <i class="fas fa-history w-5 text-center text-emerald-500"></i>
                         Ventas e Intercambios
@@ -112,10 +118,12 @@
                 @if(auth()->user()->isAdmin || auth()->user()->isSuperAdminUser())
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">Administración</div>
                 <nav class="space-y-1 mb-6">
+                    @if(auth()->user()->isSuperAdminUser())
                     <a href="{{ route('admin.recursos-humanos.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors text-gray-700">
                         <i class="fas fa-users w-5 text-center text-gray-500"></i>
                         Recursos Humanos
                     </a>
+                    @endif
                     <a href="{{ route('admin.mensajes.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
                         <i class="fas fa-comment-dots w-5 text-center text-gray-500"></i>
                         Mensajes Predefinidos
@@ -138,6 +146,10 @@
                 @if(auth()->user()->isSuperAdminUser())
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">Reportes y Configuración Avanzada</div>
                 <nav class="space-y-1 mb-6">
+                    <a href="{{ route('admin.pagos_vendedores.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-purple-50 hover:text-purple-600 transition-colors text-gray-700">
+                        <i class="fas fa-wallet w-5 text-center text-purple-500"></i>
+                        Pagos a Vendedores
+                    </a>
                     <a href="{{ route('admin.stats.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
                         <i class="fas fa-chart-line w-5 text-center text-purple-500"></i>
                         Estadísticas

@@ -157,9 +157,9 @@
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
                                             </button>
 
-                                            <a href="{{ route('admin.erp.transporte.pdf', $sol->id) }}" class="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200" title="Ver Detalles (PDF)">
+                                            <button type="button" onclick="previewPdf({{ $sol->id }})" class="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200" title="Ver Detalles (PDF)">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            </a>
+                                            </button>
 
                                             @if($sol->estado == 'pendiente')
                                                 <form action="{{ route('admin.erp.transporte.aprobar', $sol->id) }}" method="POST" class="inline">
@@ -649,11 +649,79 @@
     </div>
 </div>
 
-@endsection
+<!-- Modal PDF Preview -->
+<div id="modal-pdf-preview" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col" style="height: 90vh;">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                Vista Previa del PDF
+            </h3>
+            <button onclick="closePdfModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <div class="flex-1 bg-gray-100 p-2">
+            <iframe id="pdf-iframe" src="" class="w-full h-full rounded border border-gray-300"></iframe>
+        </div>
+        
+        <div class="p-4 border-t flex justify-end gap-3 bg-gray-50">
+            <button type="button" onclick="closePdfModal()" class="px-5 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+            <button type="button" id="btn-descargar-pdf" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Descargar a Escritorio
+            </button>
+        </div>
+    </div>
+</div>
 
+@endsection
 
 @push('scripts')
 <script>
+    let currentPdfId = null;
+
+    function previewPdf(id) {
+        currentPdfId = id;
+        document.getElementById('pdf-iframe').src = `/admin/erp/transporte/${id}/pdf?preview=1`;
+        document.getElementById('modal-pdf-preview').classList.remove('hidden');
+    }
+
+    function closePdfModal() {
+        document.getElementById('modal-pdf-preview').classList.add('hidden');
+        document.getElementById('pdf-iframe').src = '';
+        currentPdfId = null;
+    }
+
+    document.getElementById('btn-descargar-pdf').addEventListener('click', function() {
+        if(!currentPdfId) return;
+        
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Descargando...';
+        btn.disabled = true;
+
+        fetch(`/admin/erp/transporte/${currentPdfId}/pdf?save_to_desktop=1`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert('¡Éxito! ' + data.message);
+                } else {
+                    alert('Ocurrió un error al guardar el archivo.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error al intentar descargar.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                closePdfModal();
+            });
+    });
+
     function editCamion(id, nombre, medida, precio, activo) {
         document.getElementById('form-edit-camion').action = '/admin/erp/transporte/camiones/' + id;
         document.getElementById('edit_camion_nombre').value = nombre;

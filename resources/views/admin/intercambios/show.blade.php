@@ -139,13 +139,13 @@ function btnCopiar(string $id, string $label = ''): string {
                                 </svg>
                                 Enviar por Email
                             </a>
-                            <a href="{{ route('admin.intercambios.pdf', $hashedId) }}"
+                            <button type="button" onclick="previewPdf('{{ route('admin.intercambios.pdf', $hashedId) }}')"
                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Descargar PDF
-                            </a>
+                            </button>
                             {!! btnCopiar('intercambio', 'intercambio') !!}
                         </div>
                         <p class="text-sm text-gray-500">
@@ -286,8 +286,24 @@ function btnCopiar(string $id, string $label = ''): string {
                     </div>
                     @endif
 
-                    {{-- Direcciones de Envío --}}
-                    @if($dirEmisor || $dirReceptor)
+                    {{-- Direcciones de Envío / Modo de Entrega --}}
+                    @if($intercambio->esServicioORetiro())
+                    <div class="bg-orange-50 rounded-xl shadow-sm border border-orange-200 p-5 mb-5 flex items-start gap-4">
+                        <div class="p-3 bg-orange-100 rounded-lg text-orange-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-orange-800">Servicio / Retiro en Persona</h2>
+                            <p class="text-sm text-orange-700 mt-1">
+                                Las partes han acordado que este intercambio no requiere logística de envío a través de la plataforma (ej. intercambio de servicios o retiro presencial).
+                            </p>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if(($dirEmisor || $dirReceptor) && !$intercambio->esServicioORetiro())
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
                             <h2 class="font-semibold text-gray-800 flex items-center gap-2">
@@ -295,16 +311,16 @@ function btnCopiar(string $id, string $label = ''): string {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                Direcciones de Envío
+                                Direcciones (Recogida y Entrega)
                             </h2>
-                            {!! btnCopiar('direcciones', 'direcciones de envío') !!}
+                            {!! btnCopiar('direcciones', 'direcciones de logística') !!}
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {{-- Emisor --}}
                             <div class="bg-orange-50/10 border border-orange-100/50 rounded-xl p-4">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700">Emisor (Recibe Solicitado)</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700">Emisor (Punto de Recogida / Entrega)</span>
                                     {!! btnCopiar('dir_emisor', 'dirección emisor') !!}
                                 </div>
                                 @if($dirEmisor)
@@ -348,7 +364,7 @@ function btnCopiar(string $id, string $label = ''): string {
                             {{-- Receptor --}}
                             <div class="bg-purple-50/10 border border-purple-100/50 rounded-xl p-4">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700">Receptor (Recibe Ofrecidos)</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700">Receptor (Punto de Recogida / Entrega)</span>
                                     {!! btnCopiar('dir_receptor', 'dirección receptor') !!}
                                 </div>
                                 @if($dirReceptor)
@@ -429,7 +445,7 @@ function btnCopiar(string $id, string $label = ''): string {
                         $pagoEmisorObj = $intercambio->pagoEnvios->firstWhere('id_user', $intercambio->usuario_emisor_id);
                         $pagoReceptorObj = $intercambio->pagoEnvios->firstWhere('id_user', $intercambio->usuario_receptor_id);
                     @endphp
-                    @if($pagoEmisorObj || $pagoReceptorObj)
+                    @if(($pagoEmisorObj || $pagoReceptorObj) && !$intercambio->esServicioORetiro())
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
                             <h2 class="font-semibold text-gray-800 flex items-center gap-2">
@@ -657,7 +673,7 @@ function btnCopiar(string $id, string $label = ''): string {
                             @endif
                         </div>
 
-                        @if($intercambio->tracking_url)
+                        @if($intercambio->tracking_url && !$intercambio->esServicioORetiro())
                         <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-sm">
                             <p class="text-xs text-blue-500 mb-1">Código de rastreo</p>
                             <p class="font-mono font-semibold text-blue-800">{{ $intercambio->tracking_code }}</p>
@@ -668,6 +684,7 @@ function btnCopiar(string $id, string $label = ''): string {
                         </div>
                         @endif
 
+                        @if(!$intercambio->esServicioORetiro())
                         <button type="button" onclick="document.getElementById('modalTracking').classList.remove('hidden')"
                             class="w-full border border-primary text-primary hover:bg-primary hover:text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -675,6 +692,7 @@ function btnCopiar(string $id, string $label = ''): string {
                             </svg>
                             {{ $intercambio->tracking_url ? 'Actualizar tracking' : 'Enviar tracking' }}
                         </button>
+                        @endif
 
                         {{-- Botón Notificaciones --}}
                         <button type="button" onclick="document.getElementById('modalNotificacion').classList.remove('hidden')"
@@ -758,7 +776,7 @@ function btnCopiar(string $id, string $label = ''): string {
                     <select name="estado" required
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                         @foreach($estados as $estado)
-                        <option value="{{ $estado }}" {{ $estado === 'en_envio' && !$intercambio->tracking_url ? 'selected' : ($intercambio->estado === $estado && $intercambio->tracking_url ? 'selected' : '') }}>
+                          <option value="{{ $estado }}" {{ $intercambio->estado === $estado ? 'selected' : '' }}>
                             {{ ucfirst($estado) }}
                         </option>
                         @endforeach
@@ -879,6 +897,8 @@ function btnCopiar(string $id, string $label = ''): string {
         </form>
     </div>
 </div>
+
+@include('admin.partials.pdf_modal')
 
 <div id="copyToast" style="display:none;position:fixed;bottom:24px;right:24px;background:#1f2937;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)">
     ✓ Copiado al portapapeles

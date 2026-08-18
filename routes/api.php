@@ -10,6 +10,7 @@ use App\Http\Controllers\API\NegociacionApiController;
 use App\Http\Controllers\API\HojaVidaApiController;
 use App\Http\Controllers\API\PagoApiController;
 use App\Http\Controllers\TarjetaPagoController;
+use App\Http\Controllers\Api\BilleteraApiController;
 
 
 /*
@@ -130,6 +131,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Hoja de Vida
     Route::get('/hoja-vida',  [HojaVidaApiController::class, 'show']);
     Route::post('/hoja-vida', [HojaVidaApiController::class, 'store']);
+
+    // Billetera del Vendedor
+    Route::prefix('billetera')->group(function () {
+        Route::get('/resumen', [BilleteraApiController::class, 'resumen']);
+        Route::get('/cuentas-bancarias', [BilleteraApiController::class, 'cuentasBancarias']);
+        Route::post('/cuentas-bancarias', [BilleteraApiController::class, 'agregarCuentaBancaria']);
+        Route::delete('/cuentas-bancarias/{id}', [BilleteraApiController::class, 'eliminarCuentaBancaria']);
+        Route::get('/retiros', [BilleteraApiController::class, 'historialRetiros']);
+        Route::post('/retiros', [BilleteraApiController::class, 'solicitarRetiro']);
+    });
 
     // Transporte y Mudanza
     Route::get('/transporte/articulos', [\App\Http\Controllers\API\TransporteApiController::class, 'articulos']);

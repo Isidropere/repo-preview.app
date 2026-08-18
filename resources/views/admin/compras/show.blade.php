@@ -108,13 +108,13 @@ function btnCopiar(string $id, string $label = ''): string {
                         <h1 class="text-xl font-bold text-gray-900">
                             Orden <span class="font-mono text-base">#{{ $compra->id_pago_compra }}</span>
                         </h1>
-                        <a href="{{ route('admin.compras.pdf', $compra->id_pago_compra) }}"
+                        <button type="button" onclick="previewPdf('{{ route('admin.compras.pdf', $compra->id_pago_compra) }}')"
                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Datos del envío (PDF)
-                        </a>
+                        </button>
                         <a href="{!! $mailtoUrl !!}"
                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,92 +366,109 @@ function btnCopiar(string $id, string $label = ''): string {
                 <div id="data-comprador" style="display:none">{{ $txtComprador }}</div>
                 @endif
 
-                {{-- ── DIRECCIÓN DE ENVÍO ── --}}
-                @if($compra->direccion)
-                @php $dir = $compra->direccion; @endphp
+                {{-- ── DIRECCIONES DE LOGÍSTICA ── --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <div class="flex items-center gap-2 mb-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h2 class="font-semibold text-gray-800 flex items-center gap-2">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            Dirección de envío
+                            Direcciones (Recogida y Entrega)
                         </h2>
-                        <a href="{{ route('admin.compras.pdf', $compra->id_pago_compra) }}"
-                           class="inline-flex items-center gap-2 px-3 py-1 bg-primary text-white rounded-lg text-xs font-medium hover:bg-hoverPrimary transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Datos del envío
-                        </a>
-                        <a href="{!! $mailtoUrl !!}"
-                           class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            Enviar Email
-                        </a>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="previewPdf('{{ route('admin.compras.pdf', $compra->id_pago_compra) }}')"
+                               class="inline-flex items-center gap-2 px-3 py-1 bg-primary text-white rounded-lg text-xs font-medium hover:bg-hoverPrimary transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Hoja Logística
+                            </button>
+                            <a href="{!! $mailtoUrl !!}"
+                               class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Enviar Email
+                            </a>
+                        </div>
                     </div>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div class="sm:col-span-2">
-                            <dt class="text-xs text-gray-400 uppercase tracking-wide mb-1">Calle / Dirección</dt>
-                            <dd class="font-medium text-gray-700">
-                                {{ $dir->calle }}
-                                @if($dir->N_casa_edificio) #{{ $dir->N_casa_edificio }}@endif
-                                @if($dir->apto), Apto {{ $dir->apto }}@endif
-                            </dd>
-                        </div>
-                        @if($dir->sector)
+
+                    @php
+                        $primerItem = $compra->pagoItems->first();
+                        $dirRec = null;
+                        if ($primerItem && $primerItem->item && $primerItem->item->usuario) {
+                            $dirRec = $primerItem->item->usuario->direcciones->first();
+                        }
+                    @endphp
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Punto de Recogida --}}
                         <div>
-                            <dt class="text-xs text-gray-400 uppercase tracking-wide mb-1">Sector</dt>
-                            <dd class="font-medium text-gray-700">{{ $dir->sector }}</dd>
+                            <h3 class="font-medium text-sm text-gray-700 mb-2 border-b pb-1">Punto de Recogida (Vendedor)</h3>
+                            @if($dirRec)
+                            <dl class="text-sm space-y-2">
+                                <div>
+                                    <dt class="text-xs text-gray-400 uppercase tracking-wide">Calle / Dirección</dt>
+                                    <dd class="font-medium text-gray-700">{{ $dirRec->calle }} @if($dirRec->N_casa_edificio) #{{ $dirRec->N_casa_edificio }}@endif @if($dirRec->apto), Apto {{ $dirRec->apto }}@endif</dd>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Sector</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dirRec->sector ?? 'N/A' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Municipio</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dirRec->municipio->municipio ?? $dirRec->id_municipio ?? 'N/A' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Provincia</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dirRec->provincia->provincia ?? $dirRec->id_provincia ?? 'N/A' }}</dd>
+                                    </div>
+                                </div>
+                            </dl>
+                            @else
+                            <p class="text-sm text-gray-500 italic">No hay dirección de recogida registrada.</p>
+                            @endif
                         </div>
-                        @endif
-                        @if($dir->municipio)
+
+                        {{-- Punto de Entrega --}}
                         <div>
-                            <dt class="text-xs text-gray-400 uppercase tracking-wide mb-1">Municipio</dt>
-                            <dd class="font-medium text-gray-700">{{ $dir->municipio->municipio ?? $dir->id_municipio }}</dd>
+                            <h3 class="font-medium text-sm text-gray-700 mb-2 border-b pb-1">Punto de Entrega (Comprador)</h3>
+                            @if($compra->direccion)
+                            @php $dir = $compra->direccion; @endphp
+                            <dl class="text-sm space-y-2">
+                                <div>
+                                    <dt class="text-xs text-gray-400 uppercase tracking-wide">Calle / Dirección</dt>
+                                    <dd class="font-medium text-gray-700">{{ $dir->calle }} @if($dir->N_casa_edificio) #{{ $dir->N_casa_edificio }}@endif @if($dir->apto), Apto {{ $dir->apto }}@endif</dd>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Sector</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dir->sector ?? 'N/A' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Municipio</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dir->municipio->municipio ?? $dir->id_municipio }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Provincia</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dir->provincia->provincia ?? $dir->id_provincia }}</dd>
+                                    </div>
+                                    @if($dir->telefono_contacto)
+                                    <div>
+                                        <dt class="text-xs text-gray-400 uppercase tracking-wide">Tel. Contacto</dt>
+                                        <dd class="font-medium text-gray-700">{{ $dir->telefono_contacto }}</dd>
+                                    </div>
+                                    @endif
+                                </div>
+                            </dl>
+                            @else
+                            <p class="text-sm text-gray-500 italic">No hay dirección de entrega registrada.</p>
+                            @endif
                         </div>
-                        @endif
-                        @if($dir->provincia)
-                        <div>
-                            <dt class="text-xs text-gray-400 uppercase tracking-wide mb-1">Provincia</dt>
-                            <dd class="font-medium text-gray-700">{{ $dir->provincia->provincia ?? $dir->id_provincia }}</dd>
-                        </div>
-                        @endif
-                        @if($dir->telefono_contacto)
-                        <div>
-                            <dt class="text-xs text-gray-400 uppercase tracking-wide mb-1">Teléfono de contacto</dt>
-                            <dd class="font-medium text-gray-700">{{ $dir->telefono_contacto }}</dd>
-                        </div>
-                        @endif
-                    </dl>
+                    </div>
                 </div>
-                @php
-                    $txtDir  = "Dirección de envío — Orden #{$compra->id_pago_compra}\n";
-                    $txtDir .= "Calle: {$dir->calle}";
-                    $txtDir .= $dir->N_casa_edificio ? " #{$dir->N_casa_edificio}" : '';
-                    $txtDir .= $dir->apto            ? ", Apto {$dir->apto}"       : '';
-                    $txtDir .= "\n";
-                    $txtDir .= $dir->sector          ? "Sector: {$dir->sector}\n"  : '';
-                    $txtDir .= $dir->municipio       ? "Municipio: " . ($dir->municipio->municipio ?? $dir->id_municipio) . "\n" : '';
-                    $txtDir .= $dir->provincia       ? "Provincia: " . ($dir->provincia->provincia ?? $dir->id_provincia) . "\n" : '';
-                    $txtDir .= $dir->telefono_contacto ? "Teléfono: {$dir->telefono_contacto}\n" : '';
-                @endphp
-                <div id="data-direccion" style="display:none">{{ $txtDir }}</div>
-                @else
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <h2 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Dirección de envío
-                    </h2>
-                    <p class="text-sm text-gray-400">No se registró dirección para esta orden.</p>
-                </div>
-                @endif
 
             </div>{{-- /col-izquierda --}}
 
@@ -619,7 +636,7 @@ function btnCopiar(string $id, string $label = ''): string {
                     <select name="estatus" required
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                         @foreach($estados as $estado)
-                        <option value="{{ $estado }}" {{ $estado === 'enviado' && !$compra->tracking_url ? 'selected' : ($compra->estatus === $estado && $compra->tracking_url ? 'selected' : '') }}>
+                        <option value="{{ $estado }}" {{ $compra->estatus === $estado ? 'selected' : '' }}>
                             {{ ucfirst($estado) }}
                         </option>
                         @endforeach
@@ -743,6 +760,8 @@ function btnCopiar(string $id, string $label = ''): string {
     </div>
 </div>
 @endif
+
+@include('admin.partials.pdf_modal')
 @endsection
 
 @push('scripts')

@@ -49,16 +49,7 @@
                     <p class="text-[9px] font-bold text-purple-600 uppercase tracking-wider truncate">Intercambios</p>
                     <p class="text-base font-black text-purple-600 mt-0.5">{{ number_format($totalIntercambios, 0) }}</p>
                 </a>
-                <a href="{{ route('admin.index', ['tab' => 'intencion_compra']) }}"
-                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'intencion_compra' ? 'border-amber-500 ring-1 ring-amber-500/20 bg-amber-50/30 shadow' : 'border-gray-100 border-l-amber-500' }} hover:border-amber-500/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
-                    <p class="text-[9px] font-bold text-amber-600 uppercase tracking-wider truncate">Int. Compra</p>
-                    <p class="text-base font-black text-amber-600 mt-0.5">{{ number_format($totalIntencionCompra, 0) }}</p>
-                </a>
-                <a href="{{ route('admin.index', ['tab' => 'intencion_intercambio']) }}"
-                   class="bg-white rounded-xl shadow-sm p-2.5 border border-l-4 {{ $tab === 'intencion_intercambio' ? 'border-pink-500 ring-1 ring-pink-500/20 bg-pink-50/30 shadow' : 'border-gray-100 border-l-pink-500' }} hover:border-pink-500/50 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer block">
-                    <p class="text-[9px] font-bold text-pink-600 uppercase tracking-wider truncate">Int. Intercambio</p>
-                    <p class="text-base font-black text-pink-600 mt-0.5">{{ number_format($totalIntencionIntercambio, 0) }}</p>
-                </a>
+
             </div>
 
             {{-- Tabs --}}
@@ -83,22 +74,11 @@
                             Intercambios
                             <span class="ml-1.5 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{{ $intercambios->total() }}</span>
                         </a>
-                        <a href="{{ route('admin.index', ['tab' => 'intencion_compra']) }}"
-                           class="px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                                  {{ $tab === 'intencion_compra' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            Intención de Compra
-                            <span class="ml-1.5 bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">{{ $intencionCompra->total() }}</span>
-                        </a>
-                        <a href="{{ route('admin.index', ['tab' => 'intencion_intercambio']) }}"
-                           class="px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                                  {{ $tab === 'intencion_intercambio' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            Intención de Intercambio
-                            <span class="ml-1.5 bg-pink-100 text-pink-600 text-xs px-2 py-0.5 rounded-full">{{ $intencionIntercambio->total() }}</span>
-                        </a>
+
                         <a href="{{ route('admin.index', ['tab' => 'envio']) }}"
                            class="px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
                                   {{ $tab === 'envio' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            Envío
+                            Precio por ruta envío
                         </a>
                         <a href="{{ route('admin.index', ['tab' => 'intercambios_confirmados']) }}"
                            class="px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
@@ -174,7 +154,6 @@
                             </select>
                         </div>
 
-                        @if($tab !== 'intencion_compra')
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
                             <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
@@ -185,7 +164,6 @@
                             <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
                                    class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
-                        @endif
 
                         <div class="flex gap-2">
                             <button type="submit" class="bg-primary hover:bg-hoverPrimary text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -210,10 +188,7 @@
                     @include('admin.partials.tabla-ventas', ['ventas' => $ventas])
                 @elseif($tab === 'intercambios')
                     @include('admin.partials.tabla-intercambios', ['intercambios' => $intercambios])
-                @elseif($tab === 'intencion_compra')
-                    @include('admin.partials.tabla-intencion-compra', ['intencionCompra' => $intencionCompra])
-                @elseif($tab === 'intencion_intercambio')
-                    @include('admin.partials.tabla-intencion-intercambio', ['intencionIntercambio' => $intencionIntercambio])
+
                 @elseif($tab === 'intercambios_confirmados')
                     @include('admin.partials.tabla-intercambios-confirmados', [
                         'intercambiosConfirmados' => $intercambiosConfirmados,
@@ -232,6 +207,8 @@
         </div>{{-- /mainContent --}}
     </div>
 </div>
+
+@include('admin.partials.pdf_modal')
 @endsection
 
 @push('scripts')

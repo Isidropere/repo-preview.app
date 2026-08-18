@@ -253,13 +253,13 @@
                                     Marcar completado
                                 </button>
                             </form>
-                            <a href="{{ route('admin.compras.pdf', $compra->id_pago_compra) }}"
+                            <button type="button" onclick="previewPdf('{{ route('admin.compras.pdf', $compra->id_pago_compra) }}')"
                                class="inline-flex items-center justify-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 hover:underline font-bold mt-1">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline-block;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Descargar Hoja PDF
-                            </a>
+                            </button>
                             @elseif($compra->estatus === 'entregado')
                             <span class="inline-flex items-center justify-center text-xs text-green-600 font-bold gap-1 py-1">
                                 <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20">
@@ -267,13 +267,13 @@
                                 </svg>
                                 Finalizado
                             </span>
-                            <a href="{{ route('admin.compras.pdf', $compra->id_pago_compra) }}"
+                            <button type="button" onclick="previewPdf('{{ route('admin.compras.pdf', $compra->id_pago_compra) }}')"
                                class="inline-flex items-center justify-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 hover:underline font-bold">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline-block;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Ver PDF
-                            </a>
+                            </button>
                             @endif
                         </div>
                     </td>
@@ -461,13 +461,13 @@
                                     Marcar completado
                                 </button>
                             </form>
-                            <a href="{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
+                            <button type="button" onclick="previewPdf('{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}')"
                                class="inline-flex items-center justify-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 hover:underline font-bold mt-1">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline-block;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Descargar Hoja PDF
-                            </a>
+                            </button>
                             @elseif($neg->estado === 'completado')
                             <span class="inline-flex items-center justify-center text-xs text-green-600 font-bold gap-1 py-1">
                                 <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20">
@@ -475,13 +475,13 @@
                                 </svg>
                                 Finalizado
                             </span>
-                            <a href="{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}"
+                            <button type="button" onclick="previewPdf('{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($neg->id_negociacion)) }}')"
                                class="inline-flex items-center justify-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 hover:underline font-bold">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline-block;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Ver PDF
-                            </a>
+                            </button>
                             @else
                             <span class="text-xs text-gray-400 font-medium italic py-2">⏳ Esperando pagos</span>
                             @endif

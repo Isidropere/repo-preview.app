@@ -19,6 +19,7 @@ import 'mis_intercambios_screen.dart';
 import 'notificaciones_screen.dart';
 import 'items_list_screen.dart';
 import 'transporte_screen.dart';
+import 'billetera_screen.dart';
 import '../widgets/footer_widget.dart';
 
 /// Pantalla "Tu cuenta" — fiel al diseño web de Cambialord
@@ -149,6 +150,12 @@ class _CuentaScreenState extends State<CuentaScreen> {
       'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DireccionesScreen())),
     },
 
+    {
+      'icon': Icons.account_balance_wallet_outlined,
+      'title': 'Mi Billetera',
+      'sub': 'Gestiona tus ganancias y retiros',
+      'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BilleteraScreen())),
+    },
     {
       'icon': Icons.shield_outlined,
       'title': 'Seguridad y Contraseña',

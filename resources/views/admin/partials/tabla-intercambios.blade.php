@@ -15,6 +15,7 @@
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Artículo solicitado</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Emisor</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Receptor</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Direcciones</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Monto oferta</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
@@ -71,6 +72,29 @@
                         <span class="text-gray-400 text-xs">Sin datos</span>
                     @endif
                 </td>
+                <td class="px-4 py-3 text-xs">
+                    @if($intercambio->esServicioORetiro())
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-50 text-orange-700 font-semibold border border-orange-200">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            Servicio / Retiro
+                        </span>
+                    @else
+                        @php
+                            $dirEmiStr = 'N/A';
+                            $dirRecStr = 'N/A';
+                            if ($intercambio->usuario) {
+                                $dirEmi = $intercambio->usuario->direcciones->first();
+                                if ($dirEmi) $dirEmiStr = ($dirEmi->municipio->municipio ?? '') . ', ' . ($dirEmi->provincia->provincia ?? '');
+                            }
+                            if ($intercambio->usuarioReceptor) {
+                                $dirRec = $intercambio->usuarioReceptor->direcciones->first();
+                                if ($dirRec) $dirRecStr = ($dirRec->municipio->municipio ?? '') . ', ' . ($dirRec->provincia->provincia ?? '');
+                            }
+                        @endphp
+                        <div class="mb-1" title="Dirección Emisor"><span class="font-semibold text-gray-500">Emi:</span> {{ $dirEmiStr }}</div>
+                        <div title="Dirección Receptor"><span class="font-semibold text-gray-500">Rec:</span> {{ $dirRecStr }}</div>
+                    @endif
+                </td>
                 <td class="px-4 py-3 font-semibold text-gray-800">
                     {{ $intercambio->monto_oferta ? 'RD$ ' . number_format($intercambio->monto_oferta, 2) : '—' }}
                 </td>
@@ -89,14 +113,14 @@
                             </svg>
                             Ver detalle
                         </a>
-                        <a href="{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion)) }}"
+                        <button type="button" onclick="previewPdf('{{ route('admin.intercambios.pdf', \App\Helpers\HashIdHelper::encode($intercambio->id_negociacion)) }}')"
                            class="inline-flex items-center gap-1 text-red-600 hover:text-red-800 text-xs font-medium transition-colors"
                            title="Descargar PDF">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             PDF
-                        </a>
+                        </button>
                     </div>
                 </td>
             </tr>

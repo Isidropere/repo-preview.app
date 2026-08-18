@@ -47,6 +47,29 @@ class Negociacion extends Model
         return $this->belongsTo(Item::class, 'receptor_item_id');
     }
 
+    public function esServicioORetiro(): bool
+    {
+        if ($this->modo_entrega === 'retiro') {
+            return true;
+        }
+        
+        $itemReceptor = $this->item;
+        if ($itemReceptor && ($itemReceptor->id_categoria_item == 29 || $itemReceptor->id_tipo_item == 2)) {
+            return true;
+        }
+
+        if (is_array($this->items_ofrecidos)) {
+            $ofrecidos = Item::whereIn('id_item', $this->items_ofrecidos)->get();
+            foreach ($ofrecidos as $itemOfrecido) {
+                if ($itemOfrecido->id_categoria_item == 29 || $itemOfrecido->id_tipo_item == 2) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
     public function pagoEnvios()
     {
         return $this->hasMany(PagoEnvioIntercambio::class, 'id_negociacion', 'id_negociacion');

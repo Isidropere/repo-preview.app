@@ -44,15 +44,11 @@ class AdminComprasService
             'compras'                    => $this->queryCompras($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_compras')->withQueryString(),
             'ventas'                     => $this->queryVentas($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ventas')->withQueryString(),
             'intercambios'               => $this->queryIntercambios($tab, $estatus, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_intercambios')->withQueryString(),
-            'intencionCompra'            => $this->queryIntencionCompra($tab, $buscar)->paginate(20, ['*'], 'page_ic')->withQueryString(),
-            'intencionIntercambio'       => $this->queryIntencionIntercambio($tab, $buscar, $fechaDesde, $fechaHasta)->paginate(20, ['*'], 'page_ii')->withQueryString(),
             'intercambiosConfirmados'    => $this->queryIntercambiosConfirmados($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_ic2')->withQueryString(),
             'ventasConfirmadas'          => $this->queryVentasConfirmadas($tab, $buscar, $fechaDesde, $fechaHasta, $provincia, $municipio)->paginate(20, ['*'], 'page_vc')->withQueryString(),
             'totalCompras'               => PagoCompra::count(),
-            'totalVentas'                => PagoCompra::whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
+            'totalVentas'                => PagoCompra::count(),
             'totalIntercambios'          => Negociacion::count(),
-            'totalIntencionCompra'       => ItemIntencionCompra::whereHas('item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))->count(),
-            'totalIntencionIntercambio'  => Negociacion::whereIn('estado', ['Inicial', 'pendiente', 'contraoferta'])->count(),
             'estadosCompra'              => self::ESTADOS_COMPRA,
             'estadosIntercambio'         => self::ESTADOS_INTERCAMBIO,
             'tab'                        => $tab,
@@ -116,7 +112,14 @@ class AdminComprasService
 
     private function queryCompras(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
-        $query = PagoCompra::with(['pagoItems.item.imagenes', 'carrito.usuario'])
+        $query = PagoCompra::with([
+            'pagoItems.item.imagenes', 
+            'pagoItems.item.usuario.direcciones.provincia',
+            'pagoItems.item.usuario.direcciones.municipio',
+            'carrito.usuario',
+            'direccion.provincia',
+            'direccion.municipio'
+        ])
             ->orderByDesc('id_pago_compra');
 
         if ($tab === 'compras') {
@@ -139,8 +142,14 @@ class AdminComprasService
 
     private function queryVentas(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
-        $query = PagoCompra::with(['pagoItems.item.imagenes', 'pagoItems.item.usuario', 'carrito.usuario'])
-            ->whereHas('pagoItems.item', fn($q) => $q->whereIn('tipo_trans', [1, 3]))
+        $query = PagoCompra::with([
+            'pagoItems.item.imagenes', 
+            'pagoItems.item.usuario.direcciones.provincia',
+            'pagoItems.item.usuario.direcciones.municipio',
+            'carrito.usuario',
+            'direccion.provincia',
+            'direccion.municipio'
+        ])
             ->orderByDesc('id_pago_compra');
 
         if ($tab === 'ventas') {
@@ -166,7 +175,11 @@ class AdminComprasService
 
     private function queryIntercambios(string $tab, ?string $estatus, ?string $buscar, ?string $fechaDesde = null, ?string $fechaHasta = null, ?string $provincia = null, ?string $municipio = null)
     {
-        $query = Negociacion::with(['item.imagenes', 'usuario', 'usuarioReceptor'])
+        $query = Negociacion::with([
+            'item.imagenes', 
+            'usuario.direcciones.provincia', 'usuario.direcciones.municipio',
+            'usuarioReceptor.direcciones.provincia', 'usuarioReceptor.direcciones.municipio'
+        ])
             ->orderByDesc('id_negociacion');
 
         if ($tab === 'intercambios') {
