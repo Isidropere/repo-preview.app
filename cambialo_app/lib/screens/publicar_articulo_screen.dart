@@ -25,10 +25,10 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
   final _descCtrl      = TextEditingController();
 
   // Dimensiones
-  final _pesoCtrl      = TextEditingController();
-  final _altoCtrl      = TextEditingController();
-  final _anchoCtrl     = TextEditingController();
-  final _profundoCtrl  = TextEditingController();
+  final _pesoCtrl      = TextEditingController(text: '1');
+  final _altoCtrl      = TextEditingController(text: '1');
+  final _anchoCtrl     = TextEditingController(text: '1');
+  final _profundoCtrl  = TextEditingController(text: '1');
 
   List _categorias     = [];
   int? _idCategoria;
@@ -109,10 +109,10 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
           _estatus = (parsedEstatus == 1 || parsedEstatus == 2) ? parsedEstatus : 2;
 
           // Dimensions
-          _pesoCtrl.text = (item['peso_lbs'] ?? '').toString();
-          _altoCtrl.text = (item['alto_cm'] ?? '').toString();
-          _anchoCtrl.text = (item['ancho_cm'] ?? '').toString();
-          _profundoCtrl.text = (item['profundo_cm'] ?? '').toString();
+          _pesoCtrl.text = (item['peso_lbs'] == null || item['peso_lbs'].toString().isEmpty || item['peso_lbs'].toString() == '0') ? '1' : item['peso_lbs'].toString();
+          _altoCtrl.text = (item['alto_cm'] == null || item['alto_cm'].toString().isEmpty || item['alto_cm'].toString() == '0') ? '1' : item['alto_cm'].toString();
+          _anchoCtrl.text = (item['ancho_cm'] == null || item['ancho_cm'].toString().isEmpty || item['ancho_cm'].toString() == '0') ? '1' : item['ancho_cm'].toString();
+          _profundoCtrl.text = (item['profundo_cm'] == null || item['profundo_cm'].toString().isEmpty || item['profundo_cm'].toString() == '0') ? '1' : item['profundo_cm'].toString();
 
           // Colors
           _selectedColors.clear();

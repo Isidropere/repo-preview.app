@@ -238,19 +238,19 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Peso (lbs) *</label>
-                                    <input type="number" id="peso_lbs" name="peso_lbs" step="0.01" min="0.01" value="{{ old('peso_lbs') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                                    <input type="number" id="peso_lbs" name="peso_lbs" step="0.01" min="0.01" value="{{ old('peso_lbs', 1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Alto (cm) *</label>
-                                    <input type="number" id="alto_cm" name="alto_cm" step="0.1" min="0.1" value="{{ old('alto_cm') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                                    <input type="number" id="alto_cm" name="alto_cm" step="0.1" min="0.1" value="{{ old('alto_cm', 1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Ancho (cm) *</label>
-                                    <input type="number" id="ancho_cm" name="ancho_cm" step="0.1" min="0.1" value="{{ old('ancho_cm') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                                    <input type="number" id="ancho_cm" name="ancho_cm" step="0.1" min="0.1" value="{{ old('ancho_cm', 1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Profundidad (cm) *</label>
-                                    <input type="number" id="profundo_cm" name="profundo_cm" step="0.1" min="0.1" value="{{ old('profundo_cm') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                                    <input type="number" id="profundo_cm" name="profundo_cm" step="0.1" min="0.1" value="{{ old('profundo_cm', 1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                                 </div>
                             </div>
                             @error('peso_lbs')<span class="text-red-500 text-xs block">{{ $message }}</span>@enderror
