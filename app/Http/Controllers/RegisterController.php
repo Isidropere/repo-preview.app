@@ -185,6 +185,8 @@ class RegisterController extends Controller
             // Auto-login
             Auth::login($usuario);
 
+            session()->flash('gtag_event', ['name' => 'user_registration', 'params' => ['method' => 'manual', 'platform' => 'web']]);
+
             return redirect()->route('home')->with('success', '¡Cuenta creada exitosamente! Tu correo ya está verificado.');
 
         } catch (\Throwable $e) {

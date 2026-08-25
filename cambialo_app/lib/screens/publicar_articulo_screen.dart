@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../core/api_client.dart';
+import '../core/analytics_service.dart';
 import '../core/theme.dart';
 
 /// Formulario para publicar un nuevo artículo desde la app móvil
@@ -579,6 +580,9 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
       setState(() => _saving = false);
 
       if (res.statusCode == 200 || res.statusCode == 201) {
+        if (widget.itemId == null) {
+          AnalyticsService.trackEvent('publish_product_success');
+        }
         if (!mounted) return;
         final body = jsonDecode(res.body);
         final msg = body['message'] ?? (widget.itemId != null 

@@ -11,6 +11,10 @@ use App\Http\Controllers\API\HojaVidaApiController;
 use App\Http\Controllers\API\PagoApiController;
 use App\Http\Controllers\TarjetaPagoController;
 use App\Http\Controllers\Api\BilleteraApiController;
+use App\Http\Controllers\API\AnalyticsApiController;
+
+// Analytics event tracking
+Route::post('/analytics/track-event', [AnalyticsApiController::class, 'trackEvent']);
 
 
 /*

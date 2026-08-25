@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api_client.dart';
+import '../core/analytics_service.dart';
 import '../core/theme.dart';
 import 'hoja_vida_screen.dart';
 
@@ -501,6 +502,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
       setState(() => _saving = false);
 
       if (res.statusCode == 200 || res.statusCode == 201) {
+        if (!isEdit) {
+          AnalyticsService.trackEvent('publish_talent_success');
+        }
         if (!mounted) return;
 
         final redirectUrl = body['redirect_url']?.toString();

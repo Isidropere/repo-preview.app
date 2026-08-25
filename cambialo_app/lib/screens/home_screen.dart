@@ -26,6 +26,8 @@ import '../widgets/footer_widget.dart';
 import '../widgets/categorias_drawer.dart';
 import '../widgets/ticker_banner_widget.dart';
 import '../widgets/adulto_verification_dialog.dart';
+import '../core/analytics_service.dart';
+
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,6 +78,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _initAll();
     _startCarouselTimer();
     _loadStripCategorias();
+    AnalyticsService.trackEvent(
+      _user != null ? 'home_logged_in_view' : 'home_public_view',
+      params: {'user_status': _user != null ? 'authenticated' : 'guest'},
+    );
   }
 
   Future<void> _loadStripCategorias() async {

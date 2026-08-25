@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
+import '../core/analytics_service.dart';
 import '../core/theme.dart';
 import 'main_screen.dart';
 
@@ -55,6 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loading = false);
 
     if (result['success']) {
+      AnalyticsService.trackEvent('user_registration', params: {'method': 'manual'});
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainScreen()),
@@ -96,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final result = await AuthService.loginWithGoogle(googleData);
       setState(() => _loading = false);
       if (result['success']) {
+        AnalyticsService.trackEvent('user_registration', params: {'method': 'google'});
         if (!mounted) return;
         Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),
