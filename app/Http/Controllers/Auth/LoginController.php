@@ -48,6 +48,8 @@ class LoginController extends Controller
         if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
             $request->session()->regenerate();
 
+            session()->flash('gtag_event', ['name' => 'login_success', 'params' => ['method' => 'manual', 'platform' => 'web']]);
+
             // Verificar inventario de productos/servicios del usuario
             $this->verificarInventarioUsuario(Auth::user());
 

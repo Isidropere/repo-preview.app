@@ -458,3 +458,19 @@
     </main>
 @endsection
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @auth
+            if (typeof window.trackGoogleTagEvent === 'function') {
+                window.trackGoogleTagEvent('home_logged_in_view', { 'user_status': 'authenticated' });
+            }
+        @else
+            if (typeof window.trackGoogleTagEvent === 'function') {
+                window.trackGoogleTagEvent('home_public_view', { 'user_status': 'guest' });
+            }
+        @endauth
+    });
+</script>
+@endpush
+

@@ -62,6 +62,7 @@ class SocialAuthController extends Controller
 
         $idField = $provider . '_id'; // google_id | facebook_id | instagram_id
 
+        $isNewUser = false;
         // Buscar usuario existente por provider_id o por email
         $user = User::where($idField, $socialUser->getId())->first()
             ?? User::where('email', $socialUser->getEmail())->first();
@@ -73,6 +74,7 @@ class SocialAuthController extends Controller
                 $user->save();
             }
         } else {
+            $isNewUser = true;
             // Crear nuevo usuario
             $nameParts = explode(' ', $socialUser->getName() ?? '', 2);
             $nombres   = $nameParts[0] ?? 'Usuario';
@@ -100,6 +102,12 @@ class SocialAuthController extends Controller
         }
 
         Auth::login($user, true);
+
+        if ($isNewUser) {
+            session()->flash('gtag_event', ['name' => 'user_registration', 'params' => ['method' => $provider, 'platform' => 'web']]);
+        } else {
+            session()->flash('gtag_event', ['name' => 'login_success', 'params' => ['method' => $provider, 'platform' => 'web']]);
+        }
 
         return redirect()->intended(route('home'));
     }

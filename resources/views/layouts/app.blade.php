@@ -19,6 +19,37 @@
     </noscript>
     {{-- Leaflet solo si la página lo necesita --}}
     @stack('head_styles')
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18379974826"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'AW-18379974826');
+
+      window.trackGoogleTagEvent = function(eventName, params) {
+        params = params || {};
+        if (typeof gtag === 'function') {
+          gtag('event', eventName, Object.assign({
+            'send_to': 'AW-18379974826',
+            'platform': 'web'
+          }, params));
+        }
+      };
+    </script>
+
+    @if(session('gtag_event'))
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var eventData = @json(session('gtag_event'));
+        if (eventData && eventData.name) {
+          window.trackGoogleTagEvent(eventData.name, eventData.params || {});
+        }
+      });
+    </script>
+    @endif
  
 
            <?php

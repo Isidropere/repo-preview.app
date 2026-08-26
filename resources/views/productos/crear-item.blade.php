@@ -76,25 +76,25 @@
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="peso_lbs" class="form-label">Peso (lbs)</label>
-                            <input type="number" class="form-control" id="peso_lbs" name="peso_lbs" step="0.01" min="0">
+                            <input type="number" class="form-control" id="peso_lbs" name="peso_lbs" step="0.01" min="0" value="1">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="alto_cm" class="form-label">Alto (cm)</label>
-                            <input type="number" class="form-control" id="alto_cm" name="alto_cm" step="0.1" min="0">
+                            <input type="number" class="form-control" id="alto_cm" name="alto_cm" step="0.1" min="0" value="1">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="ancho_cm" class="form-label">Ancho (cm)</label>
-                            <input type="number" class="form-control" id="ancho_cm" name="ancho_cm" step="0.1" min="0">
+                            <input type="number" class="form-control" id="ancho_cm" name="ancho_cm" step="0.1" min="0" value="1">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="profundo_cm" class="form-label">Profundidad (cm)</label>
-                            <input type="number" class="form-control" id="profundo_cm" name="profundo_cm" step="0.1" min="0">
+                            <input type="number" class="form-control" id="profundo_cm" name="profundo_cm" step="0.1" min="0" value="1">
                         </div>
                     </div>
                 </div>

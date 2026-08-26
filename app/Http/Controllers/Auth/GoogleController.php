@@ -20,9 +20,11 @@ class GoogleController extends Controller
     {
         $googleUser = Socialite::driver('google')->user();
 
+        $isNewUser = false;
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if (!$user) {
+            $isNewUser = true;
             // Separar nombre y apellido del nombre completo de Google
             $nameParts = explode(' ', $googleUser->getName(), 2);
             $nombres   = $nameParts[0] ?? $googleUser->getName();
@@ -43,6 +45,12 @@ class GoogleController extends Controller
         }
 
         Auth::login($user, true);
+
+        if ($isNewUser) {
+            session()->flash('gtag_event', ['name' => 'user_registration', 'params' => ['method' => 'google', 'platform' => 'web']]);
+        } else {
+            session()->flash('gtag_event', ['name' => 'login_success', 'params' => ['method' => 'google', 'platform' => 'web']]);
+        }
 
         return redirect()->intended('/home'); // Redirect to intended page after login
     }

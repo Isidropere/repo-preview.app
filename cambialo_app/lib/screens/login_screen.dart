@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/api_client.dart';
 import '../core/auth_service.dart';
+import '../core/analytics_service.dart';
 import '../core/theme.dart';
 import 'main_screen.dart';
 import 'register_screen.dart';
@@ -28,6 +29,12 @@ class _LoginScreenState extends State<LoginScreen> {
     scopes: ['email', 'profile'],
   );
 
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.trackEvent('login_page_view');
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
@@ -36,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
       setState(() => _loading = false);
       if (result['success']) {
+        AnalyticsService.trackEvent('login_success', params: {'method': 'manual'});
         if (!mounted) return;
         Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),
@@ -89,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _loading = false);
       
       if (result['success']) {
+        AnalyticsService.trackEvent('login_success', params: {'method': 'google'});
         if (!mounted) return;
         Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainScreen()),

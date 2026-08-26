@@ -135,3 +135,13 @@ function togglePassword() {
 </script>
 @endsection
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.trackGoogleTagEvent === 'function') {
+            window.trackGoogleTagEvent('login_page_view', {});
+        }
+    });
+</script>
+@endpush
+

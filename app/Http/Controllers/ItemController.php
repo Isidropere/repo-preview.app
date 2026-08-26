@@ -212,6 +212,7 @@ class ItemController extends Controller
                 return response()->json(['success' => true, 'message' => 'Talento creado exitosamente!', 'redirect' => route('items.admintalento')]);
             }
 
+            session()->flash('gtag_event', ['name' => 'publish_talent_success', 'params' => ['platform' => 'web', 'talent_id' => $item->id_item]]);
             return redirect()->route('items.admintalento')->with('success', 'Talento creado exitosamente!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -435,7 +436,8 @@ class ItemController extends Controller
             \Illuminate\Support\Facades\Cache::forget('home_intercambio');
             \Illuminate\Support\Facades\Cache::forget('home_venta');
 
-            return redirect()->route('items.user')->with('success', 'Talento creado exitosamente!');
+            session()->flash('gtag_event', ['name' => 'publish_product_success', 'params' => ['platform' => 'web', 'item_id' => $item->id_item]]);
+            return redirect()->route('items.user')->with('success', 'Producto creado exitosamente!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
