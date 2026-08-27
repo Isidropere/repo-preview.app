@@ -29,6 +29,13 @@
 
       gtag('config', 'AW-18379974826');
 
+      // Event snippet for Vista de página conversion
+      gtag('event', 'conversion', {
+          'send_to': 'AW-18379974826/xBm2CJTgkuEcEKrRoLxE',
+          'value': 1.0,
+          'currency': 'USD'
+      });
+
       window.trackGoogleTagEvent = function(eventName, params) {
         params = params || {};
         if (typeof gtag === 'function') {
@@ -36,6 +43,16 @@
             'send_to': 'AW-18379974826',
             'platform': 'web'
           }, params));
+        }
+      };
+
+      window.trackGoogleConversion = function(label, value, currency) {
+        if (typeof gtag === 'function') {
+          gtag('event', 'conversion', {
+            'send_to': label || 'AW-18379974826/wL3QCNjWq-QcEKrRoLxE',
+            'value': value || 1.0,
+            'currency': currency || 'USD'
+          });
         }
       };
     </script>
@@ -46,6 +63,9 @@
         var eventData = @json(session('gtag_event'));
         if (eventData && eventData.name) {
           window.trackGoogleTagEvent(eventData.name, eventData.params || {});
+          if (eventData.name === 'user_registration' || eventData.name === 'publish_product_success' || eventData.name === 'publish_talent_success') {
+            window.trackGoogleConversion('AW-18379974826/wL3QCNjWq-QcEKrRoLxE', 1.0, 'USD');
+          }
         }
       });
     </script>
