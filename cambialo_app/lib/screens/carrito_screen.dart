@@ -5,6 +5,7 @@ import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/item_image.dart';
 import 'checkout_screen.dart';
+import 'main_screen.dart';
 import 'login_screen.dart';
 import 'publicar_articulo_screen.dart';
 import 'items_list_screen.dart';
@@ -31,7 +32,26 @@ class _CarritoScreenState extends State<CarritoScreen> {
   @override
   void initState() {
     super.initState();
+    ApiClient.cartCountNotifier.addListener(_onCartCountChanged);
     _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant CarritoScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    ApiClient.cartCountNotifier.removeListener(_onCartCountChanged);
+    super.dispose();
+  }
+
+  void _onCartCountChanged() {
+    if (mounted) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -423,34 +443,41 @@ class _CarritoScreenState extends State<CarritoScreen> {
           'Carrito ($itemCount)',
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        leading: itemCount > 0 ? InkWell(
-          onTap: () {
-            final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
-            final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
-              if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
-              return ApiClient.parseBool(i['es_seleccionado']);
-            });
-            _toggleSeleccionarTodos(!todosSeleccionados);
-          },
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              Builder(
-                builder: (context) {
-                  final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
-                  final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
-                    if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
-                    return ApiClient.parseBool(i['es_seleccionado']);
-                  });
-                  return Icon(todosSeleccionados ? Icons.check_circle : Icons.circle_outlined, 
-                    color: todosSeleccionados ? kPrimary : Colors.grey.shade400, size: 22);
-                }
-              ),
-              const SizedBox(width: 4),
-              const Text('Todos', style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.w500)),
-            ],
-          ),
-        ) : const SizedBox(),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              )
+            : (itemCount > 0
+                ? InkWell(
+                    onTap: () {
+                      final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
+                      final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
+                        if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
+                        return ApiClient.parseBool(i['es_seleccionado']);
+                      });
+                      _toggleSeleccionarTodos(!todosSeleccionados);
+                    },
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        Builder(
+                          builder: (context) {
+                            final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
+                            final todosSeleccionados = todosLosItems.isNotEmpty && todosLosItems.every((i) {
+                              if (i['item']?['id_categoria_item'].toString() == '29' && i['estado_solicitud'] != 'aprobada') return true; 
+                              return ApiClient.parseBool(i['es_seleccionado']);
+                            });
+                            return Icon(todosSeleccionados ? Icons.check_circle : Icons.circle_outlined, 
+                              color: todosSeleccionados ? kPrimary : Colors.grey.shade400, size: 22);
+                          }
+                        ),
+                        const SizedBox(width: 4),
+                        const Text('Todos', style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )
+                : null),
         leadingWidth: 100,
         actions: [
           if (_data != null && (_data!['todosLosItems'] as List).isNotEmpty)
@@ -490,11 +517,51 @@ class _CarritoScreenState extends State<CarritoScreen> {
     final todosLosItems = (_data?['todosLosItems'] as List?) ?? [];
     if (todosLosItems.isEmpty) {
       return Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Tu carrito está vacío', style: TextStyle(color: kTextGray, fontSize: 15)),
-        ]),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.orange.shade400),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Tu carrito está vacío',
+                style: TextStyle(color: kTextDark, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Explora nuestros productos y servicios para agregar lo que te guste.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: kTextGray, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    MainScreen.switchTab(context, 2);
+                  }
+                },
+                icon: const Icon(Icons.storefront, color: Colors.white),
+                label: const Text('Explorar productos', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -664,7 +731,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        totalSeleccionadosServicios > 0 ? 'Proceder al Pago de Servicios ($totalSeleccionadosServicios)' : 'Proceder al Pago de Servicios (0)', 
+                        totalSeleccionadosServicios > 0 ? 'Pago Servicio ($totalSeleccionadosServicios)' : 'Pago Servicio (0)', 
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)
                       ),
                     ),

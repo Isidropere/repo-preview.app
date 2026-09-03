@@ -1048,22 +1048,18 @@ class _ProductCard extends StatelessWidget {
       String message = 'Error al agregar';
       bool isSuccess = false;
       if (res.statusCode == 200) {
+        isSuccess = true;
+        ApiClient.clearCache('/carrito');
         try {
           final data = jsonDecode(res.body);
-          if (data['success'] == true) {
-            isSuccess = true;
-            message = data['message'] ?? '¡Agregado al carrito!';
-            if (data['cart_count'] != null) {
-              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
-            } else {
-              ApiClient.cartCountNotifier.value++;
-            }
+          message = data['message'] ?? '¡Agregado al carrito!';
+          if (data['cart_count'] != null) {
+            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? (ApiClient.cartCountNotifier.value + 1);
           } else {
-            message = data['message'] ?? 'Error al agregar';
+            ApiClient.cartCountNotifier.value++;
           }
         } catch (_) {
-          isSuccess = true;
-          ApiClient.cartCountNotifier.value++;
+          message = '¡Agregado al carrito!';
         }
       } else {
         try {

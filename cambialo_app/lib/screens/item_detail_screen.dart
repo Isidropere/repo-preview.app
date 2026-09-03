@@ -60,6 +60,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     
     if (!mounted) return;
     if (res.statusCode == 200) {
+      ApiClient.clearCache('/carrito');
       try {
         final data = jsonDecode(res.body);
         if (data['cart_count'] != null) {

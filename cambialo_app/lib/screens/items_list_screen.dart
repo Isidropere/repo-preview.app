@@ -335,21 +335,15 @@ class _ItemGridCard extends StatelessWidget {
       String message = 'Error al agregar';
       bool isSuccess = false;
       if (res.statusCode == 200) {
+        isSuccess = true;
+        ApiClient.clearCache('/carrito');
         try {
           final data = jsonDecode(res.body);
-          if (data['success'] == true) {
-            isSuccess = true;
-            message = data['message'] ?? '¡Agregado al carrito!';
-            if (data['cart_count'] != null) {
-              ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? ApiClient.cartCountNotifier.value;
-            }
-          } else {
-            message = data['message'] ?? 'Error al agregar';
-            if (ApiClient.cartCountNotifier.value > 0) ApiClient.cartCountNotifier.value--;
+          message = data['message'] ?? '¡Agregado al carrito!';
+          if (data['cart_count'] != null) {
+            ApiClient.cartCountNotifier.value = int.tryParse(data['cart_count'].toString()) ?? ApiClient.cartCountNotifier.value;
           }
-        } catch (_) {
-          isSuccess = true;
-        }
+        } catch (_) {}
       } else {
         // Revertir en caso de error HTTP
         if (ApiClient.cartCountNotifier.value > 0) ApiClient.cartCountNotifier.value--;
