@@ -17,6 +17,14 @@ import '../widgets/ticker_banner_widget.dart';
 /// Pantalla principal con Bottom Navigation Bar
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
+  static void switchTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<_MainScreenState>();
+    if (state != null) {
+      state._onTabTapped(index);
+    }
+  }
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -175,6 +183,9 @@ class _MainScreenState extends State<MainScreen> {
           _cartKey++;
         }
       });
+      if (_navigatorKeys[i].currentState != null && _navigatorKeys[i].currentState!.canPop()) {
+        _navigatorKeys[i].currentState!.popUntil((route) => route.isFirst);
+      }
     }
     AuthService.isLoggedIn().then((isLoggedIn) {
        if (isLoggedIn != _lastAuthState) {
@@ -190,7 +201,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildTabNavigator(int index, Widget rootPage) {
     return Navigator(
-      key: _navigatorKeys[index],
+      key: index == 3 ? ValueKey('nav_cart__') : _navigatorKeys[index],
       onGenerateRoute: (routeSettings) {
         return MaterialPageRoute(
           builder: (context) => rootPage,

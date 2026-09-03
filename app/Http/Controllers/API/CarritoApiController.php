@@ -77,7 +77,11 @@ class CarritoApiController extends Controller
             return response()->json(['message' => $resultado['message']], 400);
         }
 
-        return response()->json(['message' => $resultado['message'], 'cart_count' => $resultado['cart_count']]);
+        return response()->json([
+            'success'    => true,
+            'message'    => $resultado['message'],
+            'cart_count' => $resultado['cart_count']
+        ]);
     }
 
     /** DELETE /api/carrito/{id_item} */

@@ -1,0 +1,3674 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Specification \u2014 CB.app",
+    "version": "1.0.0",
+    "description": "Especificaci\u00f3n generada autom\u00e1ticamente por Codebase 360\u00b0 Auditor para CB.app"
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "Endpoint POST /api/login",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'login'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "summary": "Endpoint POST /api/register",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'register'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/google": {
+      "post": {
+        "summary": "Endpoint POST /api/google",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'loginGoogle'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/password/email": {
+      "post": {
+        "summary": "Endpoint POST /api/password/email",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Auth\\PasswordResetController, 'email'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "summary": "Endpoint POST /api/logout",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'logout'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "summary": "Endpoint GET /api/me",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'me'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/badges": {
+      "get": {
+        "summary": "Endpoint GET /api/badges",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'getBadges'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/cambiar-contrasena": {
+      "post": {
+        "summary": "Endpoint POST /api/cambiar-contrasena",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'cambiarContrasena'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "post": {
+        "summary": "Endpoint POST /api/profile",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'updateProfile'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/adultos/verificar": {
+      "post": {
+        "summary": "Endpoint POST /api/adultos/verificar",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'verificarCredencialesAdultos'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/delete_account": {
+      "post": {
+        "summary": "Endpoint POST /api/delete_account",
+        "description": "Acci\u00f3n manejada por: AuthApiController, 'deleteAccount'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/items": {
+      "get": {
+        "summary": "Endpoint GET /api/items",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/items",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/items/buscar": {
+      "get": {
+        "summary": "Endpoint GET /api/items/buscar",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'buscar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/items/{id}": {
+      "get": {
+        "summary": "Endpoint GET /api/items/{id}",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /api/items/{id}",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/categorias": {
+      "get": {
+        "summary": "Endpoint GET /api/categorias",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'categorias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/colors": {
+      "get": {
+        "summary": "Endpoint GET /api/colors",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'colors'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/images": {
+      "post": {
+        "summary": "Endpoint POST /api/images",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\ImageController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/ubicacion/provincias": {
+      "get": {
+        "summary": "Endpoint GET /api/ubicacion/provincias",
+        "description": "Acci\u00f3n manejada por: DireccionApiController, 'provincias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/ubicacion/municipios/{id_provincia}": {
+      "get": {
+        "summary": "Endpoint GET /api/ubicacion/municipios/{id_provincia}",
+        "description": "Acci\u00f3n manejada por: DireccionApiController, 'municipios'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/empleos": {
+      "get": {
+        "summary": "Endpoint GET /api/empleos",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/ayuda/{slug}": {
+      "get": {
+        "summary": "Endpoint GET /api/ayuda/{slug}",
+        "description": "Acci\u00f3n manejada por: function ($slug",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/delivery/calcular": {
+      "get": {
+        "summary": "Endpoint GET /api/delivery/calcular",
+        "description": "Acci\u00f3n manejada por: \\App\\API\\DeliveryZonaController, 'calcular'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/": {
+      "get": {
+        "summary": "Endpoint GET /api/",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/agregar": {
+      "post": {
+        "summary": "Endpoint POST /api/agregar",
+        "description": "Acci\u00f3n manejada por: CarritoApiController, 'agregar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/vaciar": {
+      "delete": {
+        "summary": "Endpoint DELETE /api/vaciar",
+        "description": "Acci\u00f3n manejada por: CarritoApiController, 'vaciar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id_item}": {
+      "delete": {
+        "summary": "Endpoint DELETE /api/{id_item}",
+        "description": "Acci\u00f3n manejada por: CarritoApiController, 'eliminar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{itemIntencionId}/cantidad": {
+      "put": {
+        "summary": "Endpoint PUT /api/{itemIntencionId}/cantidad",
+        "description": "Acci\u00f3n manejada por: CarritoApiController, 'actualizarCantidad'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{itemIntencionId}/seleccion": {
+      "put": {
+        "summary": "Endpoint PUT /api/{itemIntencionId}/seleccion",
+        "description": "Acci\u00f3n manejada por: CarritoApiController, 'marcarSeleccionado'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/getnegociaciones/{itemId}": {
+      "get": {
+        "summary": "Endpoint GET /api/getnegociaciones/{itemId}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NegociacionController, 'getNegociaciones'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/savenegociaciones": {
+      "post": {
+        "summary": "Endpoint POST /api/savenegociaciones",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NegociacionController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/items-usuario": {
+      "get": {
+        "summary": "Endpoint GET /api/items-usuario",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\ItemController, 'getItemsUsuario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/crearPaquete": {
+      "post": {
+        "summary": "Endpoint POST /api/crearPaquete",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\PaqueteController, 'crearPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/editarPaquete/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /api/editarPaquete/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\PaqueteController, 'editarPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/mis-items": {
+      "get": {
+        "summary": "Endpoint GET /api/mis-items",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'userItems'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/mis-items/{id}": {
+      "get": {
+        "summary": "Endpoint GET /api/mis-items/{id}",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'userItemDetail'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/items/{id}/update": {
+      "post": {
+        "summary": "Endpoint POST /api/items/{id}/update",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}": {
+      "get": {
+        "summary": "Endpoint GET /api/{id}",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "put": {
+        "summary": "Endpoint PUT /api/{id}",
+        "description": "Acci\u00f3n manejada por: DireccionApiController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /api/{id}",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/aceptar": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/aceptar",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'aceptar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'rechazar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/contraoferta": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/contraoferta",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'contraoferta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/cancelar": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/cancelar",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'cancelar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/confirmar-emisor": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/confirmar-emisor",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'confirmarEmisor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/confirmar-receptor": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/confirmar-receptor",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'confirmarReceptor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/aceptar-como-emisor": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/aceptar-como-emisor",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'aceptarComoEmisor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/aceptar-contraoferta": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/aceptar-contraoferta",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'aceptarComoEmisor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/modo-entrega": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/modo-entrega",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'seleccionarModoEntrega'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/confirmar-entrega": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/confirmar-entrega",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'confirmarEntrega'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/completar": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/completar",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'completar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/mensajes": {
+      "get": {
+        "summary": "Endpoint GET /api/{id}/mensajes",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'mensajes'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/{id}/mensajes",
+        "description": "Acci\u00f3n manejada por: NegociacionApiController, 'enviarMensaje'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/pago": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/pago",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NegociacionController, 'procesarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/hoja-vida": {
+      "get": {
+        "summary": "Endpoint GET /api/hoja-vida",
+        "description": "Acci\u00f3n manejada por: HojaVidaApiController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/hoja-vida",
+        "description": "Acci\u00f3n manejada por: HojaVidaApiController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/resumen": {
+      "get": {
+        "summary": "Endpoint GET /api/resumen",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'resumen'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/cuentas-bancarias": {
+      "get": {
+        "summary": "Endpoint GET /api/cuentas-bancarias",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'cuentasBancarias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/cuentas-bancarias",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'agregarCuentaBancaria'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/cuentas-bancarias/{id}": {
+      "delete": {
+        "summary": "Endpoint DELETE /api/cuentas-bancarias/{id}",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'eliminarCuentaBancaria'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/retiros": {
+      "get": {
+        "summary": "Endpoint GET /api/retiros",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'historialRetiros'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /api/retiros",
+        "description": "Acci\u00f3n manejada por: BilleteraApiController, 'solicitarRetiro'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/transporte/articulos": {
+      "get": {
+        "summary": "Endpoint GET /api/transporte/articulos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\API\\TransporteApiController, 'articulos'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/transporte/solicitar": {
+      "post": {
+        "summary": "Endpoint POST /api/transporte/solicitar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\API\\TransporteApiController, 'solicitar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/talentos/config": {
+      "get": {
+        "summary": "Endpoint GET /api/talentos/config",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/talentos": {
+      "post": {
+        "summary": "Endpoint POST /api/talentos",
+        "description": "Acci\u00f3n manejada por: ItemApiController, 'storeTalento'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/todas": {
+      "get": {
+        "summary": "Endpoint GET /api/todas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NotificationController, 'listarTodasApi'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/leer-todas": {
+      "post": {
+        "summary": "Endpoint POST /api/leer-todas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NotificationController, 'marcarTodasLeidasApi'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/{id}/leido": {
+      "post": {
+        "summary": "Endpoint POST /api/{id}/leido",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NotificationController, 'marcarLeido'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/rating": {
+      "post": {
+        "summary": "Endpoint POST /api/rating",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/historial": {
+      "get": {
+        "summary": "Endpoint GET /api/historial",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/historial/devolucion/{id}": {
+      "post": {
+        "summary": "Endpoint POST /api/historial/devolucion/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HistorialController, 'procesarDevolucionApi'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/historial/compra/{id}/invoice": {
+      "get": {
+        "summary": "Endpoint GET /api/historial/compra/{id}/invoice",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HistorialController, 'descargarFactura'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/pago/checkout": {
+      "post": {
+        "summary": "Endpoint POST /api/pago/checkout",
+        "description": "Acci\u00f3n manejada por: PagoApiController, 'checkout'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/solicitudes-servicio/enviar": {
+      "post": {
+        "summary": "Endpoint POST /api/solicitudes-servicio/enviar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'enviarDesdeCarrito'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/solicitudes-servicio/estado/{idItem}": {
+      "get": {
+        "summary": "Endpoint GET /api/solicitudes-servicio/estado/{idItem}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'estadoItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/solicitudes-servicio/mis-ventas-talentos": {
+      "get": {
+        "summary": "Endpoint GET /api/solicitudes-servicio/mis-ventas-talentos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'misVentasTalentosJson'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/solicitudes-servicio/{id}/aprobar-json": {
+      "post": {
+        "summary": "Endpoint POST /api/solicitudes-servicio/{id}/aprobar-json",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'aprobarJson'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/solicitudes-servicio/{id}/rechazar-json": {
+      "post": {
+        "summary": "Endpoint POST /api/solicitudes-servicio/{id}/rechazar-json",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'rechazarJson'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/usar": {
+      "post": {
+        "summary": "Endpoint POST /api/usar",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'usarEstaTarjeta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/zonas": {
+      "get": {
+        "summary": "Endpoint GET /api/zonas",
+        "description": "Acci\u00f3n manejada por: DeliveryZonaController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/calcular": {
+      "get": {
+        "summary": "Endpoint GET /api/calcular",
+        "description": "Acci\u00f3n manejada por: DeliveryZonaController, 'calcular'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "summary": "Endpoint GET /api/config",
+        "description": "Acci\u00f3n manejada por: DeliveryZonaController, 'config'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/config/{clave}": {
+      "post": {
+        "summary": "Endpoint POST /api/config/{clave}",
+        "description": "Acci\u00f3n manejada por: DeliveryZonaController, 'updateConfig'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/api/scout-import-items": {
+      "get": {
+        "summary": "Endpoint GET /api/scout-import-items",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Endpoint GET /",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery/calcular": {
+      "get": {
+        "summary": "Endpoint GET /delivery/calcular",
+        "description": "Acci\u00f3n manejada por: \\App\\API\\DeliveryZonaController, 'calcular'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/deploy-migrate": {
+      "get": {
+        "summary": "Endpoint GET /deploy-migrate",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/storage-link": {
+      "get": {
+        "summary": "Endpoint GET /storage-link",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/migrate-images": {
+      "get": {
+        "summary": "Endpoint GET /migrate-images",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/debug-paths": {
+      "get": {
+        "summary": "Endpoint GET /debug-paths",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/sync-public-folders": {
+      "get": {
+        "summary": "Endpoint GET /sync-public-folders",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/home": {
+      "get": {
+        "summary": "Endpoint GET /home",
+        "description": "Acci\u00f3n manejada por: HomeController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/contador": {
+      "get": {
+        "summary": "Endpoint GET /notificaciones/contador",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/usuario/municipio": {
+      "get": {
+        "summary": "Endpoint GET /usuario/municipio",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/sobre-nosotros": {
+      "get": {
+        "summary": "Endpoint GET /sobre-nosotros",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/borrar-cuenta": {
+      "get": {
+        "summary": "Endpoint GET /borrar-cuenta",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /borrar-cuenta",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contactanos": {
+      "get": {
+        "summary": "Endpoint GET /contactanos",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/envios": {
+      "get": {
+        "summary": "Endpoint GET /envios",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/politica-privacidad": {
+      "get": {
+        "summary": "Endpoint GET /politica-privacidad",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/politica-devoluciones": {
+      "get": {
+        "summary": "Endpoint GET /politica-devoluciones",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/terminos-condiciones": {
+      "get": {
+        "summary": "Endpoint GET /terminos-condiciones",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/empleos": {
+      "get": {
+        "summary": "Endpoint GET /empleos",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/responsabilidad": {
+      "get": {
+        "summary": "Endpoint GET /responsabilidad",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/realizar-intercambio": {
+      "get": {
+        "summary": "Endpoint GET /realizar-intercambio",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/como-vender": {
+      "get": {
+        "summary": "Endpoint GET /como-vender",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/realizar-compra": {
+      "get": {
+        "summary": "Endpoint GET /realizar-compra",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/como-publicar-articulo": {
+      "get": {
+        "summary": "Endpoint GET /como-publicar-articulo",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/como-publicar-talento": {
+      "get": {
+        "summary": "Endpoint GET /como-publicar-talento",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/registrarse": {
+      "get": {
+        "summary": "Endpoint GET /registrarse",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/ayuda": {
+      "get": {
+        "summary": "Endpoint GET /ayuda",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contrase\u00f1a": {
+      "get": {
+        "summary": "Endpoint GET /contrase\u00f1a",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/historial": {
+      "get": {
+        "summary": "Endpoint GET /historial",
+        "description": "Acci\u00f3n manejada por: ERPController, 'historialTransacciones'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/historial/compra/{id}/invoice": {
+      "get": {
+        "summary": "Endpoint GET /historial/compra/{id}/invoice",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HistorialController, 'descargarFactura'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/historial/devolucion/{id}": {
+      "post": {
+        "summary": "Endpoint POST /historial/devolucion/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HistorialController, 'procesarDevolucion'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/search_header": {
+      "get": {
+        "summary": "Endpoint GET /items/search_header",
+        "description": "Acci\u00f3n manejada por: ItemController, 'search_header'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/buscar": {
+      "get": {
+        "summary": "Endpoint GET /buscar",
+        "description": "Acci\u00f3n manejada por: fn(",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/categorias-item": {
+      "get": {
+        "summary": "Endpoint APIRESOURCE /categorias-item",
+        "description": "Acci\u00f3n manejada por: CategoriaItemController",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/categorias-item/{id}": {
+      "get": {
+        "summary": "Endpoint GET /categorias-item/{id}",
+        "description": "Acci\u00f3n manejada por: CategoriaItemController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/provincias": {
+      "get": {
+        "summary": "Endpoint GET /provincias",
+        "description": "Acci\u00f3n manejada por: ProvinciaController, 'getProvincias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/municipios": {
+      "get": {
+        "summary": "Endpoint GET /municipios",
+        "description": "Acci\u00f3n manejada por: MunicipioController, 'getMunicipio'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/distritos-municipales": {
+      "get": {
+        "summary": "Endpoint GET /distritos-municipales",
+        "description": "Acci\u00f3n manejada por: DistritoMunicipalController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/intercambio": {
+      "get": {
+        "summary": "Endpoint GET /intercambio",
+        "description": "Acci\u00f3n manejada por: ItemController, 'showItemsTipo2y3'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/compras": {
+      "get": {
+        "summary": "Endpoint GET /compras",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'indexCompras'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/producto/{slug}": {
+      "get": {
+        "summary": "Endpoint GET /producto/{slug}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'showDetail'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/categoria29": {
+      "get": {
+        "summary": "Endpoint GET /categoria29",
+        "description": "Acci\u00f3n manejada por: ItemController, 'soloCategoria29'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Endpoint GET /search",
+        "description": "Acci\u00f3n manejada por: ItemController, 'search'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/info/{id}": {
+      "get": {
+        "summary": "Endpoint GET /info/{id}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'info'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/otras-categorias": {
+      "get": {
+        "summary": "Endpoint GET /otras-categorias",
+        "description": "Acci\u00f3n manejada por: ItemController, 'otrasCategorias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/categoria/{slug}": {
+      "get": {
+        "summary": "Endpoint GET /categoria/{slug}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'porCategoria'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{slug}/edit": {
+      "get": {
+        "summary": "Endpoint GET /{slug}/edit",
+        "description": "Acci\u00f3n manejada por: ItemController, 'edit'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{slug}/Talentoeditar": {
+      "get": {
+        "summary": "Endpoint GET /{slug}/Talentoeditar",
+        "description": "Acci\u00f3n manejada por: ItemController, 'talentoedit'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{slug}/detalle": {
+      "get": {
+        "summary": "Endpoint GET /{slug}/detalle",
+        "description": "Acci\u00f3n manejada por: ItemController, 'VerDetalle'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}": {
+      "get": {
+        "summary": "Endpoint GET /{id}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "put": {
+        "summary": "Endpoint PUT /{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/item-ids": {
+      "get": {
+        "summary": "Endpoint GET /item-ids",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'getItemIds'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/carrito": {
+      "get": {
+        "summary": "Endpoint GET /carrito",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/agregar": {
+      "post": {
+        "summary": "Endpoint POST /agregar",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'agregarItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/item/{id_item}": {
+      "delete": {
+        "summary": "Endpoint DELETE /item/{id_item}",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'eliminarItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/vaciar": {
+      "delete": {
+        "summary": "Endpoint DELETE /vaciar",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'vaciar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/checkout": {
+      "get": {
+        "summary": "Endpoint GET /checkout",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'checkout'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pago": {
+      "post": {
+        "summary": "Endpoint POST /pago",
+        "description": "Acci\u00f3n manejada por: PagoController, 'procesar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/carrito/{item}": {
+      "patch": {
+        "summary": "Endpoint PATCH /carrito/{item}",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/marcar-seleccionados": {
+      "post": {
+        "summary": "Endpoint POST /marcar-seleccionados",
+        "description": "Acci\u00f3n manejada por: CarritoController, 'marcarSeleccionados'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/tarjetas": {
+      "post": {
+        "summary": "Endpoint POST /tarjetas",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/tarjetas/usar": {
+      "post": {
+        "summary": "Endpoint POST /tarjetas/usar",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'usarEstaTarjeta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/tarjetas/{id}": {
+      "delete": {
+        "summary": "Endpoint DELETE /tarjetas/{id}",
+        "description": "Acci\u00f3n manejada por: TarjetaPagoController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/actualizarPaquete/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /actualizarPaquete/{id}",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'actualizarPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/eliminarPaquete/{id}": {
+      "delete": {
+        "summary": "Endpoint DELETE /eliminarPaquete/{id}",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'eliminarPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/listarPaquetes": {
+      "get": {
+        "summary": "Endpoint GET /listarPaquetes",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'listarPaquetes'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/obtenerPaquete/{id}": {
+      "get": {
+        "summary": "Endpoint GET /obtenerPaquete/{id}",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'obtenerPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/crearPaquete": {
+      "post": {
+        "summary": "Endpoint POST /crearPaquete",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'crearPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/editarPaquete/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /editarPaquete/{id}",
+        "description": "Acci\u00f3n manejada por: PaqueteController, 'editarPaquete'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items-usuario": {
+      "get": {
+        "summary": "Endpoint GET /items-usuario",
+        "description": "Acci\u00f3n manejada por: ItemController, 'getItemsUsuario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/getnegociaciones/{itemId}": {
+      "get": {
+        "summary": "Endpoint GET /getnegociaciones/{itemId}",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'getNegociaciones'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/savenegociaciones": {
+      "post": {
+        "summary": "Endpoint POST /savenegociaciones",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/negociaciones/mensajes/{id_emisor}/{id_receptor}": {
+      "get": {
+        "summary": "Endpoint GET /negociaciones/mensajes/{id_emisor}/{id_receptor}",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'obtenerMensajes'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/negociaciones/ver/{id_emisor}/{id_receptor}": {
+      "get": {
+        "summary": "Endpoint GET /negociaciones/ver/{id_emisor}/{id_receptor}",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'obtenerMensajes'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pago/ipn": {
+      "post": {
+        "summary": "Endpoint POST /pago/ipn",
+        "description": "Acci\u00f3n manejada por: PagoRedirectController, 'ipnWebhook'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pago/redirect/iniciar-movil/{id_pago_compra}": {
+      "get": {
+        "summary": "Endpoint GET /pago/redirect/iniciar-movil/{id_pago_compra}",
+        "description": "Acci\u00f3n manejada por: PagoRedirectController, 'iniciarPagoMovil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/pago/iniciar-movil/{id_item}": {
+      "get": {
+        "summary": "Endpoint GET /talento/pago/iniciar-movil/{id_item}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoPagoRedirectController, 'iniciarPagoMovil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/pago/recargar-movil/{id_item}": {
+      "get": {
+        "summary": "Endpoint GET /talento/pago/recargar-movil/{id_item}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoPagoRedirectController, 'iniciarRecargaMovil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/negociaciones/pago/iniciar-movil/{id_negociacion}": {
+      "get": {
+        "summary": "Endpoint GET /negociaciones/pago/iniciar-movil/{id_negociacion}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NegociacionPagoRedirectController, 'iniciarPagoMovil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pago/iniciar": {
+      "post": {
+        "summary": "Endpoint POST /pago/iniciar",
+        "description": "Acci\u00f3n manejada por: PagoRedirectController, 'iniciarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/pago/iniciar/{id_item}": {
+      "get": {
+        "summary": "Endpoint GET /talento/pago/iniciar/{id_item}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoPagoRedirectController, 'iniciarPagoWeb'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/pago/recargar/{id_item}": {
+      "get": {
+        "summary": "Endpoint GET /talento/pago/recargar/{id_item}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoPagoRedirectController, 'iniciarRecargaWeb'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/negociaciones/pago/iniciar/{id_negociacion}": {
+      "get": {
+        "summary": "Endpoint GET /negociaciones/pago/iniciar/{id_negociacion}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\NegociacionPagoRedirectController, 'iniciarPagoWeb'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pendientes": {
+      "get": {
+        "summary": "Endpoint GET /pendientes",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'contarPendientes'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/mensaje": {
+      "post": {
+        "summary": "Endpoint POST /{id}/mensaje",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'enviarMensaje'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{item}": {
+      "get": {
+        "summary": "Endpoint GET /{item}",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/aceptar": {
+      "post": {
+        "summary": "Endpoint POST /{id}/aceptar",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'aceptar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminPagosVendedoresController, 'rechazar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/contraoferta": {
+      "get": {
+        "summary": "Endpoint GET /{id}/contraoferta",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'contraoferta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /{id}/contraoferta",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'storeContraoferta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/cancelar": {
+      "post": {
+        "summary": "Endpoint POST /{id}/cancelar",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'cancelar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/completar": {
+      "post": {
+        "summary": "Endpoint POST /{id}/completar",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'completar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/confirmar-emisor": {
+      "post": {
+        "summary": "Endpoint POST /{id}/confirmar-emisor",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'confirmarEmisor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/confirmar-receptor": {
+      "post": {
+        "summary": "Endpoint POST /{id}/confirmar-receptor",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'confirmarReceptor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/aceptar-contraoferta": {
+      "post": {
+        "summary": "Endpoint POST /{id}/aceptar-contraoferta",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'aceptarComoEmisor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/modo-entrega": {
+      "post": {
+        "summary": "Endpoint POST /{id}/modo-entrega",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'seleccionarModoEntrega'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/confirmar-entrega": {
+      "post": {
+        "summary": "Endpoint POST /{id}/confirmar-entrega",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'confirmarEntrega'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/enviar": {
+      "post": {
+        "summary": "Endpoint POST /enviar",
+        "description": "Acci\u00f3n manejada por: App\\Http\\Controllers\\NegociacionController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/ver-chat/{id}": {
+      "get": {
+        "summary": "Endpoint GET /ver-chat/{id}",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'verChat'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/pago": {
+      "get": {
+        "summary": "Endpoint GET /{id}/pago",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'mostrarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /{id}/pago",
+        "description": "Acci\u00f3n manejada por: NegociacionController, 'procesarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mis-ventas-talentos": {
+      "get": {
+        "summary": "Endpoint GET /mis-ventas-talentos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/{id}/aprobar": {
+      "post": {
+        "summary": "Endpoint POST /solicitudes-servicio/{id}/aprobar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'aprobar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /solicitudes-servicio/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'rechazar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/enviar": {
+      "post": {
+        "summary": "Endpoint POST /solicitudes-servicio/enviar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'enviarDesdeCarrito'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/estado/{idItem}": {
+      "get": {
+        "summary": "Endpoint GET /solicitudes-servicio/estado/{idItem}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'estadoItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/{id}/aprobar-json": {
+      "post": {
+        "summary": "Endpoint POST /solicitudes-servicio/{id}/aprobar-json",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'aprobarJson'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/solicitudes-servicio/{id}/rechazar-json": {
+      "post": {
+        "summary": "Endpoint POST /solicitudes-servicio/{id}/rechazar-json",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\SolicitudServicioController, 'rechazarJson'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mi-hoja-vida": {
+      "get": {
+        "summary": "Endpoint GET /mi-hoja-vida",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HojaVidaController, 'form'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /mi-hoja-vida",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\HojaVidaController, 'save'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/rating": {
+      "post": {
+        "summary": "Endpoint POST /rating",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/debug-negociaciones": {
+      "get": {
+        "summary": "Endpoint GET /debug-negociaciones",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "summary": "Endpoint RESOURCE /usuarios",
+        "description": "Acci\u00f3n manejada por: UserController",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/usuarios/{id}/toggle-status": {
+      "put": {
+        "summary": "Endpoint PUT /usuarios/{id}/toggle-status",
+        "description": "Acci\u00f3n manejada por: 'toggleStatus'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mi-perfil": {
+      "get": {
+        "summary": "Endpoint GET /mi-perfil",
+        "description": "Acci\u00f3n manejada por: UserController, 'profile'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/actualizar-perfil": {
+      "put": {
+        "summary": "Endpoint PUT /actualizar-perfil",
+        "description": "Acci\u00f3n manejada por: UserController, 'updateProfile'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cambiar-contrasena": {
+      "post": {
+        "summary": "Endpoint POST /cambiar-contrasena",
+        "description": "Acci\u00f3n manejada por: UserController, 'updatePassword'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cuentas": {
+      "post": {
+        "summary": "Endpoint POST /cuentas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\BilleteraController, 'agregarCuenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cuentas/{id}": {
+      "delete": {
+        "summary": "Endpoint DELETE /cuentas/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\BilleteraController, 'eliminarCuenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/retiros": {
+      "post": {
+        "summary": "Endpoint POST /retiros",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\BilleteraController, 'solicitarRetiro'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/direccion/predeterminada/{id}": {
+      "post": {
+        "summary": "Endpoint POST /direccion/predeterminada/{id}",
+        "description": "Acci\u00f3n manejada por: DireccionesController, 'marcarComoPredeterminada'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/direcciones": {
+      "get": {
+        "summary": "Endpoint RESOURCE /direcciones",
+        "description": "Acci\u00f3n manejada por: DireccionesController",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/{slug}/talentoupdate": {
+      "put": {
+        "summary": "Endpoint PUT /items/{slug}/talentoupdate",
+        "description": "Acci\u00f3n manejada por: ItemController, 'talentoupdate'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items": {
+      "get": {
+        "summary": "Endpoint GET /items",
+        "description": "Acci\u00f3n manejada por: ItemController, 'itemsCategoria29'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talentos/crear": {
+      "get": {
+        "summary": "Endpoint GET /talentos/crear",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/agregar": {
+      "post": {
+        "summary": "Endpoint POST /talento/agregar",
+        "description": "Acci\u00f3n manejada por: ItemController, 'AddTalento'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talentos": {
+      "get": {
+        "summary": "Endpoint GET /talentos",
+        "description": "Acci\u00f3n manejada por: ItemController, 'userItemstalento'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/categoria-29": {
+      "get": {
+        "summary": "Endpoint GET /items/categoria-29",
+        "description": "Acci\u00f3n manejada por: ItemController, 'itemsCategoria29'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/talento/pago": {
+      "get": {
+        "summary": "Endpoint GET /talento/pago",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoRegistroPagoController, 'mostrarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /talento/pago",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TalentoRegistroPagoController, 'procesarPago'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/messages": {
+      "get": {
+        "summary": "Endpoint GET /messages",
+        "description": "Acci\u00f3n manejada por: MessageController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /messages",
+        "description": "Acci\u00f3n manejada por: MessageController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/messages/create/{item?}": {
+      "get": {
+        "summary": "Endpoint GET /messages/create/{item?}",
+        "description": "Acci\u00f3n manejada por: MessageController, 'create'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/messages/unread/count": {
+      "get": {
+        "summary": "Endpoint GET /messages/unread/count",
+        "description": "Acci\u00f3n manejada por: MessageController, 'unreadCount'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/messages/{message}": {
+      "get": {
+        "summary": "Endpoint GET /messages/{message}",
+        "description": "Acci\u00f3n manejada por: MessageController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/messages/{message}/read": {
+      "post": {
+        "summary": "Endpoint POST /messages/{message}/read",
+        "description": "Acci\u00f3n manejada por: MessageController, 'markAsRead'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones": {
+      "get": {
+        "summary": "Endpoint GET /notificaciones",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminNotificacionesController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mis-notificaciones": {
+      "get": {
+        "summary": "Endpoint GET /mis-notificaciones",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'misNotificaciones'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/leido/{id}": {
+      "post": {
+        "summary": "Endpoint POST /notificaciones/leido/{id}",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'marcarLeido'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/leer-todas": {
+      "post": {
+        "summary": "Endpoint POST /notificaciones/leer-todas",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'marcarTodasLeidas'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Endpoint GET /notifications",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /notifications",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "summary": "Endpoint POST /notifications/{id}/read",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'markAsRead'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notifications/{id}": {
+      "delete": {
+        "summary": "Endpoint DELETE /notifications/{id}",
+        "description": "Acci\u00f3n manejada por: NotificationController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/tu-cuenta/updateProducts": {
+      "get": {
+        "summary": "Endpoint GET /tu-cuenta/updateProducts",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/tu-cuenta": {
+      "get": {
+        "summary": "Endpoint GET /tu-cuenta",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "summary": "Endpoint GET /login",
+        "description": "Acci\u00f3n manejada por: LoginController, 'showLoginForm'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /login",
+        "description": "Acci\u00f3n manejada por: LoginController, 'login'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Endpoint POST /logout",
+        "description": "Acci\u00f3n manejada por: LoginController, 'logout'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "get": {
+        "summary": "Endpoint GET /logout",
+        "description": "Acci\u00f3n manejada por: LoginController, 'logout'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/adultos/verificar": {
+      "post": {
+        "summary": "Endpoint POST /adultos/verificar",
+        "description": "Acci\u00f3n manejada por: LoginController, 'verificarCredenciales'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/auth/{provider}": {
+      "get": {
+        "summary": "Endpoint GET /auth/{provider}",
+        "description": "Acci\u00f3n manejada por: SocialAuthController, 'redirect'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/auth/{provider}/callback": {
+      "get": {
+        "summary": "Endpoint GET /auth/{provider}/callback",
+        "description": "Acci\u00f3n manejada por: SocialAuthController, 'callback'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/password/reset": {
+      "get": {
+        "summary": "Endpoint GET /password/reset",
+        "description": "Acci\u00f3n manejada por: PasswordResetController, 'request'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /password/reset",
+        "description": "Acci\u00f3n manejada por: PasswordResetController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/password/email": {
+      "post": {
+        "summary": "Endpoint POST /password/email",
+        "description": "Acci\u00f3n manejada por: PasswordResetController, 'email'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/password/reset/{token}": {
+      "get": {
+        "summary": "Endpoint GET /password/reset/{token}",
+        "description": "Acci\u00f3n manejada por: PasswordResetController, 'reset'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte": {
+      "get": {
+        "summary": "Endpoint GET /transporte",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /transporte",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\TransporteController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/registro": {
+      "post": {
+        "summary": "Endpoint POST /registro",
+        "description": "Acci\u00f3n manejada por: 'registrarUsuario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "get": {
+        "summary": "Endpoint GET /registro",
+        "description": "Acci\u00f3n manejada por: 'showRegistroForm'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/registro/verificar": {
+      "get": {
+        "summary": "Endpoint GET /registro/verificar",
+        "description": "Acci\u00f3n manejada por: 'showVerificarForm'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /registro/verificar",
+        "description": "Acci\u00f3n manejada por: 'verificarCodigo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/registro/reenviar": {
+      "post": {
+        "summary": "Endpoint POST /registro/reenviar",
+        "description": "Acci\u00f3n manejada por: 'reenviarCodigo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/micuenta": {
+      "get": {
+        "summary": "Endpoint GET /micuenta",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cambiar-tipo-usuario": {
+      "get": {
+        "summary": "Endpoint GET /cambiar-tipo-usuario",
+        "description": "Acci\u00f3n manejada por: UserController, 'editTipoUsuario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /cambiar-tipo-usuario",
+        "description": "Acci\u00f3n manejada por: UserController, 'updateTipoUsuario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/crear": {
+      "get": {
+        "summary": "Endpoint GET /crear",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'create'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/gestiona-item": {
+      "get": {
+        "summary": "Endpoint GET /gestiona-item",
+        "description": "Acci\u00f3n manejada por: ItemController, 'gestion'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/{slug}": {
+      "put": {
+        "summary": "Endpoint PUT /items/{slug}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /items/{slug}",
+        "description": "Acci\u00f3n manejada por: ItemController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/email/verify": {
+      "get": {
+        "summary": "Endpoint GET /email/verify",
+        "description": "Acci\u00f3n manejada por: VerificationController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/email/verify/{id}/{hash}": {
+      "get": {
+        "summary": "Endpoint GET /email/verify/{id}/{hash}",
+        "description": "Acci\u00f3n manejada por: VerificationController, 'verify'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/email/resend": {
+      "post": {
+        "summary": "Endpoint POST /email/resend",
+        "description": "Acci\u00f3n manejada por: VerificationController, 'resend'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/historial/pdf": {
+      "get": {
+        "summary": "Endpoint GET /historial/pdf",
+        "description": "Acci\u00f3n manejada por: ERPController, 'descargarHistorialPdf'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad": {
+      "get": {
+        "summary": "Endpoint GET /contabilidad",
+        "description": "Acci\u00f3n manejada por: ERPController, 'contabilidad'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/asiento": {
+      "post": {
+        "summary": "Endpoint POST /contabilidad/asiento",
+        "description": "Acci\u00f3n manejada por: ERPController, 'storeAsiento'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/asientos/{id}/detalle": {
+      "get": {
+        "summary": "Endpoint GET /contabilidad/asientos/{id}/detalle",
+        "description": "Acci\u00f3n manejada por: ERPController, 'detalleAsiento'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/reportes": {
+      "get": {
+        "summary": "Endpoint GET /contabilidad/reportes",
+        "description": "Acci\u00f3n manejada por: ERPController, 'reportesFinancieros'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/reportes/{tipo}/pdf": {
+      "get": {
+        "summary": "Endpoint GET /contabilidad/reportes/{tipo}/pdf",
+        "description": "Acci\u00f3n manejada por: ERPController, 'descargarReportePdf'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/{id}/aprobar": {
+      "post": {
+        "summary": "Endpoint POST /transporte/{id}/aprobar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'aprobar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /transporte/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'rechazar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/{id}/pdf": {
+      "get": {
+        "summary": "Endpoint GET /transporte/{id}/pdf",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'generarPdf'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/articulos": {
+      "post": {
+        "summary": "Endpoint POST /transporte/articulos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'storeArticulo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/articulos/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /transporte/articulos/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'updateArticulo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /transporte/articulos/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'destroyArticulo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/config": {
+      "put": {
+        "summary": "Endpoint PUT /transporte/config",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'updateConfig'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/camiones": {
+      "post": {
+        "summary": "Endpoint POST /transporte/camiones",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'storeCamion'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/transporte/camiones/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /transporte/camiones/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'updateCamion'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /transporte/camiones/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminTransporteController, 'destroyCamion'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/cuentas": {
+      "post": {
+        "summary": "Endpoint POST /contabilidad/cuentas",
+        "description": "Acci\u00f3n manejada por: ERPController, 'storeCuenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/cuentas/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /contabilidad/cuentas/{id}",
+        "description": "Acci\u00f3n manejada por: ERPController, 'updateCuenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /contabilidad/cuentas/{id}",
+        "description": "Acci\u00f3n manejada por: ERPController, 'destroyCuenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/contabilidad/cuentas/{id}/mayor": {
+      "get": {
+        "summary": "Endpoint GET /contabilidad/cuentas/{id}/mayor",
+        "description": "Acci\u00f3n manejada por: ERPController, 'libroMayor'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/inventario": {
+      "get": {
+        "summary": "Endpoint GET /inventario",
+        "description": "Acci\u00f3n manejada por: ERPController, 'inventario'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/caja": {
+      "get": {
+        "summary": "Endpoint GET /caja",
+        "description": "Acci\u00f3n manejada por: ERPController, 'caja'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/caja/abrir": {
+      "post": {
+        "summary": "Endpoint POST /caja/abrir",
+        "description": "Acci\u00f3n manejada por: ERPController, 'abrirCaja'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/caja/cerrar": {
+      "post": {
+        "summary": "Endpoint POST /caja/cerrar",
+        "description": "Acci\u00f3n manejada por: ERPController, 'cerrarCaja'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/compras/{id}": {
+      "get": {
+        "summary": "Endpoint GET /compras/{id}",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'showCompra'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/compras/{id}/estado": {
+      "post": {
+        "summary": "Endpoint POST /compras/{id}/estado",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'actualizarEstado'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/compras/{id}/tracking": {
+      "post": {
+        "summary": "Endpoint POST /compras/{id}/tracking",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'enviarTracking'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/compras/{id}/pdf": {
+      "get": {
+        "summary": "Endpoint GET /compras/{id}/pdf",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'descargarPdf'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/ventas/{id}": {
+      "get": {
+        "summary": "Endpoint GET /ventas/{id}",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'showVenta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/intercambios/{id}": {
+      "get": {
+        "summary": "Endpoint GET /intercambios/{id}",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'showIntercambio'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/intercambios/{id}/pdf": {
+      "get": {
+        "summary": "Endpoint GET /intercambios/{id}/pdf",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'descargarIntercambioPdf'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/intercambios/{id}/estado": {
+      "post": {
+        "summary": "Endpoint POST /intercambios/{id}/estado",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'actualizarEstadoIntercambio'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/intercambios/{id}/tracking": {
+      "post": {
+        "summary": "Endpoint POST /intercambios/{id}/tracking",
+        "description": "Acci\u00f3n manejada por: AdminComprasController, 'enviarTrackingIntercambio'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mensajes-predefinidos": {
+      "get": {
+        "summary": "Endpoint GET /mensajes-predefinidos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMensajesController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /mensajes-predefinidos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMensajesController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/enviar": {
+      "post": {
+        "summary": "Endpoint POST /notificaciones/enviar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminNotificacionesController, 'enviar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/buscar-usuarios": {
+      "get": {
+        "summary": "Endpoint GET /notificaciones/buscar-usuarios",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminNotificacionesController, 'buscarUsuarios'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/categorias": {
+      "get": {
+        "summary": "Endpoint GET /notificaciones/categorias",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminNotificacionesController, 'indexCategorias'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/notificaciones/enviar-directa": {
+      "post": {
+        "summary": "Endpoint POST /notificaciones/enviar-directa",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminNotificacionesController, 'enviarDirecta'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/aprobar-todas": {
+      "post": {
+        "summary": "Endpoint POST /items/aprobar-todas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'aprobarTodosItems'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/{id}/aprobar": {
+      "post": {
+        "summary": "Endpoint POST /items/{id}/aprobar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'aprobarItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/items/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /items/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'rechazarItem'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/perfiles/aprobar-todas": {
+      "post": {
+        "summary": "Endpoint POST /perfiles/aprobar-todas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'aprobarTodosPerfiles'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/perfiles/{id}/aprobar": {
+      "post": {
+        "summary": "Endpoint POST /perfiles/{id}/aprobar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'aprobarPerfil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/perfiles/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /perfiles/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'rechazarPerfil'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/productos/{id}/aprobar": {
+      "post": {
+        "summary": "Endpoint POST /productos/{id}/aprobar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'aprobarProducto'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/productos/{id}/rechazar": {
+      "post": {
+        "summary": "Endpoint POST /productos/{id}/rechazar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminImagenesController, 'rechazarProducto'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/editar": {
+      "get": {
+        "summary": "Endpoint GET /{id}/editar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminRecursosHumanosController, 'edit'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{pageId}/pasos/crear": {
+      "get": {
+        "summary": "Endpoint GET /{pageId}/pasos/crear",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminAyudaController, 'createStep'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{pageId}/pasos": {
+      "post": {
+        "summary": "Endpoint POST /{pageId}/pasos",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminAyudaController, 'storeStep'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pasos/{stepId}/editar": {
+      "get": {
+        "summary": "Endpoint GET /pasos/{stepId}/editar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminAyudaController, 'editStep'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/pasos/{stepId}": {
+      "put": {
+        "summary": "Endpoint PUT /pasos/{stepId}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminAyudaController, 'updateStep'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /pasos/{stepId}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminAyudaController, 'destroyStep'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/{id}/pagar": {
+      "post": {
+        "summary": "Endpoint POST /{id}/pagar",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminPagosVendedoresController, 'pagar'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/motivos-devolucion": {
+      "get": {
+        "summary": "Endpoint RESOURCE /motivos-devolucion",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMotivosDevolucionController",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/estadisticas": {
+      "get": {
+        "summary": "Endpoint GET /estadisticas",
+        "description": "Acci\u00f3n manejada por: AdminStatsController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/estadisticas/data": {
+      "get": {
+        "summary": "Endpoint GET /estadisticas/data",
+        "description": "Acci\u00f3n manejada por: AdminStatsController, 'data'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/estadisticas/delivery-config/{clave}": {
+      "post": {
+        "summary": "Endpoint POST /estadisticas/delivery-config/{clave}",
+        "description": "Acci\u00f3n manejada por: \\App\\API\\DeliveryZonaController, 'updateConfig'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/estadisticas/categorias/{id}/aplica-impuesto": {
+      "post": {
+        "summary": "Endpoint POST /estadisticas/categorias/{id}/aplica-impuesto",
+        "description": "Acci\u00f3n manejada por: AdminStatsController, 'updateCategoriaAplicaImpuesto'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery/zonas": {
+      "get": {
+        "summary": "Endpoint GET /delivery/zonas",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminDeliveryZonasController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery/zonas/provincia/{id}/toggle": {
+      "post": {
+        "summary": "Endpoint POST /delivery/zonas/provincia/{id}/toggle",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminDeliveryZonasController, 'toggleProvincia'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery/zonas/municipio/{id}/toggle": {
+      "post": {
+        "summary": "Endpoint POST /delivery/zonas/municipio/{id}/toggle",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminDeliveryZonasController, 'toggleMunicipio'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery-zonas": {
+      "get": {
+        "summary": "Endpoint GET /delivery-zonas",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /delivery-zonas",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/delivery-zonas/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /delivery-zonas/{id}",
+        "description": "Acci\u00f3n manejada por: function (\\Illuminate\\Http\\Request $request, $id",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /delivery-zonas/{id}",
+        "description": "Acci\u00f3n manejada por: function ($id",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mensajes-predefinidos/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /mensajes-predefinidos/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMensajesController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /mensajes-predefinidos/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMensajesController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/mensajes-predefinidos/{id}/toggle": {
+      "patch": {
+        "summary": "Endpoint PATCH /mensajes-predefinidos/{id}/toggle",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminMensajesController, 'toggleActivo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cuentas-banco": {
+      "get": {
+        "summary": "Endpoint GET /cuentas-banco",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminCuentaBancoController, 'index'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "post": {
+        "summary": "Endpoint POST /cuentas-banco",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminCuentaBancoController, 'store'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cuentas-banco/{id}": {
+      "put": {
+        "summary": "Endpoint PUT /cuentas-banco/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminCuentaBancoController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Endpoint DELETE /cuentas-banco/{id}",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminCuentaBancoController, 'destroy'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/cuentas-banco/{id}/toggle": {
+      "patch": {
+        "summary": "Endpoint PATCH /cuentas-banco/{id}/toggle",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminCuentaBancoController, 'toggleActivo'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/config-tarifa": {
+      "get": {
+        "summary": "Endpoint GET /config-tarifa",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminConfigTarifaController, 'show'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      },
+      "put": {
+        "summary": "Endpoint PUT /config-tarifa",
+        "description": "Acci\u00f3n manejada por: \\App\\Http\\Controllers\\Admin\\AdminConfigTarifaController, 'update'",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    },
+    "/scout-import-items": {
+      "get": {
+        "summary": "Endpoint GET /scout-import-items",
+        "description": "Acci\u00f3n manejada por: function (",
+        "responses": {
+          "200": {
+            "description": "Operaci\u00f3n exitosa"
+          }
+        }
+      }
+    }
+  }
+}

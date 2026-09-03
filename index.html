@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cambialord - Tienda Online & Mercado de Trueques</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-orange: #f97316;
+      --primary-hover: #ea580c;
+      --bg-light: #f8fafc;
+      --text-dark: #0f172a;
+    }
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    .top-bar {
+      background-color: #0f172a;
+      color: #94a3b8;
+      font-size: 0.825rem;
+    }
+    .navbar-cambialo {
+      background-color: #ffffff;
+      border-bottom: 2px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .brand-logo {
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--primary-orange);
+      letter-spacing: -0.5px;
+    }
+    .brand-badge {
+      background-color: #ffedd5;
+      color: #c2410c;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    .hero-banner {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      border: 1px solid #fed7aa;
+      position: relative;
+      overflow: hidden;
+    }
+    .text-gradient {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .btn-cambialo {
+      background-color: var(--primary-orange);
+      color: #ffffff;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 0.75rem 2rem;
+      border: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+    }
+    .btn-cambialo:hover {
+      background-color: var(--primary-hover);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+    .cat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.25rem 0.75rem;
+      text-align: center;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      height: 100%;
+    }
+    .cat-card:hover {
+      border-color: var(--primary-orange);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+    }
+    .cat-icon {
+      font-size: 2.25rem;
+      color: var(--primary-orange);
+      margin-bottom: 0.5rem;
+    }
+    .item-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .item-card:hover {
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+      border-color: #cbd5e1;
+    }
+    .item-img-placeholder {
+      height: 180px;
+      background-color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: #94a3b8;
+    }
+    .badge-trueque {
+      background-color: #dcfce7;
+      color: #15803d;
+      font-weight: 700;
+      border: 1px solid #bbf7d0;
+    }
+    .badge-venta {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      font-weight: 700;
+      border: 1px solid #bae6fd;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar py-1.5 px-3">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div>
+        <i class="bi bi-geo-alt-fill text-warning me-1"></i> Cobertura Nacional en 31 Provincias de República Dominicana
+      </div>
+      <div class="d-flex gap-3">
+        <span><i class="bi bi-shield-check text-success me-1"></i> Intercambios Verificados</span>
+        <span><i class="bi bi-headset me-1"></i> Soporte 24/7</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar Principal -->
+  <nav class="navbar navbar-expand-lg navbar-cambialo sticky-top py-2 px-3">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <div class="bg-warning text-white p-2 rounded-3 d-flex align-items-center justify-content-center" style="width:40px; height:40px; background-color: var(--primary-orange) !important;">
+          <i class="bi bi-arrow-repeat fs-4"></i>
+        </div>
+        <div>
+          <span class="brand-logo">Cambialo<span class="text-dark">RD</span></span>
+          <span class="brand-badge ms-2">Tienda Online & Trueques</span>
+        </div>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCambialo">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse mt-2 mt-lg-0" id="navCambialo">
+        <div class="mx-auto my-2 my-lg-0 w-50">
+          <div class="input-group">
+            <input type="text" class="form-control border-end-0" placeholder="¿Qué deseas intercambiar o comprar hoy? (ej. iPhone, Laptop, Consola...)" style="border-radius: 10px 0 0 10px;">
+            <button class="btn text-white fw-bold px-4" type="button" style="background-color: var(--primary-orange); border-radius: 0 10px 10px 0;"><i class="bi bi-search"></i> Buscar</button>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <button class="btn btn-outline-dark btn-sm rounded-3 px-3 fw-bold" onclick="alert('Iniciando sesión con Sanctum Auth...')"><i class="bi bi-person me-1"></i>Iniciar Sesión</button>
+          <button class="btn btn-cambialo btn-sm rounded-3 px-3 fw-bold" onclick="alert('Formulario de publicación de artículo abierto')"><i class="bi bi-plus-lg me-1"></i>Publicar Producto</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Headline Section -->
+  <section class="container py-4">
+    <div class="hero-banner text-center">
+      <h1 class="display-5 fw-extrabold text-dark mb-2">
+        Si no puedes venderlo... <span class="text-gradient fw-black">¡Cámbialo!</span>
+      </h1>
+      <p class="lead text-secondary mb-4 mx-auto" style="max-width: 700px;">
+        La primera plataforma en República Dominicana para intercambiar artículos, publicar servicios de talento y realizar compras directas con entrega a domicilio garantizada.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <button class="btn btn-cambialo btn-lg" onclick="proposeBarterModal()"><i class="bi bi-arrow-repeat me-2"></i>Solicitar Cambio o Trueque</button>
+        <button class="btn btn-outline-dark btn-lg fw-bold rounded-4 px-4" onclick="document.getElementById('cat-section').scrollIntoView({behavior: 'smooth'})"><i class="bi bi-grid me-2"></i>Explorar Categorías</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categorías Populares -->
+  <section class="container py-3" id="cat-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-grid-fill text-warning me-2" style="color: var(--primary-orange) !important;"></i>Categorías Populares</h4>
+      <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary-orange);">Ver Todas <i class="bi bi-chevron-right"></i></a>
+    </div>
+
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-phone"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Teléfonos</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-laptop"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Tecnología</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-controller"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Gamer</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-gender-female"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Damas</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-gender-male"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Caballeros</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-house-door"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Hogar</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-person-badge"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Talentos-Servicios</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-car-front"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Vehículos</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-truck"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Transporte & Mudanza</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-tv"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Electrodomésticos</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-controller"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Niños & Juegos</h6>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cat-card">
+          <div class="cat-icon"><i class="bi bi-three-dots"></i></div>
+          <h6 class="fw-bold text-dark mb-0">Otras Categorías</h6>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Productos de Intercambio Destacados -->
+  <section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-arrow-repeat text-success me-2"></i>Productos Destacados para Trueque & Venta</h4>
+        <p class="text-muted small mb-0">Intercambia lo que tienes por algo que realmente necesitas</p>
+      </div>
+      <span class="badge bg-success bg-opacity-10 text-success p-2 border border-success fw-bold">🟢 Mercado En Vivo Activo</span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <!-- Item 1 -->
+      <div class="col">
+        <div class="item-card h-100 p-3">
+          <div class="item-img-placeholder text-primary"><i class="bi bi-phone"></i></div>
+          <div class="p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge badge-trueque">Trueque o Venta</span>
+              <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Santo Domingo</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">iPhone 13 Pro (128GB)</h6>
+            <p class="text-muted small mb-3">Cambio por laptop Intel i7 o cámara profesional Canon. Excelente estado 9/10.</p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="fw-bold text-success fs-5">$35,000 DOP</span>
+              <button class="btn btn-sm btn-outline-success rounded-3 fw-bold" onclick="proposeBarterModal('iPhone 13 Pro')">Proponer Trueque</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="col">
+        <div class="item-card h-100 p-3">
+          <div class="item-img-placeholder text-warning"><i class="bi bi-controller"></i></div>
+          <div class="p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge badge-trueque">Solo Trueque</span>
+              <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Santiago</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">PlayStation 5 Disc Edition</h6>
+            <p class="text-muted small mb-3">Incluye 2 mandos DualSense y 3 juegos físicos. Intercambio directo por iPad Pro.</p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="fw-bold text-info fs-6">Intercambio Directo</span>
+              <button class="btn btn-sm btn-outline-success rounded-3 fw-bold" onclick="proposeBarterModal('PS5 Disc Edition')">Proponer Trueque</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 3 -->
+      <div class="col">
+        <div class="item-card h-100 p-3">
+          <div class="item-img-placeholder text-info"><i class="bi bi-camera"></i></div>
+          <div class="p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge badge-venta">Venta Directa</span>
+              <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>La Vega</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">Cámara Canon EOS M50</h6>
+            <p class="text-muted small mb-3">Con lente 15-45mm perfecto para creación de contenido 4K y fotografía profesional.</p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="fw-bold text-success fs-5">$28,500 DOP</span>
+              <button class="btn btn-sm btn-primary rounded-3 fw-bold" onclick="alert('Añadido al Carrito CambialoRD')">Añadir al Carrito</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 4 -->
+      <div class="col">
+        <div class="item-card h-100 p-3">
+          <div class="item-img-placeholder text-success"><i class="bi bi-tools"></i></div>
+          <div class="p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge badge-trueque">Trueque o Venta</span>
+              <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Puerto Plata</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">Kit Herramientas DeWalt 20V</h6>
+            <p class="text-muted small mb-3">Taladro percutor + atornillador de impacto con 2 baterías de litio de alta duración.</p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="fw-bold text-success fs-5">$16,000 DOP</span>
+              <button class="btn btn-sm btn-outline-success rounded-3 fw-bold" onclick="proposeBarterModal('Kit DeWalt')">Proponer Trueque</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer CambialoRD -->
+  <footer class="bg-dark text-white pt-5 pb-3 mt-5">
+    <div class="container">
+      <div class="row g-4 border-bottom border-secondary pb-4">
+        <div class="col-md-4">
+          <h5 class="fw-bold text-warning mb-3" style="color: var(--primary-orange) !important;">CambialoRD</h5>
+          <p class="text-secondary small">La tienda online y mercado de intercambios líder en República Dominicana. Vende, compra o solicita trueques con total confianza y seguridad.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold text-white mb-3">Enlaces Rápidos</h6>
+          <ul class="list-unstyled text-secondary small leading-relaxed">
+            <li><a href="#" class="text-decoration-none text-secondary">Categorías Populares</a></li>
+            <li><a href="#" class="text-decoration-none text-secondary">Bolsa de Talentos & Servicios</a></li>
+            <li><a href="#" class="text-decoration-none text-secondary">Solicitar Transporte o Mudanza</a></li>
+            <li><a href="#" class="text-decoration-none text-secondary">Términos Legales & Garantía</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold text-white mb-3">Contacto & Cobertura</h6>
+          <p class="text-secondary small mb-1"><i class="bi bi-geo-alt text-warning me-1"></i> Santo Domingo, República Dominicana</p>
+          <p class="text-secondary small mb-1"><i class="bi bi-envelope text-warning me-1"></i> soporte@cambialord.com</p>
+          <p class="text-secondary small"><i class="bi bi-phone text-warning me-1"></i> +1 (809) 555-0199</p>
+        </div>
+      </div>
+      <div class="text-center pt-3 text-secondary small">
+        © 2026 CambialoRD. Todos los derechos reservados. Impulsado por AI Software Factory.
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function proposeBarterModal(item) {
+      alert('🔄 Oferta de Trueque CambialoRD para "' + (item || 'Producto') + '":\n\n1. Elige tus artículos a ofrecer\n2. Agrega dinero extra opcional\n3. Selecciona la provincia de delivery');
+    }
+  </script>
+</body>
+</html>
