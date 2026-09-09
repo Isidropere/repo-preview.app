@@ -45,11 +45,12 @@ class CustomResetPassword extends Notification
         ], false));
 
         return (new MailMessage)
-            ->subject('Recupera tu contraseña')
-            ->greeting('Hola!')
-            ->line('Recibiste este correo porque solicitaste un restablecimiento de contraseña para tu cuenta.')
+            ->subject('Recupera tu contraseña - Cambialord')
+            ->greeting('¡Hola!')
+            ->line('Recibiste este correo porque solicitaste un restablecimiento de contraseña para tu cuenta en Cambialord.')
             ->action('Restablecer contraseña', $url)
-            ->line('Si no solicitaste un restablecimiento de contraseña, ignora este correo.');
+            ->line('Si no solicitaste un restablecimiento de contraseña, puedes ignorar este correo sin ningún problema.')
+            ->salutation("Atentamente,\nEl equipo de Cambialord");
     }
 
     /**
