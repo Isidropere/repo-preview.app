@@ -20,24 +20,38 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Create a key for rate limiting based on the email
-        $key = 'password-reset:' . $request->email;
+        $email = strtolower(trim($request->email));
+        $dailyKey = 'password-reset-daily:' . $email;
+        $ipKey = 'password-reset-daily-ip:' . $request->ip();
+        $minuteKey = 'password-reset-min:' . $email;
 
-        // Check if the user has exceeded the rate limit (1 request per minute)
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $seconds = RateLimiter::availableIn($key);
-            $errorMessage = 'Has solicitado demasiados enlaces de restablecimiento de contraseña. Por favor, espera ' . $seconds . ' segundos antes de intentarlo de nuevo.';
+        // Check if daily limit (3 requests per 24h) exceeded for this email or IP
+        if (RateLimiter::tooManyAttempts($dailyKey, 3) || RateLimiter::tooManyAttempts($ipKey, 6)) {
+            $errorMessage = 'Has alcanzado el límite de 3 solicitudes de restablecimiento al día. Por seguridad de tu cuenta, intenta de nuevo mañana.';
 
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => $errorMessage
-                ]);
+                ], 429);
             }
 
-            return back()->withErrors([
-                'email' => $errorMessage
-            ]);
+            return back()->withErrors(['email' => $errorMessage]);
+        }
+
+        // Check minute limit (1 per 60 seconds)
+        if (RateLimiter::tooManyAttempts($minuteKey, 1)) {
+            $seconds = RateLimiter::availableIn($minuteKey);
+            $errorMessage = 'Por favor espera ' . $seconds . ' segundos antes de solicitar otro enlace.';
+
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 429);
+            }
+
+            return back()->withErrors(['email' => $errorMessage]);
         }
 
         // Send the reset link
@@ -45,10 +59,11 @@ class PasswordResetController extends Controller
             $request->only('email')
         );
 
-        // If the reset link was sent successfully, increment the rate limiter
+        // If the reset link was sent successfully, increment rate limiters
         if ($status === Password::RESET_LINK_SENT) {
-            // Increment the rate limiter with a decay time of 60 seconds (1 minute)
-            RateLimiter::hit($key, 60);
+            RateLimiter::hit($dailyKey, 86400); // 24 hours
+            RateLimiter::hit($ipKey, 86400);    // 24 hours
+            RateLimiter::hit($minuteKey, 60);    // 1 minute
 
             $successMessage = 'Se ha enviado un link a su correo para cambiar su contraseña.';
 

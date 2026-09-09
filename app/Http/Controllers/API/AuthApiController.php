@@ -23,13 +23,26 @@ class AuthApiController extends Controller
             'password' => 'required',
         ]);
 
+        $throttleKey = 'login-attempts:' . strtolower(trim($request->email)) . '|' . $request->ip();
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            $minutes = ceil($seconds / 60);
+            return response()->json([
+                'message' => 'Demasiados intentos fallidos de inicio de sesión. Cuenta bloqueada por seguridad durante ' . $minutes . ' minutos.'
+            ], 429);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 900); // 15 minutos
             throw ValidationException::withMessages([
                 'email' => ['Credenciales incorrectas.'],
             ]);
         }
+
+        \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
         if (!$user->estatus) {
             return response()->json(['message' => 'Cuenta desactivada.'], 403);
