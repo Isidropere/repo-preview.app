@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 
@@ -123,19 +124,44 @@ class _AgregarCuentaDialogState extends State<AgregarCuentaDialog> {
                 controller: _numeroController,
                 decoration: const InputDecoration(labelText: 'Número de Cuenta', border: OutlineInputBorder()),
                 keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(labelText: 'Nombre del Titular', border: OutlineInputBorder()),
-                validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                keyboardType: TextInputType.name,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]'))],
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Requerido';
+                  if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(v.trim())) {
+                    return 'El nombre solo debe contener letras';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _cedulaController,
-                decoration: const InputDecoration(labelText: 'Cédula o Pasaporte', border: OutlineInputBorder()),
-                validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Cédula del Titular (11 dígitos)',
+                  border: OutlineInputBorder(),
+                  counterText: '',
+                ),
+                keyboardType: TextInputType.number,
+                maxLength: 11,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Requerido';
+                  if (v.trim().length != 11 || !RegExp(r'^\d{11}$').hasMatch(v.trim())) {
+                    return 'La cédula debe tener exactamente 11 números';
+                  }
+                  return null;
+                },
               ),
             ],
           ),

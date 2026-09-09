@@ -78,8 +78,20 @@ class BilleteraApiController extends Controller
             'banco' => 'required|string|max:150',
             'tipo_cuenta' => 'required|in:ahorro,corriente',
             'numero_cuenta' => 'required|string|max:50',
-            'titular' => 'required|string|max:150',
-            'cedula_titular' => 'required|string|max:20',
+            'titular' => [
+                'required',
+                'string',
+                'max:150',
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u'
+            ],
+            'cedula_titular' => [
+                'required',
+                'string',
+                'regex:/^\d{11}$/'
+            ],
+        ], [
+            'titular.regex' => 'El nombre del titular solo debe contener letras.',
+            'cedula_titular.regex' => 'La cédula debe contener exactamente 11 dígitos numéricos.',
         ]);
 
         if ($validator->fails()) {
