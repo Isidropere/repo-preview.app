@@ -90,20 +90,28 @@ class BilleteraApiController extends Controller
             ], 422);
         }
 
-        $cuenta = new CuentaBancariaUsuario();
-        $cuenta->id_usuario = $user->id;
-        $cuenta->banco = $request->banco;
-        $cuenta->tipo_cuenta = $request->tipo_cuenta;
-        $cuenta->numero_cuenta = $request->numero_cuenta;
-        $cuenta->titular = $request->titular;
-        $cuenta->cedula_titular = $request->cedula_titular;
-        $cuenta->save();
+        try {
+            $cuenta = new CuentaBancariaUsuario();
+            $cuenta->id_usuario = $user->id;
+            $cuenta->banco = $request->banco;
+            $cuenta->tipo_cuenta = $request->tipo_cuenta;
+            $cuenta->numero_cuenta = $request->numero_cuenta;
+            $cuenta->titular = $request->titular;
+            $cuenta->cedula_titular = $request->cedula_titular;
+            $cuenta->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cuenta bancaria agregada exitosamente.',
-            'data' => $cuenta
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Cuenta bancaria agregada exitosamente.',
+                'data' => $cuenta
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo guardar la cuenta. Verifica que las migraciones de la base de datos se hayan ejecutado.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
