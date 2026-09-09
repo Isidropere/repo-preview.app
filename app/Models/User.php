@@ -179,10 +179,13 @@ class User extends Authenticatable implements MustVerifyEmail
         // Por ahora, la comisión es 0%.
 
         // Egresos: Suma de retiros solicitados (que no hayan sido rechazados)
-        $egresos = \Illuminate\Support\Facades\DB::table('retiros_vendedor')
-            ->where('id_usuario', $this->id)
-            ->whereIn('estado', ['pendiente', 'procesando', 'pagado'])
-            ->sum('monto');
+        $egresos = 0;
+        if (\Illuminate\Support\Facades\Schema::hasTable('retiros_vendedor')) {
+            $egresos = (float) \Illuminate\Support\Facades\DB::table('retiros_vendedor')
+                ->where('id_usuario', $this->id)
+                ->whereIn('estado', ['pendiente', 'procesando', 'pagado'])
+                ->sum('monto');
+        }
 
         return (float) ($ingresos - $egresos);
     }

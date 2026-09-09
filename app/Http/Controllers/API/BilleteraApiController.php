@@ -21,11 +21,15 @@ class BilleteraApiController extends Controller
         }
 
         $balanceDisponible = (float) $user->balance_disponible;
-        $cuentas = $user->cuentasBancarias;
-        $retiros = RetiroVendedor::where('id_usuario', $user->id)
-            ->with('cuentaBancaria')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $cuentas = \Illuminate\Support\Facades\Schema::hasTable('cuentas_bancarias_usuarios') 
+            ? $user->cuentasBancarias 
+            : [];
+        $retiros = \Illuminate\Support\Facades\Schema::hasTable('retiros_vendedor') 
+            ? RetiroVendedor::where('id_usuario', $user->id)
+                ->with('cuentaBancaria')
+                ->orderBy('created_at', 'desc')
+                ->get() 
+            : [];
 
         $dataPayload = [
             'balance_disponible' => $balanceDisponible,
