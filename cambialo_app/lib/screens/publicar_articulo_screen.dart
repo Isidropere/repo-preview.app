@@ -774,6 +774,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
 
               // Categoría dropdown
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 value: _idCategoria,
                 style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                 decoration: InputDecoration(
@@ -1284,6 +1285,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DropdownButtonFormField<int>(
+                        isExpanded: true,
                         value: _condicion,
                         style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
@@ -1319,6 +1321,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DropdownButtonFormField<int>(
+                        isExpanded: true,
                         value: _tipoTrans,
                         hint: const Text('Modalidad *', style: TextStyle(fontSize: 13, color: Colors.grey)),
                         style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
@@ -1352,6 +1355,7 @@ class _PublicarArticuloScreenState extends State<PublicarArticuloScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
+              isExpanded: true,
               value: _estatus,
               style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
               decoration: InputDecoration(

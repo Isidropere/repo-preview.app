@@ -11,11 +11,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE tarjetas_pagos MODIFY no_tarjeta VARCHAR(500) NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE tarjetas_pagos MODIFY no_tarjeta VARCHAR(500) NULL');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE tarjetas_pagos MODIFY no_tarjeta VARCHAR(19) NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE tarjetas_pagos MODIFY no_tarjeta VARCHAR(19) NULL');
+        }
     }
 };

@@ -26,16 +26,14 @@ class UserFactory extends Factory
         return [
             'nombres'          => fake()->firstName(),
             'apellidos'        => fake()->lastName(),
-            'telefono'         => fake()->numerify('###-###-####'),
-            'nombre_usuario'   => fake()->unique()->userName(),
+            'telefono'         => fake()->numerify('##########'),
             'email'            => fake()->unique()->safeEmail(),
             'email_verified_at'=> now(),
             'password'         => static::$password ??= Hash::make('password'),
             'remember_token'   => Str::random(10),
-            'estatus'          => 1,
-            'id_tipo_usuario'  => 1,
+            'active'           => true,
+            'tipos_usuario_id' => 1,
             'isAdmin'          => false,
-            'isSuperAdmin'     => false,
         ];
     }
 

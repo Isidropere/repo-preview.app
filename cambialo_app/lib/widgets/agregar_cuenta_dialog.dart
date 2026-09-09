@@ -60,7 +60,10 @@ class _AgregarCuentaDialogState extends State<AgregarCuentaDialog> {
         'cedula_titular': _cedulaController.text.trim(),
       };
       
-      final res = await ApiClient.post('/billetera/cuentas-bancarias', body, auth: true);
+      var res = await ApiClient.post('/billetera/cuentas-bancarias', body, auth: true);
+      if (res.statusCode == 404) {
+        res = await ApiClient.post('/mi-billetera/cuentas', body, auth: true);
+      }
       if (res.statusCode == 201 || res.statusCode == 200) {
         if (mounted) {
           Navigator.pop(context, true);
@@ -100,8 +103,9 @@ class _AgregarCuentaDialogState extends State<AgregarCuentaDialog> {
             children: [
               DropdownButtonFormField<String>(
                 value: _banco,
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Banco', border: OutlineInputBorder()),
-                items: _bancos.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
+                items: _bancos.map((b) => DropdownMenuItem(value: b, child: Text(b, overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() => _banco = v!),
               ),
               const SizedBox(height: 16),

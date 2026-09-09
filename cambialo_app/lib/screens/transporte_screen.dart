@@ -399,6 +399,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
                     const SizedBox(height: 12),
                     _buildCard([
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: _tipoServicio,
                         decoration: const InputDecoration(
                           labelText: 'Tipo de Servicio',
@@ -453,6 +454,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: _pisoOrigen,
                         decoration: const InputDecoration(
                           labelText: 'Piso de Origen',
@@ -473,6 +475,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: _pisoDestino,
                         decoration: const InputDecoration(
                           labelText: 'Piso de Destino',
@@ -591,6 +594,7 @@ class _TransporteScreenState extends State<TransporteScreen> {
     if (_tipoServicio == 'mudanza') {
       return _buildCard([
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: _camionTamano,
           decoration: const InputDecoration(
             labelText: 'Tamaño del Camión',

@@ -27,7 +27,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _error;
 
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: '888336739336-ti3q4e2ejj4tuf6voeb36bbh5e2fua40.apps.googleusercontent.com',
+    clientId: '888336739336-el3qgr2lgfp7294q219t0lg976769njs.apps.googleusercontent.com',
+    serverClientId: '888336739336-ti3q4e2ejj4tuf6voeb36bbh5e2fua40.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
 

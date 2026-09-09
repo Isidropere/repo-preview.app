@@ -74,16 +74,18 @@ class _AdultoVerificationDialogState extends State<AdultoVerificationDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.eighteen_up_rating, color: Colors.red, size: 28),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Contenido para adultos',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: kTextDark,
+                  Icon(Icons.eighteen_up_rating, color: Colors.red, size: 28),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Contenido para adultos',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: kTextDark,
+                      ),
                     ),
                   ),
                 ],
@@ -182,31 +184,36 @@ class _AdultoVerificationDialogState extends State<AdultoVerificationDialog> {
               const SizedBox(height: 20),
 
               // Acciones (Cancelar y Confirmar)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _loading ? null : () => Navigator.pop(context),
-                    child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: canConfirm ? _submit : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: canConfirm ? Colors.red : Colors.grey.shade300,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: _loading ? null : () => Navigator.pop(context),
+                      child: const Text('Cancelar', style: TextStyle(color: kTextGray)),
                     ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text('Confirmar acceso', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+                    ElevatedButton(
+                      onPressed: canConfirm ? _submit : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: canConfirm ? Colors.red : Colors.grey.shade300,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text('Confirmar acceso', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

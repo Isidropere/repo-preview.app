@@ -99,9 +99,11 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                       color: Colors.red, size: 22),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '¿Eliminar este talento?',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const Expanded(
+                  child: Text(
+                    '¿Eliminar este talento?',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -587,42 +589,34 @@ class _MisTalentosScreenState extends State<MisTalentosScreen> {
                                               ),
                                               const SizedBox(height: 5),
                                               // Precio, Tipo y Fecha
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    'RD\$ ${_formatPrice(item['valor'])}',
-                                                    style: const TextStyle(
-                                                        fontSize: 13,
-                                                        color: kSecondary,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        '$transText  |  $pubDate',
-                                                        style: TextStyle(
-                                                            fontSize: 10,
-                                                            color: Colors
-                                                                .grey.shade500),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        'Publicaciones: $cantidad',
-                                                        style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: cantidad <= 0
-                                                                ? Colors.red
-                                                                : Colors.grey.shade600),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
+                                              Text(
+                                                'RD\$ ${_formatPrice(item['valor'])}',
+                                                style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: kSecondary,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '$transText  |  $pubDate',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey.shade500),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Publicaciones: $cantidad',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: cantidad <= 0
+                                                        ? Colors.red
+                                                        : Colors.grey.shade600),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),

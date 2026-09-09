@@ -80,25 +80,24 @@ class SocialAuthController extends Controller
             $nombres   = $nameParts[0] ?? 'Usuario';
             $apellidos = $nameParts[1] ?? '';
 
-            $baseUsername = strtolower(preg_replace('/\s+/', '', ($socialUser->getName() ?? 'user')));
-            $username = $baseUsername;
-            if (User::where('nombre_usuario', $username)->exists()) {
-                $username = $baseUsername . '_' . Str::random(4);
-            }
-
-            $user = User::create([
+            $userData = [
                 'nombres'           => $nombres,
                 'apellidos'         => $apellidos,
                 'email'             => $socialUser->getEmail() ?? $socialUser->getId() . '@' . $provider . '.oauth',
                 'telefono'          => '',
                 $idField            => $socialUser->getId(),
-                'nombre_usuario'    => $username,
                 'password'          => bcrypt(Str::random(24)),
                 'password_defined'  => false,
-                'estatus'           => 1,
-                'id_tipo_usuario'   => 1,
+                'active'            => true,
+                'tipos_usuario_id'  => 1,
                 'email_verified_at' => now(), // OAuth = email ya verificado
-            ]);
+            ];
+
+            if (\Schema::hasColumn('users', 'nombre_usuario')) {
+                $userData['nombre_usuario'] = $username;
+            }
+
+            $user = User::create($userData);
         }
 
         Auth::login($user, true);

@@ -11,6 +11,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
         $fixes = [

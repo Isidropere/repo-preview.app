@@ -28,22 +28,54 @@ class _BilleteraScreenState extends State<BilleteraScreen> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
-      final res = await ApiClient.get('/billetera/resumen', auth: true, useCache: false);
+      var res = await ApiClient.get('/billetera/resumen', auth: true, useCache: false);
+      if (res.statusCode == 404) {
+        res = await ApiClient.get('/billetera', auth: true, useCache: false);
+      }
+      if (res.statusCode == 404) {
+        res = await ApiClient.get('/mi-billetera/resumen', auth: true, useCache: false);
+      }
+
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final body = jsonDecode(res.body);
+        final Map<String, dynamic> dataMap = (body is Map && body['data'] is Map)
+            ? Map<String, dynamic>.from(body['data'])
+            : (body is Map ? Map<String, dynamic>.from(body) : {});
+
+        final rawBalance = dataMap['balance_disponible'] ?? (body is Map ? body['balance_disponible'] : null) ?? 0;
+        final double balanceVal = rawBalance is num
+            ? rawBalance.toDouble()
+            : (double.tryParse(rawBalance.toString()) ?? 0.0);
+
+        final rawCuentas = dataMap['cuentas'] ?? (body is Map ? body['cuentas'] : null) ?? [];
+        final rawHistorial = dataMap['retiros'] ?? (body is Map ? body['retiros'] : null) ?? [];
+
         if (mounted) {
           setState(() {
-            _balance = (data['balance_disponible'] ?? 0).toDouble();
-            _cuentas = data['cuentas'] ?? [];
-            _historial = data['retiros'] ?? [];
+            _balance = balanceVal;
+            _cuentas = rawCuentas is List ? rawCuentas : [];
+            _historial = rawHistorial is List ? rawHistorial : [];
             _loading = false;
           });
         }
       } else {
-        if (mounted) setState(() => _loading = false);
+        if (mounted) {
+          setState(() => _loading = false);
+          String errorMsg = 'Error al cargar la billetera (${res.statusCode})';
+          try {
+            final errBody = jsonDecode(res.body);
+            if (errBody is Map && errBody['message'] != null) {
+              errorMsg = errBody['message'];
+            }
+          } catch (_) {}
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg), backgroundColor: Colors.red));
+        }
       }
     } catch (e) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error de conexión al cargar billetera'), backgroundColor: Colors.red));
+      }
     }
   }
 
@@ -58,7 +90,10 @@ class _BilleteraScreenState extends State<BilleteraScreen> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al eliminar cuenta'), backgroundColor: Colors.red));
+          final err = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(err['message'] ?? 'Error al eliminar cuenta'), backgroundColor: Colors.red),
+          );
         }
       }
     } catch (e) {
@@ -133,7 +168,9 @@ class _BilleteraScreenState extends State<BilleteraScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Mis Cuentas Bancarias', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextGray)),
+            const Expanded(
+              child: Text('Mis Cuentas Bancarias', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextGray), overflow: TextOverflow.ellipsis),
+            ),
             TextButton.icon(
               onPressed: _showAgregarCuenta,
               icon: const Icon(Icons.add, size: 18, color: kPrimary),

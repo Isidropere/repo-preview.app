@@ -66,6 +66,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'instagram_id',
         'email_verified_at',
         'password',
+        'active',
+        'tipos_usuario_id',
         'estatus',
         'id_tipo_usuario',
         'remember_token',
@@ -86,6 +88,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isContableUser(): bool
     {
         return (bool) ($this->attributes['isContable'] ?? false);
+    }
+
+    /** Accessor para estatus (alias de active) */
+    public function getEstatusAttribute()
+    {
+        return $this->attributes['active'] ?? $this->attributes['estatus'] ?? 1;
     }
 
     /**

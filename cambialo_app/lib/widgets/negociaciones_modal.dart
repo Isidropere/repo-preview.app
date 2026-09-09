@@ -123,7 +123,16 @@ class _NegociacionesModalState extends State<NegociacionesModal> {
       padding: const EdgeInsets.only(top: 16),
       child: Column(
         children: [
-          Text('Negociar: ${widget.itemName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Negociar: ${widget.itemName}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
           const Divider(),
           Expanded(
             child: _loading
@@ -172,6 +181,7 @@ class _NegociacionesModalState extends State<NegociacionesModal> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Acción a realizar',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -182,12 +192,13 @@ class _NegociacionesModalState extends State<NegociacionesModal> {
                       items: _acciones.map((a) {
                         final tipo = a['tipo']?.toString() ?? '';
                         final label = tipo.isNotEmpty ? tipo[0].toUpperCase() + tipo.substring(1) : '';
-                        return DropdownMenuItem(value: tipo, child: Text(label));
+                        return DropdownMenuItem(value: tipo, child: Text(label, overflow: TextOverflow.ellipsis));
                       }).toList(),
                       onChanged: (val) => setState(() => _accionSeleccionada = val),
                     ),
                   ),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   decoration: InputDecoration(
                     labelText: 'Mensaje Rápido',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -198,7 +209,7 @@ class _NegociacionesModalState extends State<NegociacionesModal> {
                   items: _mensajesPredefinidosAPI.map((msg) {
                     return DropdownMenuItem<String>(
                       value: msg['mensaje'].toString(),
-                      child: Text(msg['titulo'].toString()),
+                      child: Text(msg['titulo'].toString(), overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
                   onChanged: (val) {

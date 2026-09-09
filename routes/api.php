@@ -10,7 +10,7 @@ use App\Http\Controllers\API\NegociacionApiController;
 use App\Http\Controllers\API\HojaVidaApiController;
 use App\Http\Controllers\API\PagoApiController;
 use App\Http\Controllers\TarjetaPagoController;
-use App\Http\Controllers\Api\BilleteraApiController;
+use App\Http\Controllers\API\BilleteraApiController;
 use App\Http\Controllers\API\AnalyticsApiController;
 
 // Analytics event tracking
@@ -29,6 +29,15 @@ Route::post('/analytics/track-event', [AnalyticsApiController::class, 'trackEven
 |
 |--------------------------------------------------------------------------
 */
+
+// ── Estado / Health Check ─────────────────────────────────────────────
+Route::get('/', function () {
+    return response()->json([
+        'status'  => 'online',
+        'message' => 'API de CambialóRD en funcionamiento',
+        'version' => '1.0.0'
+    ]);
+});
 
 // ── Auth ──────────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
@@ -139,9 +148,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // Billetera del Vendedor
     Route::prefix('billetera')->group(function () {
         Route::get('/resumen', [BilleteraApiController::class, 'resumen']);
+        Route::get('/', [BilleteraApiController::class, 'resumen']);
         Route::get('/cuentas-bancarias', [BilleteraApiController::class, 'cuentasBancarias']);
         Route::post('/cuentas-bancarias', [BilleteraApiController::class, 'agregarCuentaBancaria']);
         Route::delete('/cuentas-bancarias/{id}', [BilleteraApiController::class, 'eliminarCuentaBancaria']);
+        Route::get('/retiros', [BilleteraApiController::class, 'historialRetiros']);
+        Route::post('/retiros', [BilleteraApiController::class, 'solicitarRetiro']);
+    });
+
+    // Rutas alias para compatibilidad mi-billetera
+    Route::prefix('mi-billetera')->group(function () {
+        Route::get('/resumen', [BilleteraApiController::class, 'resumen']);
+        Route::get('/', [BilleteraApiController::class, 'resumen']);
+        Route::get('/cuentas', [BilleteraApiController::class, 'cuentasBancarias']);
+        Route::post('/cuentas', [BilleteraApiController::class, 'agregarCuentaBancaria']);
+        Route::delete('/cuentas/{id}', [BilleteraApiController::class, 'eliminarCuentaBancaria']);
         Route::get('/retiros', [BilleteraApiController::class, 'historialRetiros']);
         Route::post('/retiros', [BilleteraApiController::class, 'solicitarRetiro']);
     });

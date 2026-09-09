@@ -257,20 +257,24 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
+                              isExpanded: true,
                               value: _selectedStatus,
                               items: const [
                                 DropdownMenuItem(
                                     value: 'all',
                                     child: Text('Todos (Estado)',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                                 DropdownMenuItem(
                                     value: '1',
                                     child: Text('Activos',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                                 DropdownMenuItem(
                                     value: '2',
                                     child: Text('Inactivos',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                               ],
                               onChanged: (val) => setState(
                                   () => _selectedStatus = val ?? 'all'),
@@ -288,24 +292,29 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<String>(
+                              isExpanded: true,
                               value: _selectedType,
                               items: const [
                                 DropdownMenuItem(
                                     value: 'all',
                                     child: Text('Tipo',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                                 DropdownMenuItem(
                                     value: '1',
                                     child: Text('Venta',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                                 DropdownMenuItem(
                                     value: '2',
                                     child: Text('Intercambio',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                                 DropdownMenuItem(
                                     value: '3',
                                     child: Text('Ambos',
-                                        style: TextStyle(fontSize: 12))),
+                                        style: TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis)),
                               ],
                               onChanged: (val) =>
                                   setState(() => _selectedType = val ?? 'all'),
@@ -469,27 +478,22 @@ class _MisArticulosScreenState extends State<MisArticulosScreen> {
                                               ),
                                               const SizedBox(height: 5),
                                               // Precio, Tipo de Transacción y Fecha
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    'RD\$ ${_formatPrice(item['valor'])}',
-                                                    style: const TextStyle(
-                                                        fontSize: 13,
-                                                        color: kPrimary,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Text(
-                                                    '$transText  |  $pubDate',
-                                                    style: TextStyle(
-                                                        fontSize: 10,
-                                                        color: Colors
-                                                            .grey.shade500),
-                                                  ),
-                                                ],
+                                              Text(
+                                                'RD\$ ${_formatPrice(item['valor'])}',
+                                                style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: kPrimary,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '$transText  |  $pubDate',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey.shade500),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),

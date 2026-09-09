@@ -236,10 +236,14 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
 
             // Provincia
             DropdownButtonFormField<String>(
+              isExpanded: true,
               value: _idProvincia,
               decoration: const InputDecoration(labelText: 'Provincia *', border: OutlineInputBorder()),
               items: _provincias.map<DropdownMenuItem<String>>((p) =>
-                DropdownMenuItem(value: p['id_provincia'].toString(), child: Text(p['provincia']))).toList(),
+                DropdownMenuItem(
+                  value: p['id_provincia'].toString(),
+                  child: Text(p['provincia'], overflow: TextOverflow.ellipsis),
+                )).toList(),
               onChanged: (v) {
                 setState(() { 
                   _idProvincia = v; 
@@ -253,10 +257,14 @@ class _FormDireccionScreenState extends State<_FormDireccionScreen> {
 
             // Municipio
             DropdownButtonFormField<String>(
+              isExpanded: true,
               value: _idMunicipio,
               decoration: const InputDecoration(labelText: 'Municipio *', border: OutlineInputBorder()),
               items: _municipios.map<DropdownMenuItem<String>>((m) =>
-                DropdownMenuItem(value: m['id_municipio'].toString(), child: Text(m['municipio']))).toList(),
+                DropdownMenuItem(
+                  value: m['id_municipio'].toString(),
+                  child: Text(m['municipio'], overflow: TextOverflow.ellipsis),
+                )).toList(),
               onChanged: (v) => setState(() => _idMunicipio = v),
             ),
             const SizedBox(height: 16),

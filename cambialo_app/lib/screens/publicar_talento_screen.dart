@@ -703,6 +703,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<int>(
+                      isExpanded: true,
                       value: _tipoTrans,
                       style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
@@ -711,7 +712,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                         prefixIcon: const Icon(Icons.handshake_outlined, color: kPrimary, size: 20),
                         filled: true,
                         fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
@@ -722,9 +723,9 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                         ),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 3, child: Text('Ambos')),
-                        DropdownMenuItem(value: 2, child: Text('Solo Canje')),
-                        DropdownMenuItem(value: 1, child: Text('Solo Venta')),
+                        DropdownMenuItem(value: 3, child: Text('Ambos', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(value: 2, child: Text('Solo Canje', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(value: 1, child: Text('Solo Venta', overflow: TextOverflow.ellipsis)),
                       ],
                       onChanged: (val) => setState(() => _tipoTrans = val!),
                     ),
@@ -796,6 +797,7 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 value: _estatus,
                 style: const TextStyle(fontSize: 14, color: kTextDark, fontWeight: FontWeight.w500),
                 decoration: InputDecoration(
@@ -815,8 +817,8 @@ class _PublicarTalentoScreenState extends State<PublicarTalentoScreen> {
                   ),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 1, child: Text('Activo')),
-                  DropdownMenuItem(value: 2, child: Text('Pausado (Inactivo)')),
+                  DropdownMenuItem(value: 1, child: Text('Activo', overflow: TextOverflow.ellipsis)),
+                  DropdownMenuItem(value: 2, child: Text('Pausado (Inactivo)', overflow: TextOverflow.ellipsis)),
                 ],
                 onChanged: (val) => setState(() => _estatus = val ?? 2),
               ),

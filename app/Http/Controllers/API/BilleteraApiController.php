@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -20,14 +20,25 @@ class BilleteraApiController extends Controller
             return response()->json(['success' => false, 'message' => 'No autorizado'], 401);
         }
 
-        $balanceDisponible = $user->balance_disponible;
+        $balanceDisponible = (float) $user->balance_disponible;
+        $cuentas = $user->cuentasBancarias;
+        $retiros = RetiroVendedor::where('id_usuario', $user->id)
+            ->with('cuentaBancaria')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $dataPayload = [
+            'balance_disponible' => $balanceDisponible,
+            'cuentas'            => $cuentas,
+            'retiros'            => $retiros,
+        ];
 
         return response()->json([
-            'success' => true,
-            'data' => [
-                'balance_disponible' => $balanceDisponible,
-                // Opcional: Podríamos agregar balance en tránsito en el futuro.
-            ]
+            'success'            => true,
+            'data'               => $dataPayload,
+            'balance_disponible' => $balanceDisponible,
+            'cuentas'            => $cuentas,
+            'retiros'            => $retiros,
         ]);
     }
 
@@ -104,6 +115,17 @@ class BilleteraApiController extends Controller
         $cuenta = CuentaBancariaUsuario::where('id', $id)->where('id_usuario', $user->id)->first();
         if (!$cuenta) {
             return response()->json(['success' => false, 'message' => 'Cuenta no encontrada'], 404);
+        }
+
+        $tieneRetiroPendiente = RetiroVendedor::where('id_cuenta_bancaria', $cuenta->id)
+            ->whereIn('estado', ['pendiente', 'procesando'])
+            ->exists();
+
+        if ($tieneRetiroPendiente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No puedes eliminar esta cuenta porque tiene solicitudes de retiro en proceso.'
+            ], 400);
         }
 
         $cuenta->delete();

@@ -195,7 +195,13 @@ class _SolicitudCard extends StatelessWidget {
               children: [
                 const Icon(Icons.location_on, size: 14, color: kTextGray),
                 const SizedBox(width: 4),
-                Text('Lugar: $ubicacion', style: const TextStyle(fontSize: 13, color: kTextGray)),
+                Expanded(
+                  child: Text(
+                    'Lugar: $ubicacion',
+                    style: const TextStyle(fontSize: 13, color: kTextGray),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),

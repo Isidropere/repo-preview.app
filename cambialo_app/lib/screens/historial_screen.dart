@@ -207,8 +207,9 @@ class _ComprasTab extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: kTextGray, fontWeight: isBold ? FontWeight.bold : null)),
-          Text(value, style: TextStyle(fontSize: 11, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: valueColor ?? kTextDark)),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 11, color: kTextGray, fontWeight: isBold ? FontWeight.bold : null), overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 8),
+          Flexible(child: Text(value, style: TextStyle(fontSize: 11, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: valueColor ?? kTextDark), overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -240,16 +241,22 @@ class _ComprasTab extends StatelessWidget {
               child: Row(children: [
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Text('Orden #${(c['id_pago_compra'] ?? '').toString().substring(0, 8)}...',
-                        style: const TextStyle(fontSize: 12, color: kTextGray)),
+                    Flexible(
+                      child: Text(
+                        'Orden #${(c['id_pago_compra'] ?? '').toString().substring(0, (c['id_pago_compra'] ?? '').toString().length > 8 ? 8 : (c['id_pago_compra'] ?? '').toString().length)}...',
+                        style: const TextStyle(fontSize: 12, color: kTextGray),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     _EstatusBadge(estatus: estatus),
                   ]),
                   const SizedBox(height: 4),
                   Text(c['fecha'] ?? '', style: const TextStyle(fontSize: 11, color: kTextGray)),
                 ])),
+                const SizedBox(width: 8),
                 Text('RD\$ ${c['total'] ?? 0}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kPrimary)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: kPrimary)),
               ]),
             ),
             // Items
@@ -263,14 +270,20 @@ class _ComprasTab extends StatelessWidget {
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(pi['nombre_item'] ?? '',
-                          style: const TextStyle(fontSize: 12, color: kTextDark, fontWeight: FontWeight.w500)),
+                      Text(
+                        pi['nombre_item'] ?? '',
+                        style: const TextStyle(fontSize: 12, color: kTextDark, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         double.tryParse(pi['descuento']?.toString() ?? '0')! > 0
                             ? '${pi['cantidad']} x RD\$ ${double.tryParse(pi['precio_unitario']?.toString() ?? '0')?.toStringAsFixed(2)} (-RD\$ ${double.tryParse(pi['descuento']?.toString() ?? '0')?.toStringAsFixed(2)})'
                             : '${pi['cantidad']} x RD\$ ${double.tryParse(pi['precio_unitario']?.toString() ?? '0')?.toStringAsFixed(2)}',
                         style: const TextStyle(fontSize: 10, color: kTextGray),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   )),
@@ -359,10 +372,12 @@ class _ComprasTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        if (editable) ...[
+                        if (editable)
                           TextButton.icon(
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.red.shade700,
@@ -377,8 +392,6 @@ class _ComprasTab extends StatelessWidget {
                             label: const Text('Solicitar Devolución', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             onPressed: () => _confirmDevolucion(context, c['id_pago_compra'] ?? ''),
                           ),
-                          const SizedBox(width: 8),
-                        ],
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF58634), // Web orange #f58634
@@ -487,6 +500,7 @@ class _DevolucionBottomSheetState extends State<_DevolucionBottomSheet> {
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 value: _selectedMotivoId,
                 decoration: InputDecoration(
                   labelText: 'Motivo de devolución *',
@@ -512,6 +526,7 @@ class _DevolucionBottomSheetState extends State<_DevolucionBottomSheet> {
                     child: Text(
                       m['motivo'] ?? '',
                       style: const TextStyle(fontSize: 14, color: kTextDark),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
                 }).toList(),
@@ -629,6 +644,7 @@ class _VentasTab extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item['item'] ?? 'Artículo',
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextDark)),
               Text('Cantidad: ${v['cantidad']}', style: TextStyle(fontSize: 12, color: kTextGray)),
               if (item['valor'] != null)
@@ -725,8 +741,11 @@ class _EstatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(estatus[0].toUpperCase() + estatus.substring(1),
-          style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600)),
+      child: Text(
+        estatus.isEmpty ? '' : estatus[0].toUpperCase() + estatus.substring(1),
+        style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600),
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }

@@ -430,21 +430,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                         const SizedBox(height: 16),
-                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          ElevatedButton(
-                            onPressed: () => Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
-                            style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                            child: const Text('Vender', style: TextStyle(color: Colors.white)),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: () => Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
-                            style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                            child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
-                          ),
-                        ]),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => Navigator.push(context,
+                                  MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                              style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                              child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.push(context,
+                                  MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                              style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                              child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
                       ]),
                     ),
                     const FooterWidget(),

@@ -49,7 +49,10 @@ class _SolicitarRetiroDialogState extends State<SolicitarRetiroDialog> {
         'monto': monto,
       };
       
-      final res = await ApiClient.post('/billetera/retiros', body, auth: true);
+      var res = await ApiClient.post('/billetera/retiros', body, auth: true);
+      if (res.statusCode == 404) {
+        res = await ApiClient.post('/mi-billetera/retiros', body, auth: true);
+      }
       if (res.statusCode == 201 || res.statusCode == 200) {
         if (mounted) {
           Navigator.pop(context, true);
@@ -79,37 +82,43 @@ class _SolicitarRetiroDialogState extends State<SolicitarRetiroDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Solicitar Retiro'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Balance Disponible: RD\$ ${widget.balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              value: _cuentaId,
-              decoration: const InputDecoration(labelText: 'Cuenta Destino', border: OutlineInputBorder()),
-              items: widget.cuentas.map((c) => DropdownMenuItem<int>(
-                value: c['id'], 
-                child: Text('${c['banco']} - *${c['numero_cuenta'].toString().length > 4 ? c['numero_cuenta'].toString().substring(c['numero_cuenta'].toString().length - 4) : c['numero_cuenta']}')
-              )).toList(),
-              onChanged: (v) => setState(() => _cuentaId = v),
-              validator: (v) => v == null ? 'Seleccione una cuenta' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _montoController,
-              decoration: const InputDecoration(labelText: 'Monto a retirar', border: OutlineInputBorder(), prefixText: 'RD\$ '),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Requerido';
-                final d = double.tryParse(v);
-                if (d == null) return 'Monto inválido';
-                return null;
-              },
-            ),
-          ],
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Balance Disponible: RD\$ ${widget.balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _cuentaId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Cuenta Destino', border: OutlineInputBorder()),
+                items: widget.cuentas.map((c) => DropdownMenuItem<int>(
+                  value: c['id'], 
+                  child: Text(
+                    '${c['banco']} - *${c['numero_cuenta'].toString().length > 4 ? c['numero_cuenta'].toString().substring(c['numero_cuenta'].toString().length - 4) : c['numero_cuenta']}',
+                    overflow: TextOverflow.ellipsis,
+                  )
+                )).toList(),
+                onChanged: (v) => setState(() => _cuentaId = v),
+                validator: (v) => v == null ? 'Seleccione una cuenta' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _montoController,
+                decoration: const InputDecoration(labelText: 'Monto a retirar', border: OutlineInputBorder(), prefixText: 'RD\$ '),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  final d = double.tryParse(v);
+                  if (d == null) return 'Monto inválido';
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
       ),
       actions: [

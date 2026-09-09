@@ -26,22 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'pago/*',
             'talento/pago/*',
             'negociaciones/pago/*',
+            'logout',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Log custom mismatch session errors
-        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'La sesión expiró, vuelva a iniciar sesión',
-                    'redirect' => route('login'),
-                ], 419);
-            }
-            return redirect()->route('login')
-                ->with('message', 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
-        });
-
         // Global reportable to log all other exceptions to database
         $exceptions->report(function (Throwable $e) {
             try {
@@ -49,7 +37,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     $service = app(\App\Services\ErrorLogService::class);
                     $reference = $service->report($e);
                     
-                    // Safely store reference in the request attributes if possible
                     if (app()->bound('request')) {
                         $request = app('request');
                         if (method_exists($request, 'attributes')) {
@@ -57,29 +44,32 @@ return Application::configure(basePath: dirname(__DIR__))
                         }
                     }
                 }
-            } catch (Throwable $ignore) {
-                // Never let the reporter crash the app
-            }
+            } catch (Throwable $ignore) {}
         });
 
-        // Custom renderer for all non-validation/404 exceptions
-        $exceptions->render(function (Throwable $e, $request = null) {
-            // Ensure $request is not null and is a valid request object
-            if (!$request || !method_exists($request, 'expectsJson')) {
-                // Fallback attempt to get it from container
-                $request = app()->bound('request') ? app('request') : null;
+        // Custom renderer for non-validation / non-404 / non-session-expired exceptions
+        $exceptions->render(function (Throwable $e, \Illuminate\Http\Request $request) {
+            // Token mismatch (expired session / CSRF token)
+            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La sesión expiró, vuelva a iniciar sesión',
+                        'redirect' => route('login'),
+                    ], 419);
+                }
+                return redirect()->route('login')->with('message', 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
             }
 
-            // If we still don't have a valid request or it expects JSON, let Laravel handle it
-            if (!$request || $request->expectsJson() || ($request->is && $request->is('api/*'))) {
+            // If request expects JSON or is API, let default JSON handler run
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return;
             }
 
             // Exceptions we don't want to show the custom "Oops" page for
             if ($e instanceof \Illuminate\Validation\ValidationException || 
                 $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ||
-                $e instanceof \Illuminate\Auth\AuthenticationException ||
-                $e instanceof \Illuminate\Session\TokenMismatchException) {
+                $e instanceof \Illuminate\Auth\AuthenticationException) {
                 return;
             }
 

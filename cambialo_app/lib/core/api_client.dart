@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 String get kBaseUrl {
   final url = dotenv.env['API_URL']?.trim() ?? 'https://cambialord.com/api';
-  if (!kIsWeb && (url.contains('127.0.0.1') || url.contains('localhost'))) {
+  if (defaultTargetPlatform == TargetPlatform.android && (url.contains('127.0.0.1') || url.contains('localhost'))) {
     return url.replaceAll('127.0.0.1', '10.0.2.2').replaceAll('localhost', '10.0.2.2');
   }
   return url;
@@ -70,7 +70,7 @@ class ApiClient {
                     
     if (isLocal) {
       // En emulador android: mapear localhost/127.0.0.1 a 10.0.2.2
-      if (!kIsWeb && kBaseUrl.contains('10.0.2.2')) {
+      if (defaultTargetPlatform == TargetPlatform.android && kBaseUrl.contains('10.0.2.2')) {
         fixedUrl = fixedUrl.replaceAll('127.0.0.1', '10.0.2.2').replaceAll('localhost', '10.0.2.2');
       }
     }

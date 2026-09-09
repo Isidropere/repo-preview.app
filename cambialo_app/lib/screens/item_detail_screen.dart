@@ -179,19 +179,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               const SizedBox(height: 8),
 
               // Precio + badges
-              Row(children: [
-                if (_item!['valor'] != null)
-                  Text('RD\$ ${_item!['valor']}',
-                      style: const TextStyle(fontSize: 20, color: kPrimary, fontWeight: FontWeight.bold)),
-                const SizedBox(width: 12),
-                _badge(
-                  tipoTrans,
-                  esVenta ? const Color(0xFF1D4ED8) : (esMixto ? Colors.deepPurple : const Color(0xFF15803D)),
-                  esVenta ? const Color(0xFFEFF6FF) : (esMixto ? const Color(0xFFF3E8FF) : const Color(0xFFF0FDF4)),
-                ),
-                const SizedBox(width: 6),
-                _badge(condicion, kTextGray, kBgGray),
-              ]),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (_item!['valor'] != null)
+                    Text('RD\$ ${_item!['valor']}',
+                        style: const TextStyle(fontSize: 20, color: kPrimary, fontWeight: FontWeight.bold)),
+                  _badge(
+                    tipoTrans,
+                    esVenta ? const Color(0xFF1D4ED8) : (esMixto ? Colors.deepPurple : const Color(0xFF15803D)),
+                    esVenta ? const Color(0xFFEFF6FF) : (esMixto ? const Color(0xFFF3E8FF) : const Color(0xFFF0FDF4)),
+                  ),
+                  _badge(condicion, kTextGray, kBgGray),
+                ],
+              ),
               const SizedBox(height: 16),
 
               // Ubicación
@@ -199,9 +202,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 Row(children: [
                   const Icon(Icons.person_outline, size: 16, color: kTextGray),
                   const SizedBox(width: 4),
-                  Text(
-                    '${_item!['usuario']['nombres']} ${_item!['usuario']['apellidos']}',
-                    style: TextStyle(fontSize: 13, color: kTextGray),
+                  Expanded(
+                    child: Text(
+                      '${_item!['usuario']['nombres']} ${_item!['usuario']['apellidos']}',
+                      style: const TextStyle(fontSize: 13, color: kTextGray),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ]),
                 const SizedBox(height: 8),

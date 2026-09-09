@@ -413,7 +413,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 2.2,
+                mainAxisExtent: 80,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
@@ -431,21 +431,25 @@ class _CuentaScreenState extends State<CuentaScreen> {
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
-                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                    child: const Text('Vender', style: TextStyle(color: Colors.white)),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
-                    style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
-                    child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
-                  ),
-                ]),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const PublicarArticuloScreen())),
+                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                      child: const Text('Vender', style: TextStyle(color: Colors.white)),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ItemsListScreen(tipo: 2))),
+                      style: ElevatedButton.styleFrom(backgroundColor: kSecondary),
+                      child: const Text('Cambiar', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
               ]),
             ),
             
@@ -703,7 +707,7 @@ class _OpcionCard extends StatelessWidget {
     return GestureDetector(
       onTap: opcion['onTap'] as VoidCallback?,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),

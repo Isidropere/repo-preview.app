@@ -321,6 +321,7 @@ class AuthApiController extends Controller
                 'nombre_usuario'    => $username,
                 'password'          => Hash::make(Str::random(24)),
                 'password_defined'  => false,
+                'active'            => 1,
                 'estatus'           => 1,
                 'id_tipo_usuario'   => 1,
                 'email_verified_at' => now(),
