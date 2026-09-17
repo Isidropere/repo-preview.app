@@ -185,8 +185,8 @@ class AuthService {
       }, auth: true);
       
       final body = jsonDecode(res.body);
-      if (res.statusCode == 200) {
-        await logout(); // Limpiar sesión local al borrar
+      if (res.statusCode == 200 || res.statusCode == 401) {
+        await logout(); // Limpiar sesión local al borrar o si el token ya no es válido
         return {'success': true};
       }
       return {
