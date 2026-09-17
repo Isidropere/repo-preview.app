@@ -180,15 +180,20 @@ class AuthApiController extends Controller
             return response()->json(['message' => 'No autorizado'], 401);
         }
 
-        if (empty($user->google_id) && $user->password_defined) {
-            $request->validate([
-                'password' => 'required|string'
-            ], [
-                'password.required' => 'La contraseña es requerida para confirmar la eliminación.'
-            ]);
+        $hasPassword = !empty($user->password) && (empty($user->google_id) || $user->password_defined);
+        if ($hasPassword) {
+            if (!$request->filled('password')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La contraseña es requerida para confirmar la eliminación de la cuenta.'
+                ], 422);
+            }
 
             if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
-                return response()->json(['message' => 'La contraseña es incorrecta.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La contraseña es incorrecta.'
+                ], 400);
             }
         }
 
