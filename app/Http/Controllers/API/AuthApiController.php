@@ -197,42 +197,39 @@ class AuthApiController extends Controller
                 $userId = $user->id;
 
                 // 1. Obtener los IDs de los items del usuario para limpiar imágenes, inventarios y variaciones
-                $itemIds = \Illuminate\Support\Facades\DB::table('items')
-                    ->where('id_user', $userId)
-                    ->pluck('id_item')
-                    ->toArray();
+                if (\Illuminate\Support\Facades\Schema::hasTable('items')) {
+                    $itemIds = \Illuminate\Support\Facades\DB::table('items')
+                        ->where('id_user', $userId)
+                        ->pluck('id_item')
+                        ->toArray();
 
-                if (!empty($itemIds)) {
-                    if (\Illuminate\Support\Facades\Schema::hasTable('imagenes_item')) {
-                        \Illuminate\Support\Facades\DB::table('imagenes_item')->whereIn('id_item', $itemIds)->delete();
+                    if (!empty($itemIds)) {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('imagenes_item')) {
+                            \Illuminate\Support\Facades\DB::table('imagenes_item')->whereIn('id_item', $itemIds)->delete();
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasTable('items_color')) {
+                            \Illuminate\Support\Facades\DB::table('items_color')->whereIn('id_item', $itemIds)->delete();
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasTable('inventarios')) {
+                            \Illuminate\Support\Facades\DB::table('inventarios')->whereIn('id_item', $itemIds)->delete();
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
+                            \Illuminate\Support\Facades\DB::table('carritos')->whereIn('id_item', $itemIds)->delete();
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasTable('items_intencion_compra')) {
+                            \Illuminate\Support\Facades\DB::table('items_intencion_compra')->whereIn('id_item', $itemIds)->delete();
+                        }
+                        
+                        \Illuminate\Support\Facades\DB::table('items')->whereIn('id_item', $itemIds)->delete();
                     }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('items_color')) {
-                        \Illuminate\Support\Facades\DB::table('items_color')->whereIn('id_item', $itemIds)->delete();
-                    }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('inventarios')) {
-                        \Illuminate\Support\Facades\DB::table('inventarios')->whereIn('id_item', $itemIds)->delete();
-                    }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
-                        \Illuminate\Support\Facades\DB::table('carritos')->whereIn('id_item', $itemIds)->delete();
-                    }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('items_intencion_compra')) {
-                        \Illuminate\Support\Facades\DB::table('items_intencion_compra')->whereIn('id_item', $itemIds)->delete();
-                    }
-                    
-                    \Illuminate\Support\Facades\DB::table('items')->whereIn('id_item', $itemIds)->delete();
                 }
 
-                // 2. Eliminar talentos asociados
-                if (\Illuminate\Support\Facades\Schema::hasTable('talentos')) {
-                    \Illuminate\Support\Facades\DB::table('talentos')->where('id_usuario', $userId)->delete();
-                }
-
-                // 3. Eliminar carritos del usuario
+                // 2. Eliminar carritos del usuario
                 if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
-                    \Illuminate\Support\Facades\DB::table('carritos')->where('id_usuario', $userId)->delete();
+                    \Illuminate\Support\Facades\DB::table('carritos')->where('id_user', $userId)->delete();
                 }
 
-                // 4. Eliminar retiros y cuentas bancarias
+                // 3. Eliminar retiros y cuentas bancarias
                 if (\Illuminate\Support\Facades\Schema::hasTable('retiros_vendedor')) {
                     \Illuminate\Support\Facades\DB::table('retiros_vendedor')->where('id_usuario', $userId)->delete();
                 }
@@ -240,20 +237,34 @@ class AuthApiController extends Controller
                     \Illuminate\Support\Facades\DB::table('cuentas_bancarias_usuarios')->where('id_usuario', $userId)->delete();
                 }
 
-                // 5. Eliminar solicitudes de transporte y servicio
+                // 4. Eliminar solicitudes de transporte y servicio
                 if (\Illuminate\Support\Facades\Schema::hasTable('solicitudes_transporte')) {
                     \Illuminate\Support\Facades\DB::table('solicitudes_transporte')->where('id_usuario', $userId)->delete();
                 }
                 if (\Illuminate\Support\Facades\Schema::hasTable('solicitudes_servicio')) {
-                    \Illuminate\Support\Facades\DB::table('solicitudes_servicio')->where('id_usuario', $userId)->delete();
+                    \Illuminate\Support\Facades\DB::table('solicitudes_servicio')->where('id_comprador', $userId)->orWhere('id_proveedor', $userId)->delete();
                 }
 
-                // 6. Eliminar hoja de vida y direcciones
+                // 5. Eliminar hoja de vida y direcciones
                 if (\Illuminate\Support\Facades\Schema::hasTable('hojas_vida')) {
-                    \Illuminate\Support\Facades\DB::table('hojas_vida')->where('id_usuario', $userId)->delete();
+                    \Illuminate\Support\Facades\DB::table('hojas_vida')->where('id_user', $userId)->delete();
                 }
                 if (\Illuminate\Support\Facades\Schema::hasTable('direcciones')) {
-                    \Illuminate\Support\Facades\DB::table('direcciones')->where('id_usuario', $userId)->delete();
+                    \Illuminate\Support\Facades\DB::table('direcciones')->where('id_user', $userId)->delete();
+                }
+
+                // 6. Tarjetas, paquetes, calificaciones y sesiones
+                if (\Illuminate\Support\Facades\Schema::hasTable('tarjetas_pagos')) {
+                    \Illuminate\Support\Facades\DB::table('tarjetas_pagos')->where('id_user', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('paquetes')) {
+                    \Illuminate\Support\Facades\DB::table('paquetes')->where('id_user', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('ratings')) {
+                    \Illuminate\Support\Facades\DB::table('ratings')->where('id_usuario', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $userId)->delete();
                 }
 
                 // 7. Revocar todos los tokens de autenticación
