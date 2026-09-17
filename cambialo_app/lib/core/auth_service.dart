@@ -185,13 +185,18 @@ class AuthService {
       }, auth: true);
       
       final body = jsonDecode(res.body);
-      if (res.statusCode == 200 || res.statusCode == 401) {
-        await logout(); // Limpiar sesión local al borrar o si el token ya no es válido
+      if (res.statusCode == 200 && body['success'] == true) {
+        await logout(); // Limpiar sesión local al borrar exitosamente
         return {'success': true};
+      }
+      
+      String msg = body['message'] ?? 'Error al eliminar la cuenta.';
+      if (res.statusCode == 401 || msg == 'Unauthenticated.') {
+        msg = 'Sesión expirada. Por favor inicie sesión nuevamente.';
       }
       return {
         'success': false,
-        'message': body['message'] ?? 'Error al eliminar la cuenta.'
+        'message': msg
       };
     } catch (e) {
       return {'success': false, 'message': 'No se pudo conectar al servidor.'};
