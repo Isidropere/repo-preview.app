@@ -192,7 +192,7 @@ class AuthApiController extends Controller
             if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'La contraseña es incorrecta.'
+                    'message' => 'La clave proporcionada no es correcta.'
                 ], 400);
             }
         }
