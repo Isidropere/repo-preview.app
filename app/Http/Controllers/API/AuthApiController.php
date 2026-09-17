@@ -176,34 +176,107 @@ class AuthApiController extends Controller
     public function deleteAccount(Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado'], 401);
+        }
 
-        if (empty($user->google_id)) {
+        if (empty($user->google_id) && $user->password_defined) {
             $request->validate([
                 'password' => 'required|string'
+            ], [
+                'password.required' => 'La contraseña es requerida para confirmar la eliminación.'
             ]);
 
-            if (!Hash::check($request->password, $user->password)) {
-                return response()->json(['message' => 'Contraseña incorrecta'], 400);
+            if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                return response()->json(['message' => 'La contraseña es incorrecta.'], 400);
             }
         }
 
         try {
-            // Eliminar dependencias
-            \App\Models\Articulo::where('user_id', $user->id)->delete();
-            \App\Models\Talento::where('id_usuario', $user->id)->delete();
-            
-            // Eliminar el usuario
-            $user->delete();
+            \Illuminate\Support\Facades\DB::transaction(function () use ($user) {
+                $userId = $user->id;
+
+                // 1. Obtener los IDs de los items del usuario para limpiar imágenes, inventarios y variaciones
+                $itemIds = \Illuminate\Support\Facades\DB::table('items')
+                    ->where('id_user', $userId)
+                    ->pluck('id_item')
+                    ->toArray();
+
+                if (!empty($itemIds)) {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('imagenes_item')) {
+                        \Illuminate\Support\Facades\DB::table('imagenes_item')->whereIn('id_item', $itemIds)->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('items_color')) {
+                        \Illuminate\Support\Facades\DB::table('items_color')->whereIn('id_item', $itemIds)->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('inventarios')) {
+                        \Illuminate\Support\Facades\DB::table('inventarios')->whereIn('id_item', $itemIds)->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
+                        \Illuminate\Support\Facades\DB::table('carritos')->whereIn('id_item', $itemIds)->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('items_intencion_compra')) {
+                        \Illuminate\Support\Facades\DB::table('items_intencion_compra')->whereIn('id_item', $itemIds)->delete();
+                    }
+                    
+                    \Illuminate\Support\Facades\DB::table('items')->whereIn('id_item', $itemIds)->delete();
+                }
+
+                // 2. Eliminar talentos asociados
+                if (\Illuminate\Support\Facades\Schema::hasTable('talentos')) {
+                    \Illuminate\Support\Facades\DB::table('talentos')->where('id_usuario', $userId)->delete();
+                }
+
+                // 3. Eliminar carritos del usuario
+                if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
+                    \Illuminate\Support\Facades\DB::table('carritos')->where('id_usuario', $userId)->delete();
+                }
+
+                // 4. Eliminar retiros y cuentas bancarias
+                if (\Illuminate\Support\Facades\Schema::hasTable('retiros_vendedor')) {
+                    \Illuminate\Support\Facades\DB::table('retiros_vendedor')->where('id_usuario', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('cuentas_bancarias_usuarios')) {
+                    \Illuminate\Support\Facades\DB::table('cuentas_bancarias_usuarios')->where('id_usuario', $userId)->delete();
+                }
+
+                // 5. Eliminar solicitudes de transporte y servicio
+                if (\Illuminate\Support\Facades\Schema::hasTable('solicitudes_transporte')) {
+                    \Illuminate\Support\Facades\DB::table('solicitudes_transporte')->where('id_usuario', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('solicitudes_servicio')) {
+                    \Illuminate\Support\Facades\DB::table('solicitudes_servicio')->where('id_usuario', $userId)->delete();
+                }
+
+                // 6. Eliminar hoja de vida y direcciones
+                if (\Illuminate\Support\Facades\Schema::hasTable('hojas_vida')) {
+                    \Illuminate\Support\Facades\DB::table('hojas_vida')->where('id_usuario', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('direcciones')) {
+                    \Illuminate\Support\Facades\DB::table('direcciones')->where('id_usuario', $userId)->delete();
+                }
+
+                // 7. Revocar todos los tokens de autenticación
+                if (\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens')) {
+                    \Illuminate\Support\Facades\DB::table('personal_access_tokens')
+                        ->where('tokenable_id', $userId)
+                        ->delete();
+                }
+
+                // 8. Eliminar el registro del usuario
+                $user->delete();
+            });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Cuenta y datos eliminados permanentemente.'
+                'message' => 'Cuenta y datos asociados eliminados permanentemente.'
             ], 200);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error eliminando cuenta: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar la cuenta.'
+                'message' => 'Error al eliminar la cuenta: ' . $e->getMessage()
             ], 500);
         }
     }
