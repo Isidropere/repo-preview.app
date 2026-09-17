@@ -279,7 +279,7 @@ Route::post('/borrar-cuenta', function (\Illuminate\Http\Request $request) {
 
     $user = \App\Models\User::where('email', strtolower(trim($request->email)))->first();
     if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
-        return back()->with('error', 'Credenciales incorrectas. No se pudo eliminar la cuenta.');
+        return back()->with('error', 'La clave proporcionada no es correcta.');
     }
 
     try {

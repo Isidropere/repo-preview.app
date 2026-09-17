@@ -566,7 +566,21 @@ class _CuentaScreenState extends State<CuentaScreen> {
         );
       } else {
         setState(() => _loading = false);
-        _error(res['message']);
+        final String msg = res['message']?.toString() ?? 'Error al eliminar la cuenta.';
+        if (msg.contains('Sesión expirada') || msg.contains('Unauthenticated')) {
+          await AuthService.logout();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tu sesión expiró. Inicia sesión nuevamente.'), backgroundColor: Colors.orange),
+          );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (_) => false,
+          );
+        } else {
+          _error(msg);
+        }
       }
     }
   }
