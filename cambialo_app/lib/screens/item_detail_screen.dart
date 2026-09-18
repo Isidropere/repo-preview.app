@@ -321,6 +321,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ]),
           ),
           Container(
+            width: double.infinity,
             color: kPrimary,
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             child: Column(children: [

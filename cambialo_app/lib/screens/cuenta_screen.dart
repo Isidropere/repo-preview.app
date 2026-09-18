@@ -422,6 +422,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
             ),
             const SizedBox(height: 24),
             Container(
+              width: double.infinity,
               color: kPrimary,
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Column(children: [

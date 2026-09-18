@@ -226,6 +226,7 @@ class _OtrasCategoriasScreenState extends State<OtrasCategoriasScreen> {
         ),
         SliverToBoxAdapter(
           child: Container(
+            width: double.infinity,
             color: kPrimary,
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             child: Column(children: [

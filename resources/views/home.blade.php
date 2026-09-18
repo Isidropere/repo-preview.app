@@ -442,7 +442,7 @@
                 <div class="mt-8 flex justify-center lg:hidden" style="gap: 16px;"> <button aria-label="Previous slide" id="keen-slider-previous" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="size-5 -rotate-180 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    <button aria-label="Next slide" id="keen-slider-next" class="rounded-full border border-secondary p-4 text-secondary transition hover:bg-secondary hover:text-white"> <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path> </svg> </button>                    </div>
             </div>
         </section>
-        <section class="bg-primary px-4 py-8 flex flex-col sm:flex-row justify-center items-center" style="gap: 24px;">
+        <section class="w-full bg-primary px-4 py-8 flex flex-col sm:flex-row justify-center items-center" style="gap: 24px;">
             <h1 class="text-xl sm:text-2xl md:text-3xl font-normal text-center sm:text-left text-gray-950">
                 ¿Quieres intercambiar o vender un producto? <br> <span class="font-bold">¡Hazlo con nosotros!</span> </h1>
             <div class="mt-4 sm:mt-0 flex items-center" style="gap: 12px;">
