@@ -286,7 +286,7 @@ Route::post('/borrar-cuenta', function (\Illuminate\Http\Request $request) {
         \Illuminate\Support\Facades\DB::transaction(function () use ($user) {
             $userId = $user->id;
 
-            // 1. Obtener los IDs de los items del usuario para limpiar imágenes, inventarios y variaciones
+            // 1. Obtener los IDs de los items del usuario para limpiar imágenes y variaciones
             if (\Illuminate\Support\Facades\Schema::hasTable('items')) {
                 $itemIds = \Illuminate\Support\Facades\DB::table('items')
                     ->where('id_user', $userId)
@@ -302,9 +302,6 @@ Route::post('/borrar-cuenta', function (\Illuminate\Http\Request $request) {
                     }
                     if (\Illuminate\Support\Facades\Schema::hasTable('inventarios')) {
                         \Illuminate\Support\Facades\DB::table('inventarios')->whereIn('id_item', $itemIds)->delete();
-                    }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('carritos')) {
-                        \Illuminate\Support\Facades\DB::table('carritos')->whereIn('id_item', $itemIds)->delete();
                     }
                     if (\Illuminate\Support\Facades\Schema::hasTable('items_intencion_compra')) {
                         \Illuminate\Support\Facades\DB::table('items_intencion_compra')->whereIn('id_item', $itemIds)->delete();
