@@ -80,6 +80,14 @@ class SocialAuthController extends Controller
             $nombres   = $nameParts[0] ?? 'Usuario';
             $apellidos = $nameParts[1] ?? '';
 
+            // Generar nombre_usuario único
+            $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $socialUser->getName() ?? explode('@', $socialUser->getEmail() ?? 'user')[0]));
+            $baseUsername = !empty($cleanName) ? $cleanName : 'user';
+            $username = $baseUsername;
+            if (User::where('nombre_usuario', $username)->exists()) {
+                $username = $baseUsername . '_' . Str::random(4);
+            }
+
             $userData = [
                 'nombres'           => $nombres,
                 'apellidos'         => $apellidos,
@@ -88,13 +96,19 @@ class SocialAuthController extends Controller
                 $idField            => $socialUser->getId(),
                 'password'          => bcrypt(Str::random(24)),
                 'password_defined'  => false,
-                'active'            => true,
-                'tipos_usuario_id'  => 1,
+                'estatus'           => 1,
+                'id_tipo_usuario'   => 1,
                 'email_verified_at' => now(), // OAuth = email ya verificado
             ];
 
             if (\Schema::hasColumn('users', 'nombre_usuario')) {
                 $userData['nombre_usuario'] = $username;
+            }
+            if (\Schema::hasColumn('users', 'active')) {
+                $userData['active'] = true;
+            }
+            if (\Schema::hasColumn('users', 'tipos_usuario_id')) {
+                $userData['tipos_usuario_id'] = 1;
             }
 
             $user = User::create($userData);
