@@ -446,7 +446,7 @@ class AuthApiController extends Controller
                 ? $baseUsername . '_' . Str::random(4) 
                 : $baseUsername;
 
-            $user = User::create([
+            $userData = [
                 'nombres'           => $request->nombres,
                 'apellidos'         => $request->apellidos ?? '',
                 'email'             => $request->email,
@@ -455,11 +455,16 @@ class AuthApiController extends Controller
                 'nombre_usuario'    => $username,
                 'password'          => Hash::make(Str::random(24)),
                 'password_defined'  => false,
-                'active'            => 1,
                 'estatus'           => 1,
                 'id_tipo_usuario'   => 1,
                 'email_verified_at' => now(),
-            ]);
+            ];
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'active')) {
+                $userData['active'] = 1;
+            }
+
+            $user = User::create($userData);
         }
 
         if (!$user->estatus) {
