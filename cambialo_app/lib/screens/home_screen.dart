@@ -421,6 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // CTA final — igual que la web (fondo naranja)
                     Container(
+                      width: double.infinity,
                       color: kPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                       child: Column(children: [

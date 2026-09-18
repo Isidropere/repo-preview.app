@@ -183,6 +183,7 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                             ),
                             SizedBox(height: MediaQuery.of(context).size.height * 0.15),
                             Container(
+                              width: double.infinity,
                               color: kPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                               child: Column(children: [
@@ -253,6 +254,7 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
                               ),
                             SliverToBoxAdapter(
                               child: Container(
+                                width: double.infinity,
                                 color: kPrimary,
                                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                                 child: Column(children: [
