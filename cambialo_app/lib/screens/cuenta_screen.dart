@@ -502,7 +502,10 @@ class _CuentaScreenState extends State<CuentaScreen> {
 
   Future<void> _mostrarConfirmacionEliminarCuenta() async {
     final passwordCtrl = TextEditingController();
-    bool isGoogleUser = _user!['google_id'] != null && _user!['google_id'].toString().isNotEmpty;
+    final bool isGoogleUser = (_user?['google_id'] != null && _user!['google_id'].toString().trim().isNotEmpty) ||
+        (_user?['facebook_id'] != null && _user!['facebook_id'].toString().trim().isNotEmpty) ||
+        (_user?['instagram_id'] != null && _user!['instagram_id'].toString().trim().isNotEmpty) ||
+        ApiClient.parseBool(_user?['password_defined']) == false;
 
     bool? confirm = await showDialog<bool>(
       context: context,

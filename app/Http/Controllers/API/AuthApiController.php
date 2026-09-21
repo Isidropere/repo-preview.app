@@ -500,6 +500,10 @@ class AuthApiController extends Controller
     private function formatUser(User $user): array
     {
         $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($user->nombres . ' ' . $user->apellidos) . '&background=f58634&color=fff&size=128';
+        
+        $hasSocialId = !empty($user->google_id) || !empty($user->facebook_id) || !empty($user->instagram_id);
+        $isPasswordDefined = $user->password_defined !== null ? (bool)$user->password_defined : !$hasSocialId;
+
         return [
             'id'                => $user->id,
             'nombres'           => $user->nombres,
@@ -507,11 +511,14 @@ class AuthApiController extends Controller
             'email'             => $user->email,
             'telefono'          => $user->telefono,
             'nombre_usuario'    => $user->nombre_usuario,
+            'google_id'         => $user->google_id,
+            'facebook_id'       => $user->facebook_id,
+            'instagram_id'      => $user->instagram_id,
             'id_tipo_usuario'   => $user->id_tipo_usuario,
             'profile_photo_url' => $user->profile_photo_path
                 ? (filter_var($user->profile_photo_path, FILTER_VALIDATE_URL) ? $user->profile_photo_path : url($user->profile_photo_path))
                 : $avatarUrl,
-            'password_defined'  => (bool)($user->password_defined ?? true),
+            'password_defined'  => $isPasswordDefined,
         ];
     }
 
