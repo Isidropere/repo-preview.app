@@ -122,7 +122,7 @@ class SocialAuthController extends Controller
             session()->flash('gtag_event', ['name' => 'login_success', 'params' => ['method' => $provider, 'platform' => 'web']]);
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->route('home');
     }
 
     /**

@@ -52,6 +52,6 @@ class GoogleController extends Controller
             session()->flash('gtag_event', ['name' => 'login_success', 'params' => ['method' => 'google', 'platform' => 'web']]);
         }
 
-        return redirect()->intended('/home'); // Redirect to intended page after login
+        return redirect()->route('home');
     }
 }
