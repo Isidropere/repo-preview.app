@@ -181,22 +181,28 @@ class AuthApiController extends Controller
                 return response()->json(['message' => 'No autorizado'], 401);
             }
 
-        if (!empty($user->password)) {
-            $inputPassword = $request->input('password');
-            if (empty($inputPassword)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'La contraseña es requerida para confirmar la eliminación.'
-                ], 422);
-            }
+            // Usuarios de Google / Redes Sociales o sin contraseña definida no requieren validación de clave previa
+            $isGoogleOrSocialUser = !empty($user->google_id) 
+                || !empty($user->facebook_id) 
+                || !empty($user->instagram_id) 
+                || empty($user->password_defined);
 
-            if (!\Illuminate\Support\Facades\Hash::check($inputPassword, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'La clave proporcionada no es correcta.'
-                ], 400);
+            if (!$isGoogleOrSocialUser && !empty($user->password)) {
+                $inputPassword = $request->input('password');
+                if (empty($inputPassword)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La contraseña es requerida para confirmar la eliminación.'
+                    ], 422);
+                }
+
+                if (!\Illuminate\Support\Facades\Hash::check($inputPassword, $user->password)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La clave proporcionada no es correcta.'
+                    ], 400);
+                }
             }
-        }
 
             \Illuminate\Support\Facades\DB::transaction(function () use ($user) {
                 $userId = $user->id;
