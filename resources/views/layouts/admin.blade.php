@@ -132,6 +132,10 @@
                         <i class="fas fa-question-circle w-5 text-center text-gray-500"></i>
                         Páginas de Ayuda
                     </a>
+                    <a href="{{ route('admin.carrusel.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-orange-50 hover:text-primary transition-colors text-gray-700">
+                        <i class="fas fa-images w-5 text-center text-primary"></i>
+                        Carrusel Home
+                    </a>
                     <a href="{{ route('admin.notificaciones.index') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
                         <i class="fas fa-bell w-5 text-center text-yellow-500"></i>
                         Notificaciones

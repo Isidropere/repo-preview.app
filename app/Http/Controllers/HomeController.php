@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\HomeCarousel;
+use App\Models\HomeCarouselConfig;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 
@@ -41,6 +43,26 @@ class HomeController extends Controller
                 ->get();
         });
 
-        return view('home', compact('productosIntercambio', 'productosVenta'));
+        // 3. Diapositivas y Configuración de Velocidad del Carrusel
+        $carouselSlides = Cache::remember('home_carousel_slides', 600, function () {
+            return HomeCarousel::activos()->get();
+        });
+
+        $carouselSpeedSeconds = (int) Cache::remember('home_carousel_speed', 600, function () {
+            return HomeCarouselConfig::get('velocidad_segundos', 4);
+        });
+        $carouselSpeedMs = max(1000, $carouselSpeedSeconds * 1000);
+
+        $carouselAutoplay = (bool) Cache::remember('home_carousel_autoplay', 600, function () {
+            return (bool) HomeCarouselConfig::get('is_autoplay', 1);
+        });
+
+        return view('home', compact(
+            'productosIntercambio',
+            'productosVenta',
+            'carouselSlides',
+            'carouselSpeedMs',
+            'carouselAutoplay'
+        ));
     }
 }
