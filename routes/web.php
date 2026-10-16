@@ -1040,6 +1040,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'updateStep'])->name('update_step');
             Route::delete('/pasos/{stepId}', [\App\Http\Controllers\Admin\AdminAyudaController::class, 'destroyStep'])->name('destroy_step');
         });
+
+        // Administración del Carrusel del Home
+        Route::prefix('carrusel')->name('carrusel.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'store'])->name('store');
+            Route::post('/velocidad', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'updateVelocidad'])->name('velocidad');
+            Route::post('/{id}/toggle', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'toggle'])->name('toggle');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\AdminCarruselController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 

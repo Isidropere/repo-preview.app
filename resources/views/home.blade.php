@@ -149,15 +149,30 @@
         </div>-->
         <section class="relative">
             <div class="h-auto w-full bg-white rounded-lg shadow-md relative">
-                <div data-hs-carousel="{
-            &quot;loadingClasses&quot;: &quot;opacity-0&quot;,
-            &quot;isAutoPlay&quot;: &quot;true&quot;
-            }" class="relative">
+                <div data-hs-carousel='{
+                    "loadingClasses": "opacity-0",
+                    "isAutoPlay": {{ ($carouselAutoplay ?? true) ? "true" : "false" }},
+                    "speed": {{ $carouselSpeedMs ?? 4000 }}
+                }' class="relative">
                     <div id="home-hero-carousel" class="hs-carousel relative overflow-hidden w-full h-[530px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 left-0 flex flex-nowrap transition-transform duration-700">
-                            <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Encuentra lo que necesitas en Cambialord" width="1200" height="530"> </div>
+                            @if(isset($carouselSlides) && $carouselSlides->count() > 0)
+                                @foreach($carouselSlides as $slide)
+                                    <div class="hs-carousel-slide">
+                                        @if(!empty($slide->enlace))
+                                            <a href="{{ $slide->enlace }}" class="block h-full w-full">
+                                                <img src="{{ $slide->imagen_url }}" class="h-full w-full object-cover" alt="{{ $slide->titulo ?? 'Promoción Cambialord' }}" width="1200" height="530">
+                                            </a>
+                                        @else
+                                            <img src="{{ $slide->imagen_url }}" class="h-full w-full object-cover" alt="{{ $slide->titulo ?? 'Promoción Cambialord' }}" width="1200" height="530">
+                                        @endif
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
+                                <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
+                                <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Encuentra lo que necesitas en Cambialord" width="1200" height="530"> </div>
+                            @endif
                         </div>
                     </div>
                 </div>

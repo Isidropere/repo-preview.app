@@ -360,6 +360,45 @@ CMS integrado para mantener actualizados los 3 tutoriales interactivos clave:
 
 ---
 
+## 10.1 Gestión del Carrusel del Home
+**Ruta:** `/admin/carrusel`
+
+Permite configurar las imágenes panorámicas del banner principal de la página de inicio y la velocidad con la que rotan.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🖼️ Carrusel del Home                                                        │
+├──────────────────────────────────────┬──────────────────────────────────────┤
+│ ⏱️ VELOCIDAD DE ROTACIÓN             │ 📤 SUBIR NUEVO BANNER                │
+│ Tiempo por Diapositiva: [ 4 ] seg    │ Imagen: [ Seleccionar archivo... ]   │
+│ [━━━━━━●━━━━━━━━━━━] (1 a 15 seg)    │ Título: [ Gran feria de trueques ]   │
+│ [X] Autoplay activado                │ Enlace: [ /categorias/hogar      ]   │
+│ Ajustes rápidos: [⚡3s] [⏱️5s] [🐢8s]  │ Orden:  [ 1 ]                        │
+│ [ 💾 Guardar Velocidad ]             │ [ ➕ Subir Imagen al Carrusel ]      │
+├──────────────────────────────────────┴──────────────────────────────────────┤
+│ 📋 DIAPOSITIVAS ACTUALES (3)                                                │
+│ 1. [ Miniatura ] Intercambia y vende | Orden #1 | [🟢 Visible] | [Pausar][🗑️]│
+│ 2. [ Miniatura ] Ofertas destacadas  | Orden #2 | [🟢 Visible] | [Pausar][🗑️]│
+│ 3. [ Miniatura ] Trueques seguros    | Orden #3 | [🟢 Visible] | [Pausar][🗑️]│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Paso a paso para gestionar el carrusel:
+1. **Configurar la Velocidad:**
+   - Desplaza la barra o introduce el número de segundos deseado (por ejemplo, 3 segundos para rotación rápida, 5 segundos para normal).
+   - Puedes hacer clic en los accesos directos: **⚡ 3 seg**, **⏱️ 5 seg** o **🐢 8 seg**.
+   - Haz clic en **Guardar Velocidad**. El carrusel en el home rotará con el nuevo intervalo en tiempo real.
+2. **Subir una Nueva Imagen:**
+   - Haz clic en el área punteada para seleccionar una imagen desde tu dispositivo (recomendada resolución panorámica horizontal, ej. 1200x530 px).
+   - Si deseas que al hacer clic en el banner lleve a una categoría o producto, agrega la dirección en **Enlace URL**.
+   - Define el **Orden** de aparición (1 = primera, 2 = segunda, etc.).
+   - Haz clic en **Subir Imagen al Carrusel**.
+3. **Pausar o Eliminar:**
+   - Si deseas ocultar temporalmente una diapositiva sin borrarla, pulsa el botón **Pausar**.
+   - Para removerla definitivamente, pulsa **Eliminar**.
+
+---
+
 ## 11. Módulo 9: Centro de Notificaciones
 **Rutas:** `/admin/notificaciones` y `/admin/notificaciones/categorias`
 
