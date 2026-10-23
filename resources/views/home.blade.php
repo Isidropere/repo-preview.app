@@ -169,9 +169,12 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="hs-carousel-slide"> <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Promoción Cambialord - Intercambia y vende productos" width="1200" height="530"> </div>
-                                <div class="hs-carousel-slide"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Ofertas destacadas en Cambialord" width="1200" height="530"> </div>
-                                <div class="hs-carousel-slide"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Encuentra lo que necesitas en Cambialord" width="1200" height="530"> </div>
+                                <div class="hs-carousel-slide w-full h-full bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 flex items-center justify-center">
+                                    <div class="text-center text-white px-4">
+                                        <h2 class="text-3xl sm:text-4xl font-extrabold drop-shadow">¡Bienvenido a CámbialoRD!</h2>
+                                        <p class="text-sm sm:text-base text-orange-100 mt-2">La comunidad líder de intercambio y comercio en República Dominicana</p>
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -369,24 +372,40 @@
             keenSliderNextDesktop.addEventListener("click", () => slider.next());
             }); // end DOMContentLoaded
         </script>
+        @if(isset($carouselSlides) && $carouselSlides->count() > 0)
         <section class="my-12">
             <div>
-                <div data-hs-carousel="{
-        &quot;loadingClasses&quot;: &quot;opacity-0&quot;,
-       &quot;isAutoPlay&quot;: &quot;true&quot;
-      }" class="relative ">
+                <div data-hs-carousel='{
+                    "loadingClasses": "opacity-0",
+                    "isAutoPlay": {{ ($carouselAutoplay ?? true) ? "true" : "false" }},
+                    "speed": {{ $carouselSpeedMs ?? 4000 }}
+                }' class="relative ">
                     <div id="home-ad-carousel" class="hs-carousel relative overflow-hidden w-full min-h-[250px] lg:min-h-[250px] bg-white">
                         <div class="hs-carousel-body absolute top-0 bottom-0 start-0 flex flex-nowrap transition-transform duration-700 opacity-0">
-                            <div class="hs-carousel-slide h-full">
-                            <img src="/imgs/1.jpg" class="h-full w-full object-cover" alt="Banner publicitario Cambialord" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide h-full"> <img src="/imgs/2.jpg" class="h-full w-full object-cover" alt="Promociones Cambialord" width="1200" height="530"> </div>
-                            <div class="hs-carousel-slide h-full"> <img src="/imgs/3.jpg" class="h-full w-full object-cover" alt="Descubre productos en Cambialord" width="1200" height="530"> </div>
+                            @foreach($carouselSlides as $slide)
+                                <div class="hs-carousel-slide h-full">
+                                    @if(!empty($slide->enlace))
+                                        <a href="{{ $slide->enlace }}" class="block h-full w-full">
+                                            <img src="{{ $slide->imagen_url }}" class="h-full w-full object-cover" alt="{{ $slide->titulo ?? 'Banner publicitario Cambialord' }}" width="1200" height="530">
+                                        </a>
+                                    @else
+                                        <img src="{{ $slide->imagen_url }}" class="h-full w-full object-cover" alt="{{ $slide->titulo ?? 'Banner publicitario Cambialord' }}" width="1200" height="530">
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
-                    </div> <button type="button" class="hs-carousel-prev hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 start-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m15 18-6-6 6-6"></path> </svg> </span> <span class="sr-only">Previous</span> </button>                    <button type="button" class="hs-carousel-next hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 end-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="sr-only">Next</span> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m9 18 6-6-6-6"></path> </svg> </span> </button>
-                    <div class="hs-carousel-pagination flex justify-center absolute bottom-3 start-0 end-0 space-x-2"> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>                        <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span> </div>
+                    </div>
+                    <button type="button" class="hs-carousel-prev hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 start-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m15 18-6-6 6-6"></path> </svg> </span> <span class="sr-only">Previous</span> </button>
+                    <button type="button" class="hs-carousel-next hs-carousel:disabled:opacity-50 disabled:pointer-events-none absolute inset-y-0 end-0 inline-flex justify-center items-center w-[46px] h-full text-gray-800 hover:bg-gray-800/10 "> <span class="sr-only">Next</span> <span class="text-2xl" aria-hidden="true"> <svg class="flex-shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="m9 18 6-6-6-6"></path> </svg> </span> </button>
+                    <div class="hs-carousel-pagination flex justify-center absolute bottom-3 start-0 end-0 space-x-2">
+                        @foreach($carouselSlides as $slide)
+                            <span class="hs-carousel-active:bg-primary hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </section>
+        @endif
         <section class="bg-[#EEEEEE] mb-12">
             <div class="slider-section-container relative mx-auto w-full px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24">
                 <div class="slider-grid grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-center lg:gap-16">
