@@ -44,18 +44,13 @@ class HomeController extends Controller
         });
 
         // 3. Diapositivas y Configuración de Velocidad del Carrusel
-        $carouselSlides = Cache::remember('home_carousel_slides', 600, function () {
-            return HomeCarousel::activos()->get();
-        });
+        // Consultar directamente de BD para que los cambios (pausar, activar, reordenar) se reflejen al instante
+        $carouselSlides = HomeCarousel::activos()->get();
 
-        $carouselSpeedSeconds = (int) Cache::remember('home_carousel_speed', 600, function () {
-            return HomeCarouselConfig::get('velocidad_segundos', 4);
-        });
+        $carouselSpeedSeconds = (int) HomeCarouselConfig::get('velocidad_segundos', 4);
         $carouselSpeedMs = max(1000, $carouselSpeedSeconds * 1000);
 
-        $carouselAutoplay = (bool) Cache::remember('home_carousel_autoplay', 600, function () {
-            return (bool) HomeCarouselConfig::get('is_autoplay', 1);
-        });
+        $carouselAutoplay = (bool) HomeCarouselConfig::get('is_autoplay', 1);
 
         return view('home', compact(
             'productosIntercambio',
