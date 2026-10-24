@@ -27,6 +27,8 @@ import '../widgets/categorias_drawer.dart';
 import '../widgets/ticker_banner_widget.dart';
 import '../widgets/adulto_verification_dialog.dart';
 import '../core/analytics_service.dart';
+import '../core/carousel_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Pantalla principal — fiel al diseño web de Cambialord
 class HomeScreen extends StatefulWidget {
@@ -50,11 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _stripCategorias = [];
   bool _stripLoading = true;
 
-  // Carrusel
+  // Carrusel dinámico desde API
   final PageController _carouselCtrl = PageController();
   int _carouselIndex = 0;
   Timer? _carouselTimer;
-  final List<String> _carouselImages = ['1.jpg', '2.jpg', '3.jpg'];
+  List<CarouselSlide> _carouselSlides = [];
+  bool _carouselAutoplay = true;
+  int _carouselSpeedSeconds = 4;
+  bool _carouselLoaded = false;
 
   // Categorías populares (igual que la web)
   final _categorias = [
@@ -76,12 +81,38 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _user = AuthService.currentUser;
     _initAll();
-    _startCarouselTimer();
+    _loadCarousel();
     _loadStripCategorias();
     AnalyticsService.trackEvent(
       _user != null ? 'home_logged_in_view' : 'home_public_view',
       params: {'user_status': _user != null ? 'authenticated' : 'guest'},
     );
+  }
+
+  Future<void> _loadCarousel() async {
+    try {
+      final res = await ApiClient.get('/carrusel', useCache: false);
+      if (res.statusCode == 200 && mounted) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final response = CarouselResponse.fromJson(data);
+        if (mounted) {
+          setState(() {
+            _carouselSlides = response.slides;
+            _carouselAutoplay = response.isAutoplay;
+            _carouselSpeedSeconds = response.velocidadSegundos > 0 ? response.velocidadSegundos : 4;
+            _carouselLoaded = true;
+            if (_carouselIndex >= _carouselSlides.length) {
+              _carouselIndex = 0;
+            }
+          });
+          _startCarouselTimer();
+        }
+      } else {
+        if (mounted) setState(() => _carouselLoaded = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _carouselLoaded = true);
+    }
   }
 
   Future<void> _loadStripCategorias() async {
@@ -115,19 +146,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startCarouselTimer() {
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _carouselTimer?.cancel();
+    if (!_carouselAutoplay || _carouselSlides.length <= 1) return;
+
+    _carouselTimer = Timer.periodic(Duration(seconds: _carouselSpeedSeconds), (timer) {
       if (_carouselCtrl.hasClients && _carouselCtrl.position.hasContentDimensions) {
         try {
           final page = _carouselCtrl.page;
           if (page != null) {
-            int next = (page.round() + 1) % _carouselImages.length;
-            _carouselCtrl.animateToPage(next, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+            int next = (page.round() + 1) % _carouselSlides.length;
+            _carouselCtrl.animateToPage(
+              next,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
           }
         } catch (_) {
           // Ignorar si el layout no está listo
         }
       }
     });
+  }
+
+  Future<void> _handleCarouselTap(String link) async {
+    final trimmed = link.trim();
+    if (trimmed.isEmpty) return;
+
+    // 1. Enlace externo completo http / https
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      final uri = Uri.tryParse(trimmed);
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+
+    // 2. Ruta de categoría: ej /categorias/19
+    final catMatch = RegExp(r'/categorias/([0-9]+)').firstMatch(trimmed);
+    if (catMatch != null) {
+      final catId = int.tryParse(catMatch.group(1) ?? '');
+      if (catId != null) {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => ItemsListScreen(categoriaId: catId),
+        ));
+        return;
+      }
+    }
+
+    // 3. Ruta de producto: ej /items/123 o /producto/123
+    final itemMatch = RegExp(r'/(?:items|producto)/([0-9]+)').firstMatch(trimmed);
+    if (itemMatch != null) {
+      final itemId = int.tryParse(itemMatch.group(1) ?? '');
+      if (itemId != null) {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => ItemDetailScreen(itemId: itemId),
+        ));
+        return;
+      }
+    }
   }
 
   @override
@@ -186,7 +262,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _loadHome() => _initAll();
+  Future<void> _loadHome() async {
+    await Future.wait([
+      _initAll(),
+      _loadCarousel(),
+      _loadStripCategorias(),
+    ]);
+  }
 
   Future<void> _loadBadges() async {
     try {
@@ -579,7 +661,14 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   Widget _buildCarousel() {
-    final String baseUrl = kBaseUrl.replaceAll('/api', '');
+    // Si ya cargó y el administrador pausó todas las diapositivas, ocultar carrusel
+    if (_carouselLoaded && _carouselSlides.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hasSlides = _carouselSlides.isNotEmpty;
+    final int count = hasSlides ? _carouselSlides.length : 1;
+
     return Container(
       height: 180,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -591,34 +680,67 @@ class _HomeScreenState extends State<HomeScreen> {
             child: PageView.builder(
               controller: _carouselCtrl,
               onPageChanged: (i) => setState(() => _carouselIndex = i),
-              itemCount: _carouselImages.length,
+              itemCount: count,
               itemBuilder: (ctx, i) {
-                return Image.network(
-                  '$baseUrl/imgs/${_carouselImages[i]}',
+                if (!hasSlides) {
+                  return Container(
+                    color: Colors.grey.shade100,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
+                    ),
+                  );
+                }
+
+                final slide = _carouselSlides[i];
+                final fixedUrl = ApiClient.fixImageUrl(slide.imagenUrl);
+
+                Widget imageWidget = CachedNetworkImage(
+                  imageUrl: fixedUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200, child: const Icon(Icons.image_not_supported, color: Colors.grey)),
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholder: (_, __) => Container(
+                    color: Colors.grey.shade100,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2),
+                    ),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                  ),
                 );
+
+                if (slide.enlace != null && slide.enlace!.trim().isNotEmpty) {
+                  return GestureDetector(
+                    onTap: () => _handleCarouselTap(slide.enlace!),
+                    child: imageWidget,
+                  );
+                }
+
+                return imageWidget;
               },
             ),
           ),
-          Positioned(
-            bottom: 10,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_carouselImages.length, (i) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 8,
-                  width: _carouselIndex == i ? 16 : 8,
-                  decoration: BoxDecoration(
-                    color: _carouselIndex == i ? kPrimary : Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
+          if (count > 1)
+            Positioned(
+              bottom: 10,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(count, (i) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: _carouselIndex == i ? 16 : 8,
+                    decoration: BoxDecoration(
+                      color: _carouselIndex == i ? kPrimary : Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
             ),
-          ),
         ],
       ),
     );
