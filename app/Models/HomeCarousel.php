@@ -25,6 +25,10 @@ class HomeCarousel extends Model
         'orden'  => 'integer',
     ];
 
+    protected $appends = [
+        'imagen_url',
+    ];
+
     /**
      * Scope para obtener solo diapositivas activas ordenadas.
      */
@@ -42,8 +46,12 @@ class HomeCarousel extends Model
             return asset('imgs/1.jpg');
         }
 
-        if (str_starts_with($this->imagen, 'http://') || str_starts_with($this->imagen, 'https://') || str_starts_with($this->imagen, '/')) {
+        if (str_starts_with($this->imagen, 'http://') || str_starts_with($this->imagen, 'https://')) {
             return $this->imagen;
+        }
+
+        if (str_starts_with($this->imagen, '/')) {
+            return url($this->imagen);
         }
 
         return asset('storage/' . $this->imagen);

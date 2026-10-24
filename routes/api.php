@@ -12,9 +12,13 @@ use App\Http\Controllers\API\PagoApiController;
 use App\Http\Controllers\TarjetaPagoController;
 use App\Http\Controllers\API\BilleteraApiController;
 use App\Http\Controllers\API\AnalyticsApiController;
+use App\Http\Controllers\API\CarruselApiController;
 
 // Analytics event tracking
 Route::post('/analytics/track-event', [AnalyticsApiController::class, 'trackEvent']);
+
+// Carrusel de la pantalla de inicio (público)
+Route::get('/carrusel', [CarruselApiController::class, 'index']);
 
 
 /*
