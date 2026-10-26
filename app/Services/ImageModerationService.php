@@ -6,6 +6,7 @@ use App\Events\NuevaNotificacion;
 use App\Models\ImagenItem;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ImageModerationService
@@ -18,12 +19,35 @@ class ImageModerationService
         $imagen->update(['estado' => 'aprobado', 'motivo_rechazo' => null]);
 
         if ($imagen->item) {
-            $nombre = $imagen->item->item ?? 'tu artículo';
-            $this->notificar(
-                $imagen->item->id_user,
-                "Tu imagen del artículo '{$nombre}' ha sido aprobada."
-            );
+            $item = $imagen->item;
+            $nombre = $item->item ?? 'tu artículo';
+
+            $tieneOtrasNoAprobadas = $item->todasLasImagenes()
+                ->where('id_imagen', '!=', $idImagen)
+                ->where('estado', '!=', 'aprobado')
+                ->exists();
+
+            if (!$tieneOtrasNoAprobadas) {
+                $item->update([
+                    'estatus' => 1,
+                    'estado_aprobacion' => 'aprobado',
+                ]);
+
+                $this->notificar(
+                    $item->id_user,
+                    "Tu producto '{$nombre}' ha sido aprobado y ya está visible en la plataforma."
+                );
+            } else {
+                $this->notificar(
+                    $item->id_user,
+                    "Tu imagen del artículo '{$nombre}' ha sido aprobada."
+                );
+            }
         }
+
+        Cache::forget('home_intercambio');
+        Cache::forget('home_venta');
+        Cache::flush();
 
         return $imagen;
     }
@@ -34,12 +58,23 @@ class ImageModerationService
         $imagen->update(['estado' => 'rechazado', 'motivo_rechazo' => $motivo]);
 
         if ($imagen->item) {
-            $nombre = $imagen->item->item ?? 'tu artículo';
+            $item = $imagen->item;
+            $nombre = $item->item ?? 'tu artículo';
+
+            $item->update([
+                'estatus' => 0,
+                'estado_aprobacion' => 'rechazado',
+            ]);
+
             $this->notificar(
-                $imagen->item->id_user,
+                $item->id_user,
                 "Tu imagen del artículo '{$nombre}' fue rechazada. Motivo: {$motivo}"
             );
         }
+
+        Cache::forget('home_intercambio');
+        Cache::forget('home_venta');
+        Cache::flush();
 
         return $imagen;
     }
@@ -48,17 +83,44 @@ class ImageModerationService
     {
         $pendientes = ImagenItem::with('item')->where('estado', 'pendiente')->get();
 
+        $itemsAfectados = [];
+
         foreach ($pendientes as $imagen) {
             $imagen->update(['estado' => 'aprobado', 'motivo_rechazo' => null]);
 
             if ($imagen->item) {
-                $nombre = $imagen->item->item ?? 'tu artículo';
+                $itemsAfectados[$imagen->item->id_item] = $imagen->item;
+            }
+        }
+
+        foreach ($itemsAfectados as $item) {
+            $tieneOtrasNoAprobadas = $item->todasLasImagenes()
+                ->where('estado', '!=', 'aprobado')
+                ->exists();
+
+            $nombre = $item->item ?? 'tu artículo';
+
+            if (!$tieneOtrasNoAprobadas) {
+                $item->update([
+                    'estatus' => 1,
+                    'estado_aprobacion' => 'aprobado',
+                ]);
+
                 $this->notificar(
-                    $imagen->item->id_user,
-                    "Tu imagen del artículo '{$nombre}' ha sido aprobada."
+                    $item->id_user,
+                    "Tu producto '{$nombre}' ha sido aprobado y ya está visible en la plataforma."
+                );
+            } else {
+                $this->notificar(
+                    $item->id_user,
+                    "Imágenes de tu artículo '{$nombre}' han sido aprobadas."
                 );
             }
         }
+
+        Cache::forget('home_intercambio');
+        Cache::forget('home_venta');
+        Cache::flush();
 
         return $pendientes->count();
     }
