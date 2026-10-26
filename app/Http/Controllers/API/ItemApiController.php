@@ -296,7 +296,12 @@ class ItemApiController extends Controller
     /** GET /api/mis-items — artículos del usuario autenticado */
     public function userItems(Request $request)
     {
-        $items = Item::with(['imagenes:id_imagen,id_item,nombre,ruta', 'categoria:id_categoria_item,categoria', 'inventarios:id_item,cantidad'])
+        $items = Item::with([
+                'imagenes:id_imagen,id_item,nombre,ruta',
+                'todasLasImagenes:id_imagen,id_item,nombre,ruta',
+                'categoria:id_categoria_item,categoria',
+                'inventarios:id_item,cantidad'
+            ])
             ->withCount('views')
             ->where('id_user', $request->user()->id)
             ->select('id_item', 'item', 'valor', 'condicion', 'tipo_trans', 'estatus', 'fecha', 'id_categoria_item', 'id_tipo_item')
@@ -349,7 +354,8 @@ class ItemApiController extends Controller
             'condicion'         => $data['condicion'],
             'tipo_trans'        => $data['tipo_trans'],
             'id_user'           => $request->user()->id,
-            'estatus'           => $request->input('estatus', 1), // Por defecto Activo (1) si no viene
+            'estatus'           => 0, // Inactivo/Pausado hasta que se apruebe
+            'estado_aprobacion' => 'pendiente',
             'fecha'             => now(),
             'peso_lbs'          => $data['peso_lbs'] ?? 0,
             'alto_cm'           => $data['alto_cm'] ?? 0,
@@ -893,6 +899,9 @@ class ItemApiController extends Controller
         }
 
         $imagenes = $arr['imagenes'] ?? [];
+        if (empty($imagenes) && is_object($item) && $item->relationLoaded('todasLasImagenes') && $item->todasLasImagenes->isNotEmpty()) {
+            $imagenes = $item->todasLasImagenes->toArray();
+        }
         if (!empty($imagenes)) {
             $primera = $imagenes[0];
             $nombre  = $primera['nombre'] ?? '';

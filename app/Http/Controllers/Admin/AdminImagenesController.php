@@ -13,6 +13,8 @@ use App\Models\Item;
 use App\Models\CategoriaItem;
 use App\Models\Message;
 use App\Models\Notificacion;
+use App\Events\NuevaNotificacion;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -123,6 +125,16 @@ class AdminImagenesController extends Controller
             $item->estatus = 1;
             $item->save();
 
+            // Aprobar también todas sus imágenes pendientes
+            $item->todasLasImagenes()->where('estado', 'pendiente')->update([
+                'estado' => 'aprobado',
+                'motivo_rechazo' => null,
+            ]);
+
+            Cache::forget('home_intercambio');
+            Cache::forget('home_venta');
+            Cache::flush();
+
             // Notificar al dueño
             $mensaje = "Tu producto '{$item->item}' ha sido aprobado y ya está visible en la plataforma.";
             Message::create([
@@ -130,6 +142,12 @@ class AdminImagenesController extends Controller
                 'mensaje' => $mensaje,
                 'leido' => false,
             ]);
+
+            try {
+                event(new NuevaNotificacion($mensaje, $item->id_user));
+            } catch (\Throwable $e) {
+                // Continuar si pusher/broadcast falla
+            }
 
             return back()->with('success', 'Producto aprobado correctamente.');
         } catch (ModelNotFoundException $e) {
@@ -147,6 +165,16 @@ class AdminImagenesController extends Controller
             $item->estatus = 0;
             $item->save();
 
+            // Rechazar también sus imágenes pendientes
+            $item->todasLasImagenes()->where('estado', 'pendiente')->update([
+                'estado' => 'rechazado',
+                'motivo_rechazo' => $request->motivo_rechazo,
+            ]);
+
+            Cache::forget('home_intercambio');
+            Cache::forget('home_venta');
+            Cache::flush();
+
             // Notificar al dueño
             $mensaje = "Tu producto '{$item->item}' ha sido rechazado. Motivo: {$request->motivo_rechazo}";
             Message::create([
@@ -154,6 +182,12 @@ class AdminImagenesController extends Controller
                 'mensaje' => $mensaje,
                 'leido' => false,
             ]);
+
+            try {
+                event(new NuevaNotificacion($mensaje, $item->id_user));
+            } catch (\Throwable $e) {
+                // Continuar si pusher/broadcast falla
+            }
 
             return back()->with('success', 'Producto rechazado.');
         } catch (ModelNotFoundException $e) {
