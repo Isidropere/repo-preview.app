@@ -481,7 +481,7 @@
                             <label class="inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="toggleCategoriasOverlay" checked onchange="actualizarOverlaySimulador()" class="w-4 h-4 rounded text-primary focus:ring-primary/30 border-gray-300">
                                 <span class="ml-2 text-xs text-gray-700 font-semibold select-none">
-                                    Simular panel de "Categorías Populares" del Home
+                                    Mostrar menú de "Categorías Populares" (como en la Home)
                                 </span>
                             </label>
                         </div>
@@ -510,41 +510,93 @@
                                 </div>
                             </div>
 
-                            {{-- Superposición de Categorías Populares (Idéntico a home.blade.php) --}}
-                            <div id="simuladorOverlayDesktop" class="absolute inset-0 z-20 flex flex-col justify-center items-center p-4 sm:p-6 pointer-events-none transition-opacity duration-200">
-                                <div class="text-center bg-orange-200/65 backdrop-blur-xs p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[90%] border border-orange-300/40">
-                                    <h4 class="text-sm sm:text-base md:text-xl font-black text-gray-900 mb-2">
-                                        Categorías Populares
-                                    </h4>
-                                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 justify-items-center opacity-90">
-                                        <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">👗</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Damas</span>
+                            {{-- Superposición de Categorías Populares (Idéntico a la Home real) --}}
+                            <div id="simuladorOverlayDesktop" class="absolute inset-0 z-20 flex flex-col justify-between py-2 sm:py-3 md:py-4 px-3 sm:px-5 md:px-8 pointer-events-none select-none transition-opacity duration-200">
+                                
+                                {{-- Título superior centrado --}}
+                                <h2 class="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-900 text-center tracking-tight"
+                                    style="text-shadow: 0 1px 3px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.9);">
+                                    Categorías Populares
+                                </h2>
+
+                                {{-- Distribución de columnas exactamente como en la Home --}}
+                                <div class="flex items-center justify-between w-full h-full px-1 sm:px-2 md:px-4">
+                                    
+                                    {{-- Bloque Izquierdo (Columnas 1 y 2) --}}
+                                    <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 md:gap-x-6 lg:gap-x-10 gap-y-1 sm:gap-y-2 md:gap-y-3">
+                                        {{-- Col 1, Fila 1: Damas --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/women.svg') }}" alt="Damas" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Damas</span>
                                         </div>
-                                        <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">👔</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Caballeros</span>
+                                        {{-- Col 2, Fila 1: Caballeros --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/ropa.svg') }}" alt="Caballeros" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Caballeros</span>
                                         </div>
-                                        <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">🧸</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Niños</span>
+
+                                        {{-- Col 1, Fila 2: Hogar --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/hogar.svg') }}" alt="Hogar" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Hogar</span>
                                         </div>
-                                        <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">📱</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Teléfonos</span>
+                                        {{-- Col 2, Fila 2: Gamer --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/consolas.svg') }}" alt="Gamer" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Gamer</span>
                                         </div>
-                                        <div class="hidden sm:flex bg-white/70 rounded-xl p-1.5 flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">💻</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Laptops</span>
+
+                                        {{-- Col 1, Fila 3: Vehículos --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <svg class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto text-gray-900" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3" d="M8 16H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-8v8m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Vehículos</span>
                                         </div>
-                                        <div class="hidden sm:flex bg-white/70 rounded-xl p-1.5 flex-col items-center w-full">
-                                            <span class="text-sm sm:text-lg">🚗</span>
-                                            <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Vehículos</span>
+                                        {{-- Col 2, Fila 3: Transporte y Mudanza --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <svg class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto text-gray-900" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path><path d="M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5 leading-tight text-center" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Transporte y<br>Mudanza</span>
                                         </div>
                                     </div>
-                                    <p class="text-[9px] text-orange-950 font-semibold mt-1">
-                                        * Este panel se muestra en la portada sobre el banner. Asegúrate que tu texto importante no quede oculto.
-                                    </p>
+
+                                    {{-- Centro Despejado (Muestra libremente el centro del banner) --}}
+                                    <div class="flex-1 min-w-[20px] sm:min-w-[50px] md:min-w-[90px] lg:min-w-[130px]"></div>
+
+                                    {{-- Bloque Derecho (Columnas 3 y 4) --}}
+                                    <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 md:gap-x-6 lg:gap-x-10 gap-y-1 sm:gap-y-2 md:gap-y-3">
+                                        {{-- Col 3, Fila 1: Niños --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/juegos.svg') }}" alt="Niños" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Niños</span>
+                                        </div>
+                                        {{-- Col 4, Fila 1: Teléfonos --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/celulares.svg') }}" alt="Teléfonos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Teléfonos</span>
+                                        </div>
+
+                                        {{-- Col 3, Fila 2: Talentos-Servicios --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/antiguedades.svg') }}" alt="Talentos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Talentos-Servicios</span>
+                                        </div>
+                                        {{-- Col 4, Fila 2: Tecnología --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/computacion.svg') }}" alt="Tecnología" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Tecnología</span>
+                                        </div>
+
+                                        {{-- Col 3, Fila 3: Electrodomésticos --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/electro.svg') }}" alt="Electrodomésticos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5 leading-tight text-center" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Electrodomésticos</span>
+                                        </div>
+                                        {{-- Col 4, Fila 3: Otras categorías --}}
+                                        <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                            <img src="{{ asset('imgs/icons/otros.svg') }}" alt="Otras categorías" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                            <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Otras categorías</span>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -577,13 +629,26 @@
                                     </div>
                                 </div>
 
-                                {{-- Tarjeta de categorías móvil (en móvil va debajo o semi-superpuesto) --}}
-                                <div id="simuladorOverlayMobile" class="p-3 bg-orange-100/70 m-2 rounded-xl text-center border border-orange-200">
-                                    <span class="text-[10px] font-bold text-gray-800 block">Categorías</span>
-                                    <div class="grid grid-cols-3 gap-1 mt-1 text-[8px] text-gray-600 font-bold">
-                                        <div class="bg-white rounded p-1">👗 Damas</div>
-                                        <div class="bg-white rounded p-1">👔 Caballeros</div>
-                                        <div class="bg-white rounded p-1">📱 Teléfonos</div>
+                                {{-- Tarjeta de categorías móvil con iconos reales --}}
+                                <div id="simuladorOverlayMobile" class="p-2 bg-white/95 backdrop-blur-xs m-2 rounded-xl text-center border border-gray-200 shadow-xs">
+                                    <span class="text-[10px] font-bold text-gray-900 block mb-1">Categorías Populares</span>
+                                    <div class="grid grid-cols-4 gap-1 text-[8px] text-gray-800 font-bold">
+                                        <div class="flex flex-col items-center p-1 bg-gray-50 rounded">
+                                            <img src="{{ asset('imgs/icons/women.svg') }}" class="h-4 w-auto mb-0.5">
+                                            <span>Damas</span>
+                                        </div>
+                                        <div class="flex flex-col items-center p-1 bg-gray-50 rounded">
+                                            <img src="{{ asset('imgs/icons/ropa.svg') }}" class="h-4 w-auto mb-0.5">
+                                            <span>Caballeros</span>
+                                        </div>
+                                        <div class="flex flex-col items-center p-1 bg-gray-50 rounded">
+                                            <img src="{{ asset('imgs/icons/juegos.svg') }}" class="h-4 w-auto mb-0.5">
+                                            <span>Niños</span>
+                                        </div>
+                                        <div class="flex flex-col items-center p-1 bg-gray-50 rounded">
+                                            <img src="{{ asset('imgs/icons/celulares.svg') }}" class="h-4 w-auto mb-0.5">
+                                            <span>Teléfonos</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -652,7 +717,7 @@
                     <label class="inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="toggleOverlaySlideExistente" checked onchange="toggleOverlaySlideFunc()" class="w-4 h-4 rounded text-primary focus:ring-primary/30 border-gray-300">
                         <span class="ml-2 text-xs text-gray-700 font-semibold select-none">
-                            Mostrar panel flotante de "Categorías Populares"
+                            Mostrar menú de "Categorías Populares" (como en la Home)
                         </span>
                     </label>
                     <a href="{{ route('home') }}" target="_blank" class="text-xs font-bold text-primary hover:text-hoverPrimary flex items-center gap-1">
@@ -676,38 +741,93 @@
                         </div>
                     </div>
 
-                    {{-- Overlay Categorías --}}
-                    <div id="overlaySlideExistente" class="absolute inset-0 z-20 flex flex-col justify-center items-center p-4 sm:p-6 pointer-events-none transition-opacity duration-200">
-                        <div class="text-center bg-orange-200/65 backdrop-blur-xs p-3 sm:p-4 rounded-2xl shadow-lg w-full max-w-[90%] border border-orange-300/40">
-                            <h4 class="text-sm sm:text-base md:text-xl font-black text-gray-900 mb-2">
-                                Categorías Populares
-                            </h4>
-                            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 justify-items-center opacity-90">
-                                <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">👗</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Damas</span>
+                    {{-- Overlay Categorías (Idéntico a la Home real) --}}
+                    <div id="overlaySlideExistente" class="absolute inset-0 z-20 flex flex-col justify-between py-2 sm:py-3 md:py-4 px-3 sm:px-5 md:px-8 pointer-events-none select-none transition-opacity duration-200">
+                        
+                        {{-- Título superior centrado --}}
+                        <h2 class="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-900 text-center tracking-tight"
+                            style="text-shadow: 0 1px 3px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.9);">
+                            Categorías Populares
+                        </h2>
+
+                        {{-- Distribución de columnas exactamente como en la Home --}}
+                        <div class="flex items-center justify-between w-full h-full px-1 sm:px-2 md:px-4">
+                            
+                            {{-- Bloque Izquierdo (Columnas 1 y 2) --}}
+                            <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 md:gap-x-6 lg:gap-x-10 gap-y-1 sm:gap-y-2 md:gap-y-3">
+                                {{-- Col 1, Fila 1: Damas --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/women.svg') }}" alt="Damas" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Damas</span>
                                 </div>
-                                <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">👔</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Caballeros</span>
+                                {{-- Col 2, Fila 1: Caballeros --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/ropa.svg') }}" alt="Caballeros" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Caballeros</span>
                                 </div>
-                                <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">🧸</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Niños</span>
+
+                                {{-- Col 1, Fila 2: Hogar --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/hogar.svg') }}" alt="Hogar" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Hogar</span>
                                 </div>
-                                <div class="bg-white/70 rounded-xl p-1.5 flex flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">📱</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Teléfonos</span>
+                                {{-- Col 2, Fila 2: Gamer --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/consolas.svg') }}" alt="Gamer" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Gamer</span>
                                 </div>
-                                <div class="hidden sm:flex bg-white/70 rounded-xl p-1.5 flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">💻</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Laptops</span>
+
+                                {{-- Col 1, Fila 3: Vehículos --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <svg class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto text-gray-900" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3" d="M8 16H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-8v8m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Vehículos</span>
                                 </div>
-                                <div class="hidden sm:flex bg-white/70 rounded-xl p-1.5 flex-col items-center w-full">
-                                    <span class="text-sm sm:text-lg">🚗</span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-gray-800">Vehículos</span>
+                                {{-- Col 2, Fila 3: Transporte y Mudanza --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <svg class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto text-gray-900" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path><path d="M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5 leading-tight text-center" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Transporte y<br>Mudanza</span>
                                 </div>
                             </div>
+
+                            {{-- Centro Despejado (Muestra libremente el centro del banner) --}}
+                            <div class="flex-1 min-w-[20px] sm:min-w-[50px] md:min-w-[90px] lg:min-w-[130px]"></div>
+
+                            {{-- Bloque Derecho (Columnas 3 y 4) --}}
+                            <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 md:gap-x-6 lg:gap-x-10 gap-y-1 sm:gap-y-2 md:gap-y-3">
+                                {{-- Col 3, Fila 1: Niños --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/juegos.svg') }}" alt="Niños" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Niños</span>
+                                </div>
+                                {{-- Col 4, Fila 1: Teléfonos --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/celulares.svg') }}" alt="Teléfonos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Teléfonos</span>
+                                </div>
+
+                                {{-- Col 3, Fila 2: Talentos-Servicios --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/antiguedades.svg') }}" alt="Talentos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Talentos-Servicios</span>
+                                </div>
+                                {{-- Col 4, Fila 2: Tecnología --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/computacion.svg') }}" alt="Tecnología" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Tecnología</span>
+                                </div>
+
+                                {{-- Col 3, Fila 3: Electrodomésticos --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/electro.svg') }}" alt="Electrodomésticos" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5 leading-tight text-center" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Electrodomésticos</span>
+                                </div>
+                                {{-- Col 4, Fila 3: Otras categorías --}}
+                                <div class="flex flex-col items-center justify-center p-0.5 text-center">
+                                    <img src="{{ asset('imgs/icons/otros.svg') }}" alt="Otras categorías" class="h-5 sm:h-7 md:h-8 lg:h-9 w-auto object-contain" style="filter: drop-shadow(0 1px 2px rgba(255,255,255,0.95));">
+                                    <span class="text-[8px] sm:text-[10px] md:text-xs font-bold text-gray-900 mt-0.5" style="text-shadow: 0 1px 2px #fff, 0 0 6px #fff;">Otras categorías</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
