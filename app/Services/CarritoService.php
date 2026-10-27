@@ -32,7 +32,7 @@ class CarritoService
      */
     public function obtenerCarritoConTotales(int $userId): array
     {
-        // Obtener ambos carritos del usuario
+        // Obtener carritos del usuario
         $carritos = Carrito::where('id_user', $userId)
             ->with([
                 'itemsIntencionCompra.item.categoria',
@@ -42,18 +42,23 @@ class CarritoService
                 'itemsIntencionCompra.color',
             ])->get();
 
+        if ($carritos->isEmpty()) {
+            $nuevoCarrito = Carrito::firstOrCreate(['id_user' => $userId, 'tipo' => 'producto']);
+            $carritos = collect([$nuevoCarrito]);
+        }
+
         // Carrito principal: el de productos (o el primero que exista)
         $carrito = $carritos->firstWhere('tipo', 'producto') ?? $carritos->first();
 
-        if (!$carrito) {
-            return ['success' => false, 'message' => 'No tienes un carrito creado.'];
-        }
-
-        // Combinar items de todos los carritos para la vista
+        // Combinar items válidos de todos los carritos para la vista
         $todosLosItems = collect();
         foreach ($carritos as $c) {
             foreach ($c->itemsIntencionCompra as $item) {
-                $todosLosItems->push($item);
+                if ($item->item) {
+                    $todosLosItems->push($item);
+                } else {
+                    $item->delete(); // Limpiar registros huérfanos sin modelo Item
+                }
             }
         }
 
@@ -231,10 +236,14 @@ class CarritoService
             $query->where('tipo', $tipo);
         }
 
-        $carrito = $query->firstOrFail();
+        $carrito = $query->first();
+
+        if (!$carrito) {
+            $carrito = Carrito::firstOrCreate(['id_user' => $userId, 'tipo' => $tipo ?: 'producto']);
+        }
 
         $carrito->itemsIntencionCompra = $carrito->itemsIntencionCompra
-            ->filter(fn($item) => $item->es_seleccionado);
+            ->filter(fn($item) => $item->es_seleccionado && $item->item !== null);
 
         $subtotal = $carrito->itemsIntencionCompra->sum(
             fn($item) => ($item->item->valor ?? 0) * ($item->cantidad ?? 0)

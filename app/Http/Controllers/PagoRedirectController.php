@@ -138,7 +138,7 @@ class PagoRedirectController extends Controller
                 // Evitar compras duplicadas simultáneas
                 $carritoLocked = Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
-                    ->whereIn('estatus', ['aprobado', 'pendiente'])
+                    ->where('estatus', 'pendiente')
                     ->where('fecha', '>=', now()->subMinutes(2))
                     ->exists();
 
