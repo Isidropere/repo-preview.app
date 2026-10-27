@@ -128,7 +128,7 @@ class PagoApiController extends Controller
             $pagoCompra = \Illuminate\Support\Facades\DB::transaction(function () use ($itemsSeleccionados, $carrito, $montoTotal, $direccion, $totalImpuestos, $costoEnvio) {
                 $carritoLocked = \App\Models\Carrito::where('id_carrito', $carrito->id_carrito)->lockForUpdate()->first();
                 $yaExiste = \App\Models\PagoCompra::where('id_carrito', $carritoLocked->id_carrito)
-                    ->whereIn('estatus', ['aprobado', 'pendiente'])
+                    ->where('estatus', 'pendiente')
                     ->where('fecha', '>=', now()->subMinutes(2))
                     ->exists();
 

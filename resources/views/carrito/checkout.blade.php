@@ -245,8 +245,8 @@
 
                 <div class="p-6">
                     @php
-                        $itemsSeleccionados = $carrito->itemsIntencionCompra->filter(fn($i) => $i->es_seleccionado);
-                        $subtotal           = $itemsSeleccionados->sum(fn($i) => $i->item->valor * $i->cantidad);
+                        $itemsSeleccionados = $carrito->itemsIntencionCompra->filter(fn($i) => $i->es_seleccionado && $i->item !== null);
+                        $subtotal           = $itemsSeleccionados->sum(fn($i) => ($i->item->valor ?? 0) * ($i->cantidad ?? 0));
                         $totalDescuento     = $itemsSeleccionados->sum('descuento');
                         $totalBase          = $subtotal - $totalDescuento;
 
@@ -261,7 +261,7 @@
                             if ($i->item) {
                                 $aplicaImpuesto = (bool) ($i->item->categoria?->aplica_impuesto ?? true);
                                 if ($aplicaImpuesto) {
-                                    $netoItem = ($i->item->valor * $i->cantidad) - ($i->descuento ?? 0);
+                                    $netoItem = (($i->item->valor ?? 0) * $i->cantidad) - ($i->descuento ?? 0);
                                     if ($netoItem > 0) {
                                         $isServicio = (int) ($i->item->id_categoria_item ?? 0) === 29;
                                         if ($isServicio) {
@@ -283,16 +283,16 @@
                             <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
                                 @if($item->imagenes->first())
                                     <img src="{{ \App\Helpers\ImageHelper::urlMedia('imgs/articulos/items', $item->imagenes->first()->nombre) }}"
-                                         alt="{{ $item->item->item }}" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
+                                         alt="{{ $item->item->item ?? 'Artículo' }}" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @else
                                     <img src="{{ asset('imgs/defaults/producto_default.svg') }}"
                                          alt="Sin imagen" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-800 leading-tight truncate">{{ $item->item->item }}</p>
+                                <p class="text-sm font-medium text-gray-800 leading-tight truncate">{{ $item->item->item ?? 'Artículo' }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5">Cant: {{ $item->cantidad }}</p>
-                                <p class="text-sm font-bold text-blue-600 mt-1">${{ number_format($item->item->valor * $item->cantidad, 2) }}</p>
+                                <p class="text-sm font-bold text-blue-600 mt-1">${{ number_format(($item->item->valor ?? 0) * $item->cantidad, 2) }}</p>
                             </div>
                         </div>
                         @empty

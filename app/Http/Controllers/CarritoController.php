@@ -96,6 +96,9 @@ class CarritoController extends Controller
             \App\Models\PagoCompra::liberarOrdenesPendientes($data['carrito']->id_carrito);
         }
 
+        if (empty($data['carrito']) || $data['carrito']->itemsIntencionCompra->isEmpty()) {
+            return redirect()->route('carrito.show')->with('alerta', 'Tu carrito no tiene artículos seleccionados para comprar.');
+        }
 
         // Para servicios: cargar info del proveedor de cada item
       $proveedoresInfo = [];
