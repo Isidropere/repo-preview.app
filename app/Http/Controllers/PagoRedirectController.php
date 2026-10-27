@@ -266,7 +266,16 @@ class PagoRedirectController extends Controller
 
         try {
             // Generar los campos y el AuthHash para AZUL
-            $azulData = $this->azulProvider->generarCamposFormulario($pagoCompra->total, $pagoCompra->id_pago_compra, ['tax' => (float) ($pagoCompra->impuestos ?? 0)]);
+            $azulData = $this->azulProvider->generarCamposFormulario(
+                $pagoCompra->total, 
+                $pagoCompra->id_pago_compra, 
+                [
+                    'tax'          => (float) ($pagoCompra->impuestos ?? 0),
+                    'approved_url' => route('pago.redirect.aprobado') . '?mobile=1',
+                    'declined_url' => route('pago.redirect.declinado') . '?mobile=1',
+                    'cancel_url'   => route('pago.redirect.cancelado') . '?mobile=1',
+                ]
+            );
 
             // Registrar log local del request
             DB::table('logs_pagos')->insert([
@@ -305,7 +314,7 @@ class PagoRedirectController extends Controller
         // 1. Validar firma del hash
         if (!$this->azulProvider->validarFirmaRespuesta($request->all())) {
             Log::critical('[Azul Redirect] Firma AuthHash inválida en pagoAprobado');
-            return redirect()->route('carrito.checkout_index')->with('error', 'Firma de seguridad inválida de la pasarela de pagos.');
+            return $this->mostrarVistaResultado(false, 'Firma de seguridad inválida de la pasarela de pagos.');
         }
 
         $orderNumber = $request->input('OrderNumber');
@@ -313,27 +322,21 @@ class PagoRedirectController extends Controller
 
         if (!$pagoCompra) {
             Log::critical('[Azul Redirect] Orden no encontrada en pagoAprobado', ['order_id' => $orderNumber]);
-            return redirect()->route('carrito.checkout_index')->with('error', 'No se encontró la orden de compra asociada.');
+            return $this->mostrarVistaResultado(false, 'No se encontró la orden de compra asociada.');
         }
 
         // Si ya fue aprobada por IPN u otra redirección, omitir duplicado
         if ($pagoCompra->estatus === 'aprobado') {
-            return redirect()->route('historial')
-                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
-                ->with('order_completed_id', $pagoCompra->id_pago_compra);
+            return $this->mostrarVistaResultado(true, '¡Pago procesado correctamente! Tu pedido está en camino.', $pagoCompra);
         }
 
         // 2. Confirmar transacción de compra
         try {
             $this->procesarAprobacionLocal($pagoCompra, $request->all());
-            return redirect()->route('historial')
-                ->with('success', '¡Pago procesado correctamente! Tu pedido está en camino.')
-                ->with('order_completed_id', $pagoCompra->id_pago_compra);
+            return $this->mostrarVistaResultado(true, '¡Pago procesado correctamente! Tu pedido está en camino.', $pagoCompra);
         } catch (\Throwable $e) {
             Log::error('[Azul Redirect] Error al asentar compra aprobada', ['error' => $e->getMessage()]);
-            return redirect()->route('historial')
-                ->with('success', '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.')
-                ->with('order_completed_id', $pagoCompra->id_pago_compra);
+            return $this->mostrarVistaResultado(true, '¡Compra procesada! Tu pago fue acreditado, pero hubo un error menor al registrar tu recibo. Contacta soporte.', $pagoCompra);
         }
     }
 
@@ -347,7 +350,7 @@ class PagoRedirectController extends Controller
         // Validar firma
         if (!$this->azulProvider->validarFirmaRespuesta($request->all())) {
             Log::critical('[Azul Redirect] Firma AuthHash inválida en pagoDeclinado');
-            return redirect()->route('carrito.checkout_index')->with('error', 'Firma de seguridad inválida.');
+            return $this->mostrarVistaResultado(false, 'Firma de seguridad inválida.');
         }
 
         $orderNumber = $request->input('OrderNumber');
@@ -358,7 +361,7 @@ class PagoRedirectController extends Controller
         }
 
         $errorMsg = $request->input('ErrorDescription') ?: ($request->input('ResponseMessage') ?: 'Transacción rechazada.');
-        return redirect()->route('carrito.checkout_index')->with('error', 'Pago rechazado: ' . $errorMsg);
+        return $this->mostrarVistaResultado(false, 'Pago rechazado: ' . $errorMsg, $pagoCompra);
     }
 
     /**
@@ -375,7 +378,34 @@ class PagoRedirectController extends Controller
             $this->procesarCancelacionODeclinacion($pagoCompra, 'cancelado', 'Cancelado por el usuario en la pasarela.');
         }
 
-        return redirect()->route('carrito.checkout_index')->with('warning', 'Pago cancelado por el usuario.');
+        return $this->mostrarVistaResultado(false, 'Pago cancelado por el usuario.', $pagoCompra);
+    }
+
+    /**
+     * Renderiza una vista de confirmación que funciona para la Web y es amigable con la App móvil.
+     */
+    private function mostrarVistaResultado(bool $success, string $message, ?PagoCompra $pagoCompra = null)
+    {
+        $isMobile = request()->segment(3) === 'movil' 
+            || request()->has('mobile') 
+            || ($pagoCompra && $pagoCompra->id_tarjeta === 'REDIRECT_AZUL_MOVIL')
+            || !auth()->check();
+
+        if ($isMobile) {
+            return view('pago.resultado_movil', [
+                'success' => $success,
+                'message' => $message,
+                'title'   => 'Resultado de Compra'
+            ]);
+        }
+
+        if ($success) {
+            return redirect()->route('historial')
+                ->with('success', $message)
+                ->with('order_completed_id', $pagoCompra?->id_pago_compra);
+        } else {
+            return redirect()->route('carrito.checkout_index')->with('error', $message);
+        }
     }
 
     /**
