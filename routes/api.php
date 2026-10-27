@@ -334,7 +334,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $comprasArr = $compras->map(function ($compra) {
             $arr = $compra->toArray();
             $arr['fecha'] = $compra->fecha ? $compra->fecha->toDateTimeString() : null;
-            if ($compra->id_tarjeta === 'REDIRECT_AZUL') {
+            if ($compra->id_tarjeta === 'REDIRECT_AZUL' || $compra->id_tarjeta === 'REDIRECT_AZUL_MOVIL') {
                 $azulResponse = $compra->azul_response;
                 $cardNumber = $azulResponse['CardNumber'] ?? null;
                 $brand = $azulResponse['DataVaultBrand'] ?? $azulResponse['Brand'] ?? 'Tarjeta';
